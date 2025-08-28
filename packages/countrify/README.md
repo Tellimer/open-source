@@ -3,7 +3,6 @@
     <img src="./assets/tellimer-logo.avif" width="400" alt="Tellimer" />
   </a>
 </p>
-<br>
 
 # @tellimer/countrify
 
