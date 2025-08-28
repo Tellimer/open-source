@@ -2,15 +2,15 @@
  * Combined normalization functions that integrate currency, magnitude, and time scaling
  */
 
-import type { FXTable, Scale, TimeScale } from '../types.ts';
-import { normalizeCurrencyValue } from '../currency/currency.ts';
+import type { FXTable, Scale, TimeScale } from "../types.ts";
+import { normalizeCurrencyValue } from "../currency/currency.ts";
 import {
   getScale,
   parseTimeScale,
   rescaleMagnitude,
   rescaleTime,
-} from '../scale/scale.ts';
-import { parseUnit } from '../units/units.ts';
+} from "../scale/scale.ts";
+import { parseUnit } from "../units/units.ts";
 
 // ----------------------- Combined Normalization -----------------------
 
@@ -32,13 +32,13 @@ export function normalizeFlowValue(
     unitText: string;
     to?: TimeScale;
     targetMagnitude?: Scale;
-  }
+  },
 ): number {
   const parsed = parseUnit(options.unitText);
 
   if (!parsed.timeScale && options.to) {
     throw new Error(
-      `Cannot convert to ${options.to} - no time scale found in "${options.unitText}"`
+      `Cannot convert to ${options.to} - no time scale found in "${options.unitText}"`,
     );
   }
 
@@ -84,7 +84,7 @@ export function normalizeMonetary(
     toMagnitude?: Scale;
     fromTimeScale?: TimeScale | null;
     toTimeScale?: TimeScale;
-  }
+  },
 ): number {
   const fromScale = getScale(opts.unitText);
   const targetScale = opts.toMagnitude ?? fromScale;
@@ -96,13 +96,13 @@ export function normalizeMonetary(
   const timeNormalized = rescaleTime(
     magnitudeNormalized,
     fromBasis,
-    opts.toTimeScale!
+    opts.toTimeScale!,
   );
   return normalizeCurrencyValue(
     timeNormalized,
     opts.fromCurrency,
     opts.toCurrency,
-    opts.fx
+    opts.fx,
   );
 }
 
@@ -126,10 +126,10 @@ export function normalizeMonetaryFlow(
     toMagnitude?: Scale;
     fromTimeScale?: TimeScale | null;
     toTimeScale: TimeScale;
-  }
+  },
 ): number {
   // Try enhanced unit parsing first
-  const parsed = parseUnit(opts.unitText || '');
+  const parsed = parseUnit(opts.unitText || "");
   const detectedScale = parsed.scale || getScale(opts.unitText);
   const detectedTimeScale = parsed.timeScale || parseTimeScale(opts.unitText);
 
@@ -144,13 +144,13 @@ export function normalizeMonetaryFlow(
   const timeNormalized = rescaleTime(
     magnitudeNormalized,
     fromBasis,
-    opts.toTimeScale
+    opts.toTimeScale,
   );
   return normalizeCurrencyValue(
     timeNormalized,
     opts.fromCurrency,
     opts.toCurrency,
-    opts.fx
+    opts.fx,
   );
 }
 
@@ -172,7 +172,7 @@ export function normalizeValue(
     toMagnitude?: Scale;
     toTimeScale?: TimeScale;
     fx?: FXTable;
-  }
+  },
 ): number {
   const parsed = parseUnit(unitText);
   let result = value;
@@ -206,7 +206,7 @@ export function normalizeValue(
       result,
       parsed.currency,
       options.toCurrency,
-      options.fx
+      options.fx,
     );
   }
 

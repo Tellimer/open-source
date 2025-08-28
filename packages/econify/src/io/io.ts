@@ -2,11 +2,11 @@
  * Import/Export utilities for various formats
  */
 
-import { parseUnit } from '../units/units.ts';
-import { inferUnit } from '../inference/inference.ts';
+import { parseUnit } from "../units/units.ts";
+import { inferUnit } from "../inference/inference.ts";
 
-export type ExportFormat = 'csv' | 'json' | 'excel' | 'parquet';
-export type ImportFormat = 'csv' | 'json' | 'excel';
+export type ExportFormat = "csv" | "json" | "excel" | "parquet";
+export type ImportFormat = "csv" | "json" | "excel";
 
 export interface ExportOptions {
   format: ExportFormat;
@@ -36,14 +36,14 @@ type Row = Record<string, unknown>;
  */
 export function exportTo(
   data: Row[],
-  options: ExportOptions
+  options: ExportOptions,
 ): string | ArrayBuffer {
   switch (options.format) {
-    case 'csv':
+    case "csv":
       return exportToCSV(data, options);
-    case 'json':
+    case "json":
       return exportToJSON(data, options);
-    case 'excel':
+    case "excel":
       return exportToExcel(data, options);
     default:
       throw new Error(`Unsupported export format: ${options.format}`);
@@ -54,25 +54,25 @@ export function exportTo(
  * Export to CSV
  */
 function exportToCSV(data: Row[], options: ExportOptions): string {
-  if (data.length === 0) return '';
+  if (data.length === 0) return "";
 
-  const delimiter = options.delimiter || ',';
+  const delimiter = options.delimiter || ",";
   const headers = Object.keys(data[0]);
 
-  let csv = '';
+  let csv = "";
   if (options.headers !== false) {
-    csv = headers.join(delimiter) + '\n';
+    csv = headers.join(delimiter) + "\n";
   }
 
   for (const row of data) {
     const values = headers.map((h) => {
       const value = row[h];
-      if (typeof value === 'string' && value.includes(delimiter)) {
+      if (typeof value === "string" && value.includes(delimiter)) {
         return `"${value.replace(/"/g, '""')}"`;
       }
-      return String(value ?? '');
+      return String(value ?? "");
     });
-    csv += values.join(delimiter) + '\n';
+    csv += values.join(delimiter) + "\n";
   }
 
   return csv;
@@ -93,7 +93,7 @@ function exportToJSON(data: Row[], options: ExportOptions): string {
         },
       },
       null,
-      2
+      2,
     );
   }
 
@@ -106,7 +106,7 @@ function exportToJSON(data: Row[], options: ExportOptions): string {
 function exportToExcel(data: Row[], options: ExportOptions): string {
   // In a real implementation, this would create an actual Excel file
   // For now, return tab-separated values
-  return exportToCSV(data, { ...options, delimiter: '\t' });
+  return exportToCSV(data, { ...options, delimiter: "\t" });
 }
 
 /**
@@ -118,7 +118,7 @@ function exportToExcel(data: Row[], options: ExportOptions): string {
  */
 export async function importFrom(
   source: string | File | Response,
-  options: ImportOptions = {}
+  options: ImportOptions = {},
 ): Promise<Row[]> {
   const content = await getContent(source);
   const format = options.format || detectFormat(content);
@@ -126,10 +126,10 @@ export async function importFrom(
   let data: Row[];
 
   switch (format) {
-    case 'csv':
+    case "csv":
       data = importFromCSV(content, options);
       break;
-    case 'json':
+    case "json":
       data = importFromJSON(content);
       break;
     default:
@@ -148,9 +148,9 @@ export async function importFrom(
  * Get content from source
  */
 async function getContent(source: string | File | Response): Promise<string> {
-  if (typeof source === 'string') {
+  if (typeof source === "string") {
     // If it's a URL
-    if (source.startsWith('http')) {
+    if (source.startsWith("http")) {
       const response = await fetch(source);
       return response.text();
     }
@@ -166,7 +166,7 @@ async function getContent(source: string | File | Response): Promise<string> {
     return source.text();
   }
 
-  throw new Error('Invalid source type');
+  throw new Error("Invalid source type");
 }
 
 /**
@@ -175,21 +175,21 @@ async function getContent(source: string | File | Response): Promise<string> {
 function detectFormat(content: string): ImportFormat {
   const trimmed = content.trim();
 
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-    return 'json';
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    return "json";
   }
 
-  return 'csv';
+  return "csv";
 }
 
 /**
  * Import from CSV
  */
 function importFromCSV(content: string, options: ImportOptions): Row[] {
-  const lines = content.trim().split('\n');
+  const lines = content.trim().split("\n");
   if (lines.length === 0) return [];
 
-  const delimiter = options.delimiter || ',';
+  const delimiter = options.delimiter || ",";
   const hasHeaders = options.headers !== false;
 
   const headers = hasHeaders
@@ -216,7 +216,7 @@ function importFromCSV(content: string, options: ImportOptions): Row[] {
  */
 function parseCSVLine(line: string, delimiter: string): string[] {
   const result: string[] = [];
-  let current = '';
+  let current = "";
   let inQuotes = false;
 
   for (let i = 0; i < line.length; i++) {
@@ -231,7 +231,7 @@ function parseCSVLine(line: string, delimiter: string): string[] {
       }
     } else if (char === delimiter && !inQuotes) {
       result.push(current);
-      current = '';
+      current = "";
     } else {
       current += char;
     }
@@ -252,8 +252,8 @@ function parseValue(value: string): number | boolean | string | null {
   if (!isNaN(num)) return num;
 
   // Try boolean
-  if (value.toLowerCase() === 'true') return true;
-  if (value.toLowerCase() === 'false') return false;
+  if (value.toLowerCase() === "true") return true;
+  if (value.toLowerCase() === "false") return false;
 
   // Return as string
   return value;
@@ -266,7 +266,7 @@ function importFromJSON(content: string): Row[] {
   const parsed: unknown = JSON.parse(content);
 
   if (Array.isArray(parsed)) {
-    const isRowArray = parsed.every((v) => typeof v === 'object' && v !== null);
+    const isRowArray = parsed.every((v) => typeof v === "object" && v !== null);
     if (isRowArray) return parsed as Row[];
   }
 
@@ -274,7 +274,7 @@ function importFromJSON(content: string): Row[] {
     return (parsed as { data: unknown[] }).data as Row[];
   }
 
-  throw new Error('Invalid JSON structure for import');
+  throw new Error("Invalid JSON structure for import");
 }
 
 function isObjectWithArray(v: unknown): v is unknown[] {
@@ -292,16 +292,16 @@ function postProcessData(data: Row[], options: ImportOptions): Row[] {
       processed[key] = value;
 
       // Detect units
-      if (options.detectUnits && typeof value === 'string') {
+      if (options.detectUnits && typeof value === "string") {
         const parsed = parseUnit(value);
-        if (parsed.category !== 'unknown') {
+        if (parsed.category !== "unknown") {
           processed[`${key}_unit`] = parsed.normalized || value;
           processed[`${key}_category`] = parsed.category;
         }
       }
 
       // Infer types
-      if (options.inferTypes && typeof value === 'number') {
+      if (options.inferTypes && typeof value === "number") {
         const context = { text: key };
         const inferred = inferUnit(value, context);
         if (inferred.confidence > 0.7) {

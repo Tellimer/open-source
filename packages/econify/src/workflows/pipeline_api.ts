@@ -2,9 +2,9 @@
  * Clean API for the pipeline that abstracts away XState completely
  */
 
-import { createActor } from 'npm:xstate@^5.20.2';
-import { pipelineMachine } from './pipeline_v5.ts';
-import type { ParsedData, PipelineConfig } from './pipeline_v5.ts';
+import { createActor } from "npm:xstate@^5.20.2";
+import { pipelineMachine } from "./pipeline_v5.ts";
+import type { ParsedData, PipelineConfig } from "./pipeline_v5.ts";
 
 export interface PipelineOptions extends PipelineConfig {
   onProgress?: (step: string, progress: number) => void;
@@ -52,7 +52,7 @@ export interface PipelineResult {
  */
 export async function processEconomicData(
   data: ParsedData[],
-  options: PipelineOptions = {}
+  options: PipelineOptions = {},
 ): Promise<PipelineResult> {
   const { onProgress, onWarning, onError, ...config } = options;
 
@@ -64,7 +64,7 @@ export async function processEconomicData(
       },
     });
 
-    let lastState = '';
+    let lastState = "";
     const startTime = Date.now();
 
     actor.subscribe((state) => {
@@ -88,10 +88,10 @@ export async function processEconomicData(
 
         // Clean up state names for external consumption
         const cleanStateName = lastState
-          .replace('adjusting.', '')
-          .replace('xstate.', '')
-          .replace('.actor.', ' ')
-          .replace(/([A-Z])/g, ' $1')
+          .replace("adjusting.", "")
+          .replace("xstate.", "")
+          .replace(".actor.", " ")
+          .replace(/([A-Z])/g, " $1")
           .toLowerCase()
           .trim();
 
@@ -104,21 +104,21 @@ export async function processEconomicData(
       // Handle warnings
       if (state.context.warnings.length > 0 && onWarning) {
         state.context.warnings.forEach((warning) => {
-          if (!warning.startsWith('_processed_')) {
+          if (!warning.startsWith("_processed_")) {
             onWarning(warning);
             // Mark as processed to avoid duplicate calls
             state.context.warnings[state.context.warnings.indexOf(warning)] =
-              '_processed_' + warning;
+              "_processed_" + warning;
           }
         });
       }
 
       // Handle completion
-      if (state.matches('success')) {
+      if (state.matches("success")) {
         const result: PipelineResult = {
           data: state.context.finalData || [],
           warnings: state.context.warnings.filter(
-            (w) => !w.startsWith('_processed_')
+            (w) => !w.startsWith("_processed_"),
           ),
           errors: [],
           metrics: {
@@ -132,9 +132,9 @@ export async function processEconomicData(
       }
 
       // Handle errors
-      if (state.matches('error')) {
+      if (state.matches("error")) {
         const errors = state.context.errors.map(
-          (e) => new Error(e.message || 'Pipeline error')
+          (e) => new Error(e.message || "Pipeline error"),
         );
 
         if (onError && errors[0]) {
@@ -144,7 +144,7 @@ export async function processEconomicData(
         const result: PipelineResult = {
           data: state.context.normalizedData || state.context.parsedData || [],
           warnings: state.context.warnings.filter(
-            (w) => !w.startsWith('_processed_')
+            (w) => !w.startsWith("_processed_"),
           ),
           errors,
           metrics: {
@@ -154,12 +154,12 @@ export async function processEconomicData(
             qualityScore: state.context.qualityScore?.overall,
           },
         };
-        reject(errors[0] || new Error('Pipeline failed'));
+        reject(errors[0] || new Error("Pipeline failed"));
       }
     });
 
     actor.start();
-    actor.send({ type: 'START' });
+    actor.send({ type: "START" });
   });
 }
 
@@ -173,7 +173,7 @@ export async function processEconomicData(
  */
 export async function processEconomicDataAuto(
   data: ParsedData[],
-  options: PipelineOptions = {}
+  options: PipelineOptions = {},
 ): Promise<PipelineResult> {
   return new Promise((resolve, reject) => {
     const { onProgress, onWarning, onError, ...config } = options;
@@ -189,7 +189,7 @@ export async function processEconomicDataAuto(
 
     actor.subscribe((state) => {
       // Auto-continue on quality review
-      if (state.matches('qualityReview') && !hasReviewed) {
+      if (state.matches("qualityReview") && !hasReviewed) {
         hasReviewed = true;
         if (onWarning) {
           onWarning(
@@ -197,10 +197,10 @@ export async function processEconomicDataAuto(
               state.context.qualityScore?.overall || 0
             } below threshold ${
               config.minQualityScore || 70
-            }, continuing anyway`
+            }, continuing anyway`,
           );
         }
-        setTimeout(() => actor.send({ type: 'CONTINUE' }), 0);
+        setTimeout(() => actor.send({ type: "CONTINUE" }), 0);
       }
 
       if (onProgress) {
@@ -220,7 +220,7 @@ export async function processEconomicDataAuto(
         onProgress(state.value as string, progress);
       }
 
-      if (state.matches('success')) {
+      if (state.matches("success")) {
         resolve({
           data: state.context.finalData || [],
           warnings: state.context.warnings,
@@ -234,9 +234,9 @@ export async function processEconomicDataAuto(
         });
       }
 
-      if (state.matches('error')) {
+      if (state.matches("error")) {
         const error = new Error(
-          state.context.errors[0]?.message || 'Pipeline failed'
+          state.context.errors[0]?.message || "Pipeline failed",
         );
         if (onError) onError(error);
         reject(error);
@@ -244,7 +244,7 @@ export async function processEconomicDataAuto(
     });
 
     actor.start();
-    actor.send({ type: 'START' });
+    actor.send({ type: "START" });
   });
 }
 
@@ -258,10 +258,10 @@ export async function processEconomicDataAuto(
  */
 export async function validateEconomicData(
   data: ParsedData[],
-  options: { requiredFields?: string[] } = {}
+  options: { requiredFields?: string[] } = {},
 ): Promise<{ valid: boolean; score: number; issues: string[] }> {
   if (!data || data.length === 0) {
-    return { valid: false, score: 0, issues: ['No data provided'] };
+    return { valid: false, score: 0, issues: ["No data provided"] };
   }
 
   const issues: string[] = [];
@@ -269,7 +269,7 @@ export async function validateEconomicData(
   // Check required fields
   if (options.requiredFields) {
     const invalid = data.filter(
-      (item) => !options.requiredFields!.every((field) => field in item)
+      (item) => !options.requiredFields!.every((field) => field in item),
     );
     if (invalid.length > 0) {
       issues.push(`${invalid.length} records missing required fields`);
@@ -279,9 +279,9 @@ export async function validateEconomicData(
   // Check basic validity
   const invalidValues = data.filter(
     (item) =>
-      typeof item.value !== 'number' ||
+      typeof item.value !== "number" ||
       isNaN(item.value) ||
-      !isFinite(item.value)
+      !isFinite(item.value),
   );
   if (invalidValues.length > 0) {
     issues.push(`${invalidValues.length} records have invalid values`);

@@ -4,8 +4,7 @@
 
 # Tellimer Open Source Monorepo
 
-This monorepo contains various packages and applications maintained by
-Tellimer.
+This monorepo contains various packages and applications maintained by Tellimer.
 
 ## Structure
 
@@ -37,8 +36,8 @@ utilities for:
 
 ### [@tellimer/econify](packages/econify)
 
-A Deno/TypeScript package for classifying economic indicators and normalizing values
-across magnitudes, time bases, and currencies. Features:
+A Deno/TypeScript package for classifying economic indicators and normalizing
+values across magnitudes, time bases, and currencies. Features:
 
 - Classification of economic indicators (stock, flow, rate, currency)
 - Currency normalization with FX tables

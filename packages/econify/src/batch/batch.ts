@@ -2,10 +2,10 @@
  * Batch processing with validation and error handling
  */
 
-import { normalizeValue } from '../normalization/normalization.ts';
-import { parseUnit } from '../units/units.ts';
-import { assessDataQuality, type QualityScore } from '../quality/quality.ts';
-import type { FXTable, Scale, TimeScale } from '../types.ts';
+import { normalizeValue } from "../normalization/normalization.ts";
+import { parseUnit } from "../units/units.ts";
+import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
+import type { FXTable, Scale, TimeScale } from "../types.ts";
 
 export interface BatchItem {
   id?: string | number;
@@ -16,7 +16,7 @@ export interface BatchItem {
 
 export interface BatchOptions {
   validate?: boolean;
-  handleErrors?: 'throw' | 'skip' | 'default';
+  handleErrors?: "throw" | "skip" | "default";
   defaultValue?: number;
   parallel?: boolean;
   concurrency?: number;
@@ -62,11 +62,11 @@ export interface BatchStats {
  */
 export async function processBatch<T extends BatchItem>(
   items: T[],
-  options: BatchOptions = {}
+  options: BatchOptions = {},
 ): Promise<BatchResult<T>> {
   const {
     validate = true,
-    handleErrors = 'skip',
+    handleErrors = "skip",
     parallel = true,
     concurrency = 10,
     progressCallback,
@@ -96,9 +96,9 @@ export async function processBatch<T extends BatchItem>(
     result.quality = validationResult.quality;
 
     if (validationResult.quality.overall < qualityThreshold) {
-      if (handleErrors === 'throw') {
+      if (handleErrors === "throw") {
         throw new Error(
-          `Batch quality score ${validationResult.quality.overall} below threshold ${qualityThreshold}`
+          `Batch quality score ${validationResult.quality.overall} below threshold ${qualityThreshold}`,
         );
       }
 
@@ -106,7 +106,7 @@ export async function processBatch<T extends BatchItem>(
       for (const item of validationResult.invalidItems) {
         result.skipped.push({
           item,
-          reason: 'Failed quality validation',
+          reason: "Failed quality validation",
         });
       }
     }
@@ -114,7 +114,7 @@ export async function processBatch<T extends BatchItem>(
 
   // 2. Processing phase
   const itemsToProcess = items.filter(
-    (item) => !result.skipped.some((s) => s.item === item)
+    (item) => !result.skipped.some((s) => s.item === item),
   );
 
   if (parallel) {
@@ -123,14 +123,14 @@ export async function processBatch<T extends BatchItem>(
       result,
       normalizationOptions,
       concurrency,
-      progressCallback
+      progressCallback,
     );
   } else {
     await processSequentially(
       itemsToProcess,
       result,
       normalizationOptions,
-      progressCallback
+      progressCallback,
     );
   }
 
@@ -141,10 +141,9 @@ export async function processBatch<T extends BatchItem>(
   result.stats.failed = result.failed.length;
   result.stats.skipped = result.skipped.length;
   result.stats.processingTime = endTime - startTime;
-  result.stats.averageTime =
-    result.stats.processed > 0
-      ? result.stats.processingTime / result.stats.processed
-      : 0;
+  result.stats.averageTime = result.stats.processed > 0
+    ? result.stats.processingTime / result.stats.processed
+    : 0;
 
   return result;
 }
@@ -154,7 +153,7 @@ export async function processBatch<T extends BatchItem>(
  */
 async function validateBatch<T extends BatchItem>(
   items: T[],
-  threshold: number
+  threshold: number,
 ): Promise<{ quality: QualityScore; invalidItems: T[] }> {
   const dataPoints = items.map((item) => ({
     value: item.value,
@@ -171,7 +170,7 @@ async function validateBatch<T extends BatchItem>(
   // Identify invalid items
   const invalidItems: T[] = [];
   for (const issue of quality.issues) {
-    if (issue.severity === 'critical' && issue.affectedData) {
+    if (issue.severity === "critical" && issue.affectedData) {
       const idx = dataPoints.indexOf(issue.affectedData);
       if (idx >= 0) {
         invalidItems.push(items[idx]);
@@ -188,9 +187,9 @@ async function validateBatch<T extends BatchItem>(
 async function processInParallel<T extends BatchItem>(
   items: T[],
   result: BatchResult<T>,
-  options: Omit<BatchOptions, 'parallel' | 'concurrency' | 'progressCallback'>,
+  options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
   concurrency: number,
-  progressCallback?: (progress: number) => void
+  progressCallback?: (progress: number) => void,
 ): Promise<void> {
   const chunks = chunkArray(items, concurrency);
   let processed = 0;
@@ -202,13 +201,13 @@ async function processInParallel<T extends BatchItem>(
     results.forEach((res, idx) => {
       const item = chunk[idx];
 
-      if (res.status === 'fulfilled' && res.value) {
+      if (res.status === "fulfilled" && res.value) {
         result.successful.push({
           ...item,
           normalized: res.value.normalized,
           normalizedUnit: res.value.normalizedUnit,
         });
-      } else if (res.status === 'rejected') {
+      } else if (res.status === "rejected") {
         handleItemError(item, res.reason, options, result);
       }
 
@@ -226,8 +225,8 @@ async function processInParallel<T extends BatchItem>(
 async function processSequentially<T extends BatchItem>(
   items: T[],
   result: BatchResult<T>,
-  options: Omit<BatchOptions, 'parallel' | 'concurrency' | 'progressCallback'>,
-  progressCallback?: (progress: number) => void
+  options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
+  progressCallback?: (progress: number) => void,
 ): Promise<void> {
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -256,12 +255,12 @@ async function processSequentially<T extends BatchItem>(
  */
 async function processItem<T extends BatchItem>(
   item: T,
-  options: Omit<BatchOptions, 'parallel' | 'concurrency' | 'progressCallback'>
+  options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
 ): Promise<{ normalized: number; normalizedUnit: string } | null> {
   try {
     // Parse unit
     const parsed = parseUnit(item.unit);
-    if (parsed.category === 'unknown') {
+    if (parsed.category === "unknown") {
       throw new Error(`Unknown unit: ${item.unit}`);
     }
 
@@ -278,7 +277,7 @@ async function processItem<T extends BatchItem>(
       item.unit,
       options.toCurrency,
       options.toMagnitude,
-      options.toTimeScale
+      options.toTimeScale,
     );
 
     return { normalized, normalizedUnit };
@@ -293,16 +292,16 @@ async function processItem<T extends BatchItem>(
 function handleItemError<T extends BatchItem>(
   item: T,
   error: any,
-  options: Omit<BatchOptions, 'parallel' | 'concurrency' | 'progressCallback'>,
-  result: BatchResult<T>
+  options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
+  result: BatchResult<T>,
 ): void {
   const errorObj = error instanceof Error ? error : new Error(String(error));
 
   switch (options.handleErrors) {
-    case 'throw':
+    case "throw":
       throw errorObj;
 
-    case 'default':
+    case "default":
       if (options.defaultValue !== undefined) {
         result.successful.push({
           ...item,
@@ -318,7 +317,7 @@ function handleItemError<T extends BatchItem>(
       }
       break;
 
-    case 'skip':
+    case "skip":
     default:
       result.failed.push({
         item,
@@ -336,7 +335,7 @@ function buildNormalizedUnit(
   original: string,
   currency?: string,
   magnitude?: Scale,
-  timeScale?: TimeScale
+  timeScale?: TimeScale,
 ): string {
   const parsed = parseUnit(original);
   const parts: string[] = [];
@@ -362,7 +361,7 @@ function buildNormalizedUnit(
     parts.push(`per ${parsed.timeScale}`);
   }
 
-  return parts.length > 0 ? parts.join(' ') : original;
+  return parts.length > 0 ? parts.join(" ") : original;
 }
 
 /**
@@ -383,16 +382,16 @@ function chunkArray<T>(array: T[], size: number): T[][] {
  * @returns Helpers to process and processWithRetry
  */
 export function createBatchProcessor<T extends BatchItem>(
-  defaultOptions: BatchOptions
+  defaultOptions: BatchOptions,
 ): {
   process: (
     items: T[],
-    overrides?: Partial<BatchOptions>
+    overrides?: Partial<BatchOptions>,
   ) => Promise<BatchResult<T>>;
   processWithRetry: (
     items: T[],
     maxRetries?: number,
-    overrides?: Partial<BatchOptions>
+    overrides?: Partial<BatchOptions>,
   ) => Promise<BatchResult<T>>;
 } {
   return {
@@ -422,7 +421,7 @@ export function createBatchProcessor<T extends BatchItem>(
             console.log(
               `Retrying ${retryItems.length} failed items (attempt ${
                 attempt + 2
-              }/${maxRetries})`
+              }/${maxRetries})`,
             );
           } else {
             return result;
@@ -439,7 +438,7 @@ export function createBatchProcessor<T extends BatchItem>(
         }
       }
 
-      throw lastError || new Error('Batch processing failed after retries');
+      throw lastError || new Error("Batch processing failed after retries");
     },
   };
 }
@@ -449,7 +448,7 @@ export function createBatchProcessor<T extends BatchItem>(
  */
 export async function* streamProcess<T extends BatchItem>(
   items: AsyncIterable<T> | Iterable<T>,
-  options: BatchOptions = {}
+  options: BatchOptions = {},
 ): AsyncGenerator<T & { normalized: number; normalizedUnit: string }> {
   for await (const item of items) {
     try {
@@ -462,7 +461,7 @@ export async function* streamProcess<T extends BatchItem>(
         };
       }
     } catch (error) {
-      if (options.handleErrors === 'throw') {
+      if (options.handleErrors === "throw") {
         throw error;
       }
       // Skip on error for streaming

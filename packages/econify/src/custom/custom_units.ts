@@ -2,7 +2,7 @@
  * Custom unit definitions and registration
  */
 
-import type { UnitCategory, UnitPattern } from '../units/units.ts';
+import type { UnitCategory, UnitPattern } from "../units/units.ts";
 
 /** Definition for a custom unit pattern and conversion. */
 export interface CustomUnit {
@@ -28,10 +28,9 @@ export function registerCustomUnit(name: string, unit: CustomUnit): void {
   customUnits.set(name, unit);
 
   // Add to pattern list
-  const pattern =
-    typeof unit.pattern === 'string'
-      ? new RegExp(unit.pattern, 'i')
-      : unit.pattern;
+  const pattern = typeof unit.pattern === "string"
+    ? new RegExp(unit.pattern, "i")
+    : unit.pattern;
 
   customPatterns.push({
     pattern,
@@ -82,7 +81,7 @@ export function parseWithCustomUnits(text: string): {
 export function convertCustomUnit(
   value: number,
   fromUnit: string,
-  toUnit: string
+  toUnit: string,
 ): number | null {
   const from = customUnits.get(fromUnit);
   const to = customUnits.get(toUnit);
@@ -106,46 +105,46 @@ export const DOMAIN_UNITS = {
   emissions: {
     CO2_tonnes: {
       pattern: /CO2e?\s*tonnes?/i,
-      category: 'emissions',
-      normalized: 'CO2 tonnes',
-      conversionFactor: { to: 'kg', factor: 1000 },
+      category: "emissions",
+      normalized: "CO2 tonnes",
+      conversionFactor: { to: "kg", factor: 1000 },
     },
     carbon_credits: {
       pattern: /carbon\s+credits?/i,
-      category: 'emissions',
-      normalized: 'carbon credits',
+      category: "emissions",
+      normalized: "carbon credits",
     },
   },
 
   crypto: {
     BTC: {
       pattern: /\bBTC\b|bitcoin/i,
-      category: 'cryptocurrency',
-      normalized: 'BTC',
+      category: "cryptocurrency",
+      normalized: "BTC",
     },
     ETH: {
       pattern: /\bETH\b|ethereum/i,
-      category: 'cryptocurrency',
-      normalized: 'ETH',
+      category: "cryptocurrency",
+      normalized: "ETH",
     },
     wei: {
       pattern: /\bwei\b/i,
-      category: 'cryptocurrency',
-      normalized: 'wei',
-      conversionFactor: { to: 'ETH', factor: 1e-18 },
+      category: "cryptocurrency",
+      normalized: "wei",
+      conversionFactor: { to: "ETH", factor: 1e-18 },
     },
   },
 
   commodities: {
     gold_oz: {
       pattern: /gold\s+oz|troy\s+ounces?/i,
-      category: 'commodity',
-      normalized: 'troy oz',
+      category: "commodity",
+      normalized: "troy oz",
     },
     crude_barrel: {
       pattern: /crude\s+barrel|WTI|Brent/i,
-      category: 'commodity',
-      normalized: 'barrel',
+      category: "commodity",
+      normalized: "barrel",
     },
   },
 };
