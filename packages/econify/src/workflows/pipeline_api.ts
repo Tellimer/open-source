@@ -2,7 +2,7 @@
  * Clean API for the pipeline that abstracts away XState completely
  */
 
-import { createActor } from 'npm:xstate';
+import { createActor } from 'npm:xstate@^5.20.2';
 import { pipelineMachine } from './pipeline_v5.ts';
 import type { ParsedData, PipelineConfig } from './pipeline_v5.ts';
 
@@ -26,11 +26,11 @@ export interface PipelineResult {
 
 /**
  * Process economic data through the pipeline
- * 
+ *
  * @param data - Array of economic data points to process
  * @param options - Pipeline configuration and callbacks
  * @returns Promise<PipelineResult> - Processed data with metadata
- * 
+ *
  * @example
  * ```ts
  * const result = await processEconomicData(
@@ -45,7 +45,7 @@ export interface PipelineResult {
  *     onProgress: (step, progress) => console.log(`${step}: ${progress}%`),
  *   }
  * );
- * 
+ *
  * console.log(result.data); // Processed data
  * console.log(result.metrics.qualityScore); // Quality score
  * ```
@@ -55,7 +55,7 @@ export async function processEconomicData(
   options: PipelineOptions = {}
 ): Promise<PipelineResult> {
   const { onProgress, onWarning, onError, ...config } = options;
-  
+
   return new Promise((resolve, reject) => {
     const actor = createActor(pipelineMachine, {
       input: {
@@ -71,7 +71,7 @@ export async function processEconomicData(
       // Track progress through states
       if (state.value !== lastState) {
         lastState = state.value as string;
-        
+
         const progressMap: Record<string, number> = {
           idle: 0,
           validating: 10,
@@ -103,11 +103,12 @@ export async function processEconomicData(
 
       // Handle warnings
       if (state.context.warnings.length > 0 && onWarning) {
-        state.context.warnings.forEach(warning => {
+        state.context.warnings.forEach((warning) => {
           if (!warning.startsWith('_processed_')) {
             onWarning(warning);
             // Mark as processed to avoid duplicate calls
-            state.context.warnings[state.context.warnings.indexOf(warning)] = '_processed_' + warning;
+            state.context.warnings[state.context.warnings.indexOf(warning)] =
+              '_processed_' + warning;
           }
         });
       }
@@ -116,7 +117,9 @@ export async function processEconomicData(
       if (state.matches('success')) {
         const result: PipelineResult = {
           data: state.context.finalData || [],
-          warnings: state.context.warnings.filter(w => !w.startsWith('_processed_')),
+          warnings: state.context.warnings.filter(
+            (w) => !w.startsWith('_processed_')
+          ),
           errors: [],
           metrics: {
             processingTime: Date.now() - startTime,
@@ -130,17 +133,19 @@ export async function processEconomicData(
 
       // Handle errors
       if (state.matches('error')) {
-        const errors = state.context.errors.map(e => 
-          new Error(e.message || 'Pipeline error')
+        const errors = state.context.errors.map(
+          (e) => new Error(e.message || 'Pipeline error')
         );
-        
+
         if (onError && errors[0]) {
           onError(errors[0]);
         }
 
         const result: PipelineResult = {
           data: state.context.normalizedData || state.context.parsedData || [],
-          warnings: state.context.warnings.filter(w => !w.startsWith('_processed_')),
+          warnings: state.context.warnings.filter(
+            (w) => !w.startsWith('_processed_')
+          ),
           errors,
           metrics: {
             processingTime: Date.now() - startTime,
@@ -161,7 +166,7 @@ export async function processEconomicData(
 /**
  * Process economic data with automatic quality review handling
  * Will automatically continue if quality is below threshold
- * 
+ *
  * @param data - Array of economic data points to process
  * @param options - Pipeline configuration
  * @returns Promise<PipelineResult> - Processed data with metadata
@@ -187,7 +192,13 @@ export async function processEconomicDataAuto(
       if (state.matches('qualityReview') && !hasReviewed) {
         hasReviewed = true;
         if (onWarning) {
-          onWarning(`Quality score ${state.context.qualityScore?.overall || 0} below threshold ${config.minQualityScore || 70}, continuing anyway`);
+          onWarning(
+            `Quality score ${
+              state.context.qualityScore?.overall || 0
+            } below threshold ${
+              config.minQualityScore || 70
+            }, continuing anyway`
+          );
         }
         setTimeout(() => actor.send({ type: 'CONTINUE' }), 0);
       }
@@ -224,7 +235,9 @@ export async function processEconomicDataAuto(
       }
 
       if (state.matches('error')) {
-        const error = new Error(state.context.errors[0]?.message || 'Pipeline failed');
+        const error = new Error(
+          state.context.errors[0]?.message || 'Pipeline failed'
+        );
         if (onError) onError(error);
         reject(error);
       }
@@ -238,7 +251,7 @@ export async function processEconomicDataAuto(
 /**
  * Validate data without processing
  * Useful for checking data quality before processing
- * 
+ *
  * @param data - Array of economic data points to validate
  * @param options - Validation options
  * @returns Promise<{valid: boolean, score: number, issues: string[]}>
@@ -252,11 +265,11 @@ export async function validateEconomicData(
   }
 
   const issues: string[] = [];
-  
+
   // Check required fields
   if (options.requiredFields) {
     const invalid = data.filter(
-      item => !options.requiredFields!.every(field => field in item)
+      (item) => !options.requiredFields!.every((field) => field in item)
     );
     if (invalid.length > 0) {
       issues.push(`${invalid.length} records missing required fields`);
@@ -264,20 +277,23 @@ export async function validateEconomicData(
   }
 
   // Check basic validity
-  const invalidValues = data.filter(item => 
-    typeof item.value !== 'number' || isNaN(item.value) || !isFinite(item.value)
+  const invalidValues = data.filter(
+    (item) =>
+      typeof item.value !== 'number' ||
+      isNaN(item.value) ||
+      !isFinite(item.value)
   );
   if (invalidValues.length > 0) {
     issues.push(`${invalidValues.length} records have invalid values`);
   }
 
-  const missingUnits = data.filter(item => !item.unit);
+  const missingUnits = data.filter((item) => !item.unit);
   if (missingUnits.length > 0) {
     issues.push(`${missingUnits.length} records missing units`);
   }
 
   // Calculate score
-  const score = Math.max(0, 100 - (issues.length * 20));
+  const score = Math.max(0, 100 - issues.length * 20);
 
   return {
     valid: issues.length === 0,
