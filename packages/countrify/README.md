@@ -1,6 +1,9 @@
-<p align="center">
-  <img src="./assets/tellimer-logo.avif" width="500" alt="Tellimer" />
+<p align="left">
+  <a href="https://tellimer.com" target="_blank" rel="noopener">
+    <img src="./assets/tellimer-logo.avif" width="400" alt="Tellimer" />
+  </a>
 </p>
+<br>
 
 # @tellimer/countrify
 
