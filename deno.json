@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": "Sean Knowles <s@seanknowles.dev>",
+  "tasks": {
+    "dev:countrify": "cd packages/countrify && deno task dev",
+    "dev:econify": "cd packages/econify && deno task dev",
+    "test:countrify": "cd packages/countrify && deno task test",
+    "test:econify": "cd packages/econify && deno task test"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "workspace": [
+    "packages/*"
+  ],
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  }
+}
