@@ -2,7 +2,7 @@
  * XState v5 pipeline for data processing
  */
 
-import { setup, assign, createActor, fromPromise } from 'npm:xstate';
+import { setup, assign, createActor, fromPromise } from 'npm:xstate@^5.20.2';
 import {
   parseUnit,
   assessDataQuality,
