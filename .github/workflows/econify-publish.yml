@@ -1,12 +1,12 @@
-name: "econify: publish to JSR"
+name: 'econify: publish to JSR'
 
 on:
   push:
     tags:
-      - "econify-v*"
+      - 'econify-v*'
 
 concurrency:
-  group: "econify-${{ github.ref }}"
+  group: 'econify-${{ github.ref }}'
   cancel-in-progress: true
 
 defaults:
@@ -66,7 +66,7 @@ jobs:
       - name: Publish dry-run
         run: deno publish --dry-run
 
-      - name: Publish to JSR (with provenance)
+      - name: Publish to JSR
         env:
           JSR_TOKEN: ${{ secrets.JSR_TOKEN }}
-        run: deno publish --provenance --yes
+        run: deno publish --yes
