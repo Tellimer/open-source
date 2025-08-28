@@ -69,145 +69,142 @@ export {
 } from "./scale/scale.ts";
 
 // Re-export normalization functions
-export { 
+export {
   normalizeFlowValue,
-  normalizeMonetary, 
+  normalizeMonetary,
   normalizeMonetaryFlow,
-  normalizeValue
+  normalizeValue,
 } from "./normalization/normalization.ts";
 
 // Re-export units functions
 export {
-  CURRENCY_CODES,
   COUNT_PATTERNS,
+  CURRENCY_CODES,
   ENERGY_PATTERNS,
-  INDEX_PATTERNS,
-  MAGNITUDE_PATTERNS,
-  PERCENTAGE_PATTERNS,
-  PHYSICAL_PATTERNS,
   extractCurrency,
   extractScale,
   extractTimeScale,
+  INDEX_PATTERNS,
   isMonetaryUnit,
   isPercentageUnit,
-  parseUnit,
+  MAGNITUDE_PATTERNS,
   type ParsedUnit,
+  parseUnit,
+  PERCENTAGE_PATTERNS,
+  PHYSICAL_PATTERNS,
   type UnitCategory,
   type UnitPattern,
 } from "./units/units.ts";
 
 // Re-export live FX
 export {
-  fetchLiveFXRates,
-  getAvailableCurrencies,
   clearExpiredCache,
-  type FXSource,
-  type LiveFXOptions,
+  fetchLiveFXRates,
   type FXRateResponse,
+  type FXSource,
+  getAvailableCurrencies,
+  type LiveFXOptions,
 } from "./fx/live_fx.ts";
 
 // Re-export historical data
 export {
-  normalizeHistorical,
-  getHistoricalFXRates,
-  normalizeTimeSeries,
   calculateChanges,
-  resampleTimeSeries,
+  getHistoricalFXRates,
   type HistoricalDataPoint,
   type HistoricalOptions,
+  normalizeHistorical,
+  normalizeTimeSeries,
+  resampleTimeSeries,
 } from "./historical/historical.ts";
 
 // Re-export inflation adjustment
 export {
   adjustForInflation,
-  getInflationRate,
-  nominalToReal,
-  realToNominal,
-  realGrowthRate,
-  adjustTimeSeriesForInflation,
   adjustForPPP,
+  adjustTimeSeriesForInflation,
   getAvailableCountries,
   getAvailableYears,
+  getInflationRate,
   type InflationOptions,
+  nominalToReal,
+  realGrowthRate,
+  realToNominal,
 } from "./inflation/inflation.ts";
 
 // Re-export unit inference
 export {
+  type CompanyContext,
+  type InferenceContext,
+  type InferredUnit,
   inferUnit,
   validateInferredUnit,
-  type InferenceContext,
-  type CompanyContext,
-  type InferredUnit,
 } from "./inference/inference.ts";
 
 // Re-export data quality
 export {
   assessDataQuality,
   type DataPoint,
-  type QualityScore,
+  type DataSchema,
   type QualityIssue,
   type QualityOptions,
-  type DataSchema,
   type QualityRule,
+  type QualityScore,
 } from "./quality/quality.ts";
 
 // Re-export batch processing
 export {
-  processBatch,
-  createBatchProcessor,
-  streamProcess,
   type BatchItem,
   type BatchOptions,
   type BatchResult,
   type BatchStats,
+  createBatchProcessor,
+  processBatch,
+  streamProcess,
 } from "./batch/batch.ts";
 
 // Re-export custom units
 export {
+  convertCustomUnit,
+  type CustomUnit,
+  DOMAIN_UNITS,
+  getCustomUnit,
+  loadDomainUnits,
+  parseWithCustomUnits,
   registerCustomUnit,
   registerCustomUnits,
-  getCustomUnit,
-  parseWithCustomUnits,
-  convertCustomUnit,
-  loadDomainUnits,
-  DOMAIN_UNITS,
-  type CustomUnit,
 } from "./custom/custom_units.ts";
 
 // Re-export aggregations
 export {
   aggregate,
-  movingAverage,
   type AggregationOptions,
   type AggregationResult,
+  movingAverage,
 } from "./aggregations/aggregations.ts";
 
 // Re-export caching
-export {
-  withCache,
-  type CacheOptions,
-} from "./cache/cache.ts";
+export { type CacheOptions, withCache } from "./cache/cache.ts";
 
 // Re-export unit algebra
 export {
-  unitMultiply,
-  unitDivide,
-  unitAdd,
-  unitSubtract,
-  unitPower,
   chain,
+  unitAdd,
   UnitChain,
+  unitDivide,
+  unitMultiply,
+  unitPower,
+  unitSubtract,
   type UnitValue,
 } from "./algebra/algebra.ts";
 
 // Re-export IO utilities
 export {
-  exportTo,
-  importFrom,
-  type ExportOptions,
-  type ImportOptions,
   type ExportFormat,
+  type ExportOptions,
+  exportTo,
   type ImportFormat,
+  importFrom,
+  type ImportOptions,
 } from "./io/io.ts";
 
 // Re-export seasonal adjustment
@@ -219,12 +216,12 @@ export {
 
 // Re-export workflows for data pipeline processing
 export {
+  type ParsedData,
+  type PipelineConfig,
+  type PipelineError,
+  type PipelineOptions,
+  type PipelineResult,
   processEconomicData,
   processEconomicDataAuto,
   validateEconomicData,
-  type PipelineOptions,
-  type PipelineResult,
-  type PipelineConfig,
-  type ParsedData,
-  type PipelineError,
-} from './workflows/index.ts';
+} from "./workflows/index.ts";

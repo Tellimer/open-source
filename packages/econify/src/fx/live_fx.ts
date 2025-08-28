@@ -2,8 +2,11 @@
  * Live FX rate fetching from multiple sources
  */
 
-import type { FXTable } from '../types.ts';
+import type { FXTable } from "../types.ts";
 
+/**
+ * Live FX provider definition used by fetchLiveFXRates.
+ */
 export interface FXSource {
   name: string;
   endpoint: string;
@@ -12,6 +15,9 @@ export interface FXSource {
   priority: number;
 }
 
+/**
+ * Options for live FX fetching and caching.
+ */
 export interface LiveFXOptions {
   sources?: FXSource[];
   fallback?: FXTable;
@@ -21,6 +27,9 @@ export interface LiveFXOptions {
   timeout?: number;
 }
 
+/**
+ * Normalized FX response used for caching and parsing.
+ */
 export interface FXRateResponse {
   base: string;
   rates: Record<string, number>;
@@ -31,30 +40,30 @@ export interface FXRateResponse {
 type Rates = Record<string, number>;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null;
+  return typeof v === "object" && v !== null;
 }
 
 function isRates(v: unknown): v is Rates {
-  return isRecord(v) && Object.values(v).every((n) => typeof n === 'number');
+  return isRecord(v) && Object.values(v).every((n) => typeof n === "number");
 }
 
 function isECBResponse(
-  data: unknown
+  data: unknown,
 ): data is { base: string; rates: Rates; date: string } {
   return (
     isRecord(data) &&
-    typeof data.base === 'string' &&
+    typeof data.base === "string" &&
     isRates((data as { rates?: unknown }).rates) &&
-    typeof (data as { date?: unknown }).date === 'string'
+    typeof (data as { date?: unknown }).date === "string"
   );
 }
 
 function isExchangeRateAPIResponse(
-  data: unknown
+  data: unknown,
 ): data is { base: string; rates: Rates } {
   return (
     isRecord(data) &&
-    typeof (data as { base?: unknown }).base === 'string' &&
+    typeof (data as { base?: unknown }).base === "string" &&
     isRates((data as { rates?: unknown }).rates)
   );
 }
@@ -62,14 +71,14 @@ function isExchangeRateAPIResponse(
 // Default FX sources (free tier APIs)
 const DEFAULT_SOURCES: FXSource[] = [
   {
-    name: 'ECB',
-    endpoint: 'https://api.frankfurter.app/latest',
+    name: "ECB",
+    endpoint: "https://api.frankfurter.app/latest",
     priority: 1,
     rateLimit: 100,
   },
   {
-    name: 'ExchangeRate-API',
-    endpoint: 'https://api.exchangerate-api.com/v4/latest',
+    name: "ExchangeRate-API",
+    endpoint: "https://api.exchangerate-api.com/v4/latest",
     priority: 2,
     rateLimit: 1500,
   },
@@ -82,8 +91,8 @@ const rateCache = new Map<string, { data: FXRateResponse; expires: number }>();
  * Fetch live FX rates from multiple sources
  */
 export async function fetchLiveFXRates(
-  base = 'USD',
-  options: LiveFXOptions = {}
+  base = "USD",
+  options: LiveFXOptions = {},
 ): Promise<FXTable> {
   const {
     sources = DEFAULT_SOURCES,
@@ -124,11 +133,11 @@ export async function fetchLiveFXRates(
 
   // Use fallback if all sources fail
   if (fallback) {
-    console.warn('All FX sources failed, using fallback rates');
+    console.warn("All FX sources failed, using fallback rates");
     return fallback;
   }
 
-  throw new Error('Unable to fetch FX rates from any source');
+  throw new Error("Unable to fetch FX rates from any source");
 }
 
 /**
@@ -138,7 +147,7 @@ async function fetchFromSource(
   source: FXSource,
   base: string,
   timeout: number,
-  maxRetries: number
+  maxRetries: number,
 ): Promise<FXRateResponse> {
   let lastError: Error | null = null;
 
@@ -150,7 +159,7 @@ async function fetchFromSource(
       const url = `${source.endpoint}/${base}`;
       const response = await fetch(url, {
         signal: controller.signal,
-        headers: source.apiKey ? { 'X-API-Key': source.apiKey } : {},
+        headers: source.apiKey ? { "X-API-Key": source.apiKey } : {},
       });
 
       clearTimeout(timeoutId);
@@ -175,7 +184,7 @@ async function fetchFromSource(
     }
   }
 
-  throw lastError || new Error('Failed to fetch from source');
+  throw lastError || new Error("Failed to fetch from source");
 }
 
 /**
@@ -183,56 +192,52 @@ async function fetchFromSource(
  */
 function parseSourceResponse(
   sourceName: string,
-  data: unknown
+  data: unknown,
 ): FXRateResponse {
   switch (sourceName) {
-    case 'ECB': {
-      if (!isECBResponse(data)) throw new Error('Invalid ECB response format');
+    case "ECB": {
+      if (!isECBResponse(data)) throw new Error("Invalid ECB response format");
       return {
         base: data.base,
         rates: data.rates,
         timestamp: new Date(data.date),
-        source: 'ECB',
+        source: "ECB",
       };
     }
 
-    case 'ExchangeRate-API': {
+    case "ExchangeRate-API": {
       if (!isExchangeRateAPIResponse(data)) {
-        throw new Error('Invalid ExchangeRate-API response format');
+        throw new Error("Invalid ExchangeRate-API response format");
       }
       return {
         base: data.base,
         rates: data.rates,
         timestamp: new Date(),
-        source: 'ExchangeRate-API',
+        source: "ExchangeRate-API",
       };
     }
 
     default: {
-      if (!isRecord(data)) throw new Error('Invalid FX response');
+      if (!isRecord(data)) throw new Error("Invalid FX response");
 
-      const base =
-        (typeof (data as { base?: unknown }).base === 'string' &&
-          (data as { base: string }).base) ||
-        (typeof (data as { base_code?: unknown }).base_code === 'string' &&
+      const base = (typeof (data as { base?: unknown }).base === "string" &&
+        (data as { base: string }).base) ||
+        (typeof (data as { base_code?: unknown }).base_code === "string" &&
           (data as { base_code: string }).base_code);
 
-      const rates =
-        (isRates((data as { rates?: unknown }).rates) &&
-          (data as { rates: Rates }).rates) ||
+      const rates = (isRates((data as { rates?: unknown }).rates) &&
+        (data as { rates: Rates }).rates) ||
         (isRates((data as { conversion_rates?: unknown }).conversion_rates) &&
           (data as { conversion_rates: Rates }).conversion_rates);
 
-      const tsRaw =
-        (data as { timestamp?: unknown }).timestamp ??
+      const tsRaw = (data as { timestamp?: unknown }).timestamp ??
         (data as { date?: unknown }).date;
 
-      if (!base || !rates) throw new Error('Missing base or rates');
+      if (!base || !rates) throw new Error("Missing base or rates");
 
-      const timestamp =
-        typeof tsRaw === 'string' || typeof tsRaw === 'number'
-          ? new Date(tsRaw)
-          : new Date();
+      const timestamp = typeof tsRaw === "string" || typeof tsRaw === "number"
+        ? new Date(tsRaw)
+        : new Date();
 
       return { base, rates, timestamp, source: sourceName };
     }
@@ -276,8 +281,8 @@ export function clearExpiredCache(): void {
  * Get available currencies from live sources
  */
 export async function getAvailableCurrencies(
-  options: LiveFXOptions = {}
+  options: LiveFXOptions = {},
 ): Promise<string[]> {
-  const fx = await fetchLiveFXRates('USD', options);
-  return ['USD', ...Object.keys(fx.rates)].sort();
+  const fx = await fetchLiveFXRates("USD", options);
+  return ["USD", ...Object.keys(fx.rates)].sort();
 }

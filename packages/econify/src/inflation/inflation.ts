@@ -71,7 +71,7 @@ const CPI_DATA: Record<string, Record<number, number>> = {
     2022: 102.3,
     2023: 105.7,
     2024: 108.2,
-  }
+  },
 };
 
 // Currency to country mapping
@@ -88,13 +88,13 @@ const CURRENCY_COUNTRY_MAP: Record<string, string> = {
  */
 export function adjustForInflation(
   value: number,
-  options: InflationOptions & { unit?: string }
+  options: InflationOptions & { unit?: string },
 ): number {
   const {
     fromYear,
     toYear,
     country = inferCountry(options.unit),
-    method = "cpi"
+    method = "cpi",
   } = options;
 
   if (!country) {
@@ -115,10 +115,10 @@ function adjustWithCPI(
   value: number,
   fromYear: number,
   toYear: number,
-  country: string
+  country: string,
 ): number {
   const cpiData = CPI_DATA[country];
-  
+
   if (!cpiData) {
     throw new Error(`No CPI data available for ${country}`);
   }
@@ -155,10 +155,10 @@ export function getInflationRate(
   fromYear: number,
   toYear: number,
   country: string,
-  annualized = true
+  annualized = true,
 ): number {
   const cpiData = CPI_DATA[country];
-  
+
   if (!cpiData) {
     throw new Error(`No CPI data available for ${country}`);
   }
@@ -187,7 +187,7 @@ export function nominalToReal(
   nominalValue: number,
   year: number,
   baseYear: number,
-  country: string
+  country: string,
 ): number {
   return adjustWithCPI(nominalValue, year, baseYear, country);
 }
@@ -199,7 +199,7 @@ export function realToNominal(
   realValue: number,
   baseYear: number,
   targetYear: number,
-  country: string
+  country: string,
 ): number {
   return adjustWithCPI(realValue, baseYear, targetYear, country);
 }
@@ -209,7 +209,7 @@ export function realToNominal(
  */
 export function realGrowthRate(
   nominalGrowth: number,
-  inflationRate: number
+  inflationRate: number,
 ): number {
   // Fisher equation: (1 + nominal) = (1 + real) * (1 + inflation)
   return ((1 + nominalGrowth / 100) / (1 + inflationRate / 100) - 1) * 100;
@@ -221,11 +221,11 @@ export function realGrowthRate(
 export function adjustTimeSeriesForInflation(
   series: Array<{ year: number; value: number }>,
   baseYear: number,
-  country: string
+  country: string,
 ): Array<{ year: number; value: number; real_value: number }> {
-  return series.map(point => ({
+  return series.map((point) => ({
     ...point,
-    real_value: adjustWithCPI(point.value, point.year, baseYear, country)
+    real_value: adjustWithCPI(point.value, point.year, baseYear, country),
   }));
 }
 
@@ -236,14 +236,16 @@ export function adjustForPPP(
   value: number,
   fromCountry: string,
   toCountry: string,
-  year: number
+  year: number,
 ): number {
   // Simplified PPP adjustment using relative CPI levels
   const fromCPI = CPI_DATA[fromCountry]?.[year];
   const toCPI = CPI_DATA[toCountry]?.[year];
 
   if (!fromCPI || !toCPI) {
-    throw new Error(`PPP data not available for ${fromCountry}-${toCountry} in ${year}`);
+    throw new Error(
+      `PPP data not available for ${fromCountry}-${toCountry} in ${year}`,
+    );
   }
 
   // This is a simplified approximation

@@ -6,6 +6,7 @@ import { parseUnit } from "../units/units.ts";
 import { classifyIndicator } from "../classification/classification.ts";
 import type { IndicatorType } from "../types.ts";
 
+/** Input data point for quality checks. */
 export interface DataPoint {
   value: number;
   unit: string;
@@ -15,8 +16,9 @@ export interface DataPoint {
   metadata?: Record<string, any>;
 }
 
+/** Aggregated data quality score and breakdown. */
 export interface QualityScore {
-  overall: number;  // 0-100
+  overall: number; // 0-100
   dimensions: {
     completeness: number;
     consistency: number;
@@ -29,6 +31,7 @@ export interface QualityScore {
   recommendations: string[];
 }
 
+/** Issue found during quality checks. */
 export interface QualityIssue {
   severity: "critical" | "warning" | "info";
   type: string;
@@ -36,6 +39,7 @@ export interface QualityIssue {
   affectedData?: any;
 }
 
+/** Options toggling specific quality dimensions and rules. */
 export interface QualityOptions {
   checkOutliers?: boolean;
   outlierMethod?: "iqr" | "zscore" | "isolation";
@@ -45,6 +49,7 @@ export interface QualityOptions {
   customRules?: QualityRule[];
 }
 
+/** Optional expected schema used by quality checks. */
 export interface DataSchema {
   requiredFields?: string[];
   valueRange?: { min?: number; max?: number };
@@ -52,6 +57,7 @@ export interface DataSchema {
   allowedTypes?: IndicatorType[];
 }
 
+/** Custom rule definition for assessDataQuality. */
 export interface QualityRule {
   name: string;
   check: (data: DataPoint) => boolean;
@@ -64,7 +70,7 @@ export interface QualityRule {
  */
 export function assessDataQuality(
   data: DataPoint | DataPoint[],
-  options: QualityOptions = {}
+  options: QualityOptions = {},
 ): QualityScore {
   const dataArray = Array.isArray(data) ? data : [data];
   const issues: QualityIssue[] = [];
@@ -77,12 +83,15 @@ export function assessDataQuality(
     validity: 100,
     accuracy: 100,
     timeliness: 100,
-    uniqueness: 100
+    uniqueness: 100,
   };
 
   // 1. Completeness checks
   if (options.checkCompleteness !== false) {
-    const completenessResult = checkCompleteness(dataArray, options.expectedSchema);
+    const completenessResult = checkCompleteness(
+      dataArray,
+      options.expectedSchema,
+    );
     dimensions.completeness = completenessResult.score;
     issues.push(...completenessResult.issues);
   }
@@ -101,13 +110,16 @@ export function assessDataQuality(
 
   // 4. Accuracy checks (outlier detection)
   if (options.checkOutliers !== false && dataArray.length > 2) {
-    const outlierResult = detectOutliers(dataArray, options.outlierMethod || "iqr");
+    const outlierResult = detectOutliers(
+      dataArray,
+      options.outlierMethod || "iqr",
+    );
     dimensions.accuracy = outlierResult.score;
     issues.push(...outlierResult.issues);
   }
 
   // 5. Timeliness checks
-  if (dataArray.some(d => d.timestamp)) {
+  if (dataArray.some((d) => d.timestamp)) {
     const timelinessResult = checkTimeliness(dataArray);
     dimensions.timeliness = timelinessResult.score;
     issues.push(...timelinessResult.issues);
@@ -127,7 +139,7 @@ export function assessDataQuality(
             severity: rule.severity,
             type: `custom_${rule.name}`,
             message: rule.message,
-            affectedData: point
+            affectedData: point,
           });
         }
       }
@@ -144,7 +156,7 @@ export function assessDataQuality(
     overall,
     dimensions,
     issues,
-    recommendations
+    recommendations,
   };
 }
 
@@ -153,19 +165,23 @@ export function assessDataQuality(
  */
 function checkCompleteness(
   data: DataPoint[],
-  schema?: DataSchema
+  schema?: DataSchema,
 ): { score: number; issues: QualityIssue[] } {
   const issues: QualityIssue[] = [];
   let missingCount = 0;
 
   for (const point of data) {
     // Check for missing values
-    if (point.value === null || point.value === undefined || isNaN(point.value)) {
+    if (
+      point.value === null ||
+      point.value === undefined ||
+      isNaN(point.value)
+    ) {
       issues.push({
         severity: "critical",
         type: "missing_value",
         message: "Missing or invalid value",
-        affectedData: point
+        affectedData: point,
       });
       missingCount++;
     }
@@ -176,7 +192,7 @@ function checkCompleteness(
         severity: "warning",
         type: "missing_unit",
         message: "Missing or unknown unit",
-        affectedData: point
+        affectedData: point,
       });
       missingCount++;
     }
@@ -189,7 +205,7 @@ function checkCompleteness(
             severity: "warning",
             type: "missing_field",
             message: `Missing required field: ${field}`,
-            affectedData: point
+            affectedData: point,
           });
           missingCount++;
         }
@@ -206,7 +222,7 @@ function checkCompleteness(
  */
 function checkValidity(
   data: DataPoint[],
-  schema?: DataSchema
+  schema?: DataSchema,
 ): { score: number; issues: QualityIssue[] } {
   const issues: QualityIssue[] = [];
   let invalidCount = 0;
@@ -220,7 +236,7 @@ function checkValidity(
           severity: "warning",
           type: "value_out_of_range",
           message: `Value ${point.value} below minimum ${min}`,
-          affectedData: point
+          affectedData: point,
         });
         invalidCount++;
       }
@@ -229,7 +245,7 @@ function checkValidity(
           severity: "warning",
           type: "value_out_of_range",
           message: `Value ${point.value} above maximum ${max}`,
-          affectedData: point
+          affectedData: point,
         });
         invalidCount++;
       }
@@ -242,7 +258,7 @@ function checkValidity(
         severity: "warning",
         type: "invalid_unit",
         message: `Unrecognized unit: ${point.unit}`,
-        affectedData: point
+        affectedData: point,
       });
       invalidCount++;
     }
@@ -253,7 +269,7 @@ function checkValidity(
         severity: "warning",
         type: "unexpected_unit",
         message: `Unit "${point.unit}" not in allowed list`,
-        affectedData: point
+        affectedData: point,
       });
       invalidCount++;
     }
@@ -264,7 +280,7 @@ function checkValidity(
         severity: "warning",
         type: "suspicious_percentage",
         message: `Percentage value ${point.value} seems unusually large`,
-        affectedData: point
+        affectedData: point,
       });
       invalidCount++;
     }
@@ -277,26 +293,28 @@ function checkValidity(
 /**
  * Check data consistency
  */
-function checkConsistency(
-  data: DataPoint[]
-): { score: number; issues: QualityIssue[] } {
+function checkConsistency(data: DataPoint[]): {
+  score: number;
+  issues: QualityIssue[];
+} {
   const issues: QualityIssue[] = [];
-  
+
   // Check unit consistency
-  const units = new Set(data.map(d => d.unit));
+  const units = new Set(data.map((d) => d.unit));
   if (units.size > 1) {
     issues.push({
       severity: "warning",
       type: "inconsistent_units",
       message: `Multiple units found: ${Array.from(units).join(", ")}`,
-      affectedData: data
+      affectedData: data,
     });
   }
 
   // Check value consistency (coefficient of variation)
-  const values = data.map(d => d.value);
+  const values = data.map((d) => d.value);
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+  const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) /
+    values.length;
   const cv = Math.sqrt(variance) / Math.abs(mean);
 
   if (cv > 2) {
@@ -304,18 +322,18 @@ function checkConsistency(
       severity: "info",
       type: "high_variability",
       message: `High coefficient of variation: ${cv.toFixed(2)}`,
-      affectedData: data
+      affectedData: data,
     });
   }
 
   // Check sign consistency
-  const signs = new Set(values.map(v => Math.sign(v)));
+  const signs = new Set(values.map((v) => Math.sign(v)));
   if (signs.size > 1 && !signs.has(0)) {
     issues.push({
       severity: "warning",
       type: "sign_changes",
       message: "Values change sign (positive/negative)",
-      affectedData: data
+      affectedData: data,
     });
   }
 
@@ -328,10 +346,10 @@ function checkConsistency(
  */
 function detectOutliers(
   data: DataPoint[],
-  method: "iqr" | "zscore" | "isolation"
+  method: "iqr" | "zscore" | "isolation",
 ): { score: number; issues: QualityIssue[] } {
   const issues: QualityIssue[] = [];
-  const values = data.map(d => d.value);
+  const values = data.map((d) => d.value);
   let outlierIndices: number[] = [];
 
   switch (method) {
@@ -350,7 +368,7 @@ function detectOutliers(
       severity: "warning",
       type: "outlier",
       message: `Potential outlier detected: ${values[idx]}`,
-      affectedData: data[idx]
+      affectedData: data[idx],
     });
   }
 
@@ -370,8 +388,8 @@ function detectOutliersIQR(values: number[]): number[] {
   const upper = q3 + 1.5 * iqr;
 
   return values
-    .map((v, i) => (v < lower || v > upper) ? i : -1)
-    .filter(i => i >= 0);
+    .map((v, i) => (v < lower || v > upper ? i : -1))
+    .filter((i) => i >= 0);
 }
 
 /**
@@ -380,20 +398,21 @@ function detectOutliersIQR(values: number[]): number[] {
 function detectOutliersZScore(values: number[], threshold = 3): number[] {
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
   const std = Math.sqrt(
-    values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length
+    values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length,
   );
 
   return values
-    .map((v, i) => Math.abs((v - mean) / std) > threshold ? i : -1)
-    .filter(i => i >= 0);
+    .map((v, i) => (Math.abs((v - mean) / std) > threshold ? i : -1))
+    .filter((i) => i >= 0);
 }
 
 /**
  * Check timeliness
  */
-function checkTimeliness(
-  data: DataPoint[]
-): { score: number; issues: QualityIssue[] } {
+function checkTimeliness(data: DataPoint[]): {
+  score: number;
+  issues: QualityIssue[];
+} {
   const issues: QualityIssue[] = [];
   const now = new Date();
   let staleCount = 0;
@@ -409,7 +428,7 @@ function checkTimeliness(
         severity: "warning",
         type: "stale_data",
         message: `Data is ${Math.floor(days)} days old`,
-        affectedData: point
+        affectedData: point,
       });
       staleCount++;
     } else if (days > 90) {
@@ -417,7 +436,7 @@ function checkTimeliness(
         severity: "info",
         type: "aging_data",
         message: `Data is ${Math.floor(days)} days old`,
-        affectedData: point
+        affectedData: point,
       });
     }
   }
@@ -429,21 +448,23 @@ function checkTimeliness(
 /**
  * Check uniqueness
  */
-function checkUniqueness(
-  data: DataPoint[]
-): { score: number; issues: QualityIssue[] } {
+function checkUniqueness(data: DataPoint[]): {
+  score: number;
+  issues: QualityIssue[];
+} {
   const issues: QualityIssue[] = [];
   const seen = new Set<string>();
   let duplicates = 0;
 
   for (const point of data) {
-    const key = `${point.value}_${point.unit}_${point.timestamp?.toISOString()}`;
+    const key =
+      `${point.value}_${point.unit}_${point.timestamp?.toISOString()}`;
     if (seen.has(key)) {
       issues.push({
         severity: "warning",
         type: "duplicate",
         message: "Duplicate data point detected",
-        affectedData: point
+        affectedData: point,
       });
       duplicates++;
     }
@@ -463,8 +484,8 @@ function calculateOverallScore(dimensions: QualityScore["dimensions"]): number {
     consistency: 0.15,
     validity: 0.25,
     accuracy: 0.15,
-    timeliness: 0.10,
-    uniqueness: 0.10
+    timeliness: 0.1,
+    uniqueness: 0.1,
   };
 
   let weighted = 0;
@@ -484,14 +505,16 @@ function calculateOverallScore(dimensions: QualityScore["dimensions"]): number {
  */
 function generateRecommendations(
   issues: QualityIssue[],
-  dimensions: QualityScore["dimensions"]
+  dimensions: QualityScore["dimensions"],
 ): string[] {
   const recommendations: string[] = [];
 
   // Check for critical issues
-  const criticalCount = issues.filter(i => i.severity === "critical").length;
+  const criticalCount = issues.filter((i) => i.severity === "critical").length;
   if (criticalCount > 0) {
-    recommendations.push(`Address ${criticalCount} critical data quality issues immediately`);
+    recommendations.push(
+      `Address ${criticalCount} critical data quality issues immediately`,
+    );
   }
 
   // Dimension-specific recommendations
@@ -520,14 +543,18 @@ function generateRecommendations(
   }
 
   // Issue-specific recommendations
-  const issueTypes = new Set(issues.map(i => i.type));
-  
+  const issueTypes = new Set(issues.map((i) => i.type));
+
   if (issueTypes.has("invalid_unit")) {
-    recommendations.push("Standardize unit formats using the parseUnit function");
+    recommendations.push(
+      "Standardize unit formats using the parseUnit function",
+    );
   }
 
   if (issueTypes.has("outlier")) {
-    recommendations.push("Investigate outliers - they may be data errors or significant events");
+    recommendations.push(
+      "Investigate outliers - they may be data errors or significant events",
+    );
   }
 
   return recommendations;

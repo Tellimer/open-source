@@ -164,12 +164,12 @@ export async function processEconomicData(
 }
 
 /**
- * Process economic data with automatic quality review handling
- * Will automatically continue if quality is below threshold
+ * Process economic data with automatic quality review handling.
+ * Automatically continues past quality review if below threshold.
  *
- * @param data - Array of economic data points to process
- * @param options - Pipeline configuration
- * @returns Promise<PipelineResult> - Processed data with metadata
+ * @param data Array of economic data points to process
+ * @param options Pipeline configuration and optional callbacks
+ * @returns Processed data, warnings/errors, and timing/quality metrics
  */
 export async function processEconomicDataAuto(
   data: ParsedData[],
@@ -249,12 +249,12 @@ export async function processEconomicDataAuto(
 }
 
 /**
- * Validate data without processing
- * Useful for checking data quality before processing
+ * Validate data without processing (pre-flight check).
+ * Useful to compute a quick quality score and list of issues.
  *
- * @param data - Array of economic data points to validate
- * @param options - Validation options
- * @returns Promise<{valid: boolean, score: number, issues: string[]}>
+ * @param data Array of economic data points to validate
+ * @param options Validation options (e.g. required fields)
+ * @returns Validation result with boolean validity, score, and issues
  */
 export async function validateEconomicData(
   data: ParsedData[],

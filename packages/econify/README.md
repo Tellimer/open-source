@@ -1,25 +1,39 @@
 <p align="center">
-  <img src="../../assets/tellimer-logo.avif" alt="Tellimer" />
+  <img src="./assets/tellimer-logo.avif" width="500" alt="Tellimer" />
 </p>
 
 # econify
 
-A comprehensive Deno/TypeScript package for **economic data processing** with advanced features for classification, normalization, quality assessment, and analysis. Perfect for financial institutions, economic research, data pipelines, and quantitative analysis.
+A comprehensive Deno/TypeScript package for **economic data processing** with
+advanced features for classification, normalization, quality assessment, and
+analysis. Perfect for financial institutions, economic research, data pipelines,
+and quantitative analysis.
 
 ## ✨ Features
 
 ### Core Capabilities
-- 🔍 **Smart Classification** — Automatically detect whether an indicator is a stock, flow, rate, or currency
-- 🌍 **150+ Currency Support** — Convert values between currencies using FX tables (USD, EUR, GBP, JPY, NGN, KES, and more)
-- 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions, millions, and thousands
-- ⏱️ **Time Normalization** — Transform flows across time periods (annual ↔ quarterly ↔ monthly ↔ daily)
-- 🔧 **Unit Parsing Engine** — Parse and understand 200+ economic unit formats from real-world data
-- 🎯 **Composite Unit Handling** — Handle complex units like "USD Million per quarter" or "KRW/Hour"
+
+- 🔍 **Smart Classification** — Automatically detect whether an indicator is a
+  stock, flow, rate, or currency
+- 🌍 **150+ Currency Support** — Convert values between currencies using FX
+  tables (USD, EUR, GBP, JPY, NGN, KES, and more)
+- 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions,
+  millions, and thousands
+- ⏱️ **Time Normalization** — Transform flows across time periods (annual ↔
+  quarterly ↔ monthly ↔ daily)
+- 🔧 **Unit Parsing Engine** — Parse and understand 200+ economic unit formats
+  from real-world data
+- 🎯 **Composite Unit Handling** — Handle complex units like "USD Million per
+  quarter" or "KRW/Hour"
 
 ### Advanced Features
-- 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity for external consumers
-- 💱 **Live FX Rates** — Fetch real-time exchange rates from multiple sources with fallback
-- 📈 **Historical Analysis** — Time-series normalization with historical FX rates
+
+- 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity
+  for external consumers
+- 💱 **Live FX Rates** — Fetch real-time exchange rates from multiple sources
+  with fallback
+- 📈 **Historical Analysis** — Time-series normalization with historical FX
+  rates
 - 💰 **Inflation Adjustment** — Adjust values for inflation using CPI data
 - 🧠 **Smart Unit Inference** — Automatically detect units from context
 - 🏆 **Data Quality Scoring** — Assess data quality across 6 dimensions
@@ -40,11 +54,11 @@ deno add jsr:@tellimer/econify
 Or import directly:
 
 ```ts
-import { 
+import {
+  normalizeValue,
+  parseUnit,
   processEconomicData,
   validateEconomicData,
-  parseUnit, 
-  normalizeValue
 } from "jsr:@tellimer/econify";
 ```
 
@@ -52,30 +66,31 @@ import {
 
 ### Economic Data Pipeline (Primary Use Case)
 
-Process economic data through a complete pipeline with validation, quality checks, FX conversion, and normalization - all with a simple API:
+Process economic data through a complete pipeline with validation, quality
+checks, FX conversion, and normalization - all with a simple API:
 
 ```ts
 import { processEconomicData } from "jsr:@tellimer/econify";
 
 // Your economic data
 const economicData = [
-  { value: 100, unit: 'USD Million', name: 'Q1 Revenue' },
-  { value: 110, unit: 'USD Million', name: 'Q2 Revenue' },
-  { value: 16500, unit: 'EUR Billion', name: 'EU GDP' },
-  { value: 3.5, unit: 'percent', name: 'Inflation Rate' },
+  { value: 100, unit: "USD Million", name: "Q1 Revenue" },
+  { value: 110, unit: "USD Million", name: "Q2 Revenue" },
+  { value: 16500, unit: "EUR Billion", name: "EU GDP" },
+  { value: 3.5, unit: "percent", name: "Inflation Rate" },
 ];
 
 // Process the data
 const result = await processEconomicData(economicData, {
   // Convert everything to EUR billions
-  targetCurrency: 'EUR',
-  targetMagnitude: 'billions',
-  
+  targetCurrency: "EUR",
+  targetMagnitude: "billions",
+
   // Provide exchange rates
   fxFallback: {
-    base: 'USD',
-    rates: { EUR: 0.92 }
-  }
+    base: "USD",
+    rates: { EUR: 0.92 },
+  },
 });
 
 // Use the results
@@ -83,7 +98,7 @@ console.log(`✅ Processed ${result.data.length} indicators`);
 console.log(`📊 Quality score: ${result.metrics.qualityScore}/100`);
 console.log(`⏱️ Time: ${result.metrics.processingTime}ms\n`);
 
-result.data.forEach(item => {
+result.data.forEach((item) => {
   const value = (item.normalized || item.value).toFixed(2);
   const unit = item.normalizedUnit || item.unit;
   console.log(`${item.name}: ${value} ${unit}`);
@@ -96,14 +111,14 @@ Monitor pipeline progress for better UX in applications:
 
 ```ts
 const data = [
-  { value: 27360, unit: 'USD Billion', name: 'US GDP', year: 2023 },
-  { value: 16500, unit: 'EUR Billion', name: 'EU GDP', year: 2023 },
-  { value: 593, unit: 'JPY Trillion', name: 'Japan GDP', year: 2023 },
+  { value: 27360, unit: "USD Billion", name: "US GDP", year: 2023 },
+  { value: 16500, unit: "EUR Billion", name: "EU GDP", year: 2023 },
+  { value: 593, unit: "JPY Trillion", name: "Japan GDP", year: 2023 },
 ];
 
 const result = await processEconomicData(data, {
-  targetCurrency: 'USD',
-  targetMagnitude: 'trillions',
+  targetCurrency: "USD",
+  targetMagnitude: "trillions",
   onProgress: (step, progress) => {
     console.log(`  ${progress}% - ${step}`);
   },
@@ -111,9 +126,9 @@ const result = await processEconomicData(data, {
     console.log(`  ⚠️ Warning: ${warning}`);
   },
   fxFallback: {
-    base: 'USD',
-    rates: { EUR: 0.92, JPY: 150 }
-  }
+    base: "USD",
+    rates: { EUR: 0.92, JPY: 150 },
+  },
 });
 
 console.log(`\n✅ Complete! Processed ${result.data.length} items\n`);
@@ -124,10 +139,13 @@ console.log(`\n✅ Complete! Processed ${result.data.length} items\n`);
 Check data quality before processing to catch issues early:
 
 ```ts
-import { validateEconomicData, processEconomicData } from "jsr:@tellimer/econify";
+import {
+  processEconomicData,
+  validateEconomicData,
+} from "jsr:@tellimer/econify";
 
 const data = [
-  { value: 100, unit: 'USD', name: 'Valid Data' }
+  { value: 100, unit: "USD", name: "Valid Data" },
 ];
 
 // Validate first
@@ -137,7 +155,7 @@ console.log(`Score: ${validation.score}/100`);
 
 // Only process if valid
 if (validation.valid) {
-  console.log('✅ Data is valid, processing...');
+  console.log("✅ Data is valid, processing...");
   const result = await processEconomicData(data);
   console.log(`Processed ${result.data.length} items`);
 }
@@ -152,21 +170,21 @@ import { processEconomicDataAuto } from "jsr:@tellimer/econify";
 
 // Data with quality issues (outliers)
 const data = [
-  { value: 100, unit: 'USD Million', name: 'Normal Value' },
-  { value: 999999999, unit: 'USD Million', name: 'Outlier Value' },
-  { value: -50, unit: 'USD Million', name: 'Negative Value' },
+  { value: 100, unit: "USD Million", name: "Normal Value" },
+  { value: 999999999, unit: "USD Million", name: "Outlier Value" },
+  { value: -50, unit: "USD Million", name: "Negative Value" },
 ];
 
 const result = await processEconomicDataAuto(data, {
   minQualityScore: 90, // High threshold
-  targetCurrency: 'EUR',
+  targetCurrency: "EUR",
   onWarning: (warning) => {
     console.log(`  ⚠️ ${warning}`);
   },
   fxFallback: {
-    base: 'USD',
-    rates: { EUR: 0.92 }
-  }
+    base: "USD",
+    rates: { EUR: 0.92 },
+  },
 });
 
 console.log(`✅ Processed despite quality issues`);
@@ -183,44 +201,62 @@ Complete example showing API integration and data processing:
 const fetchEconomicData = async () => {
   // In reality, this would be an API call
   return [
-    { id: 'gdp_us', value: 27360, unit: 'USD Billion', name: 'US GDP', year: 2023 },
-    { id: 'gdp_china', value: 17900, unit: 'USD Billion', name: 'China GDP', year: 2023 },
-    { id: 'inflation_us', value: 3.4, unit: 'percent', name: 'US Inflation', year: 2023 },
+    {
+      id: "gdp_us",
+      value: 27360,
+      unit: "USD Billion",
+      name: "US GDP",
+      year: 2023,
+    },
+    {
+      id: "gdp_china",
+      value: 17900,
+      unit: "USD Billion",
+      name: "China GDP",
+      year: 2023,
+    },
+    {
+      id: "inflation_us",
+      value: 3.4,
+      unit: "percent",
+      name: "US Inflation",
+      year: 2023,
+    },
   ];
 };
 
-console.log('Fetching economic data...');
+console.log("Fetching economic data...");
 const rawData = await fetchEconomicData();
 
 // Validate first
 const validation = await validateEconomicData(rawData);
 if (!validation.valid) {
-  console.error('❌ Data validation failed:', validation.issues);
+  console.error("❌ Data validation failed:", validation.issues);
   return;
 }
 
-console.log('✅ Data validated, processing...\n');
+console.log("✅ Data validated, processing...\n");
 
 // Process with progress tracking
 const result = await processEconomicData(rawData, {
-  targetCurrency: 'EUR',
-  targetMagnitude: 'trillions',
+  targetCurrency: "EUR",
+  targetMagnitude: "trillions",
   inferUnits: true,
   onProgress: (step, progress) => {
     // Update UI progress bar
-    const bar = '█'.repeat(Math.floor(progress / 10)).padEnd(10, '░');
+    const bar = "█".repeat(Math.floor(progress / 10)).padEnd(10, "░");
     console.log(`  [${bar}] ${progress}% - ${step}`);
   },
   fxFallback: {
-    base: 'USD',
-    rates: { EUR: 0.92 }
-  }
+    base: "USD",
+    rates: { EUR: 0.92 },
+  },
 });
 
 // Display results
-console.log('\n📊 Results:');
-const gdpData = result.data.filter(d => d.name?.includes('GDP'));
-gdpData.forEach(item => {
+console.log("\n📊 Results:");
+const gdpData = result.data.filter((d) => d.name?.includes("GDP"));
+gdpData.forEach((item) => {
   const value = item.normalized || item.value;
   console.log(`  ${item.name}: €${value.toFixed(3)}T`);
 });
@@ -234,20 +270,20 @@ gdpData.forEach(item => {
 // Process economic data through the complete pipeline
 async function processEconomicData(
   data: ParsedData[],
-  options?: PipelineOptions
-): Promise<PipelineResult>
+  options?: PipelineOptions,
+): Promise<PipelineResult>;
 
 // Process with automatic quality review handling
 async function processEconomicDataAuto(
   data: ParsedData[],
-  options?: PipelineOptions  
-): Promise<PipelineResult>
+  options?: PipelineOptions,
+): Promise<PipelineResult>;
 
 // Validate data without processing
 async function validateEconomicData(
   data: ParsedData[],
-  options?: { requiredFields?: string[] }
-): Promise<ValidationResult>
+  options?: { requiredFields?: string[] },
+): Promise<ValidationResult>;
 ```
 
 ### Types
@@ -256,19 +292,24 @@ async function validateEconomicData(
 interface PipelineOptions {
   // Normalization targets
   targetCurrency?: string;
-  targetMagnitude?: 'ones' | 'thousands' | 'millions' | 'billions' | 'trillions';
-  targetTimeScale?: 'year' | 'quarter' | 'month' | 'week' | 'day' | 'hour';
-  
+  targetMagnitude?:
+    | "ones"
+    | "thousands"
+    | "millions"
+    | "billions"
+    | "trillions";
+  targetTimeScale?: "year" | "quarter" | "month" | "week" | "day" | "hour";
+
   // Quality control
   minQualityScore?: number; // 0-100, default 70
   inferUnits?: boolean;
-  
+
   // FX rates
   fxFallback?: {
     base: string;
     rates: Record<string, number>;
   };
-  
+
   // Callbacks
   onProgress?: (step: string, progress: number) => void;
   onWarning?: (warning: string) => void;
@@ -305,29 +346,29 @@ interface ParsedData {
 Parse and understand virtually any economic unit format:
 
 ```ts
-import { 
-  parseUnit,
-  isMonetaryUnit,
-  isPercentageUnit,
+import {
   extractCurrency,
   extractScale,
-  extractTimeScale
+  extractTimeScale,
+  isMonetaryUnit,
+  isPercentageUnit,
+  parseUnit,
 } from "jsr:@tellimer/econify";
 
 // Parse complex units
-parseUnit("NGN Billion per quarter");  // Nigerian Naira, billions, quarterly
-parseUnit("percent of GDP");           // Percentage type
-parseUnit("BBL/D/1K");                 // Oil barrels per day
-parseUnit("KRW/Hour");                 // Korean Won per hour (wages)
+parseUnit("NGN Billion per quarter"); // Nigerian Naira, billions, quarterly
+parseUnit("percent of GDP"); // Percentage type
+parseUnit("BBL/D/1K"); // Oil barrels per day
+parseUnit("KRW/Hour"); // Korean Won per hour (wages)
 
 // Check unit types
-isMonetaryUnit("USD Million");         // true
-isPercentageUnit("basis points");      // true
+isMonetaryUnit("USD Million"); // true
+isPercentageUnit("basis points"); // true
 
 // Extract components
-extractCurrency("KES Billion");        // "KES"
-extractScale("EUR Million");           // "millions"
-extractTimeScale("USD/month");         // "month"
+extractCurrency("KES Billion"); // "KES"
+extractScale("EUR Million"); // "millions"
+extractTimeScale("USD/month"); // "month"
 ```
 
 ### Classification System
@@ -337,9 +378,9 @@ Identify economic indicator types with confidence scores:
 ```ts
 import { classifyIndicator } from "jsr:@tellimer/econify";
 
-const result = classifyIndicator({ 
+const result = classifyIndicator({
   name: "Government debt",
-  unit: "USD bn"
+  unit: "USD bn",
 });
 // {
 //   type: "stock",
@@ -356,13 +397,13 @@ Convert between 150+ currencies:
 ```ts
 import { normalizeCurrencyValue } from "jsr:@tellimer/econify";
 
-const fx: FXTable = { 
-  base: "EUR", 
-  rates: { USD: 1.1, GBP: 0.85, NGN: 1650 } 
+const fx: FXTable = {
+  base: "EUR",
+  rates: { USD: 1.1, GBP: 0.85, NGN: 1650 },
 };
 
-normalizeCurrencyValue(1000, "EUR", "USD", fx);  // 1100
-normalizeCurrencyValue(1000, "NGN", "USD", fx);  // ~0.67
+normalizeCurrencyValue(1000, "EUR", "USD", fx); // 1100
+normalizeCurrencyValue(1000, "NGN", "USD", fx); // ~0.67
 ```
 
 ### Magnitude & Time Scaling
@@ -371,11 +412,11 @@ normalizeCurrencyValue(1000, "NGN", "USD", fx);  // ~0.67
 import { rescaleMagnitude, rescaleTime } from "jsr:@tellimer/econify";
 
 // Magnitude scaling
-rescaleMagnitude(5.2, "billions", "millions");   // 5200
+rescaleMagnitude(5.2, "billions", "millions"); // 5200
 
 // Time scaling
-rescaleTime(100, "month", "year");              // 1200
-rescaleTime(500, "quarter", "year");            // 2000
+rescaleTime(100, "month", "year"); // 1200
+rescaleTime(500, "quarter", "year"); // 2000
 ```
 
 ## 🚀 Advanced Features
@@ -391,17 +432,17 @@ import { fetchLiveFXRates } from "jsr:@tellimer/econify";
 const fx = await fetchLiveFXRates("USD", {
   sources: [
     { name: "ECB", endpoint: "...", priority: 1 },
-    { name: "IMF", endpoint: "...", priority: 2 }
+    { name: "IMF", endpoint: "...", priority: 2 },
   ],
   fallback: localCache,
   cache: true,
-  cacheTTL: 3600000 // 1 hour
+  cacheTTL: 3600000, // 1 hour
 });
 
 // Use live rates for conversion
 const value = normalizeValue(100, "EUR Million", {
   toCurrency: "USD",
-  fx
+  fx,
 });
 ```
 
@@ -416,17 +457,17 @@ const data = [
   { value: 100, unit: "USD Million" },
   { value: 110, unit: "USD Million" },
   { value: 10000, unit: "USD Million" }, // Outlier
-  { value: NaN, unit: "USD Million" }    // Invalid
+  { value: NaN, unit: "USD Million" }, // Invalid
 ];
 
 const quality = assessDataQuality(data, {
   checkOutliers: true,
   checkConsistency: true,
   checkCompleteness: true,
-  outlierMethod: "iqr"
+  outlierMethod: "iqr",
 });
 
-console.log("Quality Score:", quality.overall);  // 0-100
+console.log("Quality Score:", quality.overall); // 0-100
 console.log("Dimensions:", quality.dimensions);
 // {
 //   completeness: 75,
@@ -448,21 +489,22 @@ import { aggregate, movingAverage } from "jsr:@tellimer/econify";
 const data = [
   { value: 100, unit: "USD Million", weight: 0.3 },
   { value: 150, unit: "USD Million", weight: 0.5 },
-  { value: 80, unit: "USD Million", weight: 0.2 }
+  { value: 80, unit: "USD Million", weight: 0.2 },
 ];
 
 // Various aggregation methods
 const sum = aggregate(data, { method: "sum" });
 const avg = aggregate(data, { method: "average" });
-const weighted = aggregate(data, { 
+const weighted = aggregate(data, {
   method: "weightedAverage",
-  weights: "value"  // or custom weights
+  weights: "value", // or custom weights
 });
 ```
 
 ## 📊 Supported Units
 
 ### Currencies (150+)
+
 - **Major**: USD, EUR, GBP, JPY, CNY, CHF, CAD, AUD
 - **African**: NGN, KES, ZAR, EGP, MAD, GHS, TZS, UGX, RWF, ETB
 - **Asian**: INR, IDR, THB, VND, PHP, MYR, SGD, HKD, KRW, TWD
@@ -472,6 +514,7 @@ const weighted = aggregate(data, {
 - And 100+ more...
 
 ### Magnitudes
+
 - Trillions (trillion, tn)
 - Billions (billion, bn)
 - Millions (million, mn, mio)
@@ -480,6 +523,7 @@ const weighted = aggregate(data, {
 - Ones (base unit)
 
 ### Time Scales
+
 - Year (annual, /yr, per year)
 - Quarter (quarterly, /q, per quarter)
 - Month (monthly, /mo, per month)
@@ -488,6 +532,7 @@ const weighted = aggregate(data, {
 - Hour (hourly, /hr, per hour)
 
 ### Special Units
+
 - **Percentages**: %, percent, bps, pp, % of GDP
 - **Energy**: GWh, TJ, MW, kWh, MWh
 - **Physical**: BBL/D/1K, tonnes, kg, liters, hectares, m²
@@ -520,7 +565,7 @@ interface ParsedUnit {
 }
 
 interface QualityScore {
-  overall: number;  // 0-100
+  overall: number; // 0-100
   dimensions: {
     completeness: number;
     consistency: number;
@@ -590,13 +635,16 @@ MIT © 2025
 
 ## 🙏 Acknowledgments
 
-Built with ❤️ for economists, data analysts, financial engineers, and anyone working with economic data.
+Built with ❤️ for economists, data analysts, financial engineers, and anyone
+working with economic data.
 
 Special thanks to:
+
 - The Deno team for an amazing runtime
 - Financial data providers for API access
 - The open-source community for inspiration
 
 ---
 
-**Need help?** [Open an issue](https://github.com/Tellimer/open-source/issues) or check our [examples](./examples).
+**Need help?** [Open an issue](https://github.com/Tellimer/open-source/issues)
+or check our [examples](./examples).

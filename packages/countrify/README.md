@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../assets/tellimer-logo.avif" alt="Tellimer"  />
+  <img src="./assets/tellimer-logo.avif" width="500" alt="Tellimer" />
 </p>
 
 # @tellimer/countrify

@@ -88,8 +88,16 @@ Deno.test("parseUnit - index and points", () => {
 Deno.test("parseUnit - population and count units", () => {
   const tests = [
     { input: "Persons", category: "population", normalized: "persons" },
-    { input: "per 1000 people", category: "rate", normalized: "per 1000 people" },
-    { input: "doses per 100 people", category: "count", normalized: "doses per 100 people" },
+    {
+      input: "per 1000 people",
+      category: "rate",
+      normalized: "per 1000 people",
+    },
+    {
+      input: "doses per 100 people",
+      category: "count",
+      normalized: "doses per 100 people",
+    },
     { input: "doses", category: "count", normalized: "doses" },
     { input: "Units", category: "count", normalized: "units" },
   ];
@@ -194,7 +202,7 @@ Deno.test("parseUnit - ratio patterns (USD/Liter, KRW/Hour)", () => {
     },
     {
       input: "KRW/Hour",
-      category: "composite", 
+      category: "composite",
       currency: "KRW",
       timeScale: "hour",
       isComposite: true,

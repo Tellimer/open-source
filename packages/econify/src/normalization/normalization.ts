@@ -111,6 +111,10 @@ export function normalizeMonetary(
  *
  * This version attempts to parse scale/time from unitText first, before
  * applying magnitude/time and currency conversions.
+ *
+ * @param value Input numeric value
+ * @param opts Options including currencies, FX, and target scales
+ * @returns Normalized amount in target currency/time
  */
 export function normalizeMonetaryFlow(
   value: number,
@@ -154,6 +158,11 @@ export function normalizeMonetaryFlow(
  * Generic normalization using parsed unit components.
  *
  * Applies magnitude, time, and currency conversions when targets are provided.
+ *
+ * @param value Input numeric value
+ * @param unitText Unit text to parse
+ * @param options Optional conversion targets and FX table
+ * @returns Normalized numeric value
  */
 export function normalizeValue(
   value: number,

@@ -3,7 +3,7 @@
  */
 
 export interface SeasonalOptions {
-  method?: 'moving_average' | 'decomposition' | 'x13';
+  method?: "moving_average" | "decomposition" | "x13";
   period?: number;
   trend?: boolean;
 }
@@ -13,14 +13,14 @@ export interface SeasonalOptions {
  */
 export function deseasonalize(
   data: Array<{ date: Date; value: number }>,
-  options: SeasonalOptions = {}
+  options: SeasonalOptions = {},
 ): Array<{ date: Date; value: number; seasonal: number; adjusted: number }> {
-  const { method = 'moving_average', period = 12 } = options;
+  const { method = "moving_average", period = 12 } = options;
 
   switch (method) {
-    case 'moving_average':
+    case "moving_average":
       return deseasonalizeMA(data, period);
-    case 'decomposition':
+    case "decomposition":
       return decomposeTimeSeries(data, period);
     default:
       throw new Error(`Method ${method} not implemented`);
@@ -32,19 +32,19 @@ export function deseasonalize(
  */
 function deseasonalizeMA(
   data: Array<{ date: Date; value: number }>,
-  period: number
+  period: number,
 ): Array<{ date: Date; value: number; seasonal: number; adjusted: number }> {
   // Calculate centered moving average
   const trend = calculateCenteredMA(
     data.map((d) => d.value),
-    period
+    period,
   );
 
   // Calculate seasonal component
   const seasonal = calculateSeasonalComponent(
     data.map((d) => d.value),
     trend,
-    period
+    period,
   );
 
   // Remove seasonal component
@@ -61,7 +61,7 @@ function deseasonalizeMA(
  */
 function decomposeTimeSeries(
   data: Array<{ date: Date; value: number }>,
-  period: number
+  period: number,
 ): Array<{ date: Date; value: number; seasonal: number; adjusted: number }> {
   const values = data.map((d) => d.value);
 
@@ -122,7 +122,7 @@ function calculateCenteredMA(values: number[], period: number): number[] {
 function calculateSeasonalComponent(
   values: number[],
   trend: number[],
-  period: number
+  period: number,
 ): number[] {
   const seasonal = new Array(period).fill(0);
   const counts = new Array(period).fill(0);
@@ -141,7 +141,7 @@ function calculateSeasonalComponent(
  */
 export function detectSeasonality(
   data: Array<{ value: number }>,
-  maxPeriod = 24
+  maxPeriod = 24,
 ): { hasSeasonal: boolean; period?: number; strength?: number } {
   const values = data.map((d) => d.value);
 

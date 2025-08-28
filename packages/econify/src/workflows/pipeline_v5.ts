@@ -2,20 +2,20 @@
  * XState v5 pipeline for data processing
  */
 
-import { setup, assign, createActor, fromPromise } from 'npm:xstate@^5.20.2';
+import { assign, createActor, fromPromise, setup } from "npm:xstate@^5.20.2";
 import {
-  parseUnit,
-  assessDataQuality,
-  inferUnit,
   adjustForInflation,
+  assessDataQuality,
   deseasonalize,
   fetchLiveFXRates,
-  processBatch,
   type FXTable,
+  inferUnit,
+  parseUnit,
+  processBatch,
   type QualityScore,
   type Scale,
   type TimeScale,
-} from '../main.ts';
+} from "../main.ts";
 
 // Derived types
 type ParsedUnit = ReturnType<typeof parseUnit>;
@@ -59,7 +59,7 @@ export interface PipelineConfig {
   fxFallback?: FXTable;
   validateSchema?: boolean;
   requiredFields?: string[];
-  outputFormat?: 'json' | 'csv' | 'parquet';
+  outputFormat?: "json" | "csv" | "parquet";
 }
 
 /**
@@ -105,21 +105,21 @@ export const pipelineMachine = setup({
   types: {
     context: {} as PipelineContext,
     events: {} as
-      | { type: 'START' }
-      | { type: 'CONTINUE' }
-      | { type: 'ABORT' }
-      | { type: 'FIX' },
+      | { type: "START" }
+      | { type: "CONTINUE" }
+      | { type: "ABORT" }
+      | { type: "FIX" },
     input: {} as { rawData: ParsedData[]; config: PipelineConfig },
   },
   actors: {
     validateInputData: fromPromise(({ input }: { input: PipelineContext }) => {
       const { rawData, config } = input;
       if (!rawData || rawData.length === 0) {
-        throw new Error('No data provided');
+        throw new Error("No data provided");
       }
       if (config.validateSchema && config.requiredFields) {
         const invalid = rawData.filter(
-          (item) => !config.requiredFields!.every((field) => field in item)
+          (item) => !config.requiredFields!.every((field) => field in item),
         );
         if (invalid.length > 0) {
           throw new Error(`${invalid.length} records missing required fields`);
@@ -134,7 +134,7 @@ export const pipelineMachine = setup({
 
       for (const item of rawData) {
         let unit = item.unit;
-        if (config.inferUnits && (!unit || unit === 'unknown' || unit === '')) {
+        if (config.inferUnits && (!unit || unit === "unknown" || unit === "")) {
           const inferred = inferUnit(item.value, {
             text: item.description,
             indicatorName: item.name,
@@ -144,7 +144,7 @@ export const pipelineMachine = setup({
             unit = inferred.unit;
           }
         }
-        const parsedUnit = parseUnit(unit || '');
+        const parsedUnit = parseUnit(unit || "");
         parsed.push({
           ...item,
           unit,
@@ -159,25 +159,25 @@ export const pipelineMachine = setup({
       ({ input }: { input: PipelineContext }) => {
         const { parsedData } = input;
         if (!parsedData) {
-          throw new Error('No parsed data available');
+          throw new Error("No parsed data available");
         }
         return Promise.resolve(
           assessDataQuality(parsedData, {
             checkOutliers: true,
             checkConsistency: true,
             checkCompleteness: true,
-          })
+          }),
         );
-      }
+      },
     ),
 
     fetchRatesService: fromPromise(({ input }: { input: PipelineContext }) => {
       const { config } = input;
       return config.useLiveFX
-        ? fetchLiveFXRates(config.targetCurrency || 'USD', {
-            fallback: config.fxFallback,
-            cache: true,
-          })
+        ? fetchLiveFXRates(config.targetCurrency || "USD", {
+          fallback: config.fxFallback,
+          cache: true,
+        })
         : Promise.resolve(config.fxFallback!);
     }),
 
@@ -185,18 +185,18 @@ export const pipelineMachine = setup({
       async ({ input }: { input: PipelineContext }) => {
         const { parsedData, fxRates, config } = input;
         if (!parsedData) {
-          throw new Error('No parsed data available');
+          throw new Error("No parsed data available");
         }
         const result = await processBatch(parsedData, {
           validate: false,
-          handleErrors: 'skip',
+          handleErrors: "skip",
           parallel: true,
           toCurrency: config.targetCurrency,
           toMagnitude: config.targetMagnitude,
           fx: fxRates,
         });
         return result.successful;
-      }
+      },
     ),
 
     adjustInflationService: fromPromise(
@@ -211,12 +211,12 @@ export const pipelineMachine = setup({
             realValue: adjustForInflation(item.normalized || item.value, {
               fromYear: item.year || 2020,
               toYear: 2024,
-              country: 'US',
+              country: "US",
               unit: item.normalizedUnit || item.unit,
             }),
-          }))
+          })),
         );
-      }
+      },
     ),
 
     removeSeasonalityService: fromPromise(
@@ -230,7 +230,7 @@ export const pipelineMachine = setup({
           value: item.realValue || item.normalized || item.value,
         }));
         const deseasonalized = deseasonalize(timeSeries, {
-          method: 'decomposition',
+          method: "decomposition",
           period: 12,
         });
         // Map deseasonalized results back into ParsedData[]
@@ -238,11 +238,11 @@ export const pipelineMachine = setup({
           data.map((item, idx) => {
             const point = deseasonalized[idx] as
               | {
-                  date: Date;
-                  value: number;
-                  seasonal: number;
-                  adjusted: number;
-                }
+                date: Date;
+                value: number;
+                seasonal: number;
+                adjusted: number;
+              }
               | undefined;
             if (!point) return item;
             return {
@@ -253,9 +253,9 @@ export const pipelineMachine = setup({
                 seasonal: point.seasonal,
               },
             } as ParsedData;
-          })
+          }),
         );
-      }
+      },
     ),
 
     finalizeDataService: fromPromise(
@@ -266,7 +266,7 @@ export const pipelineMachine = setup({
           if (!u) return u;
           // Normalize labels like "USD Billion" -> "USD billions"
           const m = u.match(
-            /^(?<cur>[A-Z]{3})\s+(?<scale>Million|Billion|Thousand|Trillion)s?$/i
+            /^(?<cur>[A-Z]{3})\s+(?<scale>Million|Billion|Thousand|Trillion)s?$/i,
           );
           if (m && m.groups) {
             const cur = m.groups.cur.toUpperCase();
@@ -277,9 +277,8 @@ export const pipelineMachine = setup({
         };
 
         // Ensure processingTime is populated even before metrics are finalized
-        const computedProcessingTime =
-          input.metrics.processingTime ??
-          (typeof input.metrics.startTime === 'number'
+        const computedProcessingTime = input.metrics.processingTime ??
+          (typeof input.metrics.startTime === "number"
             ? Date.now() - input.metrics.startTime
             : undefined);
 
@@ -292,9 +291,9 @@ export const pipelineMachine = setup({
               processingTime: computedProcessingTime,
               inferredUnit: item.inferredUnit,
             },
-          }))
+          })),
         );
-      }
+      },
     ),
   },
   guards: {
@@ -318,10 +317,9 @@ export const pipelineMachine = setup({
     logError: assign({
       errors: ({ context, event }) => {
         const err = (event as { error?: unknown }).error;
-        const message =
-          (err && typeof err === 'object' && 'message' in err
-            ? (err as { message?: string }).message
-            : undefined) || 'Unknown error';
+        const message = (err && typeof err === "object" && "message" in err
+          ? (err as { message?: string }).message
+          : undefined) || "Unknown error";
         return [
           ...context.errors,
           {
@@ -336,10 +334,9 @@ export const pipelineMachine = setup({
     logWarning: assign({
       warnings: ({ context, event }) => {
         const err = (event as { error?: unknown }).error;
-        const message =
-          (err && typeof err === 'object' && 'message' in err
-            ? (err as { message?: string }).message
-            : undefined) || 'Warning occurred';
+        const message = (err && typeof err === "object" && "message" in err
+          ? (err as { message?: string }).message
+          : undefined) || "Warning occurred";
         return [...context.warnings, message];
       },
     }),
@@ -355,8 +352,8 @@ export const pipelineMachine = setup({
   },
 }).createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5RgMYHsB2BLAZgTwAUsAHMAGywzADosIywBiAZQBUBBAJVYG0AGALqJQxNLCwAXLJmEgAHogCMAJgBs1Pps2rlfAMyKArH0MBOADQg8iUwA5qh23r2rVfACyLtjgL4-LqJi4hCTklDQAbgCGFBBRUhhQjBCYNJQRaADWkTF08WAAkhjEAK4S-EJIIKLiUjJVCgiGAOx81MqKts2meh7uzar9ltYIynr2ysb6es3u7objqrZ+AejY+ESkFFTU0bHxlElgAE7HaMfUxGTxOOcAtru5cRKFxWUVsjWS0hiyjS1tDpdHp9AZDKyIWyKBxaZrNXpjZTKUyGFbgNbBTZhHbEKLHcSJZKpWgYDLZS542BgACq2AksA+VS+dV+DSUfC61HcQNsfGU7lMrUUqmGiDGhmozSmzlm80WejRgXWIS24Qp+MOjBOZwuVxu93VVNpkgZgk+Ym+9VAjWaylFCFUtsl+kU7i6ij0hmMCv86KCG1C2xoAEcSrkJHgAMIAC1QmSJO3SWRoUVgVLTAEUwxQI4yRBaWX9ENzmtQofzbLzDK44XxmvanPY68ougt+cLTO5FRiA6qdqHw1HYyh4ylE6Tk9RU+nYFnBzxFJV87UfkWECWyyo3VWa616xCEKYlly+KojP1uXpPMpu-6VdiQ9nJEO41rTudLtcJLdjg9p3BZyfXMzSZAtVzZBBbDtA8jEUUxqBmDluTdM8BlvZUsSDagBxzPBODACIsDAAB3RhIwAeQAOVYApKOpABRPNqjAq15BsLwNAMSZDBURCZntOx7G6Ts9CPPlbDmLtfSVTFAzVHDn3wwiSMYdgACFyO4JjmXA61EEMaCRkRdwuV5Aw9EmWxHRvaSe3vLCFIjJSiNIgAxAoAA1tJY1k9KaQz2TPBCzDUQVFA9AzmnQ2S+xoHAwAkFBo0OTh8lgBM0gncl4sS6NUpeU0l2YldWMaD0pS5GYzCg5pOhMCwD07CUOUcNQWqPD1ot7B9qBypKUrSt8dU-fVf16hKkvyuBvJK3y2IQcqJXcKq7GUWqqwakYoIlR1BVPOCdy6+y1Qwe5cgAL01MdMrJGhTt-C6wBmy05saTwJU9Hp4WMcLbVme1OihBD+gRESPVcI7MJOs6KEuwltQ-PVvwNe67ke57Cwg97gq+z0+F+tb3AB1xoSvKVnEFGZJlUSG5J2KIIAAKxKWAEigagkrjQ4ihwL8fkYDHdPm7oTK8ESXF6AxHABlFSy9EwrPCsZlsUWnYqnJmWbZjnh0ybmMF5g5MAFxdzVmtcReoMXloll1pYPDpmgmZERcUJ3Owh2y7yh+nNdZw4NeZ-3Eh5vnjeuklbsDrXQ6NjBBdKpRFjLFt+TsJZRLse1dBUSU4TFzPVDsNWeoZoPtbLrX9cNlkhsRr8fz-P2JFjlkE9epOrJTqCBSspxTCzmDTDglOqcGflqqk1ZvbplNm4DzmR0OZgwFTTBBwFkDlxetc3crBDTDrWwWi8asFmzvl4KcIv+jcasliir2MNn6Pg-Zxe9cSFe14wDeFyKnSidRi3ytnwI8EkWxwXhETB24V1C2gHqJRWBhlhPxiqXeeiRqDHDAHcNAhEv6r1gOvXCGVI6ThwXgiIYBv7EN-rhdua5+QDFAeA7kUJKYwKMnyPQedWimBbHYUS7gaZoO6lhSub9sG4PwcvIhJDnx111A3A0lD8E0PkfQ58jCILMPUGLJY7CoFXgBmZBC-IkSGBESoKUqIxHHR2DgSgF0rrEiTNlZxsMnpb2KjvCCvROjtH0DxZwV5PTChlqeTcthBRSn0G6SYJcsJOK0XDI475lGjQeCk9GPjAEdwQAEiYwSPTOGWjxEUMEoS8Ksl6JqLZxhqD8L6U6EA4CyBkuI8IZs-F+QALSVJGH0iUA8B4HXCr0QYXoklqjoAwHpmM-LcgBh0MsYDKaOjrEhH009n7qz2HkNmCyhaNDGKWKCUIBSqAslsiJB5j4IXWWFRwhjTAzJxJSQ4xygFSngsrFWh9woqACqMMYXIBjXP6H3Fsj9dnoIckBF8I5vkFMdA2MFyJOwDBcFMwU7zHyDmciRFFFsXDtHLFYkRgxAYCV5BoAUy0WwckdFY-F41coDQKiSiCp9lBW1bMEzQ4UOQNm5JKYUKhj4eism6NlqMXGJG5X5OExNVASiMLMOwAo4RFzZZIo5oFzYQXvgfU8RdxgzGHoMpQTsPrihaAZDkeL7E+znuXBeutq5hzmvktcZ4TKiTNT0Jw3Q7kjDgjodobswG8k7CoFQerMHs31V6uOSr5peFWSiAww8DJzFcIYGWFlHmXylmqiSOy-R7Iwe6rBH85E-0HOmsqjheFunmNeHo7geEXyvDCK8ZhHCyjVYm2t7M1EEKgLQhREZm1ig8OqsBarPTzBbDoGWKINB9zdoguUbKcmwy+Ya3p801q5zAZ4AUPQUSOmtQtKEpYWXwjhGMWCdi4VdJ2LAEoKAUAATnYUndkpLlunhFBZEthTGH0lCiaqRhTwIjZQjY4AGDDdGA66UDjSIMA2Ee0RBnROieCcM0nwQA */
-  id: 'econifyPipeline',
-  initial: 'idle',
+  id: "econifyPipeline",
+  initial: "idle",
   context: ({ input }) => ({
     rawData: input?.rawData ?? [],
     config: input?.config ?? {},
@@ -371,7 +368,7 @@ export const pipelineMachine = setup({
     idle: {
       on: {
         START: {
-          target: 'validating',
+          target: "validating",
           actions: assign({
             metrics: ({ context }) => ({
               ...context.metrics,
@@ -383,58 +380,58 @@ export const pipelineMachine = setup({
     },
 
     validating: {
-      entry: 'logStep',
+      entry: "logStep",
       invoke: {
-        id: 'validateInput',
-        src: 'validateInputData',
+        id: "validateInput",
+        src: "validateInputData",
         input: ({ context }) => context,
         onDone: {
-          target: 'parsing',
+          target: "parsing",
           actions: assign({
             rawData: ({ event }) => event.output,
           }),
         },
         onError: {
-          target: 'error',
-          actions: 'logError',
+          target: "error",
+          actions: "logError",
         },
       },
     },
 
     parsing: {
-      entry: 'logStep',
+      entry: "logStep",
       invoke: {
-        id: 'parseUnits',
-        src: 'parseUnitsService',
+        id: "parseUnits",
+        src: "parseUnitsService",
         input: ({ context }) => context,
         onDone: {
-          target: 'qualityCheck',
+          target: "qualityCheck",
           actions: assign({
             parsedData: ({ event }) => event.output,
           }),
         },
         onError: {
-          target: 'error',
-          actions: 'logError',
+          target: "error",
+          actions: "logError",
         },
       },
     },
 
     qualityCheck: {
-      entry: 'logStep',
+      entry: "logStep",
       invoke: {
-        id: 'assessQuality',
-        src: 'assessQualityService',
+        id: "assessQuality",
+        src: "assessQualityService",
         input: ({ context }) => context,
         onDone: {
-          target: 'qualityDecision',
+          target: "qualityDecision",
           actions: assign({
             qualityScore: ({ event }) => event.output,
           }),
         },
         onError: {
-          target: 'error',
-          actions: 'logError',
+          target: "error",
+          actions: "logError",
         },
       },
     },
@@ -442,11 +439,11 @@ export const pipelineMachine = setup({
     qualityDecision: {
       always: [
         {
-          target: 'fetchingRates',
-          guard: 'qualityPassed',
+          target: "fetchingRates",
+          guard: "qualityPassed",
         },
         {
-          target: 'qualityReview',
+          target: "qualityReview",
           actions: assign({
             warnings: ({ context }) => [
               ...context.warnings,
@@ -460,30 +457,30 @@ export const pipelineMachine = setup({
     },
 
     qualityReview: {
-      entry: 'logStep',
+      entry: "logStep",
       on: {
-        CONTINUE: 'fetchingRates',
-        ABORT: 'error',
-        FIX: 'parsing',
+        CONTINUE: "fetchingRates",
+        ABORT: "error",
+        FIX: "parsing",
       },
     },
 
     fetchingRates: {
-      entry: 'logStep',
+      entry: "logStep",
       invoke: {
-        id: 'fetchRates',
-        src: 'fetchRatesService',
+        id: "fetchRates",
+        src: "fetchRatesService",
         input: ({ context }) => context,
         onDone: {
-          target: 'normalizing',
+          target: "normalizing",
           actions: assign({
             fxRates: ({ event }) => event.output,
           }),
         },
         onError: {
-          target: 'normalizing',
+          target: "normalizing",
           actions: [
-            'logWarning',
+            "logWarning",
             assign({
               fxRates: ({ context }) => context.config.fxFallback,
             }),
@@ -493,54 +490,54 @@ export const pipelineMachine = setup({
     },
 
     normalizing: {
-      entry: 'logStep',
+      entry: "logStep",
       invoke: {
-        id: 'normalize',
-        src: 'normalizeDataService',
+        id: "normalize",
+        src: "normalizeDataService",
         input: ({ context }) => context,
         onDone: {
-          target: 'adjusting',
+          target: "adjusting",
           actions: assign({
             normalizedData: ({ event }) => event.output,
           }),
         },
         onError: {
-          target: 'error',
-          actions: 'logError',
+          target: "error",
+          actions: "logError",
         },
       },
     },
 
     adjusting: {
-      entry: 'logStep',
-      initial: 'checkingInflation',
+      entry: "logStep",
+      initial: "checkingInflation",
       states: {
         checkingInflation: {
           always: [
             {
-              target: 'adjustingInflation',
-              guard: 'shouldAdjustInflation',
+              target: "adjustingInflation",
+              guard: "shouldAdjustInflation",
             },
             {
-              target: 'checkingSeasonality',
+              target: "checkingSeasonality",
             },
           ],
         },
 
         adjustingInflation: {
           invoke: {
-            id: 'adjustInflation',
-            src: 'adjustInflationService',
+            id: "adjustInflation",
+            src: "adjustInflationService",
             input: ({ context }) => context,
             onDone: {
-              target: 'checkingSeasonality',
+              target: "checkingSeasonality",
               actions: assign({
                 adjustedData: ({ event }) => event.output,
               }),
             },
             onError: {
-              target: 'checkingSeasonality',
-              actions: 'logWarning',
+              target: "checkingSeasonality",
+              actions: "logWarning",
             },
           },
         },
@@ -548,29 +545,29 @@ export const pipelineMachine = setup({
         checkingSeasonality: {
           always: [
             {
-              target: 'removingSeasonality',
-              guard: 'shouldRemoveSeasonality',
+              target: "removingSeasonality",
+              guard: "shouldRemoveSeasonality",
             },
             {
-              target: '#econifyPipeline.finalizing',
+              target: "#econifyPipeline.finalizing",
             },
           ],
         },
 
         removingSeasonality: {
           invoke: {
-            id: 'removeSeasonality',
-            src: 'removeSeasonalityService',
+            id: "removeSeasonality",
+            src: "removeSeasonalityService",
             input: ({ context }) => context,
             onDone: {
-              target: '#econifyPipeline.finalizing',
+              target: "#econifyPipeline.finalizing",
               actions: assign({
                 adjustedData: ({ event }) => event.output,
               }),
             },
             onError: {
-              target: '#econifyPipeline.finalizing',
-              actions: 'logWarning',
+              target: "#econifyPipeline.finalizing",
+              actions: "logWarning",
             },
           },
         },
@@ -578,13 +575,13 @@ export const pipelineMachine = setup({
     },
 
     finalizing: {
-      entry: 'logStep',
+      entry: "logStep",
       invoke: {
-        id: 'finalize',
-        src: 'finalizeDataService',
+        id: "finalize",
+        src: "finalizeDataService",
         input: ({ context }) => context,
         onDone: {
-          target: 'success',
+          target: "success",
           actions: assign({
             finalData: ({ event }) => event.output,
             metrics: ({ context }) => ({
@@ -595,20 +592,20 @@ export const pipelineMachine = setup({
           }),
         },
         onError: {
-          target: 'error',
-          actions: 'logError',
+          target: "error",
+          actions: "logError",
         },
       },
     },
 
     success: {
-      type: 'final',
-      entry: ['logSuccess', 'emitResults'],
+      type: "final",
+      entry: ["logSuccess", "emitResults"],
     },
 
     error: {
-      type: 'final',
-      entry: 'logFinalError',
+      type: "final",
+      entry: "logFinalError",
     },
   },
 });
@@ -628,17 +625,17 @@ export function createPipeline(config: PipelineConfig) {
         });
 
         actor.subscribe((state) => {
-          if (state.matches('success')) {
+          if (state.matches("success")) {
             resolve(state.context.finalData || []);
-          } else if (state.matches('error')) {
+          } else if (state.matches("error")) {
             reject(
-              new Error('Pipeline failed: ' + state.context.errors[0]?.message)
+              new Error("Pipeline failed: " + state.context.errors[0]?.message),
             );
           }
         });
 
         actor.start();
-        actor.send({ type: 'START' });
+        actor.send({ type: "START" });
       });
     },
 
@@ -654,19 +651,19 @@ export function createPipeline(config: PipelineConfig) {
             },
           });
           actor.start();
-          actor.send({ type: 'START' });
+          actor.send({ type: "START" });
         },
 
         continueAfterQualityReview() {
-          actor?.send({ type: 'CONTINUE' });
+          actor?.send({ type: "CONTINUE" });
         },
 
         abortAfterQualityReview() {
-          actor?.send({ type: 'ABORT' });
+          actor?.send({ type: "ABORT" });
         },
 
         fixAndRetry() {
-          actor?.send({ type: 'FIX' });
+          actor?.send({ type: "FIX" });
         },
 
         getState() {

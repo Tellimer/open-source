@@ -6,8 +6,15 @@ import { normalizeValue } from "../normalization/normalization.ts";
 import { parseUnit } from "../units/units.ts";
 import type { FXTable } from "../types.ts";
 
+/** Options for aggregate() controlling method and normalization. */
 export interface AggregationOptions {
-  method: "sum" | "average" | "median" | "weightedAverage" | "geometricMean" | "harmonicMean";
+  method:
+    | "sum"
+    | "average"
+    | "median"
+    | "weightedAverage"
+    | "geometricMean"
+    | "harmonicMean";
   weights?: number[] | string;
   normalizeFirst?: boolean;
   targetUnit?: string;
@@ -15,6 +22,7 @@ export interface AggregationOptions {
   skipInvalid?: boolean;
 }
 
+/** Result of aggregate() including metadata. */
 export interface AggregationResult {
   value: number;
   unit: string;
@@ -33,20 +41,26 @@ export interface AggregationResult {
  */
 export function aggregate(
   data: Array<{ value: number; unit: string; weight?: number }>,
-  options: AggregationOptions
+  options: AggregationOptions,
 ): AggregationResult {
-  const { method, normalizeFirst = true, targetUnit, fx, skipInvalid = true } = options;
-  
+  const {
+    method,
+    normalizeFirst = true,
+    targetUnit,
+    fx,
+    skipInvalid = true,
+  } = options;
+
   // Normalize to common unit if needed
   let values: number[] = [];
   let finalUnit = targetUnit || data[0]?.unit || "unknown";
-  
+
   if (normalizeFirst && targetUnit) {
     for (const item of data) {
       try {
         const normalized = normalizeValue(item.value, item.unit, {
           fx,
-          ...parseTargetUnit(targetUnit)
+          ...parseTargetUnit(targetUnit),
         });
         values.push(normalized);
       } catch (error) {
@@ -55,13 +69,13 @@ export function aggregate(
       }
     }
   } else {
-    values = data.map(d => d.value);
+    values = data.map((d) => d.value);
   }
-  
+
   if (values.length === 0) {
     throw new Error("No valid values to aggregate");
   }
-  
+
   // Perform aggregation
   let result: number;
   switch (method) {
@@ -86,21 +100,21 @@ export function aggregate(
     default:
       throw new Error(`Unknown aggregation method: ${method}`);
   }
-  
+
   // Calculate metadata
   const metadata = {
     min: Math.min(...values),
     max: Math.max(...values),
     stdDev: standardDeviation(values),
-    variance: variance(values)
+    variance: variance(values),
   };
-  
+
   return {
     value: result,
     unit: finalUnit,
     method,
     count: values.length,
-    metadata
+    metadata,
   };
 }
 
@@ -112,7 +126,7 @@ function parseTargetUnit(targetUnit: string): any {
   return {
     toCurrency: parsed.currency,
     toMagnitude: parsed.scale,
-    toTimeScale: parsed.timeScale
+    toTimeScale: parsed.timeScale,
   };
 }
 
@@ -121,17 +135,17 @@ function parseTargetUnit(targetUnit: string): any {
  */
 function extractWeights(
   data: Array<{ value: number; unit: string; weight?: number }>,
-  weights?: number[] | string
+  weights?: number[] | string,
 ): number[] {
   if (Array.isArray(weights)) {
     return weights;
   }
-  
+
   if (typeof weights === "string" && weights === "value") {
-    return data.map(d => Math.abs(d.value));
+    return data.map((d) => Math.abs(d.value));
   }
-  
-  return data.map(d => d.weight || 1);
+
+  return data.map((d) => d.weight || 1);
 }
 
 // Statistical functions
@@ -179,24 +193,28 @@ function standardDeviation(values: number[]): number {
 export function movingAverage(
   series: Array<{ value: number; unit: string; timestamp?: Date }>,
   window: number,
-  centered = false
+  centered = false,
 ): Array<{ value: number; unit: string; timestamp?: Date }> {
   const result: Array<{ value: number; unit: string; timestamp?: Date }> = [];
-  
+
   for (let i = 0; i < series.length; i++) {
-    const start = centered ? Math.max(0, i - Math.floor(window / 2)) : Math.max(0, i - window + 1);
-    const end = centered ? Math.min(series.length, i + Math.ceil(window / 2)) : i + 1;
+    const start = centered
+      ? Math.max(0, i - Math.floor(window / 2))
+      : Math.max(0, i - window + 1);
+    const end = centered
+      ? Math.min(series.length, i + Math.ceil(window / 2))
+      : i + 1;
     const slice = series.slice(start, end);
-    
+
     if (slice.length > 0) {
       const avg = aggregate(slice, { method: "average" });
       result.push({
         value: avg.value,
         unit: series[i].unit,
-        timestamp: series[i].timestamp
+        timestamp: series[i].timestamp,
       });
     }
   }
-  
+
   return result;
 }

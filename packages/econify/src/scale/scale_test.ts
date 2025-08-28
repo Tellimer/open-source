@@ -75,7 +75,7 @@ Deno.test("rescaleTime - time conversions", () => {
   assertEquals(rescaleTime(12, "year", "month"), 1);
   assertEquals(rescaleTime(52, "year", "week"), 1);
   assertEquals(rescaleTime(365, "year", "day"), 1);
-  
+
   // Smaller scales to year (annualizing)
   assertEquals(rescaleTime(1, "month", "year"), 12);
   assertEquals(rescaleTime(1, "week", "year"), 52);

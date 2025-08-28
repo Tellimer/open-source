@@ -28,7 +28,11 @@ export interface ImportOptions {
 type Row = Record<string, unknown>;
 
 /**
- * Export data to various formats
+ * Export data to various formats.
+ *
+ * @param data Array of row objects to export
+ * @param options Export options: format, headers, delimiter, metadata flags
+ * @returns Serialized content (string for CSV/JSON, buffer for others)
  */
 export function exportTo(
   data: Row[],
@@ -106,7 +110,11 @@ function exportToExcel(data: Row[], options: ExportOptions): string {
 }
 
 /**
- * Import from various formats
+ * Import from various formats.
+ *
+ * @param source String/URL/Response/File content source
+ * @param options Import options: format, detectUnits, inferTypes, mapping
+ * @returns Parsed rows with optional post-processing
  */
 export async function importFrom(
   source: string | File | Response,

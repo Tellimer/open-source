@@ -18,19 +18,19 @@ class SmartCache {
       ttl: 3600000, // 1 hour default
       maxSize: 1000,
       storage: "memory",
-      ...options
+      ...options,
     };
   }
 
   get<T>(key: string): T | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
-    
+
     if (entry.expires < Date.now()) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return entry.value as T;
   }
 
@@ -40,10 +40,10 @@ class SmartCache {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, {
       value,
-      expires: Date.now() + (this.options.ttl || 3600000)
+      expires: Date.now() + (this.options.ttl || 3600000),
     });
   }
 
@@ -57,19 +57,19 @@ class SmartCache {
  */
 export function withCache<T extends (...args: any[]) => any>(
   fn: T,
-  options: CacheOptions = {}
+  options: CacheOptions = {},
 ): T {
   const cache = new SmartCache(options);
   const keyGen = options.keyGenerator || ((...args) => JSON.stringify(args));
-  
+
   return ((...args: Parameters<T>) => {
     const key = keyGen(...args);
     const cached = cache.get<ReturnType<T>>(key);
-    
+
     if (cached !== null) {
       return cached;
     }
-    
+
     const result = fn(...args);
     cache.set(key, result);
     return result;

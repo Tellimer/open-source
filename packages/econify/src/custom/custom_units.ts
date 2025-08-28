@@ -2,8 +2,9 @@
  * Custom unit definitions and registration
  */
 
-import type { UnitPattern, UnitCategory } from '../units/units.ts';
+import type { UnitCategory, UnitPattern } from '../units/units.ts';
 
+/** Definition for a custom unit pattern and conversion. */
 export interface CustomUnit {
   pattern: RegExp | string;
   category: UnitCategory | string;
@@ -100,6 +101,7 @@ export function convertCustomUnit(
 /**
  * Pre-defined domain-specific units
  */
+/** Pre-defined domain unit registries loadable via loadDomainUnits(). */
 export const DOMAIN_UNITS = {
   emissions: {
     CO2_tonnes: {

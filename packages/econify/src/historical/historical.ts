@@ -34,7 +34,7 @@ const historicalFXCache: HistoricalFXCache = {};
 export async function normalizeHistorical(
   value: number,
   unit: string,
-  options: HistoricalOptions = {}
+  options: HistoricalOptions = {},
 ): Promise<number> {
   const {
     date = new Date(),
@@ -42,20 +42,22 @@ export async function normalizeHistorical(
     toMagnitude,
     toTimeScale,
     fxSource = "historical",
-    interpolate = false
+    interpolate = false,
   } = options;
 
-  const dateStr = typeof date === "string" ? date : date.toISOString().split("T")[0];
-  
+  const dateStr = typeof date === "string"
+    ? date
+    : date.toISOString().split("T")[0];
+
   // Get FX rates for the specified date
   const fx = await getHistoricalFXRates(dateStr, fxSource);
-  
+
   // Use standard normalization with historical rates
   return normalizeValue(value, unit, {
     toCurrency,
     toMagnitude,
     toTimeScale,
-    fx
+    fx,
   });
 }
 
@@ -64,7 +66,7 @@ export async function normalizeHistorical(
  */
 export async function getHistoricalFXRates(
   date: string,
-  source: "historical" | "current" = "historical"
+  source: "historical" | "current" = "historical",
 ): Promise<FXTable> {
   // Check cache first
   if (historicalFXCache[date]) {
@@ -82,7 +84,9 @@ export async function getHistoricalFXRates(
     historicalFXCache[date] = response;
     return response;
   } catch (error) {
-    console.warn(`Failed to fetch historical rates for ${date}, using current rates`);
+    console.warn(
+      `Failed to fetch historical rates for ${date}, using current rates`,
+    );
     return await fetchLiveFXRates("USD");
   }
 }
@@ -92,17 +96,17 @@ export async function getHistoricalFXRates(
  */
 async function fetchHistoricalFromAPI(date: string): Promise<FXTable> {
   const url = `https://api.frankfurter.app/${date}`;
-  
+
   try {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    
+
     const data = await response.json();
     return {
       base: data.base,
-      rates: data.rates
+      rates: data.rates,
     };
   } catch (error) {
     throw new Error(`Failed to fetch historical rates: ${error}`);
@@ -114,24 +118,24 @@ async function fetchHistoricalFromAPI(date: string): Promise<FXTable> {
  */
 export async function normalizeTimeSeries(
   series: HistoricalDataPoint[],
-  options: Omit<HistoricalOptions, "date"> = {}
+  options: Omit<HistoricalOptions, "date"> = {},
 ): Promise<HistoricalDataPoint[]> {
   const normalized: HistoricalDataPoint[] = [];
-  
+
   for (const point of series) {
     const value = await normalizeHistorical(
       point.value,
       point.unit,
-      { ...options, date: point.date }
+      { ...options, date: point.date },
     );
-    
+
     normalized.push({
       date: point.date,
       value,
-      unit: buildNormalizedUnit(point.unit, options)
+      unit: buildNormalizedUnit(point.unit, options),
     });
   }
-  
+
   return normalized;
 }
 
@@ -140,22 +144,22 @@ export async function normalizeTimeSeries(
  */
 function buildNormalizedUnit(
   originalUnit: string,
-  options: Omit<HistoricalOptions, "date">
+  options: Omit<HistoricalOptions, "date">,
 ): string {
   const parts: string[] = [];
-  
+
   if (options.toCurrency) {
     parts.push(options.toCurrency);
   }
-  
+
   if (options.toMagnitude) {
     parts.push(options.toMagnitude);
   }
-  
+
   if (options.toTimeScale) {
     parts.push(`per ${options.toTimeScale}`);
   }
-  
+
   return parts.join(" ") || originalUnit;
 }
 
@@ -164,10 +168,10 @@ function buildNormalizedUnit(
  */
 export function calculateChanges(
   series: HistoricalDataPoint[],
-  type: "absolute" | "percentage" | "log" = "percentage"
+  type: "absolute" | "percentage" | "log" = "percentage",
 ): Array<HistoricalDataPoint & { change?: number }> {
   if (series.length < 2) {
-    return series.map(p => ({ ...p, change: undefined }));
+    return series.map((p) => ({ ...p, change: undefined }));
   }
 
   return series.map((point, index) => {
@@ -177,7 +181,7 @@ export function calculateChanges(
 
     const prev = series[index - 1].value;
     const curr = point.value;
-    
+
     let change: number;
     switch (type) {
       case "absolute":
@@ -190,7 +194,7 @@ export function calculateChanges(
         change = Math.log(curr / prev);
         break;
     }
-    
+
     return { ...point, change };
   });
 }
@@ -201,15 +205,15 @@ export function calculateChanges(
 export function resampleTimeSeries(
   series: HistoricalDataPoint[],
   frequency: "daily" | "weekly" | "monthly" | "quarterly" | "yearly",
-  aggregation: "sum" | "average" | "last" | "first" = "average"
+  aggregation: "sum" | "average" | "last" | "first" = "average",
 ): HistoricalDataPoint[] {
   const grouped = groupByPeriod(series, frequency);
   const resampled: HistoricalDataPoint[] = [];
-  
+
   for (const [period, points] of Object.entries(grouped)) {
     const date = new Date(period);
     let value: number;
-    
+
     switch (aggregation) {
       case "sum":
         value = points.reduce((sum, p) => sum + p.value, 0);
@@ -224,14 +228,14 @@ export function resampleTimeSeries(
         value = points[0].value;
         break;
     }
-    
+
     resampled.push({
       date,
       value,
-      unit: points[0].unit
+      unit: points[0].unit,
     });
   }
-  
+
   return resampled.sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
@@ -240,10 +244,10 @@ export function resampleTimeSeries(
  */
 function groupByPeriod(
   series: HistoricalDataPoint[],
-  frequency: string
+  frequency: string,
 ): Record<string, HistoricalDataPoint[]> {
   const grouped: Record<string, HistoricalDataPoint[]> = {};
-  
+
   for (const point of series) {
     const key = getPeriodKey(point.date, frequency);
     if (!grouped[key]) {
@@ -251,7 +255,7 @@ function groupByPeriod(
     }
     grouped[key].push(point);
   }
-  
+
   return grouped;
 }
 
@@ -263,7 +267,7 @@ function getPeriodKey(date: Date, frequency: string): string {
   const month = date.getMonth();
   const quarter = Math.floor(month / 3);
   const week = getWeekNumber(date);
-  
+
   switch (frequency) {
     case "daily":
       return date.toISOString().split("T")[0];
@@ -284,7 +288,9 @@ function getPeriodKey(date: Date, frequency: string): string {
  * Get ISO week number
  */
 function getWeekNumber(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+  );
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));

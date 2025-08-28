@@ -2,7 +2,7 @@
  * Currency normalization functions
  */
 
-import type { FXTable } from '../types.ts';
+import type { FXTable } from "../types.ts";
 
 // ----------------------- Currency Normalization -----------------------
 /**
@@ -19,7 +19,7 @@ export function normalizeCurrencyValue(
   value: number,
   from: string,
   to: string,
-  table: FXTable
+  table: FXTable,
 ): number {
   const src = from.toUpperCase(),
     dst = to.toUpperCase(),
