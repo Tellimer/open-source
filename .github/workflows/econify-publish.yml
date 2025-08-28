@@ -69,4 +69,4 @@ jobs:
       - name: Publish to JSR
         env:
           JSR_TOKEN: ${{ secrets.JSR_TOKEN }}
-        run: deno publish --yes
+        run: deno publish
