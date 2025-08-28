@@ -2,7 +2,7 @@
   <img src="./assets/tellimer-logo.avif" width="500" alt="Tellimer" />
 </p>
 
-# econify
+# @tellimer/econify
 
 A comprehensive Deno/TypeScript package for **economic data processing** with
 advanced features for classification, normalization, quality assessment, and
