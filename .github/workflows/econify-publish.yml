@@ -1,12 +1,12 @@
-name: 'econify: publish to JSR'
+name: "econify: publish to JSR"
 
 on:
   push:
     tags:
-      - 'econify-v*'
+      - "econify-v*"
 
 concurrency:
-  group: 'econify-${{ github.ref }}'
+  group: "econify-${{ github.ref }}"
   cancel-in-progress: true
 
 defaults:
