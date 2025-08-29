@@ -4,6 +4,9 @@
  */
 
 import type { TimeScale } from "../types.ts";
+
+// Define the time scale type locally if not available in types
+type LocalTimeScale = "hour" | "day" | "week" | "month" | "quarter" | "year";
 import { PER_YEAR } from "../patterns.ts";
 
 export type SamplingMethod =
@@ -33,8 +36,8 @@ export interface SamplingOptions {
  */
 export function simpleTimeConversion(
   value: number,
-  from: TimeScale,
-  to: TimeScale,
+  from: LocalTimeScale,
+  to: LocalTimeScale,
 ): number {
   if (from === to) return value;
   return value * (PER_YEAR[from] / PER_YEAR[to]);
@@ -46,7 +49,7 @@ export function simpleTimeConversion(
  */
 export function resampleTimeSeries(
   data: TimeSeries[],
-  targetFrequency: TimeScale,
+  targetFrequency: LocalTimeScale,
   options: SamplingOptions = { method: "linear" },
 ): TimeSeries[] {
   if (data.length === 0) return [];
@@ -202,7 +205,7 @@ function generateIntermediatePoints(
  */
 function groupByPeriod(
   data: TimeSeries[],
-  frequency: TimeScale,
+  frequency: LocalTimeScale,
 ): Map<string, TimeSeries[]> {
   const groups = new Map<string, TimeSeries[]>();
 
@@ -221,7 +224,7 @@ function groupByPeriod(
 /**
  * Get period key for grouping (e.g., "2024-01" for monthly)
  */
-function getPeriodKey(date: Date, frequency: TimeScale): string {
+function getPeriodKey(date: Date, frequency: LocalTimeScale): string {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   const day = date.getDate();
@@ -277,7 +280,7 @@ function getIntervalMs(frequency: TimeScale): number {
 /**
  * Infer frequency from time series data
  */
-function inferFrequency(data: TimeSeries[]): TimeScale {
+function inferFrequency(data: TimeSeries[]): LocalTimeScale {
   if (data.length < 2) return "month"; // Default
 
   // Calculate average interval between points
@@ -303,8 +306,8 @@ function inferFrequency(data: TimeSeries[]): TimeScale {
  */
 export function convertWageTimeScale(
   value: number,
-  fromScale: TimeScale,
-  toScale: TimeScale,
+  fromScale: LocalTimeScale,
+  toScale: LocalTimeScale,
   wageType: "hourly" | "salary" = "salary",
 ): number {
   if (fromScale === toScale) return value;
@@ -325,7 +328,7 @@ export function convertWageTimeScale(
  */
 export function processWageTimeSeries(
   wages: Array<{ date: Date; value: number; unit: string; country?: string }>,
-  targetFrequency: TimeScale = "month",
+  targetFrequency: LocalTimeScale = "month",
 ): Array<{ date: Date; value: number; unit: string; country?: string }> {
   const result = [];
 
@@ -340,7 +343,7 @@ export function processWageTimeSeries(
     // Convert to target frequency
     const convertedValue = convertWageTimeScale(
       wage.value,
-      timeScale,
+      timeScale as LocalTimeScale,
       targetFrequency,
     );
     const newUnit = wage.unit.replace(

@@ -128,9 +128,9 @@ function parseTargetUnit(targetUnit: string): {
 } {
   const parsed = parseUnit(targetUnit);
   return {
-    toCurrency: parsed.currency,
-    toMagnitude: parsed.scale,
-    toTimeScale: parsed.timeScale,
+    currency: parsed.currency,
+    scale: parsed.scale,
+    timeScale: parsed.timeScale,
   };
 }
 

@@ -42,7 +42,7 @@ export async function normalizeHistorical(
     toMagnitude,
     toTimeScale,
     fxSource = "historical",
-    _interpolate = false,
+    interpolate: _interpolate = false,
   } = options;
 
   const dateStr = typeof date === "string"

@@ -107,8 +107,8 @@ const sampleWagesIndicator = {
   },
 };
 
-Deno.test("processWagesIndicator - full integration", async () => {
-  const result = await processWagesIndicator(sampleWagesIndicator, fx, {
+Deno.test("processWagesIndicator - full integration", () => {
+  const result = processWagesIndicator(sampleWagesIndicator, fx, {
     targetCurrency: "USD",
     excludeIndexValues: false,
   });
@@ -136,8 +136,8 @@ Deno.test("processWagesIndicator - full integration", async () => {
   assertEquals(result.summary.valueRange.max < 100000, true); // Less than $100k/month
 });
 
-Deno.test("processWagesIndicator - currency conversions", async () => {
-  const result = await processWagesIndicator(sampleWagesIndicator, fx, {
+Deno.test("processWagesIndicator - currency conversions", () => {
+  const result = processWagesIndicator(sampleWagesIndicator, fx, {
     targetCurrency: "USD",
   });
 
@@ -183,7 +183,7 @@ Deno.test("createWagesPipelineConfig", () => {
   assertEquals(config.inferUnits, true);
 });
 
-Deno.test("processWagesIndicator - handles mixed data", async () => {
+Deno.test("processWagesIndicator - handles mixed data", () => {
   // Test with mixed currency and index data
   const mixedData = {
     ...sampleWagesIndicator,
@@ -194,7 +194,7 @@ Deno.test("processWagesIndicator - handles mixed data", async () => {
         value: "125.5",
         tooltip: {
           indicatorId: "TESTINDEX",
-          currency: null,
+          currency: undefined,
           units: "points",
           periodicity: "Monthly",
         },
@@ -202,7 +202,7 @@ Deno.test("processWagesIndicator - handles mixed data", async () => {
     },
   };
 
-  const result = await processWagesIndicator(mixedData, fx);
+  const result = processWagesIndicator(mixedData, fx);
 
   // Should handle the index value appropriately
   assertEquals(result.summary.total, 7);
@@ -213,8 +213,8 @@ Deno.test("processWagesIndicator - handles mixed data", async () => {
   assertEquals(result.comparable.length, 6);
 });
 
-Deno.test("processWagesIndicator - updates indicator data", async () => {
-  const result = await processWagesIndicator(sampleWagesIndicator, fx);
+Deno.test("processWagesIndicator - updates indicator data", () => {
+  const result = processWagesIndicator(sampleWagesIndicator, fx);
 
   // Check that the normalized indicator has updated value range
   assertExists(result.normalized.value_range);
@@ -222,18 +222,22 @@ Deno.test("processWagesIndicator - updates indicator data", async () => {
   // The normalized range should be much more reasonable than the original
   // Original: 29.68 - 7,473,636 (huge range, mixed units)
   // Normalized: should be in hundreds to tens of thousands USD/month
+  const valueRange = result.normalized.value_range as {
+    min: number;
+    max: number;
+  };
   assertEquals(
-    result.normalized.value_range.min > 500,
+    valueRange.min > 500,
     true,
     "Min should be reasonable wage",
   );
   assertEquals(
-    result.normalized.value_range.max < 100000,
+    valueRange.max < 100000,
     true,
     "Max should be reasonable wage",
   );
   assertEquals(
-    result.normalized.value_range.max < sampleWagesIndicator.value_range.max,
+    valueRange.max < sampleWagesIndicator.value_range.max,
     true,
     "Normalized max should be much smaller than original max",
   );
@@ -241,14 +245,18 @@ Deno.test("processWagesIndicator - updates indicator data", async () => {
   // Check that country data is updated
   const albCountry = result.normalized.countries.ALB;
   assertExists(albCountry);
-  assertExists(albCountry.tooltip.wage_normalization);
-  assertEquals(albCountry.tooltip.wage_normalization.data_type, "currency");
-  assertEquals(albCountry.tooltip.units, "USD/month");
+  assertExists(albCountry.tooltip?.wage_normalization);
+  assertEquals(
+    (albCountry.tooltip?.wage_normalization as { data_type?: string })
+      ?.data_type,
+    "currency",
+  );
+  assertEquals(albCountry.tooltip?.units, "USD/month");
 
   // Check that the value was actually normalized (should be much smaller than original)
   assertEquals(typeof albCountry.value, "number");
   assertEquals(
-    albCountry.value < 100000,
+    Number(albCountry.value) < 100000,
     true,
     "Normalized value should be reasonable",
   );

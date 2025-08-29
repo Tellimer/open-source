@@ -5,10 +5,11 @@
 import { processBatch } from "../batch/batch.ts";
 import {
   getComparableWagesData,
+  type NormalizedWageData,
   normalizeWagesData,
 } from "./wages-normalization.ts";
 import type { ParsedData, PipelineContext } from "../workflows/pipeline_v5.ts";
-import type { FXTable } from "../types.ts";
+import type { FXTable, Scale } from "../types.ts";
 
 /**
  * Enhanced normalize data service with wage-specific handling
@@ -117,7 +118,7 @@ async function processWagesData(
       handleErrors: "skip",
       parallel: true,
       toCurrency: config.targetCurrency,
-      toMagnitude: config.targetMagnitude,
+      toMagnitude: config.targetMagnitude as Scale,
       fx: fxRates,
     });
     return result.successful;
@@ -262,7 +263,8 @@ interface ProcessingResult {
     normalized: number;
     excluded: number;
     comparable: number;
-    valueRange?: { min: number; max: number; mean: number };
+    dataTypes: { currency: number; index: number; unknown: number };
+    valueRange?: { min: number; max: number; mean: number } | null;
   };
   comparable: NormalizedWageData[];
 }
@@ -282,10 +284,10 @@ export function processWagesIndicator(
     [country, data],
   ) => ({
     country,
-    value: parseFloat(data.value),
+    value: parseFloat(String(data.value)),
     unit: data.tooltip?.units || "unknown",
     currency: data.tooltip?.currency,
-    date: data.date,
+    date: String(data.date || ""),
     metadata: {
       indicatorId: data.tooltip?.indicatorId,
       sources: data.tooltip?.sources,
@@ -341,7 +343,7 @@ export function processWagesIndicator(
         max: Math.round(summary.valueRange.max),
       }
       : indicatorData.value_range,
-    countries: {},
+    countries: {} as Record<string, unknown>,
   };
 
   // Update country data with normalized values
@@ -372,7 +374,7 @@ export function processWagesIndicator(
 
   return {
     original: indicatorData,
-    normalized: updatedIndicatorData,
+    normalized: updatedIndicatorData as IndicatorData,
     summary,
     comparable: comparableData,
   };

@@ -261,7 +261,7 @@ export function validateEconomicData(
   options: { requiredFields?: string[] } = {},
 ): Promise<{ valid: boolean; score: number; issues: string[] }> {
   if (!data || data.length === 0) {
-    return { valid: false, score: 0, issues: ["No data provided"] };
+    return Promise.resolve({ valid: false, score: 0, issues: ["No data provided"] });
   }
 
   const issues: string[] = [];
@@ -295,9 +295,9 @@ export function validateEconomicData(
   // Calculate score
   const score = Math.max(0, 100 - issues.length * 20);
 
-  return {
+  return Promise.resolve({
     valid: issues.length === 0,
     score,
     issues,
-  };
+  });
 }

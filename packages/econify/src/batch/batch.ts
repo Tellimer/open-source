@@ -92,7 +92,7 @@ export async function processBatch<T extends BatchItem>(
 
   // 1. Validation phase
   if (validate) {
-    const validationResult = await validateBatch(items, qualityThreshold);
+    const validationResult = validateBatch(items, qualityThreshold);
     result.quality = validationResult.quality;
 
     if (validationResult.quality.overall < qualityThreshold) {
@@ -126,7 +126,7 @@ export async function processBatch<T extends BatchItem>(
       progressCallback,
     );
   } else {
-    await processSequentially(
+    processSequentially(
       itemsToProcess,
       result,
       normalizationOptions,
@@ -154,7 +154,7 @@ export async function processBatch<T extends BatchItem>(
 function validateBatch<T extends BatchItem>(
   items: T[],
   _threshold: number,
-): Promise<{ quality: QualityScore; invalidItems: T[] }> {
+): { quality: QualityScore; invalidItems: T[] } {
   const dataPoints = items.map((item) => ({
     value: item.value,
     unit: item.unit,
@@ -171,14 +171,14 @@ function validateBatch<T extends BatchItem>(
   const invalidItems: T[] = [];
   for (const issue of quality.issues) {
     if (issue.severity === "critical" && issue.affectedData) {
-      const idx = dataPoints.indexOf(issue.affectedData);
+      const idx = dataPoints.findIndex((item) => item === issue.affectedData);
       if (idx >= 0) {
         invalidItems.push(items[idx]);
       }
     }
   }
 
-  return { quality, invalidItems };
+  return { quality: quality, invalidItems };
 }
 
 /**
@@ -222,17 +222,17 @@ async function processInParallel<T extends BatchItem>(
 /**
  * Process items sequentially
  */
-async function processSequentially<T extends BatchItem>(
+function processSequentially<T extends BatchItem>(
   items: T[],
   result: BatchResult<T>,
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
   progressCallback?: (progress: number) => void,
-): Promise<void> {
+): void {
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
 
     try {
-      const processed = await processItem(item, options);
+      const processed = processItem(item, options);
       if (processed) {
         result.successful.push({
           ...item,
@@ -241,7 +241,7 @@ async function processSequentially<T extends BatchItem>(
         });
       }
     } catch (error) {
-      handleItemError(item, error, options, result);
+      handleItemError(item, error as Error, options, result);
     }
 
     if (progressCallback) {
@@ -256,12 +256,13 @@ async function processSequentially<T extends BatchItem>(
 function processItem<T extends BatchItem>(
   item: T,
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
-): Promise<{ normalized: number; normalizedUnit: string } | null> {
+): { normalized: number; normalizedUnit: string } | null {
   try {
     // Parse unit
     const parsed = parseUnit(item.unit);
     if (parsed.category === "unknown") {
-      throw new Error(`Unknown unit: ${item.unit}`);
+      // Skip unknown units instead of throwing error
+      return null;
     }
 
     // Normalize value
@@ -280,7 +281,7 @@ function processItem<T extends BatchItem>(
       options.toTimeScale,
     );
 
-    return { normalized, normalizedUnit };
+    return { normalized: normalized, normalizedUnit };
   } catch (error) {
     throw error;
   }
@@ -452,7 +453,7 @@ export async function* streamProcess<T extends BatchItem>(
 ): AsyncGenerator<T & { normalized: number; normalizedUnit: string }> {
   for await (const item of items) {
     try {
-      const result = await processItem(item, options);
+      const result = processItem(item, options);
       if (result) {
         yield {
           ...item,
