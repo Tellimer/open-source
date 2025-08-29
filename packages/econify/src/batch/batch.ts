@@ -11,7 +11,7 @@ export interface BatchItem {
   id?: string | number;
   value: number;
   unit: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface BatchOptions {
@@ -151,9 +151,9 @@ export async function processBatch<T extends BatchItem>(
 /**
  * Validate batch before processing
  */
-async function validateBatch<T extends BatchItem>(
+function validateBatch<T extends BatchItem>(
   items: T[],
-  threshold: number,
+  _threshold: number,
 ): Promise<{ quality: QualityScore; invalidItems: T[] }> {
   const dataPoints = items.map((item) => ({
     value: item.value,
@@ -253,7 +253,7 @@ async function processSequentially<T extends BatchItem>(
 /**
  * Process single item
  */
-async function processItem<T extends BatchItem>(
+function processItem<T extends BatchItem>(
   item: T,
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
 ): Promise<{ normalized: number; normalizedUnit: string } | null> {
@@ -291,7 +291,7 @@ async function processItem<T extends BatchItem>(
  */
 function handleItemError<T extends BatchItem>(
   item: T,
-  error: any,
+  error: Error,
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
   result: BatchResult<T>,
 ): void {
@@ -395,7 +395,7 @@ export function createBatchProcessor<T extends BatchItem>(
   ) => Promise<BatchResult<T>>;
 } {
   return {
-    process: async (items, overrides) => {
+    process: (items, overrides) => {
       return processBatch(items, { ...defaultOptions, ...overrides });
     },
 

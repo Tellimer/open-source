@@ -50,7 +50,7 @@ export interface PipelineResult {
  * console.log(result.metrics.qualityScore); // Quality score
  * ```
  */
-export async function processEconomicData(
+export function processEconomicData(
   data: ParsedData[],
   options: PipelineOptions = {},
 ): Promise<PipelineResult> {
@@ -141,7 +141,7 @@ export async function processEconomicData(
           onError(errors[0]);
         }
 
-        const result: PipelineResult = {
+        const _result: PipelineResult = {
           data: state.context.normalizedData || state.context.parsedData || [],
           warnings: state.context.warnings.filter(
             (w) => !w.startsWith("_processed_"),
@@ -171,7 +171,7 @@ export async function processEconomicData(
  * @param options Pipeline configuration and optional callbacks
  * @returns Processed data, warnings/errors, and timing/quality metrics
  */
-export async function processEconomicDataAuto(
+export function processEconomicDataAuto(
   data: ParsedData[],
   options: PipelineOptions = {},
 ): Promise<PipelineResult> {
@@ -256,7 +256,7 @@ export async function processEconomicDataAuto(
  * @param options Validation options (e.g. required fields)
  * @returns Validation result with boolean validity, score, and issues
  */
-export async function validateEconomicData(
+export function validateEconomicData(
   data: ParsedData[],
   options: { requiredFields?: string[] } = {},
 ): Promise<{ valid: boolean; score: number; issues: string[] }> {

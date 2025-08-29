@@ -3,7 +3,7 @@
  */
 
 import { parseUnit } from "../units/units.ts";
-import { classifyIndicator } from "../classification/classification.ts";
+
 import type { IndicatorType } from "../types.ts";
 
 /** Input data point for quality checks. */
@@ -13,7 +13,7 @@ export interface DataPoint {
   timestamp?: Date;
   source?: string;
   indicatorName?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /** Aggregated data quality score and breakdown. */
@@ -36,7 +36,7 @@ export interface QualityIssue {
   severity: "critical" | "warning" | "info";
   type: string;
   message: string;
-  affectedData?: any;
+  affectedData?: unknown;
 }
 
 /** Options toggling specific quality dimensions and rules. */

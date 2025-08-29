@@ -6,11 +6,11 @@ export interface CacheOptions {
   ttl?: number;
   maxSize?: number;
   storage?: "memory" | "localStorage";
-  keyGenerator?: (...args: any[]) => string;
+  keyGenerator?: (...args: unknown[]) => string;
 }
 
 class SmartCache {
-  private cache = new Map<string, { value: any; expires: number }>();
+  private cache = new Map<string, { value: unknown; expires: number }>();
   private options: CacheOptions;
 
   constructor(options: CacheOptions = {}) {
@@ -55,7 +55,7 @@ class SmartCache {
 /**
  * Create cached version of a function
  */
-export function withCache<T extends (...args: any[]) => any>(
+export function withCache<T extends (...args: unknown[]) => unknown>(
   fn: T,
   options: CacheOptions = {},
 ): T {

@@ -32,6 +32,10 @@ and quantitative analysis.
 
 - 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity
   for external consumers
+- 💼 **Wages Data Normalization** — Specialized handling for mixed wage/salary
+  data with different currencies and time periods
+- ⏰ **Advanced Time Sampling** — Comprehensive upsampling and downsampling for
+  economic time series
 - 💱 **Live FX Rates** — Fetch real-time exchange rates from multiple sources
   with fallback
 - 📈 **Historical Analysis** — Time-series normalization with historical FX
@@ -62,6 +66,19 @@ import {
   processEconomicData,
   validateEconomicData,
 } from "jsr:@tellimer/econify";
+
+// Wages processing
+import {
+  normalizeWagesData,
+  processWagesIndicator,
+} from "jsr:@tellimer/econify/wages";
+
+// Time sampling
+import {
+  convertWageTimeScale,
+  processWageTimeSeries,
+  resampleTimeSeries,
+} from "jsr:@tellimer/econify/time";
 ```
 
 ## 🚀 Quick Start
@@ -264,6 +281,91 @@ gdpData.forEach((item) => {
 });
 ```
 
+### Wages Data Processing
+
+Handle mixed wage data with different currencies and time periods:
+
+```ts
+import { processWagesIndicator } from "jsr:@tellimer/econify/wages";
+
+// Mixed wages data (real-world scenario)
+const wagesData = {
+  indicator_id: "WAGES",
+  indicator_name: "Average Wages",
+  countries: {
+    CAN: {
+      value: "29.68",
+      tooltip: { currency: "CAD", units: "CAD/Hour" },
+    },
+    AUS: {
+      value: "1432.6",
+      tooltip: { currency: "AUD", units: "AUD/Week" },
+    },
+    CHN: {
+      value: "124110",
+      tooltip: { currency: "CNY", units: "CNY/Year" },
+    },
+    EUR: {
+      value: "3200",
+      tooltip: { currency: "EUR", units: "EUR/Month" },
+    },
+  },
+};
+
+// Process with automatic time + currency conversion
+const result = await processWagesIndicator(wagesData, fxRates, {
+  targetCurrency: "USD", // Convert all to USD
+  // Time conversion to monthly is automatic
+});
+
+// Results: All wages now in USD/month for comparison
+console.log("Comparable wages in USD/month:");
+Object.entries(result.normalized.countries).forEach(([country, data]) => {
+  console.log(`${country}: $${Math.round(data.value).toLocaleString()}`);
+});
+// CAN: $15,931 USD/month (was 29.68 CAD/Hour)
+// AUS: $4,084 USD/month (was 1432.6 AUD/Week)
+// CHN: $1,427 USD/month (was 124110 CNY/Year)
+// EUR: $3,478 USD/month (was 3200 EUR/Month)
+```
+
+### Advanced Time Sampling
+
+Upsample and downsample time series data with multiple methods:
+
+```ts
+import {
+  convertWageTimeScale,
+  processWageTimeSeries,
+  resampleTimeSeries,
+} from "jsr:@tellimer/econify/time";
+
+// Upsample yearly to monthly with linear interpolation
+const yearlyData = [
+  { date: new Date("2022-01-01"), value: 50000 },
+  { date: new Date("2023-01-01"), value: 52000 },
+  { date: new Date("2024-01-01"), value: 54000 },
+];
+
+const monthlyData = resampleTimeSeries(yearlyData, "month", {
+  method: "linear", // or "step", "average", "sum"
+});
+
+// Convert wage time scales with work hours accuracy
+const monthlyWage = convertWageTimeScale(25, "hour", "month", "hourly");
+// Uses 173.33 work hours/month, not 730 calendar hours
+
+// Process mixed wage frequencies
+const mixedWages = [
+  { value: 30, unit: "USD/Hour", country: "USA" },
+  { value: 1500, unit: "EUR/Week", country: "DEU" },
+  { value: 60000, unit: "GBP/Year", country: "GBR" },
+];
+
+const standardized = processWageTimeSeries(mixedWages, "month");
+// All converted to monthly frequency with proper time factors
+```
+
 ## 🌊 Pipeline API Reference
 
 ### Core Functions
@@ -286,6 +388,28 @@ async function validateEconomicData(
   data: ParsedData[],
   options?: { requiredFields?: string[] },
 ): Promise<ValidationResult>;
+
+// Process wages data with time + currency conversion
+async function processWagesIndicator(
+  wagesData: any,
+  fxRates: FXTable,
+  options?: { targetCurrency?: string; excludeIndexValues?: boolean },
+): Promise<WagesProcessingResult>;
+
+// Advanced time series resampling
+function resampleTimeSeries(
+  data: TimeSeries[],
+  targetFrequency: TimeScale,
+  options?: SamplingOptions,
+): TimeSeries[];
+
+// Convert wage time scales with work hours accuracy
+function convertWageTimeScale(
+  value: number,
+  fromScale: TimeScale,
+  toScale: TimeScale,
+  wageType?: "hourly" | "salary",
+): number;
 ```
 
 ### Types
@@ -338,6 +462,38 @@ interface ParsedData {
   normalized?: number;
   normalizedUnit?: string;
   metadata?: Record<string, any>;
+}
+
+interface WagesProcessingResult {
+  original: any;
+  normalized: any;
+  summary: {
+    total: number;
+    normalized: number;
+    excluded: number;
+    comparable: number;
+    valueRange?: { min: number; max: number; mean: number };
+  };
+  comparable: NormalizedWageData[];
+}
+
+interface TimeSeries {
+  date: Date;
+  value: number;
+  metadata?: any;
+}
+
+interface SamplingOptions {
+  method:
+    | "linear"
+    | "step"
+    | "average"
+    | "sum"
+    | "end_of_period"
+    | "start_of_period";
+  fillMissing?: boolean;
+  fillValue?: number;
+  preserveSeasonality?: boolean;
 }
 ```
 
@@ -541,7 +697,54 @@ const weighted = aggregate(data, {
 - **Indices**: Points, Index
 - **Population**: Persons, per 1000 people, households
 - **Ratios**: USD/Liter, KRW/Hour, USD/kg
+- **Wages**: CAD/Hour, AUD/Week, CNY/Year (with work hours accuracy)
 - **Custom**: Any domain-specific units you define
+
+## 💼 Wages Data Normalization
+
+### Problem Solved
+
+Economic wage data often comes in incomparable formats:
+
+**Before Normalization:**
+
+```
+CAN: 29.68 CAD/Hour
+AUS: 1,432.6 AUD/Week
+CHN: 124,110 CNY/Year
+Value range: 29.68 to 124,110 (meaningless comparison)
+```
+
+**After Complete Pipeline:**
+
+```
+CAN: $15,931 USD/month
+AUS: $4,084 USD/month
+CHN: $1,427 USD/month
+Value range: $1,427 - $15,931 USD/month (comparable!)
+```
+
+### Key Features
+
+- **Work Hours vs Calendar Hours**: Hourly wages use 173.33 work hours/month,
+  not 730 calendar hours
+- **Mixed Frequency Handling**: Automatic conversion between hourly, weekly,
+  monthly, yearly
+- **Currency + Time Conversion**: Proper order (time first, then currency) for
+  accuracy
+- **Index Value Separation**: Distinguishes wage amounts from wage
+  indices/points
+- **Comprehensive Metadata**: Tracks all conversion steps and exclusion reasons
+
+### Time Sampling Methods
+
+| Method          | Use Case                 | Example                              |
+| --------------- | ------------------------ | ------------------------------------ |
+| `linear`        | Smooth wage progression  | Yearly salary → monthly estimates    |
+| `average`       | Typical wage calculation | Daily wages → monthly average        |
+| `sum`           | Total compensation       | Weekly pay → monthly total           |
+| `step`          | Fixed wage periods       | Quarterly bonus → monthly allocation |
+| `end_of_period` | Latest wage rate         | Use most recent wage data            |
 
 ## 🛠️ API Reference
 

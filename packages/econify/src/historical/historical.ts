@@ -42,7 +42,7 @@ export async function normalizeHistorical(
     toMagnitude,
     toTimeScale,
     fxSource = "historical",
-    interpolate = false,
+    _interpolate = false,
   } = options;
 
   const dateStr = typeof date === "string"
@@ -83,7 +83,7 @@ export async function getHistoricalFXRates(
     const response = await fetchHistoricalFromAPI(date);
     historicalFXCache[date] = response;
     return response;
-  } catch (error) {
+  } catch (_error) {
     console.warn(
       `Failed to fetch historical rates for ${date}, using current rates`,
     );

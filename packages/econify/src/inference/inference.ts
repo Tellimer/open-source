@@ -2,7 +2,7 @@
  * Smart unit inference from context
  */
 
-import { type ParsedUnit, parseUnit } from "../units/units.ts";
+import { parseUnit } from "../units/units.ts";
 import { classifyIndicator } from "../classification/classification.ts";
 import type { Scale } from "../types.ts";
 

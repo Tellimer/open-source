@@ -53,7 +53,7 @@ export function aggregate(
 
   // Normalize to common unit if needed
   let values: number[] = [];
-  let finalUnit = targetUnit || data[0]?.unit || "unknown";
+  const finalUnit = targetUnit || data[0]?.unit || "unknown";
 
   if (normalizeFirst && targetUnit) {
     for (const item of data) {
@@ -121,7 +121,11 @@ export function aggregate(
 /**
  * Parse target unit string
  */
-function parseTargetUnit(targetUnit: string): any {
+function parseTargetUnit(targetUnit: string): {
+  currency?: string;
+  scale?: string;
+  timeScale?: string;
+} {
   const parsed = parseUnit(targetUnit);
   return {
     toCurrency: parsed.currency,

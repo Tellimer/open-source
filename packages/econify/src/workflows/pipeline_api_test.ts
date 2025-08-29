@@ -9,8 +9,6 @@ import {
   assertRejects,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import {
-  type PipelineOptions,
-  type PipelineResult,
   processEconomicData,
   processEconomicDataAuto,
   validateEconomicData,
@@ -154,17 +152,10 @@ Deno.test("processEconomicDataAuto - auto quality handling", async () => {
     { value: -999999999, unit: "USD Million", name: "Negative Outlier" },
   ];
 
-  let warningReceived = false;
-
   const result = await processEconomicDataAuto(data, {
     minQualityScore: 99, // Very high threshold that data won't meet due to outliers
-    onWarning: (warning) => {
-      if (
-        warning.includes("below threshold") ||
-        warning.includes("continuing anyway")
-      ) {
-        warningReceived = true;
-      }
+    onWarning: (_warning) => {
+      // Warning callback for testing
     },
     fxFallback: {
       base: "USD",

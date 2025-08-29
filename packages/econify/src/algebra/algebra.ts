@@ -44,8 +44,8 @@ export function unitMultiply(a: UnitValue, b: UnitValue): UnitValue {
  * Divide values with unit tracking
  */
 export function unitDivide(a: UnitValue, b: UnitValue): UnitValue {
-  const parsedA = parseUnit(a.unit);
-  const parsedB = parseUnit(b.unit);
+  const _parsedA = parseUnit(a.unit);
+  const _parsedB = parseUnit(b.unit);
 
   // Same units cancel out
   if (a.unit === b.unit) {
