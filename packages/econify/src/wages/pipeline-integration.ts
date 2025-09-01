@@ -107,6 +107,8 @@ async function processWagesData(
     targetCurrency?: string;
     targetMagnitude?: string;
     targetTimeScale?: string;
+    excludeIndexValues?: boolean;
+    includeWageMetadata?: boolean;
   },
 ): Promise<ParsedData[]> {
   if (!fxRates) {
@@ -139,8 +141,8 @@ async function processWagesData(
     targetCurrency: config.targetCurrency || "USD",
     targetTimeScale: "month", // Standardize wages to monthly
     fx: fxRates,
-    excludeIndexValues: false, // Keep index values but mark them
-    includeMetadata: true,
+    excludeIndexValues: config.excludeIndexValues ?? true, // Use config value, default to true
+    includeMetadata: config.includeWageMetadata ?? true,
   });
 
   // Convert back to ParsedData format
@@ -277,7 +279,7 @@ export function processWagesIndicator(
     excludeIndexValues?: boolean;
   } = {},
 ): ProcessingResult {
-  const { targetCurrency = "USD", excludeIndexValues = false } = options;
+  const { targetCurrency = "USD", excludeIndexValues = true } = options;
 
   // Convert indicator data to wage points format
   const wagePoints = Object.entries(indicatorData.countries || {}).map((

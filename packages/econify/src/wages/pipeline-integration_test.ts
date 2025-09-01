@@ -2,11 +2,13 @@
  * Test the pipeline integration with real wages data
  */
 
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assert, assertEquals, assertExists } from "jsr:@std/assert";
 import {
   createWagesPipelineConfig,
   processWagesIndicator,
 } from "./pipeline-integration.ts";
+import { normalizeWagesData } from "./wages-normalization.ts";
+import { parseUnit } from "../units/units.ts";
 import type { FXTable } from "../types.ts";
 
 // Sample FX rates
@@ -259,5 +261,122 @@ Deno.test("processWagesIndicator - updates indicator data", () => {
     Number(albCountry.value) < 100000,
     true,
     "Normalized value should be reasonable",
+  );
+});
+
+Deno.test("processWagesIndicator - mixed currency and index data", () => {
+  const mixedData = {
+    indicator_id: "WAGES",
+    indicator_name: "Wages",
+    countries: {
+      ALB: {
+        date: "2025-03-31",
+        value: 82210.0,
+        tooltip: {
+          currency: "ALL",
+          units: "ALL/Month",
+          periodicity: "Monthly",
+        },
+      },
+      AUT: {
+        date: "2025-06-30",
+        value: 103.5,
+        tooltip: {
+          currency: undefined,
+          units: "Index (2020=100)",
+          periodicity: "Quarterly",
+        },
+      },
+    },
+  };
+
+  // Test excluding index values (default)
+  const resultExcluded = processWagesIndicator(mixedData, fx);
+  assertEquals(
+    resultExcluded.comparable.length,
+    1,
+    "Should only include currency data",
+  );
+  assertEquals(resultExcluded.comparable[0].country, "ALB");
+  assertEquals(resultExcluded.comparable[0].dataType, "currency");
+});
+
+Deno.test("processWagesIndicator - configuration options", () => {
+  // Test different target currencies
+  const resultUSD = processWagesIndicator(sampleWagesIndicator, fx, {
+    targetCurrency: "USD",
+  });
+  const resultEUR = processWagesIndicator(sampleWagesIndicator, fx, {
+    targetCurrency: "EUR",
+  });
+
+  assert(resultUSD.comparable.length > 0, "USD conversion should work");
+  assert(resultEUR.comparable.length > 0, "EUR conversion should work");
+
+  // Values should be different due to currency conversion
+  const usdValue = resultUSD.comparable[0].normalizedValue!;
+  const eurValue = resultEUR.comparable[0].normalizedValue!;
+  assert(
+    Math.abs(usdValue - eurValue) > 10,
+    "Currency conversion should change values",
+  );
+});
+
+Deno.test("processWagesIndicator - index value detection", () => {
+  // Test that index detection logic works correctly
+  const indexUnits = [
+    "Index (2020=100)",
+    "Points",
+    "Wage Growth Index",
+  ];
+
+  indexUnits.forEach((unit) => {
+    const parsed = parseUnit(unit);
+    assert(
+      parsed.category === "index" || unit.toLowerCase().includes("index") ||
+        unit.toLowerCase().includes("points"),
+      `Unit "${unit}" should be detected as index`,
+    );
+  });
+});
+
+Deno.test("processWagesIndicator - direct wages normalization", () => {
+  // Test the underlying wages normalization directly
+  const testDataPoints = [
+    {
+      country: "ALB",
+      value: 82210.0,
+      unit: "ALL/Month",
+      date: "2025-03-31",
+    },
+    {
+      country: "AUT",
+      value: 103.5,
+      unit: "Index (2020=100)",
+      date: "2025-06-30",
+    },
+  ];
+
+  const result = normalizeWagesData(testDataPoints, {
+    targetCurrency: "USD",
+    excludeIndexValues: false,
+    fx,
+  });
+
+  assertEquals(result.length, 2, "Should process both data points");
+
+  const albResult = result.find((r) => r.country === "ALB");
+  const autResult = result.find((r) => r.country === "AUT");
+
+  assertExists(albResult, "ALB result should exist");
+  assertExists(autResult, "AUT result should exist");
+
+  assertEquals(albResult.dataType, "currency", "ALB should be currency type");
+  assertEquals(autResult.dataType, "index", "AUT should be index type");
+
+  assert(!albResult.excluded, "ALB should not be excluded");
+  assert(
+    !autResult.excluded,
+    "AUT should not be excluded when includeIndex=false",
   );
 });

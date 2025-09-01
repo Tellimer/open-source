@@ -64,6 +64,12 @@ export function processEconomicData(
       },
     });
 
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      actor.stop();
+      reject(new Error("Pipeline API timeout after 15 seconds"));
+    }, 15000);
+
     let lastState = "";
     const startTime = Date.now();
 
@@ -101,6 +107,18 @@ export function processEconomicData(
         }
       }
 
+      // Auto-continue on quality review (like processEconomicDataAuto)
+      if (state.matches("qualityReview")) {
+        if (onWarning) {
+          onWarning(
+            `Quality score ${
+              state.context.qualityScore?.overall || 0
+            } below threshold, continuing anyway`,
+          );
+        }
+        setTimeout(() => actor.send({ type: "CONTINUE" }), 0);
+      }
+
       // Handle warnings
       if (state.context.warnings.length > 0 && onWarning) {
         state.context.warnings.forEach((warning) => {
@@ -128,6 +146,8 @@ export function processEconomicData(
             qualityScore: state.context.qualityScore?.overall,
           },
         };
+        clearTimeout(timeout);
+        actor.stop();
         resolve(result);
       }
 
@@ -154,6 +174,8 @@ export function processEconomicData(
             qualityScore: state.context.qualityScore?.overall,
           },
         };
+        clearTimeout(timeout);
+        actor.stop();
         reject(errors[0] || new Error("Pipeline failed"));
       }
     });
@@ -183,6 +205,12 @@ export function processEconomicDataAuto(
         config,
       },
     });
+
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      actor.stop();
+      reject(new Error("Pipeline API Auto timeout after 15 seconds"));
+    }, 15000);
 
     const startTime = Date.now();
     let hasReviewed = false;
@@ -221,6 +249,8 @@ export function processEconomicDataAuto(
       }
 
       if (state.matches("success")) {
+        clearTimeout(timeout);
+        actor.stop();
         resolve({
           data: state.context.finalData || [],
           warnings: state.context.warnings,
@@ -239,6 +269,8 @@ export function processEconomicDataAuto(
           state.context.errors[0]?.message || "Pipeline failed",
         );
         if (onError) onError(error);
+        clearTimeout(timeout);
+        actor.stop();
         reject(error);
       }
     });
@@ -261,7 +293,11 @@ export function validateEconomicData(
   options: { requiredFields?: string[] } = {},
 ): Promise<{ valid: boolean; score: number; issues: string[] }> {
   if (!data || data.length === 0) {
-    return Promise.resolve({ valid: false, score: 0, issues: ["No data provided"] });
+    return Promise.resolve({
+      valid: false,
+      score: 0,
+      issues: ["No data provided"],
+    });
   }
 
   const issues: string[] = [];

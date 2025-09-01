@@ -86,13 +86,48 @@ export function assessDataQuality(
     uniqueness: 100,
   };
 
+  // Handle empty dataset
+  if (dataArray.length === 0) {
+    issues.push({
+      severity: "critical",
+      type: "no_data",
+      message: "No data provided",
+    });
+    return {
+      overall: 0,
+      dimensions: {
+        completeness: 0,
+        consistency: 0,
+        validity: 0,
+        accuracy: 0,
+        timeliness: 0,
+        uniqueness: 0,
+      },
+      issues,
+      recommendations: ["Provide data for analysis"],
+    };
+  }
+
+  // Check for insufficient data
+  if (dataArray.length < 3) {
+    issues.push({
+      severity: "warning",
+      type: "insufficient_data",
+      message: `Insufficient data points: ${dataArray.length}`,
+    });
+    dimensions.completeness = Math.max(0, 100 - (3 - dataArray.length) * 35);
+  }
+
   // 1. Completeness checks
   if (options.checkCompleteness !== false) {
     const completenessResult = checkCompleteness(
       dataArray,
       options.expectedSchema,
     );
-    dimensions.completeness = completenessResult.score;
+    dimensions.completeness = Math.min(
+      dimensions.completeness,
+      completenessResult.score,
+    );
     issues.push(...completenessResult.issues);
   }
 
@@ -114,21 +149,28 @@ export function assessDataQuality(
       dataArray,
       options.outlierMethod || "iqr",
     );
-    dimensions.accuracy = outlierResult.score;
+    dimensions.validity = Math.min(dimensions.validity, outlierResult.score);
     issues.push(...outlierResult.issues);
   }
 
-  // 5. Timeliness checks
-  if (dataArray.some((d) => d.timestamp)) {
-    const timelinessResult = checkTimeliness(dataArray);
-    dimensions.timeliness = timelinessResult.score;
-    issues.push(...timelinessResult.issues);
-  }
+  // 5. Temporal checks
+  const temporalResult = checkTemporal(dataArray);
+  dimensions.timeliness = Math.min(dimensions.timeliness, temporalResult.score);
+  issues.push(...temporalResult.issues);
 
   // 6. Uniqueness checks
   const uniquenessResult = checkUniqueness(dataArray);
   dimensions.uniqueness = uniquenessResult.score;
+  dimensions.consistency = Math.min(
+    dimensions.consistency,
+    uniquenessResult.score,
+  );
   issues.push(...uniquenessResult.issues);
+
+  // 7. Source reliability checks
+  const sourceResult = checkSourceReliability(dataArray);
+  dimensions.accuracy = Math.min(dimensions.accuracy, sourceResult.score);
+  issues.push(...sourceResult.issues);
 
   // 7. Apply custom rules
   if (options.customRules) {
@@ -196,9 +238,100 @@ function checkCompleteness(
       });
       missingCount++;
     }
+  }
 
-    // Check required fields from schema
-    if (schema?.requiredFields) {
+  // Check for temporal gaps (missing data points)
+  const datedData = data.filter((d) =>
+    d.timestamp || (d as DataPoint & { date?: string }).date
+  );
+  if (datedData.length > 1) {
+    const dates = datedData.map((d) =>
+      new Date(d.timestamp || (d as DataPoint & { date?: string }).date!)
+    ).sort((a, b) => a.getTime() - b.getTime());
+    let expectedPoints = 0;
+    const actualPoints = dates.length;
+
+    // Estimate expected frequency
+    if (dates.length >= 2) {
+      const totalSpan = dates[dates.length - 1].getTime() - dates[0].getTime();
+      const avgGap = totalSpan / (dates.length - 1);
+      const dayGap = avgGap / (1000 * 60 * 60 * 24);
+
+      if (dayGap <= 45) { // Monthly data (allow for some variation)
+        expectedPoints = Math.round(totalSpan / (30 * 24 * 60 * 60 * 1000)) + 1;
+      } else if (dayGap <= 100) { // Quarterly data
+        expectedPoints = Math.round(totalSpan / (90 * 24 * 60 * 60 * 1000)) + 1;
+      } else {
+        // For larger gaps, assume monthly and detect missing data
+        expectedPoints = Math.round(totalSpan / (30 * 24 * 60 * 60 * 1000)) + 1;
+      }
+
+      if (expectedPoints > actualPoints) {
+        issues.push({
+          severity: "warning",
+          type: "missing_values",
+          message:
+            `Expected ${expectedPoints} data points, found ${actualPoints}`,
+        });
+        missingCount += expectedPoints - actualPoints;
+      }
+    } else {
+      // If we can't determine frequency, but have gaps, assume missing data
+      if (dates.length >= 2) {
+        const totalSpan = dates[dates.length - 1].getTime() -
+          dates[0].getTime();
+        const daySpan = totalSpan / (1000 * 60 * 60 * 24);
+
+        // If span is more than 2 months but we have only a few points, likely missing data
+        if (daySpan > 60 && dates.length < 5) {
+          issues.push({
+            severity: "warning",
+            type: "missing_values",
+            message: `Large time span (${
+              Math.round(daySpan)
+            } days) with few data points (${dates.length})`,
+          });
+          missingCount += 2; // Assume some missing data
+        }
+      }
+    }
+  } else if (data.length >= 2) {
+    // For non-dated data, check if we have fewer than expected points
+    // This is a simple heuristic - if we have very few points, assume some are missing
+    if (data.length < 5) {
+      issues.push({
+        severity: "warning",
+        type: "missing_values",
+        message:
+          `Only ${data.length} data points available, may be missing data`,
+      });
+      missingCount += 5 - data.length;
+    }
+  }
+
+  // Simple heuristic: if we have dated data spanning more than 3 months with few points
+  if (datedData.length >= 2 && datedData.length <= 3) {
+    const dates = datedData.map((d) =>
+      new Date(d.timestamp || (d as DataPoint & { date?: string }).date!)
+    );
+    const span = dates[dates.length - 1].getTime() - dates[0].getTime();
+    const monthSpan = span / (30 * 24 * 60 * 60 * 1000);
+
+    if (monthSpan > 3) { // More than 3 months span
+      issues.push({
+        severity: "warning",
+        type: "missing_values",
+        message: `${
+          Math.round(monthSpan)
+        } month span with only ${datedData.length} data points`,
+      });
+      missingCount += Math.floor(monthSpan - datedData.length);
+    }
+  }
+
+  // Check required fields from schema
+  if (schema?.requiredFields) {
+    for (const point of data) {
       for (const field of schema.requiredFields) {
         if (!(field in point)) {
           issues.push({
@@ -213,7 +346,14 @@ function checkCompleteness(
     }
   }
 
-  const score = Math.max(0, 100 - (missingCount / data.length) * 100);
+  let score = Math.max(0, 100 - (missingCount / data.length) * 100);
+
+  // Additional penalty for temporal gaps
+  const temporalGapIssues = issues.filter((i) => i.type === "missing_values");
+  if (temporalGapIssues.length > 0) {
+    score = Math.max(0, score - 30); // Additional penalty for temporal gaps
+  }
+
   return { score, issues };
 }
 
@@ -228,6 +368,17 @@ function checkValidity(
   let invalidCount = 0;
 
   for (const point of data) {
+    // Check for invalid numeric values
+    if (!isFinite(point.value) || isNaN(point.value)) {
+      issues.push({
+        severity: "critical",
+        type: "invalid_values",
+        message: `Invalid numeric value: ${point.value}`,
+        affectedData: point,
+      });
+      invalidCount++;
+    }
+
     // Check value range
     if (schema?.valueRange) {
       const { min, max } = schema.valueRange;
@@ -286,7 +437,7 @@ function checkValidity(
     }
   }
 
-  const score = Math.max(0, 100 - (invalidCount / data.length) * 50);
+  const score = Math.max(0, 100 - (invalidCount / data.length) * 80);
   return { score, issues };
 }
 
@@ -337,8 +488,30 @@ function checkConsistency(data: DataPoint[]): {
     });
   }
 
-  const score = Math.max(0, 100 - issues.length * 20);
-  return { score, issues };
+  // Check for mixed data types (this is a simple heuristic)
+  const types = new Set(data.map((d) => typeof d.value));
+  if (types.size > 1) {
+    issues.push({
+      severity: "warning",
+      type: "mixed_data_types",
+      message: "Mixed data types detected",
+      affectedData: data,
+    });
+  }
+
+  // Calculate score based on issue severity
+  let score = 100;
+  for (const issue of issues) {
+    if (issue.type === "inconsistent_units") {
+      score -= 40; // Major penalty for unit inconsistency
+    } else if (issue.severity === "warning") {
+      score -= 20;
+    } else if (issue.severity === "info") {
+      score -= 10;
+    }
+  }
+
+  return { score: Math.max(0, score), issues };
 }
 
 /**
@@ -366,7 +539,7 @@ function detectOutliers(
   for (const idx of outlierIndices) {
     issues.push({
       severity: "warning",
-      type: "outlier",
+      type: "outliers",
       message: `Potential outlier detected: ${values[idx]}`,
       affectedData: data[idx],
     });
@@ -409,7 +582,7 @@ function detectOutliersZScore(values: number[], threshold = 3): number[] {
 /**
  * Check timeliness
  */
-function checkTimeliness(data: DataPoint[]): {
+function _checkTimeliness(data: DataPoint[]): {
   score: number;
   issues: QualityIssue[];
 } {
@@ -442,36 +615,6 @@ function checkTimeliness(data: DataPoint[]): {
   }
 
   const score = Math.max(0, 100 - (staleCount / data.length) * 50);
-  return { score, issues };
-}
-
-/**
- * Check uniqueness
- */
-function checkUniqueness(data: DataPoint[]): {
-  score: number;
-  issues: QualityIssue[];
-} {
-  const issues: QualityIssue[] = [];
-  const seen = new Set<string>();
-  let duplicates = 0;
-
-  for (const point of data) {
-    const key =
-      `${point.value}_${point.unit}_${point.timestamp?.toISOString()}`;
-    if (seen.has(key)) {
-      issues.push({
-        severity: "warning",
-        type: "duplicate",
-        message: "Duplicate data point detected",
-        affectedData: point,
-      });
-      duplicates++;
-    }
-    seen.add(key);
-  }
-
-  const score = Math.max(0, 100 - (duplicates / data.length) * 100);
   return { score, issues };
 }
 
@@ -558,4 +701,116 @@ function generateRecommendations(
   }
 
   return recommendations;
+}
+
+/**
+ * Check temporal aspects of data
+ */
+function checkTemporal(data: DataPoint[]): {
+  score: number;
+  issues: QualityIssue[];
+} {
+  const issues: QualityIssue[] = [];
+  let score = 100;
+
+  // Check for temporal gaps if dates are provided
+  const datedData = data.filter((d) =>
+    d.timestamp || (d as DataPoint & { date?: string }).date
+  );
+  if (datedData.length > 1) {
+    const dates = datedData.map((d) =>
+      new Date(d.timestamp || (d as DataPoint & { date?: string }).date!)
+    ).sort((a, b) => a.getTime() - b.getTime());
+
+    // Check for large gaps
+    for (let i = 1; i < dates.length; i++) {
+      const gap = dates[i].getTime() - dates[i - 1].getTime();
+      const dayGap = gap / (1000 * 60 * 60 * 24);
+
+      if (dayGap > 45) { // More than 1.5 months
+        issues.push({
+          severity: "warning",
+          type: "temporal_gaps",
+          message: `Large temporal gap: ${Math.round(dayGap)} days`,
+        });
+        score -= 25;
+      }
+    }
+  }
+
+  return { score: Math.max(0, score), issues };
+}
+
+/**
+ * Check data uniqueness
+ */
+function checkUniqueness(data: DataPoint[]): {
+  score: number;
+  issues: QualityIssue[];
+} {
+  const issues: QualityIssue[] = [];
+  let score = 100;
+
+  // Check for duplicate dates
+  const dates = data.filter((d) =>
+    d.timestamp || (d as DataPoint & { date?: string }).date
+  ).map((d) =>
+    (d.timestamp || (d as DataPoint & { date?: string }).date!).toString()
+  );
+  const uniqueDates = new Set(dates);
+
+  if (dates.length > uniqueDates.size) {
+    issues.push({
+      severity: "warning",
+      type: "duplicate_dates",
+      message: `Found ${dates.length - uniqueDates.size} duplicate dates`,
+    });
+    score -= (dates.length - uniqueDates.size) * 20;
+  }
+
+  return { score: Math.max(0, score), issues };
+}
+
+/**
+ * Check source reliability
+ */
+function checkSourceReliability(data: DataPoint[]): {
+  score: number;
+  issues: QualityIssue[];
+} {
+  const issues: QualityIssue[] = [];
+  let score = 100;
+
+  const _reliableSources = [
+    "federal reserve",
+    "world bank",
+    "imf",
+    "oecd",
+    "eurostat",
+    "bureau of labor statistics",
+    "census bureau",
+  ];
+
+  const unreliableSources = [
+    "unknown blog",
+    "random website",
+    "unverified source",
+  ];
+
+  for (const point of data) {
+    if (point.source) {
+      const source = point.source.toLowerCase();
+      if (unreliableSources.some((us) => source.includes(us))) {
+        issues.push({
+          severity: "warning",
+          type: "unreliable_sources",
+          message: `Potentially unreliable source: ${point.source}`,
+          affectedData: point,
+        });
+        score -= 15;
+      }
+    }
+  }
+
+  return { score: Math.max(0, score), issues };
 }

@@ -4,7 +4,7 @@
 
 import { normalizeValue } from "../normalization/normalization.ts";
 import { parseUnit } from "../units/units.ts";
-import type { FXTable } from "../types.ts";
+import type { FXTable, Scale, TimeScale } from "../types.ts";
 
 /** Options for aggregate() controlling method and normalization. */
 export interface AggregationOptions {
@@ -51,17 +51,38 @@ export function aggregate(
     skipInvalid = true,
   } = options;
 
+  // Validate input
+  if (!data || data.length === 0) {
+    throw new Error("No data provided for aggregation");
+  }
+
+  // Check for mixed units without normalization
+  if (!normalizeFirst || !targetUnit) {
+    const units = [...new Set(data.map((d) => d.unit))];
+    if (units.length > 1) {
+      throw new Error(
+        `Cannot aggregate different units without normalization: ${
+          units.join(", ")
+        }`,
+      );
+    }
+  }
+
   // Normalize to common unit if needed
-  let values: number[] = [];
+  const values: number[] = [];
   const finalUnit = targetUnit || data[0]?.unit || "unknown";
 
-  if (normalizeFirst && targetUnit) {
+  if (normalizeFirst && targetUnit && fx) {
     for (const item of data) {
       try {
         const normalized = normalizeValue(item.value, item.unit, {
           fx,
           ...parseTargetUnit(targetUnit),
         });
+        if (skipInvalid && (!isFinite(normalized) || isNaN(normalized))) {
+          console.warn(`Skipping invalid normalized value: ${normalized}`);
+          continue;
+        }
         values.push(normalized);
       } catch (error) {
         if (!skipInvalid) throw error;
@@ -69,7 +90,14 @@ export function aggregate(
       }
     }
   } else {
-    values = data.map((d) => d.value);
+    for (const item of data) {
+      const value = item.value;
+      if (skipInvalid && (!isFinite(value) || isNaN(value))) {
+        console.warn(`Skipping invalid value: ${value}`);
+        continue;
+      }
+      values.push(value);
+    }
   }
 
   if (values.length === 0) {
@@ -122,15 +150,15 @@ export function aggregate(
  * Parse target unit string
  */
 function parseTargetUnit(targetUnit: string): {
-  currency?: string;
-  scale?: string;
-  timeScale?: string;
+  toCurrency?: string;
+  toMagnitude?: Scale;
+  toTimeScale?: TimeScale;
 } {
   const parsed = parseUnit(targetUnit);
   return {
-    currency: parsed.currency,
-    scale: parsed.scale,
-    timeScale: parsed.timeScale,
+    toCurrency: parsed.currency,
+    toMagnitude: parsed.scale as Scale,
+    toTimeScale: parsed.timeScale as TimeScale,
   };
 }
 
@@ -173,8 +201,12 @@ function weightedAverage(values: number[], weights: number[]): number {
 }
 
 function geometricMean(values: number[]): number {
-  const product = values.reduce((a, b) => a * b, 1);
-  return Math.pow(product, 1 / values.length);
+  // Use logarithms to avoid overflow and improve precision
+  const logSum = values.reduce((sum, val) => sum + Math.log(Math.abs(val)), 0);
+  const result = Math.exp(logSum / values.length);
+
+  // Round to avoid floating-point precision issues
+  return Math.round(result * 1e10) / 1e10;
 }
 
 function harmonicMean(values: number[]): number {

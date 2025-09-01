@@ -11,11 +11,11 @@ import {
   type FXTable,
   inferUnit,
   parseUnit,
-  processBatch,
   type QualityScore,
   type Scale,
   type TimeScale,
 } from "../main.ts";
+import { enhancedNormalizeDataService } from "../wages/pipeline-integration.ts";
 
 // Derived types
 type ParsedUnit = ReturnType<typeof parseUnit>;
@@ -60,6 +60,10 @@ export interface PipelineConfig {
   validateSchema?: boolean;
   requiredFields?: string[];
   outputFormat?: "json" | "csv" | "parquet";
+
+  // Wages-specific configuration
+  excludeIndexValues?: boolean;
+  includeWageMetadata?: boolean;
 }
 
 /**
@@ -183,19 +187,7 @@ export const pipelineMachine = setup({
 
     normalizeDataService: fromPromise(
       async ({ input }: { input: PipelineContext }) => {
-        const { parsedData, fxRates, config } = input;
-        if (!parsedData) {
-          throw new Error("No parsed data available");
-        }
-        const result = await processBatch(parsedData, {
-          validate: false,
-          handleErrors: "skip",
-          parallel: true,
-          toCurrency: config.targetCurrency,
-          toMagnitude: config.targetMagnitude,
-          fx: fxRates,
-        });
-        return result.successful;
+        return await enhancedNormalizeDataService(input);
       },
     ),
 
@@ -624,10 +616,20 @@ export function createPipeline(config: PipelineConfig) {
           },
         });
 
+        // Add timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          actor.stop();
+          reject(new Error("Pipeline timeout after 3 seconds"));
+        }, 3000);
+
         actor.subscribe((state) => {
           if (state.matches("success")) {
+            clearTimeout(timeout);
+            actor.stop();
             resolve(state.context.finalData || []);
           } else if (state.matches("error")) {
+            clearTimeout(timeout);
+            actor.stop();
             reject(
               new Error("Pipeline failed: " + state.context.errors[0]?.message),
             );
@@ -672,6 +674,10 @@ export function createPipeline(config: PipelineConfig) {
 
         getContext() {
           return actor?.getSnapshot().context;
+        },
+
+        stop() {
+          actor?.stop();
         },
       };
     },

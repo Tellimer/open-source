@@ -11,6 +11,26 @@ export interface UnitValue {
 }
 
 /**
+ * Round to avoid floating-point precision issues
+ */
+function roundPrecision(value: number, precision = 10): number {
+  return Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision);
+}
+
+/**
+ * Check if two units match, handling plural forms
+ */
+function unitsMatch(unit1: string, unit2: string): boolean {
+  if (unit1 === unit2) return true;
+
+  // Handle plural forms
+  const singular1 = unit1.endsWith("s") ? unit1.slice(0, -1) : unit1;
+  const singular2 = unit2.endsWith("s") ? unit2.slice(0, -1) : unit2;
+
+  return singular1 === singular2;
+}
+
+/**
  * Multiply values with unit tracking
  */
 export function unitMultiply(a: UnitValue, b: UnitValue): UnitValue {
@@ -34,10 +54,15 @@ export function unitMultiply(a: UnitValue, b: UnitValue): UnitValue {
   }
 
   // Default multiplication
-  return {
+  const result = {
     value: a.value * b.value,
     unit: `${a.unit} * ${b.unit}`,
   };
+
+  // Simplify the resulting unit
+  result.unit = simplifyUnit(result.unit);
+
+  return result;
 }
 
 /**
@@ -85,7 +110,7 @@ export function unitSubtract(a: UnitValue, b: UnitValue): UnitValue {
   }
 
   return {
-    value: a.value - b.value,
+    value: roundPrecision(a.value - b.value),
     unit: a.unit,
   };
 }
@@ -102,10 +127,111 @@ export function unitPower(a: UnitValue, exponent: number): UnitValue {
     return a;
   }
 
-  return {
+  const result = {
     value: Math.pow(a.value, exponent),
     unit: exponent === -1 ? `1/${a.unit}` : `${a.unit}^${exponent}`,
   };
+
+  // Simplify unit if possible
+  result.unit = simplifyUnit(result.unit);
+
+  return result;
+}
+
+/**
+ * Simplify unit expressions
+ */
+function simplifyUnit(unit: string): string {
+  let simplified = unit;
+
+  // Handle power simplification (e.g., meters^2^0.5 -> meters)
+  const powerPattern = /^(.+)\^(\d+(?:\.\d+)?)\^(0\.5|0\.25|0\.75)$/;
+  const powerMatch = simplified.match(powerPattern);
+  if (powerMatch) {
+    const [, baseUnit, power, exponent] = powerMatch;
+    const newPower = parseFloat(power) * parseFloat(exponent);
+    if (newPower === 1) {
+      simplified = baseUnit;
+    } else {
+      simplified = `${baseUnit}^${newPower}`;
+    }
+  }
+
+  // Handle simple power simplification (e.g., meters^2^0.5 -> meters)
+  const simplePowerPattern = /^(.+)\^2\^0\.5$/;
+  const simplePowerMatch = simplified.match(simplePowerPattern);
+  if (simplePowerMatch) {
+    simplified = simplePowerMatch[1];
+  }
+
+  // Handle multiplication cancellation (e.g., USD/barrel * barrels -> USD)
+  const multiplyPattern = /^(.+)\/(.+) \* (.+)$/;
+  const multiplyMatch = simplified.match(multiplyPattern);
+  if (multiplyMatch) {
+    const [, numerator, denominator, multiplier] = multiplyMatch;
+    if (unitsMatch(denominator.trim(), multiplier.trim())) {
+      simplified = numerator;
+    }
+  }
+
+  // Handle reverse multiplication cancellation (e.g., barrels * USD/barrel -> USD)
+  const reverseMultiplyPattern = /^(.+) \* (.+)\/(.+)$/;
+  const reverseMultiplyMatch = simplified.match(reverseMultiplyPattern);
+  if (reverseMultiplyMatch) {
+    const [, multiplier, numerator, denominator] = reverseMultiplyMatch;
+    if (unitsMatch(multiplier.trim(), denominator.trim())) {
+      simplified = numerator;
+    }
+  }
+
+  // Handle more complex cancellations
+  // e.g., "USD/barrel * barrels" -> "USD"
+  if (simplified.includes("/") && simplified.includes("*")) {
+    const parts = simplified.split(" * ");
+    if (parts.length === 2) {
+      const [part1, part2] = parts;
+      if (part1.includes("/")) {
+        const [num, denom] = part1.split("/");
+        if (unitsMatch(denom.trim(), part2.trim())) {
+          simplified = num.trim();
+        }
+      } else if (part2.includes("/")) {
+        const [num, denom] = part2.split("/");
+        if (unitsMatch(denom.trim(), part1.trim())) {
+          simplified = num.trim();
+        }
+      }
+    }
+  }
+
+  // Handle multiplication with dimensionless units (ratio, percent, etc.)
+  if (simplified.includes(" * ")) {
+    const parts = simplified.split(" * ");
+    if (parts.length === 2) {
+      const [part1, part2] = parts;
+      if (isDimensionless(part1.trim())) {
+        simplified = part2.trim();
+      } else if (isDimensionless(part2.trim())) {
+        simplified = part1.trim();
+      }
+    }
+  }
+
+  return simplified;
+}
+
+/**
+ * Check if a unit is dimensionless
+ */
+function isDimensionless(unit: string): boolean {
+  const dimensionlessUnits = [
+    "ratio",
+    "percent",
+    "%",
+    "dimensionless",
+    "factor",
+  ];
+  return dimensionlessUnits.includes(unit.toLowerCase());
 }
 
 /**

@@ -9,7 +9,7 @@ export interface CacheOptions {
   keyGenerator?: (...args: unknown[]) => string;
 }
 
-class SmartCache {
+export class SmartCache {
   private cache = new Map<string, { value: unknown; expires: number }>();
   private options: CacheOptions;
 
