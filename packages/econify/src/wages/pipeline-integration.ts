@@ -242,7 +242,7 @@ export function createWagesPipelineConfig(options: {
 /**
  * Process wages indicator data end-to-end
  */
-interface IndicatorData {
+export interface IndicatorData {
   indicator_id: string;
   indicator_name: string;
   countries: Record<string, {

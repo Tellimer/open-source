@@ -5,6 +5,7 @@
 import { assert, assertEquals, assertExists } from "jsr:@std/assert";
 import {
   createWagesPipelineConfig,
+  type IndicatorData,
   processWagesIndicator,
 } from "./pipeline-integration.ts";
 import { normalizeWagesData } from "./wages-normalization.ts";
@@ -379,4 +380,107 @@ Deno.test("processWagesIndicator - direct wages normalization", () => {
     !autResult.excluded,
     "AUT should not be excluded when includeIndex=false",
   );
+});
+
+Deno.test("processWagesIndicator - handles missing FX rates gracefully", () => {
+  const data: IndicatorData = {
+    indicator_id: "WAGES_TEST",
+    indicator_name: "Test Wages",
+    countries: {
+      EUR: {
+        value: "1000.000",
+        tooltip: {
+          units: "EUR/Month",
+          currency: "EUR",
+          periodicity: "Monthly",
+        },
+      },
+    },
+  };
+
+  // No FX rates provided - should fall back to standard processing
+  const emptyFX: FXTable = { base: "USD", rates: {} };
+  const result = processWagesIndicator(data, emptyFX, {
+    targetCurrency: "USD",
+    excludeIndexValues: true,
+  });
+
+  assertEquals(result.summary.total, 1);
+  // Without FX rates, should still process but without conversion
+  assertExists(result.normalized);
+});
+
+Deno.test("processWagesIndicator - comprehensive FX fallback test", () => {
+  const data: IndicatorData = {
+    indicator_id: "WAGES_COMPREHENSIVE_TEST",
+    indicator_name: "Comprehensive Wages Test",
+    countries: {
+      ARM: {
+        value: "233931.000",
+        tooltip: {
+          units: "AMD/Month",
+          currency: "AMD",
+          periodicity: "Monthly",
+        },
+      },
+      AUS: {
+        value: "1631.000",
+        tooltip: {
+          units: "AUD/Week",
+          currency: "AUD",
+          periodicity: "Weekly",
+        },
+      },
+      AWG: {
+        value: "3500.000",
+        tooltip: {
+          units: "AWG/Month",
+          currency: "AWG",
+          periodicity: "Monthly",
+        },
+      },
+    },
+  };
+
+  const fxRates: FXTable = {
+    base: "USD",
+    rates: {
+      AMD: 387.5,
+      AUD: 1.52,
+      AWG: 1.80,
+    },
+  };
+
+  const result = processWagesIndicator(data, fxRates, {
+    targetCurrency: "USD",
+    excludeIndexValues: true,
+  });
+
+  assertEquals(result.summary.total, 3);
+  assertEquals(result.summary.comparable, 3);
+
+  // Check that conversions happened
+  const comparable = result.comparable;
+  assertEquals(comparable.length, 3);
+
+  // Find specific countries
+  const armResult = comparable.find((c) => c.country === "ARM");
+  const ausResult = comparable.find((c) => c.country === "AUS");
+  const awgResult = comparable.find((c) => c.country === "AWG");
+
+  assertExists(armResult);
+  assertExists(ausResult);
+  assertExists(awgResult);
+
+  // ARM: 233,931 AMD/Month → ~604 USD/month
+  assertEquals(Math.round(armResult.normalizedValue || 0), 604);
+  assertEquals(armResult.normalizedUnit, "USD/month");
+
+  // AUS: 1,631 AUD/Week → ~4,650 USD/month (weekly to monthly conversion)
+  assertEquals(Math.round(ausResult.normalizedValue || 0), 4650);
+  assertEquals(ausResult.normalizedUnit, "USD/month");
+
+  // AWG: 3,500 AWG/Month → ~1,944 USD/month
+  assertEquals(Math.round(awgResult.normalizedValue || 0), 1944);
+  assertEquals(awgResult.normalizedUnit, "USD/month");
 });

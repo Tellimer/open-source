@@ -353,3 +353,86 @@ Deno.test("Pipeline API - no XState exposed", async () => {
   }]);
   assertExists(validation.valid);
 });
+
+Deno.test("processEconomicData - wages processing with fallback FX", async () => {
+  const wagesData = [
+    { value: 233931, unit: "AMD/Month", name: "Armenia Wages", id: "ARM" },
+    { value: 1631, unit: "AUD/Week", name: "Australia Wages", id: "AUS" },
+    { value: 3500, unit: "AWG/Month", name: "Aruba Wages", id: "AWG" },
+  ];
+
+  const result = await processEconomicData(wagesData, {
+    targetCurrency: "USD",
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: {
+        AMD: 387.5,
+        AUD: 1.52,
+        AWG: 1.80,
+      },
+    },
+    excludeIndexValues: true,
+  });
+
+  assertEquals(result.data.length, 3);
+  assertEquals(result.errors.length, 0);
+
+  // Check conversions
+  const armResult = result.data.find((d) => d.id === "ARM");
+  const ausResult = result.data.find((d) => d.id === "AUS");
+  const awgResult = result.data.find((d) => d.id === "AWG");
+
+  assertExists(armResult);
+  assertExists(ausResult);
+  assertExists(awgResult);
+
+  // Verify currency conversions
+  assertEquals(Math.round(armResult.normalized || 0), 604); // 233931/387.5
+  assertEquals(Math.round(ausResult.normalized || 0), 4650); // 1631/1.52*4.33
+  assertEquals(Math.round(awgResult.normalized || 0), 1944); // 3500/1.80
+});
+
+Deno.test("processEconomicData - processes without FX fallback but no conversion", async () => {
+  const data = [
+    { value: 1000, unit: "EUR Million", name: "Revenue" },
+  ];
+
+  // This should actually succeed but without currency conversion
+  const result = await processEconomicData(data, {
+    targetCurrency: "USD",
+    useLiveFX: false,
+    // No fxFallback provided
+  });
+
+  assertEquals(result.data.length, 1);
+  // Should process but without actual currency conversion
+  assertEquals(result.data[0].value, 1000);
+  assertEquals(result.data[0].normalizedUnit, "USD millions");
+});
+
+Deno.test("processEconomicDataAuto - wages processing with fallback FX", async () => {
+  const wagesData = [
+    { value: 50000, unit: "EUR/Month", name: "High Wage", id: "EUR" },
+    { value: 1000, unit: "USD/Month", name: "Low Wage", id: "USD" },
+  ];
+
+  const result = await processEconomicDataAuto(wagesData, {
+    targetCurrency: "USD",
+    minQualityScore: 90, // High threshold to test auto-continue
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: {
+        EUR: 0.92,
+      },
+    },
+  });
+
+  assertEquals(result.data.length, 2);
+
+  // Should auto-continue despite quality issues
+  const eurResult = result.data.find((d) => d.id === "EUR");
+  assertExists(eurResult);
+  assertEquals(Math.round(eurResult.normalized || 0), 54348); // 50000/0.92
+});

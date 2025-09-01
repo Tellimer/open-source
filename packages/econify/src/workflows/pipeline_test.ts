@@ -2,7 +2,7 @@
  * Tests for XState pipeline workflow
  */
 
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "jsr:@std/assert";
 import { createPipeline } from "./pipeline_v5.ts";
 import type { ParsedData, PipelineConfig } from "./pipeline_v5.ts";
 
@@ -338,4 +338,135 @@ Deno.test("Pipeline - output format configuration", async () => {
   if (p) {
     assertEquals(typeof p.processingTime, "number");
   }
+});
+
+Deno.test("Pipeline - processes without FX fallback but no currency conversion", async () => {
+  const data: ParsedData[] = [
+    {
+      value: 1000,
+      unit: "EUR Million",
+      name: "Revenue",
+    },
+  ];
+
+  // Configuration without fxFallback - should process but without currency conversion
+  const configWithoutFallback: PipelineConfig = {
+    targetCurrency: "USD",
+    useLiveFX: false,
+    // No fxFallback provided
+  };
+
+  const pipeline = createPipeline(configWithoutFallback);
+  const result = await pipeline.run(data);
+
+  assertEquals(Array.isArray(result), true);
+  assertEquals(result.length, 1);
+
+  // Should process but without actual currency conversion
+  // Value stays the same since no FX rates available
+  assertEquals(result[0].value, 1000);
+  assertEquals(result[0].normalized, 1000);
+  // Unit gets normalized to target currency format but value unchanged
+  assertEquals(result[0].normalizedUnit, "USD millions");
+});
+
+Deno.test("Pipeline - wages processing with FX fallback rates", async () => {
+  // Wages data that should trigger specialized processing
+  const wagesData: ParsedData[] = [
+    {
+      id: "ARM",
+      value: 233931,
+      unit: "AMD/Month",
+      name: "Average Wages",
+      metadata: { country: "Armenia" },
+    },
+    {
+      id: "AUS",
+      value: 1631,
+      unit: "AUD/Week",
+      name: "Average Wages",
+      metadata: { country: "Australia" },
+    },
+    {
+      id: "AWG",
+      value: 3500,
+      unit: "AWG/Month",
+      name: "Average Wages",
+      metadata: { country: "Aruba" },
+    },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    minQualityScore: 30,
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: {
+        AMD: 387.5,
+        AUD: 1.52,
+        AWG: 1.80,
+      },
+    },
+    excludeIndexValues: true,
+    includeWageMetadata: true,
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(wagesData);
+
+  assertEquals(Array.isArray(result), true);
+  assertEquals(result.length, 3);
+
+  // Check that wages were properly converted
+  const armResult = result.find((r) => r.id === "ARM");
+  const ausResult = result.find((r) => r.id === "AUS");
+  const awgResult = result.find((r) => r.id === "AWG");
+
+  assertExists(armResult);
+  assertExists(ausResult);
+  assertExists(awgResult);
+
+  // ARM: 233,931 AMD/Month → ~603.69 USD/month
+  assertEquals(Math.round(armResult.normalized || 0), 604);
+  assertEquals(armResult.normalizedUnit, "USD/month");
+
+  // AUS: 1,631 AUD/Week → ~4,650 USD/month (1631/1.52 * 4.33)
+  assertEquals(Math.round(ausResult.normalized || 0), 4650);
+  assertEquals(ausResult.normalizedUnit, "USD/month");
+
+  // AWG: 3,500 AWG/Month → ~1,944 USD/month
+  assertEquals(Math.round(awgResult.normalized || 0), 1944);
+  assertEquals(awgResult.normalizedUnit, "USD/month");
+});
+
+Deno.test("Pipeline - wages processing without FX rates falls back gracefully", async () => {
+  const wagesData: ParsedData[] = [
+    {
+      id: "ARM",
+      value: 233931,
+      unit: "AMD/Month",
+      name: "Average Wages",
+    },
+  ];
+
+  // Configuration without fxFallback - should process but without currency conversion
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    useLiveFX: false,
+    // No fxFallback provided
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(wagesData);
+
+  assertEquals(Array.isArray(result), true);
+  assertEquals(result.length, 1);
+
+  // Should process but without currency conversion
+  // Original value stays the same since no FX rates available
+  assertEquals(result[0].value, 233931);
+  assertEquals(result[0].unit, "AMD/Month");
+  // Without FX rates, normalized value equals original value (no conversion)
+  assertEquals(result[0].normalized, 233931);
 });

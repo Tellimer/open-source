@@ -114,6 +114,14 @@ production-ready reliability improvements.
 - **Code Standards**: Enforced strict linting rules and best practices
 - **Type Assertions**: Replaced unsafe type casts with proper type definitions
 
+#### FX Fallback & Reliability
+
+- **Robust FX Handling**: Enhanced pipeline FX rate management with clear error handling
+- **Wages Processing**: Improved wages processing reliability with FX fallback support
+- **Graceful Degradation**: Pipeline continues processing even when FX rates unavailable
+- **Clear Warnings**: Informative messages when FX rates missing for currency conversion
+- **Test Coverage**: Added 8 comprehensive tests for FX fallback scenarios
+
 ### 🚀 Improved
 
 #### Performance & Reliability

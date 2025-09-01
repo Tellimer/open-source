@@ -343,6 +343,43 @@ Object.entries(result.normalized.countries).forEach(([country, data]) => {
 });
 // CAN: $15,931 USD/month (was 29.68 CAD/Hour)
 // AUS: $4,084 USD/month (was 1432.6 AUD/Week)
+```
+
+#### FX Fallback & Reliability
+
+Wages processing includes robust FX rate handling:
+
+```ts
+// Option 1: With explicit FX rates (recommended)
+const result = await processEconomicData(wagesData, {
+  targetCurrency: "USD",
+  useLiveFX: false, // Use provided rates
+  fxFallback: {
+    base: "USD",
+    rates: {
+      CAD: 1.36,
+      AUD: 1.52,
+      EUR: 0.92,
+      // Add all currencies in your data
+    },
+  },
+});
+
+// Option 2: With live FX + fallback (production)
+const result = await processEconomicData(wagesData, {
+  targetCurrency: "USD",
+  useLiveFX: true, // Try live rates first
+  fxFallback: fallbackRates, // Use if live rates fail
+});
+
+// Option 3: Graceful degradation (no FX rates)
+const result = await processEconomicData(wagesData, {
+  targetCurrency: "USD",
+  useLiveFX: false,
+  // No fxFallback - processes without currency conversion
+});
+// ⚠️ Warning: "No FX rates available for wage normalization"
+// ✅ Still processes data, but no currency conversion
 // CHN: $1,427 USD/month (was 124110 CNY/Year)
 // EUR: $3,478 USD/month (was 3200 EUR/Month)
 ```
