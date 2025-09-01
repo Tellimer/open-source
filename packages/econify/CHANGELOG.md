@@ -8,6 +8,65 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-01-01 - FX Fallback & Reliability Release
+
+🎯 **FX Fallback & Reliability Release**: This release focuses on robust FX rate handling and wages processing reliability with comprehensive fallback support.
+
+### 🏆 Release Highlights
+
+- **Robust FX Handling**: Enhanced pipeline FX rate management with comprehensive fallback support
+- **Wages Processing Reliability**: Improved wages processing with graceful degradation when FX rates unavailable
+- **Comprehensive Testing**: Added 8 new FX fallback tests covering all scenarios
+- **Production Ready**: Three usage patterns for different deployment scenarios
+- **Zero Regressions**: All 197 tests passing with backward compatibility maintained
+
+### ✨ New Features
+
+#### FX Fallback System
+- **Enhanced Pipeline**: Improved FX rate service with clear error handling
+- **Graceful Degradation**: Pipeline continues processing even when FX rates unavailable
+- **Clear Warnings**: Informative messages when FX rates missing for currency conversion
+- **Multiple Patterns**: Support for explicit FX, live FX + fallback, and graceful degradation
+
+#### Comprehensive Test Coverage
+- **8 New FX Tests**: Complete coverage of FX fallback scenarios
+- **Pipeline Tests**: Core FX rate requirement and graceful degradation testing
+- **API Tests**: Wages processing with and without FX rates
+- **Integration Tests**: Comprehensive currency conversion verification
+- **Verified Results**: ARM (604 USD/month), AUS (4,650 USD/month), AWG (1,944 USD/month)
+
+### 🔧 Technical Improvements
+
+#### Pipeline Enhancements
+- Enhanced `fetchRatesService` with proper error handling when `useLiveFX=false`
+- Clear requirement for `fxFallback` rates in pipeline configuration
+- Improved error messages and logging for FX rate issues
+- Better type safety with exported `IndicatorData` interface
+
+#### Wages Processing Reliability
+- Better detection and handling of missing FX rates
+- Fallback to standard processing when FX rates unavailable
+- Preserved data integrity during graceful degradation
+- Enhanced warning messages for debugging
+
+### 📚 Documentation & Examples
+
+#### Updated Documentation
+- **README**: Added comprehensive FX fallback section to wages documentation
+- **Usage Patterns**: Three clear patterns for different FX rate scenarios
+- **Error Handling**: Clear examples of FX rate management
+- **Production Guidelines**: Best practices for reliable wages processing
+
+### 🧪 Quality Assurance
+
+#### Test Results
+- **197 Total Tests**: All passing (100% success rate)
+- **8 New FX Tests**: Complete FX fallback scenario coverage
+- **Zero Regressions**: All existing functionality preserved
+- **Production Verified**: Tested with real-world wage data scenarios
+
+---
+
 ## [0.1.4] - 2025-01-01 - Test Coverage & Quality Assurance Release
 
 🎯 **Quality & Reliability Release**: This release achieves 100% test coverage
