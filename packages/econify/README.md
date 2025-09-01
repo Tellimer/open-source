@@ -122,6 +122,7 @@ const result = await processEconomicData(economicData, {
   // Convert everything to EUR billions
   targetCurrency: "EUR",
   targetMagnitude: "billions",
+  targetTimeScale: "month", // 🆕 Standardize time periods to monthly
 
   // Provide exchange rates
   fxFallback: {
@@ -384,9 +385,54 @@ const result = await processEconomicData(wagesData, {
 // EUR: $3,478 USD/month (was 3200 EUR/Month)
 ```
 
+### Time Resampling & Standardization
+
+Econify automatically handles time period conversion to ensure consistent reporting:
+
+```ts
+// Mixed time periods in your data
+const mixedTimeData = [
+  { value: 300, unit: "Million USD per Quarter", name: "Quarterly Sales" },
+  { value: 1200, unit: "Million USD per Year", name: "Annual Revenue" },
+  { value: 50, unit: "Million USD per Week", name: "Weekly Production" },
+];
+
+// Standardize everything to monthly reporting
+const result = await processEconomicData(mixedTimeData, {
+  targetCurrency: "USD",
+  targetTimeScale: "month", // Convert all to monthly
+  fxFallback: { base: "USD", rates: {} },
+});
+
+// Results: All data now in consistent monthly format
+result.data.forEach(item => {
+  console.log(`${item.name}: ${item.normalized} ${item.normalizedUnit}`);
+});
+// Quarterly Sales: 100 USD millions/month (was 300/quarter)
+// Annual Revenue: 100 USD millions/month (was 1200/year)
+// Weekly Production: 217 USD millions/month (was 50/week)
+```
+
+#### Supported Time Scales
+
+- **`hour`** - Hourly data
+- **`day`** - Daily data
+- **`week`** - Weekly data
+- **`month`** - Monthly data (recommended for consistency)
+- **`quarter`** - Quarterly data
+- **`year`** - Annual data
+
+#### Automatic Conversion
+
+Econify uses accurate conversion factors:
+- **Weekly → Monthly**: ×4.33 (52 weeks ÷ 12 months)
+- **Quarterly → Monthly**: ÷3 (3 months per quarter)
+- **Annual → Monthly**: ÷12 (12 months per year)
+- **Hourly → Monthly**: ×173.33 (2080 work hours ÷ 12 months)
+
 ### Advanced Time Sampling
 
-Upsample and downsample time series data with multiple methods:
+For complex time series analysis, use the advanced sampling functions:
 
 ```ts
 import {

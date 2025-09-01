@@ -69,7 +69,7 @@ Deno.test("Pipeline - handles validation errors", async () => {
     await pipeline.run(invalidData);
     throw new Error("Pipeline should have failed");
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
+    const msg = error instanceof Error ? error.message : `${error}`;
     assertEquals(msg.includes("No data provided"), true);
   }
 });
@@ -146,9 +146,7 @@ Deno.test("Pipeline - successful normalization", async () => {
 
   assertEquals(Array.isArray(result), true);
   // Check that pipeline metadata was added
-  if (result && result[0]) {
-    assertEquals("pipeline" in result[0], true);
-  }
+  assertEquals("pipeline" in (result?.[0] ?? {}), true);
 });
 
 Deno.test("Pipeline - unit inference", async () => {
@@ -179,10 +177,11 @@ Deno.test("Pipeline - unit inference", async () => {
 
   assertEquals(Array.isArray(result), true);
   // Inferred units should be marked in the result
-  if (result && result[0]) {
+  const firstResult = result?.[0];
+  if (firstResult) {
     // Check if unit was inferred
     assertEquals(
-      result[0].inferredUnit !== undefined || result[0].unit !== "",
+      firstResult.inferredUnit !== undefined || firstResult.unit !== "",
       true,
     );
   }
@@ -469,4 +468,49 @@ Deno.test("Pipeline - wages processing without FX rates falls back gracefully", 
   assertEquals(result[0].unit, "AMD/Month");
   // Without FX rates, normalized value equals original value (no conversion)
   assertEquals(result[0].normalized, 233931);
+});
+
+Deno.test("Pipeline - time resampling with targetTimeScale", async () => {
+  const data: ParsedData[] = [
+    {
+      id: "quarterly_revenue",
+      value: 100,
+      unit: "Million USD per Quarter",
+      name: "Company Revenue",
+    },
+    {
+      id: "annual_production",
+      value: 1200,
+      unit: "Billion USD per Year",
+      name: "Production Output",
+    },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    targetTimeScale: "month", // Convert all to monthly
+    minQualityScore: 30,
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: {},
+    },
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(data);
+
+  assertEquals(Array.isArray(result), true);
+  assertEquals(result.length, 2);
+
+  // Check that time conversion happened (values should be different from original)
+  const quarterlyResult = result.find(r => r.id === "quarterly_revenue");
+  assertExists(quarterlyResult);
+  // Quarterly to monthly: should be roughly 1/3 of original
+  assertEquals(quarterlyResult.normalized !== quarterlyResult.value, true);
+
+  const annualResult = result.find(r => r.id === "annual_production");
+  assertExists(annualResult);
+  // Annual to monthly: should be roughly 1/12 of original
+  assertEquals(annualResult.normalized !== annualResult.value, true);
 });

@@ -436,3 +436,62 @@ Deno.test("processEconomicDataAuto - wages processing with fallback FX", async (
   assertExists(eurResult);
   assertEquals(Math.round(eurResult.normalized || 0), 54348); // 50000/0.92
 });
+
+Deno.test("processEconomicData - time resampling to monthly", async () => {
+  const data = [
+    {
+      id: "quarterly_sales",
+      value: 300,
+      unit: "Million USD per Quarter",
+      name: "Quarterly Sales"
+    },
+    {
+      id: "annual_revenue",
+      value: 1200,
+      unit: "Million USD per Year",
+      name: "Annual Revenue"
+    },
+    {
+      id: "weekly_production",
+      value: 50,
+      unit: "Million USD per Week",
+      name: "Weekly Production"
+    },
+  ];
+
+  const result = await processEconomicData(data, {
+    targetCurrency: "USD",
+    targetTimeScale: "month", // Convert all to monthly
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: {},
+    },
+  });
+
+  assertEquals(result.data.length, 3);
+  assertEquals(result.errors.length, 0);
+
+  // Check that time conversions happened
+  const quarterlyResult = result.data.find((d) => d.id === "quarterly_sales");
+  const annualResult = result.data.find((d) => d.id === "annual_revenue");
+  const weeklyResult = result.data.find((d) => d.id === "weekly_production");
+
+  assertExists(quarterlyResult);
+  assertExists(annualResult);
+  assertExists(weeklyResult);
+
+  // Verify time conversions (values should be different from originals)
+  assertEquals(quarterlyResult.normalized !== quarterlyResult.value, true);
+  assertEquals(annualResult.normalized !== annualResult.value, true);
+  assertEquals(weeklyResult.normalized !== weeklyResult.value, true);
+
+  // Quarterly (300) to monthly should be ~100 (300/3)
+  assertEquals(Math.round(quarterlyResult.normalized || 0), 100);
+
+  // Annual (1200) to monthly should be ~100 (1200/12)
+  assertEquals(Math.round(annualResult.normalized || 0), 100);
+
+  // Weekly (50) to monthly should be ~217 (50*4.33)
+  assertEquals(Math.round(weeklyResult.normalized || 0), 217);
+});
