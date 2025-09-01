@@ -2,7 +2,7 @@
 
 /**
  * Time Resampling Example
- * 
+ *
  * Demonstrates how to use targetTimeScale to standardize mixed time periods
  * for consistent reporting and analysis.
  */
@@ -20,7 +20,7 @@ const mixedTimeData = [
     name: "Quarterly Sales",
   },
   {
-    id: "annual_revenue", 
+    id: "annual_revenue",
     value: 1200,
     unit: "Million USD per Year",
     name: "Annual Revenue",
@@ -28,7 +28,7 @@ const mixedTimeData = [
   {
     id: "weekly_production",
     value: 50,
-    unit: "Million USD per Week", 
+    unit: "Million USD per Week",
     name: "Weekly Production",
   },
   {
@@ -40,7 +40,7 @@ const mixedTimeData = [
 ];
 
 console.log("📊 Original Data (Mixed Time Periods):");
-mixedTimeData.forEach(item => {
+mixedTimeData.forEach((item) => {
   console.log(`  ${item.name}: ${item.value} ${item.unit}`);
 });
 
@@ -58,8 +58,8 @@ const result = await processEconomicData(mixedTimeData, {
 });
 
 console.log("✅ Results (Standardized to Monthly):");
-result.data.forEach(item => {
-  const original = mixedTimeData.find(d => d.id === item.id);
+result.data.forEach((item) => {
+  const original = mixedTimeData.find((d) => d.id === item.id);
   const converted = Math.round(item.normalized || item.value);
   console.log(`  ${item.name}: ${converted} ${item.normalizedUnit}`);
   console.log(`    (was ${original?.value} ${original?.unit})`);

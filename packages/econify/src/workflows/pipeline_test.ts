@@ -504,12 +504,12 @@ Deno.test("Pipeline - time resampling with targetTimeScale", async () => {
   assertEquals(result.length, 2);
 
   // Check that time conversion happened (values should be different from original)
-  const quarterlyResult = result.find(r => r.id === "quarterly_revenue");
+  const quarterlyResult = result.find((r) => r.id === "quarterly_revenue");
   assertExists(quarterlyResult);
   // Quarterly to monthly: should be roughly 1/3 of original
   assertEquals(quarterlyResult.normalized !== quarterlyResult.value, true);
 
-  const annualResult = result.find(r => r.id === "annual_production");
+  const annualResult = result.find((r) => r.id === "annual_production");
   assertExists(annualResult);
   // Annual to monthly: should be roughly 1/12 of original
   assertEquals(annualResult.normalized !== annualResult.value, true);

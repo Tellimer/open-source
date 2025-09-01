@@ -9,9 +9,7 @@ import {
   normalizeWagesData,
 } from "./wages-normalization.ts";
 import type { ParsedData, PipelineContext } from "../workflows/pipeline_v5.ts";
-import type { FXTable, Scale, TimeScale } from "../types.ts";
-import { simpleTimeConversion } from "../time/time-sampling.ts";
-import { parseUnit } from "../units/units.ts";
+import type { FXTable, Scale } from "../types.ts";
 
 /**
  * Enhanced normalize data service with wage-specific handling
@@ -141,7 +139,9 @@ async function processWagesData(
   // Apply wage-specific normalization
   const normalizedWages = normalizeWagesData(wagePoints, {
     targetCurrency: config.targetCurrency || "USD",
-    targetTimeScale: (config.targetTimeScale as "hour" | "day" | "week" | "month" | "year") || "month", // Use config or default to monthly
+    targetTimeScale:
+      (config.targetTimeScale as "hour" | "day" | "week" | "month" | "year") ||
+      "month", // Use config or default to monthly
     fx: fxRates,
     excludeIndexValues: config.excludeIndexValues ?? true, // Use config value, default to true
     includeMetadata: config.includeWageMetadata ?? true,
@@ -309,7 +309,9 @@ export function processWagesIndicator(
   // Apply normalization
   const normalizedResults = normalizeWagesData(wagePoints, {
     targetCurrency,
-    targetTimeScale: (options.targetTimeScale as "hour" | "day" | "week" | "month" | "year") || "month",
+    targetTimeScale:
+      (options.targetTimeScale as "hour" | "day" | "week" | "month" | "year") ||
+      "month",
     fx: fxRates,
     excludeIndexValues,
     includeMetadata: true,

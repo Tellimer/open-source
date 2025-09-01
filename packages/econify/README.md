@@ -16,8 +16,8 @@ advanced features for classification, normalization, quality assessment, and
 analysis. Perfect for financial institutions, economic research, data pipelines,
 and quantitative analysis.
 
-**✅ Production Ready** • **189 Tests Passing** • **100% Reliability** • **Zero
-Linting Issues** • **Type Safe**
+**✅ Production Ready** • **199 Tests Passing** • **100% Reliability** • **Zero
+Linting Issues** • **Time Resampling** • **Type Safe**
 
 ## ✨ Features
 
@@ -66,7 +66,7 @@ Linting Issues** • **Type Safe**
   floating-point precision
 - 📁 **Universal I/O** — Import/export CSV, JSON, Excel with automatic unit
   detection
-- 🛡️ **Production Ready** — 189 comprehensive tests, zero hanging promises,
+- 🛡️ **Production Ready** — 199 comprehensive tests, zero hanging promises,
   robust error handling
 
 ## 📦 Installation
@@ -387,7 +387,8 @@ const result = await processEconomicData(wagesData, {
 
 ### Time Resampling & Standardization
 
-Econify automatically handles time period conversion to ensure consistent reporting:
+Econify automatically handles time period conversion to ensure consistent
+reporting:
 
 ```ts
 // Mixed time periods in your data
@@ -405,7 +406,7 @@ const result = await processEconomicData(mixedTimeData, {
 });
 
 // Results: All data now in consistent monthly format
-result.data.forEach(item => {
+result.data.forEach((item) => {
   console.log(`${item.name}: ${item.normalized} ${item.normalizedUnit}`);
 });
 // Quarterly Sales: 100 USD millions/month (was 300/quarter)
@@ -425,6 +426,7 @@ result.data.forEach(item => {
 #### Automatic Conversion
 
 Econify uses accurate conversion factors:
+
 - **Weekly → Monthly**: ×4.33 (52 weeks ÷ 12 months)
 - **Quarterly → Monthly**: ÷3 (3 months per quarter)
 - **Annual → Monthly**: ÷12 (12 months per year)
@@ -986,7 +988,7 @@ deno test --coverage=coverage
 
 ### Production Metrics
 
-- **Test Coverage**: 189 comprehensive tests with 100% pass rate
+- **Test Coverage**: 199 comprehensive tests with 100% pass rate
 - **Execution Speed**: Complete test suite runs in ~4 seconds
 - **Memory Safety**: Zero memory leaks, proper async cleanup
 - **Error Handling**: Robust error recovery with graceful degradation
@@ -1007,7 +1009,7 @@ deno test --coverage=coverage
 
 ### Comprehensive Test Suite
 
-- **189 Tests**: Complete coverage across all modules and edge cases
+- **199 Tests**: Complete coverage across all modules and edge cases
 - **100% Pass Rate**: All tests passing with zero failures
 - **Fast Execution**: Full suite completes in ~4 seconds
 - **Reliable**: No flaky tests, proper async handling
@@ -1071,7 +1073,7 @@ MIT © 2025
 ## 🙏 Acknowledgments
 
 Built with ❤️ for economists, data analysts, financial engineers, and anyone
-working with economic data. **Production-ready with 189 comprehensive tests**
+working with economic data. **Production-ready with 199 comprehensive tests**
 ensuring reliability and quality for mission-critical applications.
 
 Special thanks to:

@@ -443,19 +443,19 @@ Deno.test("processEconomicData - time resampling to monthly", async () => {
       id: "quarterly_sales",
       value: 300,
       unit: "Million USD per Quarter",
-      name: "Quarterly Sales"
+      name: "Quarterly Sales",
     },
     {
       id: "annual_revenue",
       value: 1200,
       unit: "Million USD per Year",
-      name: "Annual Revenue"
+      name: "Annual Revenue",
     },
     {
       id: "weekly_production",
       value: 50,
       unit: "Million USD per Week",
-      name: "Weekly Production"
+      name: "Weekly Production",
     },
   ];
 
