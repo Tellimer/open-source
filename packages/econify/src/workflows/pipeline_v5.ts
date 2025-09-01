@@ -177,12 +177,49 @@ export const pipelineMachine = setup({
 
     fetchRatesService: fromPromise(({ input }: { input: PipelineContext }) => {
       const { config } = input;
+
+      // Ensure we have fallback rates for wages processing
+      const defaultFallback: FXTable = {
+        base: "USD",
+        rates: {
+          EUR: 0.92, GBP: 0.79, JPY: 149.50, CAD: 1.36, AUD: 1.52,
+          CHF: 0.88, CNY: 7.25, SEK: 10.85, NOK: 10.75, DKK: 6.85,
+          PLN: 4.05, CZK: 22.80, HUF: 360.0, RON: 4.55, BGN: 1.80,
+          HRK: 6.95, TRY: 27.50, RUB: 92.0, KZT: 450.0, UZS: 12250,
+          GEL: 2.65, AMD: 387.5, AZN: 1.70, KGS: 89.0, TJS: 10.95,
+          TMT: 3.50, MNT: 3450, KRW: 1320, TWD: 31.5, HKD: 7.80,
+          SGD: 1.35, MYR: 4.65, THB: 35.5, PHP: 56.0, IDR: 15750,
+          VND: 24500, INR: 83.0, PKR: 278.0, BDT: 110.0, LKR: 325.0,
+          NPR: 133.0, BTN: 83.0, MVR: 15.4, AFN: 70.0, IRR: 42000,
+          IQD: 1310, JOD: 0.71, KWD: 0.31, BHD: 0.377, QAR: 3.64,
+          AED: 3.67, OMR: 0.385, SAR: 3.75, YER: 250.0, SYP: 2512,
+          LBP: 15000, ILS: 3.70, EGP: 30.9, LYD: 4.85, TND: 3.10,
+          DZD: 134.0, MAD: 9.85, XOF: 605.0, XAF: 605.0, GHS: 12.0,
+          NGN: 775.0, ZAR: 18.5, BWP: 13.5, SZL: 18.5, LSL: 18.5,
+          NAD: 18.5, AOA: 830.0, MZN: 63.5, ZMW: 25.5, MWK: 1730,
+          TZS: 2500, UGX: 3750, KES: 155.0, RWF: 1290, BIF: 2850,
+          ETB: 55.5, ERN: 15.0, DJF: 178.0, SOS: 570.0, SCR: 13.5,
+          MUR: 45.5, MGA: 4550, KMF: 455.0, CDF: 2750, XDR: 0.75,
+          BRL: 5.15, ARS: 350.0, CLP: 950.0, COP: 4050, PEN: 3.75,
+          UYU: 39.5, PYG: 7300, BOB: 6.90, VES: 36.0, GYD: 209.0,
+          SRD: 37.5, FKP: 0.79, TTD: 6.75, BBD: 2.00, JMD: 155.0,
+          BSD: 1.00, KYD: 0.83, BZD: 2.00, GTQ: 7.80, HNL: 24.7,
+          NIO: 36.7, CRC: 520.0, PAB: 1.00, CUP: 24.0, DOP: 56.5,
+          HTG: 132.0, XCD: 2.70, AWG: 1.80, ANG: 1.80, SVC: 8.75,
+          MXN: 17.1, ALL: 90.9, BAM: 1.80, MKD: 56.5, MDL: 17.8,
+          ISK: 138.0, FJD: 2.25, TOP: 2.35, WST: 2.70, SBD: 8.50,
+          VUV: 119.0, PGK: 3.75, NCF: 110.0, XPF: 110.0,
+        }
+      };
+
+      const fallbackRates = config.fxFallback || defaultFallback;
+
       return config.useLiveFX
         ? fetchLiveFXRates(config.targetCurrency || "USD", {
-          fallback: config.fxFallback,
+          fallback: fallbackRates,
           cache: true,
         })
-        : Promise.resolve(config.fxFallback!);
+        : Promise.resolve(fallbackRates);
     }),
 
     normalizeDataService: fromPromise(
