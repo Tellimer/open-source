@@ -19,6 +19,14 @@ and quantitative analysis.
 **✅ Production Ready** • **201 Tests Passing** • **100% Reliability** • **Zero
 Linting Issues** • **Time Resampling** • **Type Safe**
 
+## 🌊 XState Pipeline Architecture
+
+<p align="center">
+  <img src="./assets/xstate-machine.png" alt="Econify XState Pipeline State Machine" />
+</p>
+
+*Robust data processing pipeline powered by XState v5 with automatic quality assessment, error handling, and interactive control flow.*
+
 ## ✨ Features
 
 ### Core Capabilities
