@@ -25,7 +25,8 @@ Linting Issues** • **Time Resampling** • **Type Safe**
   <img src="./assets/xstate-machine.png" alt="Econify XState Pipeline State Machine" />
 </p>
 
-*Robust data processing pipeline powered by XState v5 with automatic quality assessment, error handling, and interactive control flow.*
+_Robust data processing pipeline powered by XState v5 with automatic quality
+assessment, error handling, and interactive control flow._
 
 ## ✨ Features
 
@@ -96,9 +97,7 @@ import {
 } from "jsr:@tellimer/econify";
 
 // Wages processing (automatic detection in main API)
-import {
-  normalizeWagesData,
-} from "jsr:@tellimer/econify/wages";
+import { normalizeWagesData } from "jsr:@tellimer/econify/wages";
 
 // Time sampling
 import {
@@ -311,7 +310,8 @@ gdpData.forEach((item) => {
 
 ### Wages Data Processing
 
-Handle mixed wage data with different currencies and time periods using the unified API:
+Handle mixed wage data with different currencies and time periods using the
+unified API:
 
 ```ts
 import { processEconomicData } from "jsr:@tellimer/econify";
@@ -359,7 +359,11 @@ const result = await processEconomicData(wagesData, {
 console.log("Comparable wages in USD/month:");
 result.data.forEach((item) => {
   if (item.normalized) {
-    console.log(`${item.metadata.country}: $${Math.round(item.normalized).toLocaleString()}`);
+    console.log(
+      `${item.metadata.country}: $${
+        Math.round(item.normalized).toLocaleString()
+      }`,
+    );
   }
 });
 // CAN: $15,931 USD/month (was 29.68 CAD/Hour)

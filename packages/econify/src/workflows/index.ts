@@ -6,7 +6,7 @@
  */
 
 // Export XState workflows
-export { pipelineMachine, createPipeline } from "./economic-data-workflow.ts";
+export { createPipeline, pipelineMachine } from "./economic-data-workflow.ts";
 
 // Export workflow types
 export type {

@@ -83,8 +83,6 @@ const sampleWagesData: WageDataPoint[] = [
   },
 ];
 
-
-
 // ============================================================================
 // Core Wages Normalization Tests
 // ============================================================================
@@ -157,8 +155,6 @@ Deno.test("Wages Normalization - Exclude index values", () => {
     "Index/points values excluded from normalization",
   );
 });
-
-
 
 // ============================================================================
 // Currency Recognition Tests (Venezuela VEF & VES)
@@ -336,8 +332,6 @@ Deno.test("Index Exclusion - Mixed currency and index processing", async () => {
   assertEquals(venResult.normalizedUnit, "USD/month");
 });
 
-
-
 // ============================================================================
 // Regression Tests
 // ============================================================================
@@ -420,5 +414,3 @@ Deno.test("Utilities - Comparable wages data extraction", () => {
     assertEquals(item.dataType, "currency");
   });
 });
-
-

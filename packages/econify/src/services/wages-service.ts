@@ -202,5 +202,3 @@ export async function processWagesData(
 
   return result;
 }
-
-

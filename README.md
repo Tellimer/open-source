@@ -44,14 +44,21 @@ A comprehensive Deno/TypeScript package for **economic data processing** with
 advanced features for classification, normalization, quality assessment, and
 analysis. Features:
 
-- 🔍 **Smart Classification** — Automatically detect indicator types (stock, flow, rate, currency)
-- 🌍 **150+ Currency Support** — Convert values between currencies using FX tables
-- 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions, millions, thousands
-- ⏱️ **Time Normalization** — Transform flows across time periods (annual ↔ quarterly ↔ monthly ↔ daily)
+- 🔍 **Smart Classification** — Automatically detect indicator types (stock,
+  flow, rate, currency)
+- 🌍 **150+ Currency Support** — Convert values between currencies using FX
+  tables
+- 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions,
+  millions, thousands
+- ⏱️ **Time Normalization** — Transform flows across time periods (annual ↔
+  quarterly ↔ monthly ↔ daily)
 - 💼 **Wages Data Processing** — Specialized handling for mixed wage/salary data
-- 🚫 **Normalization Exemptions** — Skip normalization for specific indicators or categories
-- 🌊 **XState Pipeline** — Robust data processing pipeline with quality assessment
-- 🧪 **Production Ready** — 201 tests passing, zero linting issues, comprehensive examples
+- 🚫 **Normalization Exemptions** — Skip normalization for specific indicators
+  or categories
+- 🌊 **XState Pipeline** — Robust data processing pipeline with quality
+  assessment
+- 🧪 **Production Ready** — 201 tests passing, zero linting issues,
+  comprehensive examples
 
 [View Package →](packages/econify)
 

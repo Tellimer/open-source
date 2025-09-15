@@ -1,30 +1,39 @@
 # Econify Examples
 
-This directory contains comprehensive examples demonstrating all aspects of the Econify economic data processing library.
+This directory contains comprehensive examples demonstrating all aspects of the
+Econify economic data processing library.
 
 ## 🚀 Quick Start
 
 ### Basic Usage
+
 ```bash
 deno run --allow-all examples/quickstart.ts
 ```
+
 Simple API usage with currency conversion and magnitude scaling.
 
 ### Simple Consumer API
+
 ```bash
 deno run --allow-all examples/simple_consumer.ts
 ```
+
 Real-world integration patterns with progress tracking and validation.
 
 ## 📊 Specialized Examples
 
 ### Wages Processing
+
 ```bash
 deno run --allow-all examples/wages_processing_example.ts
 ```
-Demonstrates automatic wages detection, currency conversion, and exemptions handling.
+
+Demonstrates automatic wages detection, currency conversion, and exemptions
+handling.
 
 **Features shown:**
+
 - Automatic wages data detection
 - Mixed currency processing (ARS, VEF, USD)
 - Index value exclusion (points data)
@@ -32,24 +41,31 @@ Demonstrates automatic wages detection, currency conversion, and exemptions hand
 - Progress tracking
 
 ### Exemptions System
+
 ```bash
 deno run --allow-all examples/exemptions_example.ts
 ```
+
 Shows how to exempt specific indicators from normalization.
 
 **Features shown:**
+
 - Exempt by indicator ID
 - Exempt by category group
 - Exempt by name patterns
 - Multiple exemption strategies
 
 ### Time Resampling
+
 ```bash
 deno run --allow-all examples/time_resampling_example.ts
 ```
-Standardize mixed time periods (quarterly, annual, weekly, daily) to consistent reporting periods.
+
+Standardize mixed time periods (quarterly, annual, weekly, daily) to consistent
+reporting periods.
 
 **Features shown:**
+
 - Mixed time period normalization
 - Automatic conversion factors
 - Monthly standardization
@@ -58,12 +74,15 @@ Standardize mixed time periods (quarterly, annual, weekly, daily) to consistent 
 ## 🔧 Advanced Features
 
 ### Advanced Usage
+
 ```bash
 deno run --allow-all examples/advanced_usage.ts
 ```
+
 Comprehensive demonstration of all advanced features.
 
 **Features shown:**
+
 - Live FX rates fetching
 - Historical data & inflation adjustment
 - Smart unit inference
@@ -76,12 +95,15 @@ Comprehensive demonstration of all advanced features.
 - Seasonal adjustment
 
 ### Time Sampling (Advanced)
+
 ```bash
 deno run --allow-all examples/time_sampling_advanced.ts
 ```
+
 Deep dive into time conversion and sampling techniques.
 
 **Features shown:**
+
 - Simple vs enhanced wage conversions
 - Time series upsampling/downsampling
 - Mixed frequency processing
@@ -105,16 +127,19 @@ examples/
 ## 🎯 Use Case Guide
 
 ### For Basic Users
+
 1. Start with `quickstart.ts` - learn the basic API
 2. Try `simple_consumer.ts` - see real-world patterns
 3. Use `exemptions_example.ts` - handle mixed data types
 
 ### For Wages Processing
+
 1. Run `wages_processing_example.ts` - see automatic detection
 2. Check `time_resampling_example.ts` - standardize time periods
 3. Review `time_sampling_advanced.ts` - advanced conversions
 
 ### For Advanced Users
+
 1. Explore `advanced_usage.ts` - see all capabilities
 2. Study the source code for implementation details
 3. Adapt patterns to your specific use cases
@@ -141,11 +166,13 @@ done
 
 - **Main README**: `../README.md` - Library overview
 - **API Documentation**: Generated from source code
-- **Integration Guide**: `../src/wages/INTEGRATION_GUIDE.md` - Detailed integration patterns
+- **Integration Guide**: `../src/wages/INTEGRATION_GUIDE.md` - Detailed
+  integration patterns
 
 ## 🧪 Testing Examples
 
-All examples are tested as part of the main test suite to ensure they remain up-to-date and functional.
+All examples are tested as part of the main test suite to ensure they remain
+up-to-date and functional.
 
 ```bash
 # Test that examples can be imported without errors

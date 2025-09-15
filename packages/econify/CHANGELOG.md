@@ -10,25 +10,37 @@ and this project adheres to
 
 ## [0.1.6] - 2025-01-15 - Architecture Cleanup & Modernization Release
 
-🎯 **Architecture Cleanup & Modernization Release**: This release focuses on removing backwards compatibility code, reorganizing the codebase architecture, and consolidating examples for a cleaner, more maintainable codebase.
+🎯 **Architecture Cleanup & Modernization Release**: This release focuses on
+removing backwards compatibility code, reorganizing the codebase architecture,
+and consolidating examples for a cleaner, more maintainable codebase.
 
 ### 🏆 Release Highlights
 
-- **Clean Architecture**: Removed all backwards compatibility code and legacy APIs
-- **Organized Examples**: Consolidated all examples into centralized `examples/` folder with comprehensive documentation
-- **Simplified API**: Single unified pipeline API with no confusing legacy functions
-- **Better Separation**: Clear distinction between API layer, XState workflows, and business logic services
+- **Clean Architecture**: Removed all backwards compatibility code and legacy
+  APIs
+- **Organized Examples**: Consolidated all examples into centralized `examples/`
+  folder with comprehensive documentation
+- **Simplified API**: Single unified pipeline API with no confusing legacy
+  functions
+- **Better Separation**: Clear distinction between API layer, XState workflows,
+  and business logic services
 - **Zero Regressions**: All 201 tests passing with improved code quality
 
 ### 🗑️ Removed (Breaking Changes)
 
 #### Legacy API Cleanup
-- **Removed `processWagesIndicator()`** - Legacy function replaced by unified `processEconomicData()` API
-- **Removed `createWagesPipelineConfig()`** - Legacy configuration helper no longer needed
-- **Removed `IndicatorData` interface** - Legacy data structure replaced by modern pipeline types
-- **Removed `ProcessingResult` interface** - Legacy result structure replaced by unified response format
+
+- **Removed `processWagesIndicator()`** - Legacy function replaced by unified
+  `processEconomicData()` API
+- **Removed `createWagesPipelineConfig()`** - Legacy configuration helper no
+  longer needed
+- **Removed `IndicatorData` interface** - Legacy data structure replaced by
+  modern pipeline types
+- **Removed `ProcessingResult` interface** - Legacy result structure replaced by
+  unified response format
 
 #### Backwards Compatibility Code
+
 - **Removed deprecated exports** from `src/services/index.ts`
 - **Removed legacy test cases** (4 test cases) that used deprecated APIs
 - **Removed legacy example files** that showed outdated usage patterns
@@ -36,23 +48,34 @@ and this project adheres to
 ### ✨ Added
 
 #### Centralized Examples
-- **`examples/README.md`** - Comprehensive guide for all examples with usage instructions and learning paths
-- **`examples/run_all_examples.ts`** - Automated test runner for all examples to ensure they stay working
-- **Consolidated Examples**: All scattered examples moved to main `examples/` folder
+
+- **`examples/README.md`** - Comprehensive guide for all examples with usage
+  instructions and learning paths
+- **`examples/run_all_examples.ts`** - Automated test runner for all examples to
+  ensure they stay working
+- **Consolidated Examples**: All scattered examples moved to main `examples/`
+  folder
 
 #### Enhanced Documentation
+
 - **Progressive Learning Path**: Examples organized from basic to advanced usage
-- **Feature Coverage Matrix**: Clear mapping of which examples demonstrate which features
+- **Feature Coverage Matrix**: Clear mapping of which examples demonstrate which
+  features
 - **Running Instructions**: Simple commands to run individual or all examples
 
 ### 🔧 Improved
 
 #### Architecture Reorganization
-- **Clean Separation**: `src/api/` for public APIs, `src/workflows/` for XState workflows only, `src/services/` for business logic
-- **Unified Pipeline**: Single robust pipeline that automatically detects data types and applies appropriate processing
-- **Modern Examples**: All examples updated to use current API patterns and imports
+
+- **Clean Separation**: `src/api/` for public APIs, `src/workflows/` for XState
+  workflows only, `src/services/` for business logic
+- **Unified Pipeline**: Single robust pipeline that automatically detects data
+  types and applies appropriate processing
+- **Modern Examples**: All examples updated to use current API patterns and
+  imports
 
 #### Code Quality
+
 - **Simplified Codebase**: Removed 169+ lines of legacy code
 - **Single Source of Truth**: One unified pipeline API for all users
 - **Easier Maintenance**: No need to maintain multiple API versions
@@ -61,21 +84,26 @@ and this project adheres to
 ### 🧪 Quality Assurance
 
 #### Test Results
+
 - **201 Total Tests**: All passing (100% success rate)
-- **7 Working Examples**: All examples run successfully with comprehensive output
+- **7 Working Examples**: All examples run successfully with comprehensive
+  output
 - **Zero Regressions**: All existing functionality preserved
 - **Clean Imports**: All import paths updated and verified
 
 ### 🚀 For Users
 
 #### Migration Required
+
 **Before (Deprecated - No Longer Available):**
+
 ```typescript
 // ❌ These APIs have been removed
-import { processWagesIndicator, createWagesPipelineConfig } from "econify";
+import { createWagesPipelineConfig, processWagesIndicator } from "econify";
 ```
 
 **After (Modern Unified API):**
+
 ```typescript
 // ✅ Use the unified pipeline API
 import { processEconomicData } from "econify";
@@ -83,22 +111,30 @@ const result = await processEconomicData(data, options);
 ```
 
 #### Benefits for Users
-1. **Simpler API**: One unified function handles all data types (wages, currencies, time scales, exemptions)
-2. **Better Examples**: Centralized, well-documented examples with progressive complexity
+
+1. **Simpler API**: One unified function handles all data types (wages,
+   currencies, time scales, exemptions)
+2. **Better Examples**: Centralized, well-documented examples with progressive
+   complexity
 3. **Cleaner Codebase**: No confusing legacy APIs or deprecated warnings
-4. **Future-Proof**: Clean foundation for new features without backwards compatibility baggage
+4. **Future-Proof**: Clean foundation for new features without backwards
+   compatibility baggage
 
 ### 📋 Migration Guide
 
 #### Required Changes
-1. **Replace `processWagesIndicator()`** with `processEconomicData()` - the unified API automatically detects wages data
-2. **Remove `createWagesPipelineConfig()`** calls - use standard pipeline options instead
+
+1. **Replace `processWagesIndicator()`** with `processEconomicData()` - the
+   unified API automatically detects wages data
+2. **Remove `createWagesPipelineConfig()`** calls - use standard pipeline
+   options instead
 3. **Update imports** - remove any imports of deprecated functions
 
 #### Example Migration
+
 ```typescript
 // Before (v0.1.5 and earlier)
-import { processWagesIndicator, createWagesPipelineConfig } from "econify";
+import { createWagesPipelineConfig, processWagesIndicator } from "econify";
 const config = createWagesPipelineConfig({ targetCurrency: "USD" });
 const result = processWagesIndicator(data, fxRates, config);
 
@@ -113,7 +149,8 @@ const result = await processEconomicData(data, {
 
 ### 🔄 Breaking Changes Summary
 
-- **Removed**: `processWagesIndicator()`, `createWagesPipelineConfig()`, `IndicatorData`, `ProcessingResult`
+- **Removed**: `processWagesIndicator()`, `createWagesPipelineConfig()`,
+  `IndicatorData`, `ProcessingResult`
 - **Replacement**: Use `processEconomicData()` for all data processing needs
 - **Impact**: Cleaner, simpler API with automatic wages detection and processing
 

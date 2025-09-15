@@ -16,7 +16,10 @@ import {
   type Scale,
   type TimeScale,
 } from "../main.ts";
-import { detectWagesData, processWagesData } from "../services/wages-service.ts";
+import {
+  detectWagesData,
+  processWagesData,
+} from "../services/wages-service.ts";
 import { processBatch } from "../batch/batch.ts";
 import { filterExemptions } from "../exemptions/exemptions.ts";
 

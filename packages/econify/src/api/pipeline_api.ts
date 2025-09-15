@@ -4,7 +4,10 @@
 
 import { createActor } from "npm:xstate@^5.20.2";
 import { pipelineMachine } from "../workflows/economic-data-workflow.ts";
-import type { ParsedData, PipelineConfig } from "../workflows/economic-data-workflow.ts";
+import type {
+  ParsedData,
+  PipelineConfig,
+} from "../workflows/economic-data-workflow.ts";
 
 export interface PipelineOptions extends PipelineConfig {
   onProgress?: (step: string, progress: number) => void;

@@ -6,7 +6,4 @@
  */
 
 // Export wages service functions
-export {
-  detectWagesData,
-  processWagesData,
-} from "./wages-service.ts";
+export { detectWagesData, processWagesData } from "./wages-service.ts";
