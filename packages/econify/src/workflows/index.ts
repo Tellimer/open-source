@@ -1,24 +1,20 @@
 /**
- * Clean workflow API for external consumption
- * No XState knowledge or dependencies required
+ * XState Workflows
+ *
+ * This module contains XState state machine workflows for complex data processing.
+ * For simple API access, use the functions from src/api/ instead.
  */
 
-// Export the clean API functions
-export {
-  processEconomicData,
-  processEconomicDataAuto,
-  validateEconomicData,
-} from "./pipeline_api.ts";
+// Export XState workflows
+export { pipelineMachine, createPipeline } from "./economic-data-workflow.ts";
 
-// Export types
-export type { PipelineOptions, PipelineResult } from "./pipeline_api.ts";
-
-// Types from pipeline_v5
+// Export workflow types
 export type {
   ParsedData,
   PipelineConfig,
+  PipelineContext,
   PipelineError,
-} from "./pipeline_v5.ts";
+} from "./economic-data-workflow.ts";
 
 // Note: Simple pipeline alternative available if needed
 // Can be implemented without XState dependencies

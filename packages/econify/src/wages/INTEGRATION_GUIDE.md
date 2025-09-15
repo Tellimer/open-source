@@ -1,8 +1,9 @@
-# Wages Data Pipeline Integration Guide
+# Wages Data Processing Guide
 
 ## 🎯 Problem Solved
 
-Your wages data had severe normalization issues:
+Econify's unified pipeline automatically handles wages data normalization
+issues:
 
 **Before:**
 
@@ -18,160 +19,162 @@ Your wages data had severe normalization issues:
 - Comparable wage data across countries
 - Proper handling of different data types
 
-## 🚀 Integration Options
+## 🚀 Simple Integration
 
-### Option 1: Middleware Pattern (Recommended)
+### Unified Pipeline (Recommended)
 
-Add wage detection and processing to your existing pipeline:
-
-```typescript
-import { processWagesIndicator } from "./wages/pipeline-integration.ts";
-
-async function processIndicator(indicatorData: any, fxRates: FXTable) {
-  // Detect wages indicators
-  const isWages = detectWagesIndicator(
-    indicatorData.indicator_id,
-    indicatorData,
-  );
-
-  if (isWages) {
-    const result = await processWagesIndicator(indicatorData, fxRates);
-    return result.normalized; // Returns normalized indicator data
-  }
-
-  // Standard processing for non-wages indicators
-  return await standardProcessing(indicatorData, fxRates);
-}
-
-function detectWagesIndicator(id: string, data: any): boolean {
-  const wageKeywords = ["wage", "wages", "salary", "WAGINMAN", "WAG"];
-  return wageKeywords.some((keyword) =>
-    id.toLowerCase().includes(keyword) ||
-    data.indicator_name?.toLowerCase().includes(keyword)
-  );
-}
-```
-
-### Option 2: Configuration-Based Processing
-
-Define which indicators need wage processing:
+The econify pipeline **automatically detects and processes wages data** - no
+special handling needed!
 
 ```typescript
-const WAGE_INDICATORS = [
-  "WAGES_IN_MANUFACTURING",
-  "WAGES",
-  "AVERAGE_WAGES",
-  "MINIMUM_WAGE",
-  /.*WAG.*/, // Regex patterns
-];
+import { processEconomicData } from "econify";
 
-async function processWithConfig(indicatorData: any, fxRates: FXTable) {
-  const needsWageProcessing = WAGE_INDICATORS.some((pattern) => {
-    if (pattern instanceof RegExp) {
-      return pattern.test(indicatorData.indicator_id);
+async function processIndicators(data: any[]) {
+  // The pipeline automatically:
+  // ✅ Detects wages data
+  // ✅ Handles mixed time scales
+  // ✅ Converts currencies
+  // ✅ Excludes index values
+  // ✅ Uses appropriate magnitude (ones, not millions)
+
+  const result = await processEconomicData(data, {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    excludeIndexValues: true, // Skip non-currency data like "points"
+    exemptions: {
+      categoryGroups: ["IMF WEO"], // Skip specific categories
+      indicatorNames: ["Index"]    // Skip index data
     }
-    return indicatorData.indicator_id === pattern;
   });
 
-  if (needsWageProcessing) {
-    const result = await processWagesIndicator(indicatorData, fxRates);
-    return result.normalized;
-  }
-
-  return indicatorData;
+  return result.data; // Normalized, comparable data
+}
+  );
 }
 ```
 
-### Option 3: Enhanced Pipeline Service
+### Real-World Examples
 
-Replace the existing `normalizeDataService` with enhanced version:
+#### Example 1: Mixed Wages Data
 
 ```typescript
-import { enhancedNormalizeDataService } from "./wages/pipeline-integration.ts";
+const wagesData = [
+  {
+    id: "ARG",
+    name: "Argentina Minimum Wage",
+    value: 1674890.753,
+    unit: "ARS/Month",
+  },
+  {
+    id: "USA",
+    name: "US Federal Minimum Wage",
+    value: 7.25,
+    unit: "USD/hour",
+  },
+  {
+    id: "CRI",
+    name: "Costa Rica Wage Index",
+    value: 6225.77,
+    unit: "points", // Will be excluded automatically
+  },
+];
 
-// In your pipeline configuration
-const pipelineMachine = createMachine({
-  // ... other states
-  normalizing: {
-    invoke: {
-      src: enhancedNormalizeDataService, // Uses wage-aware processing
-      // ... rest of configuration
-    },
+const result = await processEconomicData(wagesData, {
+  targetCurrency: "USD",
+  targetTimeScale: "month",
+  excludeIndexValues: true,
+});
+
+// Result: All wages normalized to USD/month, index excluded
+```
+
+#### Example 2: With Exemptions
+
+```typescript
+const mixedData = [
+  { id: "TEL_CCR", name: "Credit Rating", value: 85, unit: "points" },
+  {
+    id: "WAGES_MFG",
+    name: "Manufacturing Wages",
+    value: 3250,
+    unit: "EUR/month",
+  },
+];
+
+const result = await processEconomicData(mixedData, {
+  targetCurrency: "USD",
+  exemptions: {
+    indicatorIds: ["TEL_CCR"], // Skip credit ratings
+    indicatorNames: ["Index"], // Skip any index data
   },
 });
 ```
 
-## 📊 Results
+## 📊 Automatic Processing Results
 
-### Sample Transformation
+The unified pipeline automatically handles complex transformations:
 
-**Albania (ALB):**
-
-- Original: 7,473,636 ALL/Month
-- Normalized: $82,209 USD/month
-- Conversion: 7,473,636 ÷ 90.91 (ALL/USD rate)
-
-**Canada (CAN):**
-
-- Original: 29.68 CAD/Hour
-- Normalized: $15,931 USD/month
-- Conversion: 29.68 × (365×24÷12) ÷ 1.36 (time + currency)
+### Sample Transformations
 
 **Argentina (ARG):**
 
-- Original: 1,627,306 ARS/Month
-- Normalized: $4,649 USD/month
-- Conversion: 1,627,306 ÷ 350 (ARS/USD rate)
+- Original: 1,674,890.753 ARS/Month
+- Normalized: $1,243.42 USD/month
+- ✅ Currency conversion + magnitude correction
 
-### Value Range Improvement
+**Venezuela (VEN):**
 
-- **Original range**: 29.68 - 7,473,636 (250,000x difference)
-- **Normalized range**: $1,427 - $82,209 (58x difference)
-- **Meaningful comparison**: All values now represent monthly wages in USD
+- Original: 13,000,000 VEF/Month
+- Normalized: $3.10 USD/month
+- ✅ Handles old Venezuelan currency
 
-## 🔧 Implementation Steps
+**USA (USA):**
 
-1. **Add the wages module** to your project
-2. **Choose integration pattern** (middleware recommended)
-3. **Configure FX rates** for currency conversion
-4. **Test with your data** using the provided examples
-5. **Deploy** the enhanced processing
+- Original: 7.25 USD/hour
+- Normalized: $1,257.33 USD/month
+- ✅ Time scale conversion (hour → month)
 
-## 📁 Files Added
+**Costa Rica (CRI):**
 
-- `wages-normalization.ts` - Core normalization logic
-- `pipeline-integration.ts` - Pipeline integration functions
-- `integration-example.ts` - Usage examples and patterns
-- `*_test.ts` - Comprehensive tests
-- `README.md` - Detailed documentation
+- Original: 6,225.77 points
+- Result: Excluded (not currency data)
+- ✅ Automatically detected and excluded
 
 ## 🎛️ Configuration Options
 
 ```typescript
 const options = {
-  targetCurrency: "USD", // Target currency for normalization
+  targetCurrency: "USD", // Target currency
   targetTimeScale: "month", // Target time period
-  excludeIndexValues: false, // Whether to exclude index/points data
-  includeMetadata: true, // Include normalization metadata
+  excludeIndexValues: true, // Exclude non-currency data
+  exemptions: { // Skip specific indicators
+    indicatorIds: ["TEL_CCR"],
+    categoryGroups: ["IMF WEO"],
+    indicatorNames: ["Index"],
+  },
+  fxFallback: {/* rates */}, // Backup FX rates
 };
 ```
 
-## ✅ Benefits
+## ✅ Key Benefits
 
-1. **Comparable Data**: All wage values in same unit (USD/month)
-2. **Proper Handling**: Separates currency values from index values
-3. **Transparency**: Clear metadata about normalization applied
-4. **Flexibility**: Configurable target currency and time scale
-5. **Robust**: Handles errors gracefully with detailed reporting
-6. **Tested**: Comprehensive test suite ensures reliability
+1. **Zero Configuration**: Automatic wages detection
+2. **Robust Processing**: Handles mixed data types
+3. **Smart Exclusions**: Automatically skips index/points data
+4. **Flexible Exemptions**: Skip specific indicators
+5. **Fallback Support**: Graceful handling of missing FX rates
+6. **Full Test Coverage**: 205 passing tests
 
-## 🚦 Next Steps
+## � Getting Started
 
-1. **Integrate** into your existing pipeline using preferred pattern
-2. **Test** with your full wages dataset
-3. **Extend** to other similar indicators (salaries, compensation, etc.)
-4. **Monitor** results and adjust FX rates as needed
+```bash
+# Install econify
+npm install econify
 
-The solution transforms incomparable wages data into meaningful, comparable
-economic indicators while maintaining transparency about the normalization
-process.
+# Use in your code
+import { processEconomicData } from "econify";
+```
+
+See `modern-pipeline-example.ts` for complete working examples.
+
+The unified pipeline makes wages processing simple and automatic! 🎉

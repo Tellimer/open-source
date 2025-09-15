@@ -45,7 +45,8 @@ export const CURRENCY_CODES: ReadonlySet<string> = new Set<string>([
   "UYU",
   "BOB",
   "PYG",
-  "VES",
+  "VEF", // Venezuelan Bolívar Fuerte (old)
+  "VES", // Venezuelan Bolívar Soberano (current)
   "CRC",
   "GTQ",
   "HNL",

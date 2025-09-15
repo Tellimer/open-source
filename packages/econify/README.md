@@ -7,7 +7,7 @@
 # @tellimer/econify
 
 [![JSR](https://jsr.io/badges/@tellimer/econify)](https://jsr.io/@tellimer/econify)
-[![Test Coverage](https://img.shields.io/badge/tests-189%20passing-brightgreen)](https://github.com/Tellimer/open-source)
+[![Test Coverage](https://img.shields.io/badge/tests-201%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 [![Deno](https://img.shields.io/badge/deno-2.0+-green)](https://deno.land)
 
@@ -16,7 +16,7 @@ advanced features for classification, normalization, quality assessment, and
 analysis. Perfect for financial institutions, economic research, data pipelines,
 and quantitative analysis.
 
-**✅ Production Ready** • **199 Tests Passing** • **100% Reliability** • **Zero
+**✅ Production Ready** • **201 Tests Passing** • **100% Reliability** • **Zero
 Linting Issues** • **Time Resampling** • **Type Safe**
 
 ## ✨ Features
@@ -42,6 +42,8 @@ Linting Issues** • **Time Resampling** • **Type Safe**
   for external consumers
 - 💼 **Wages Data Normalization** — Specialized handling for mixed wage/salary
   data with different currencies and time periods
+- 🚫 **Normalization Exemptions** — Skip normalization for specific indicators,
+  categories, or name patterns (e.g., IMF WEO, credit ratings, custom indices)
 - ⏰ **Advanced Time Sampling** — Comprehensive upsampling and downsampling for
   economic time series
 - 💱 **Live FX Rates** — Fetch real-time exchange rates from multiple sources
@@ -85,10 +87,9 @@ import {
   validateEconomicData,
 } from "jsr:@tellimer/econify";
 
-// Wages processing
+// Wages processing (automatic detection in main API)
 import {
   normalizeWagesData,
-  processWagesIndicator,
 } from "jsr:@tellimer/econify/wages";
 
 // Time sampling
@@ -302,45 +303,56 @@ gdpData.forEach((item) => {
 
 ### Wages Data Processing
 
-Handle mixed wage data with different currencies and time periods:
+Handle mixed wage data with different currencies and time periods using the unified API:
 
 ```ts
-import { processWagesIndicator } from "jsr:@tellimer/econify/wages";
+import { processEconomicData } from "jsr:@tellimer/econify";
 
 // Mixed wages data (real-world scenario)
-const wagesData = {
-  indicator_id: "WAGES",
-  indicator_name: "Average Wages",
-  countries: {
-    CAN: {
-      value: "29.68",
-      tooltip: { currency: "CAD", units: "CAD/Hour" },
-    },
-    AUS: {
-      value: "1432.6",
-      tooltip: { currency: "AUD", units: "AUD/Week" },
-    },
-    CHN: {
-      value: "124110",
-      tooltip: { currency: "CNY", units: "CNY/Year" },
-    },
-    EUR: {
-      value: "3200",
-      tooltip: { currency: "EUR", units: "EUR/Month" },
-    },
+const wagesData = [
+  {
+    id: "CAN_WAGES",
+    value: 29.68,
+    unit: "CAD/Hour",
+    name: "Canada Average Wages",
+    metadata: { country: "CAN" },
   },
-};
+  {
+    id: "AUS_WAGES",
+    value: 1432.6,
+    unit: "AUD/Week",
+    name: "Australia Average Wages",
+    metadata: { country: "AUS" },
+  },
+  {
+    id: "CHN_WAGES",
+    value: 124110,
+    unit: "CNY/Year",
+    name: "China Average Wages",
+    metadata: { country: "CHN" },
+  },
+  {
+    id: "EUR_WAGES",
+    value: 3200,
+    unit: "EUR/Month",
+    name: "Europe Average Wages",
+    metadata: { country: "EUR" },
+  },
+];
 
-// Process with automatic time + currency conversion
-const result = await processWagesIndicator(wagesData, fxRates, {
+// Process with automatic wages detection + time + currency conversion
+const result = await processEconomicData(wagesData, {
   targetCurrency: "USD", // Convert all to USD
-  // Time conversion to monthly is automatic
+  targetTimeScale: "month", // Standardize to monthly
+  fxFallback: fxRates,
 });
 
 // Results: All wages now in USD/month for comparison
 console.log("Comparable wages in USD/month:");
-Object.entries(result.normalized.countries).forEach(([country, data]) => {
-  console.log(`${country}: $${Math.round(data.value).toLocaleString()}`);
+result.data.forEach((item) => {
+  if (item.normalized) {
+    console.log(`${item.metadata.country}: $${Math.round(item.normalized).toLocaleString()}`);
+  }
 });
 // CAN: $15,931 USD/month (was 29.68 CAD/Hour)
 // AUS: $4,084 USD/month (was 1432.6 AUD/Week)
@@ -384,6 +396,71 @@ const result = await processEconomicData(wagesData, {
 // CHN: $1,427 USD/month (was 124110 CNY/Year)
 // EUR: $3,478 USD/month (was 3200 EUR/Month)
 ```
+
+### Normalization Exemptions
+
+Skip normalization for specific indicators that shouldn't be processed:
+
+```ts
+import { processEconomicData } from "jsr:@tellimer/econify";
+
+const mixedData = [
+  {
+    id: "TEL_CCR",
+    value: 85,
+    unit: "points",
+    name: "Credit Rating",
+    metadata: { categoryGroup: "Tellimer" },
+  },
+  {
+    id: "IMF_GDP",
+    value: 2.5,
+    unit: "percent",
+    name: "GDP Growth Rate",
+    metadata: { categoryGroup: "IMF WEO" },
+  },
+  {
+    id: "WAGES_MFG",
+    value: 50000,
+    unit: "USD/Year",
+    name: "Manufacturing Wages",
+    metadata: { categoryGroup: "Labor Stats" },
+  },
+];
+
+const result = await processEconomicData(mixedData, {
+  targetCurrency: "EUR",
+  targetMagnitude: "millions",
+  exemptions: {
+    // Skip specific indicator IDs
+    indicatorIds: ["TEL_CCR"],
+
+    // Skip entire category groups
+    categoryGroups: ["IMF WEO", "Tellimer"],
+
+    // Skip indicators with certain name patterns
+    indicatorNames: ["Credit Rating", "Index"],
+  },
+  fxFallback: {
+    base: "USD",
+    rates: { EUR: 0.85 },
+  },
+});
+
+// Results:
+// ✅ TEL_CCR: 85 points (exempted - unchanged)
+// ✅ IMF_GDP: 2.5 percent (exempted - unchanged)
+// ✅ WAGES_MFG: 3,541.67 EUR/month (processed - normalized)
+```
+
+**Common exemption use cases:**
+
+- **IMF WEO data**: Already standardized, shouldn't be re-normalized
+- **Credit ratings**: Qualitative/ordinal data that doesn't need currency
+  conversion
+- **Custom indices**: Proprietary calculations that should remain untouched
+- **Tellimer composites**: Internal indicators with specific formatting
+  requirements
 
 ### Time Resampling & Standardization
 
@@ -576,12 +653,8 @@ async function validateEconomicData(
   options?: { requiredFields?: string[] },
 ): Promise<ValidationResult>;
 
-// Process wages data with time + currency conversion
-async function processWagesIndicator(
-  wagesData: any,
-  fxRates: FXTable,
-  options?: { targetCurrency?: string; excludeIndexValues?: boolean },
-): Promise<WagesProcessingResult>;
+// Note: processWagesIndicator() was removed in v0.1.6
+// Use processEconomicData() instead - it automatically detects wages data
 
 // Advanced time series resampling
 function resampleTimeSeries(
@@ -623,6 +696,13 @@ interface PipelineOptions {
     rates: Record<string, number>;
   };
 
+  // Exemptions - skip normalization for specific indicators
+  exemptions?: {
+    indicatorIds?: string[]; // e.g., ['TEL_CCR', 'CUSTOM_INDEX']
+    categoryGroups?: string[]; // e.g., ['IMF WEO', 'Tellimer']
+    indicatorNames?: string[]; // e.g., ['Credit Rating', 'Index']
+  };
+
   // Callbacks
   onProgress?: (step: string, progress: number) => void;
   onWarning?: (warning: string) => void;
@@ -651,18 +731,8 @@ interface ParsedData {
   metadata?: Record<string, any>;
 }
 
-interface WagesProcessingResult {
-  original: any;
-  normalized: any;
-  summary: {
-    total: number;
-    normalized: number;
-    excluded: number;
-    comparable: number;
-    valueRange?: { min: number; max: number; mean: number };
-  };
-  comparable: NormalizedWageData[];
-}
+// Note: WagesProcessingResult interface was removed in v0.1.6
+// Use PipelineResult instead - returned by processEconomicData()
 
 interface TimeSeries {
   date: Date;

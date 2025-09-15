@@ -24,6 +24,7 @@ export type {
   FXTable,
   IndicatorInput,
   IndicatorType,
+  NormalizationExemptions,
   Scale,
   TimeScale,
 } from "./types.ts";
@@ -214,14 +215,26 @@ export {
   type SeasonalOptions,
 } from "./seasonal/seasonal.ts";
 
-// Re-export workflows for data pipeline processing
+// Re-export API for data pipeline processing
 export {
-  type ParsedData,
-  type PipelineConfig,
-  type PipelineError,
   type PipelineOptions,
   type PipelineResult,
   processEconomicData,
   processEconomicDataAuto,
   validateEconomicData,
+} from "./api/index.ts";
+
+// Re-export workflow types for advanced users
+export type {
+  ParsedData,
+  PipelineConfig,
+  PipelineError,
 } from "./workflows/index.ts";
+
+// Re-export exemption utilities
+export {
+  createExemptionSummary,
+  type ExemptionCheckData,
+  filterExemptions,
+  shouldExemptFromNormalization,
+} from "./exemptions/exemptions.ts";

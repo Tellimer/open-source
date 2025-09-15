@@ -7,7 +7,7 @@
  * for consistent reporting and analysis.
  */
 
-import { processEconomicData } from "../src/workflows/pipeline_api.ts";
+import { processEconomicData } from "../src/main.ts";
 
 console.log("🕒 Time Resampling Example\n");
 

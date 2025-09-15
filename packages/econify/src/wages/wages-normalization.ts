@@ -121,7 +121,7 @@ export function normalizeWagesData(
 /**
  * Check if a unit represents an index or points value
  */
-function isIndexOrPointsUnit(
+export function isIndexOrPointsUnit(
   unitText: string,
   parsed: { category?: string; currency?: string; timeScale?: string },
 ): boolean {

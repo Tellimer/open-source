@@ -28,3 +28,15 @@ export type Scale =
   | "trillions";
 
 export type TimeScale = "year" | "quarter" | "month" | "week" | "day" | "hour";
+
+/**
+ * Configuration for exempting specific indicators from normalization
+ */
+export interface NormalizationExemptions {
+  /** Specific indicator IDs to exempt (e.g., ['TEL_CCR', 'CUSTOM_INDEX']) */
+  indicatorIds?: string[];
+  /** Category groups to exempt (e.g., ['IMF WEO', 'Tellimer']) */
+  categoryGroups?: string[];
+  /** Indicator names or name patterns to exempt (e.g., ['Credit Rating', 'Index']) */
+  indicatorNames?: string[];
+}

@@ -3,8 +3,8 @@
  */
 
 import { createActor } from "npm:xstate@^5.20.2";
-import { pipelineMachine } from "./pipeline_v5.ts";
-import type { ParsedData, PipelineConfig } from "./pipeline_v5.ts";
+import { pipelineMachine } from "../workflows/economic-data-workflow.ts";
+import type { ParsedData, PipelineConfig } from "../workflows/economic-data-workflow.ts";
 
 export interface PipelineOptions extends PipelineConfig {
   onProgress?: (step: string, progress: number) => void;

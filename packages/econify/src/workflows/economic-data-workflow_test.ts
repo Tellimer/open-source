@@ -3,8 +3,8 @@
  */
 
 import { assertEquals, assertExists } from "jsr:@std/assert";
-import { createPipeline } from "./pipeline_v5.ts";
-import type { ParsedData, PipelineConfig } from "./pipeline_v5.ts";
+import { createPipeline } from "./economic-data-workflow.ts";
+import type { ParsedData, PipelineConfig } from "./economic-data-workflow.ts";
 
 Deno.test("Pipeline - complete workflow with mock data", async () => {
   const mockData: ParsedData[] = [

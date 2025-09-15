@@ -10,12 +10,15 @@ import {
   fetchLiveFXRates,
   type FXTable,
   inferUnit,
+  type NormalizationExemptions,
   parseUnit,
   type QualityScore,
   type Scale,
   type TimeScale,
 } from "../main.ts";
-import { enhancedNormalizeDataService } from "../wages/pipeline-integration.ts";
+import { detectWagesData, processWagesData } from "../services/wages-service.ts";
+import { processBatch } from "../batch/batch.ts";
+import { filterExemptions } from "../exemptions/exemptions.ts";
 
 // Derived types
 type ParsedUnit = ReturnType<typeof parseUnit>;
@@ -64,6 +67,9 @@ export interface PipelineConfig {
   // Wages-specific configuration
   excludeIndexValues?: boolean;
   includeWageMetadata?: boolean;
+
+  // Normalization exemptions
+  exemptions?: NormalizationExemptions;
 }
 
 /**
@@ -196,7 +202,58 @@ export const pipelineMachine = setup({
 
     normalizeDataService: fromPromise(
       async ({ input }: { input: PipelineContext }) => {
-        return await enhancedNormalizeDataService(input);
+        const { parsedData, fxRates, config } = input;
+
+        if (!parsedData) {
+          throw new Error("No parsed data available");
+        }
+
+        // Filter out exempted items
+        const { exempted, nonExempted } = filterExemptions(
+          parsedData,
+          config.exemptions,
+        );
+
+        if (exempted.length > 0) {
+          console.log(
+            `📋 Exempted ${exempted.length}/${parsedData.length} indicators from normalization`,
+          );
+          exempted.forEach((item) => {
+            console.log(`   - ${item.id}: ${item.name}`);
+          });
+        }
+
+        // Check if this looks like wages data (only check non-exempted data)
+        const isWagesData = detectWagesData(nonExempted);
+
+        if (isWagesData) {
+          console.log(
+            "🔧 Detected wages data - applying specialized normalization",
+          );
+          const processedWages = await processWagesData(nonExempted, fxRates, {
+            targetCurrency: config.targetCurrency,
+            targetMagnitude: config.targetMagnitude,
+            targetTimeScale: config.targetTimeScale,
+            excludeIndexValues: config.excludeIndexValues,
+            includeWageMetadata: config.includeWageMetadata,
+          });
+
+          // Return processed wages + exempted items unchanged
+          return [...processedWages, ...exempted];
+        }
+
+        // Standard processing for non-wages data (only process non-exempted items)
+        const result = await processBatch(nonExempted, {
+          validate: false,
+          handleErrors: "skip",
+          parallel: true,
+          toCurrency: config.targetCurrency,
+          toMagnitude: config.targetMagnitude as Scale,
+          fx: fxRates,
+        });
+
+        // Return processed data + exempted items unchanged
+        return [...result.successful, ...exempted];
       },
     ),
 

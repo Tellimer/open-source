@@ -13,6 +13,7 @@ import {
   processEconomicDataAuto,
   validateEconomicData,
 } from "./pipeline_api.ts";
+import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 
 Deno.test("processEconomicData - basic processing", async () => {
   const data = [
@@ -494,4 +495,134 @@ Deno.test("processEconomicData - time resampling to monthly", async () => {
 
   // Weekly (50) to monthly should be ~217 (50*4.33)
   assertEquals(Math.round(weeklyResult.normalized || 0), 217);
+});
+
+Deno.test("processEconomicData - exemptions functionality", async () => {
+  const mixedData: ParsedData[] = [
+    {
+      id: "TEL_CCR",
+      value: 85,
+      unit: "points",
+      name: "Credit Rating",
+      metadata: { categoryGroup: "Tellimer" },
+    },
+    {
+      id: "IMF_GDP",
+      value: 2.5,
+      unit: "percent",
+      name: "GDP Growth Rate",
+      metadata: { categoryGroup: "IMF WEO" },
+    },
+    {
+      id: "WB_INFLATION",
+      value: 3.2,
+      unit: "percent",
+      name: "Inflation Rate",
+      metadata: { categoryGroup: "World Bank" },
+    },
+    {
+      id: "CUSTOM_INDEX",
+      value: 1250,
+      unit: "index",
+      name: "Market Index",
+      metadata: { categoryGroup: "Internal" },
+    },
+    {
+      id: "WAGES_MFG",
+      value: 50000,
+      unit: "USD/Year",
+      name: "Manufacturing Wages",
+      metadata: { categoryGroup: "Labor Stats" },
+    },
+  ];
+
+  const result = await processEconomicData(mixedData, {
+    targetCurrency: "EUR",
+    targetMagnitude: "thousands",
+    minQualityScore: 30,
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: {
+        EUR: 0.85,
+      },
+    },
+    exemptions: {
+      indicatorIds: ["TEL_CCR"],
+      categoryGroups: ["IMF WEO", "Tellimer"],
+      indicatorNames: ["Index"],
+    },
+  });
+
+  assertEquals(result.data.length, 5, "Should return all 5 items");
+  assertEquals(result.warnings.length, 0);
+  assertEquals(result.errors.length, 0);
+
+  // Find specific items
+  const telCcr = result.data.find((item) => item.id === "TEL_CCR");
+  const imfGdp = result.data.find((item) => item.id === "IMF_GDP");
+  const wbInflation = result.data.find((item) => item.id === "WB_INFLATION");
+  const customIndex = result.data.find((item) => item.id === "CUSTOM_INDEX");
+  const wagesMfg = result.data.find((item) => item.id === "WAGES_MFG");
+
+  // Exempted items should be unchanged
+  assertEquals(
+    telCcr?.value,
+    85,
+    "TEL_CCR should be unchanged (exempted by ID)",
+  );
+  assertEquals(telCcr?.unit, "points", "TEL_CCR unit should be unchanged");
+  assertEquals(
+    telCcr?.normalized,
+    undefined,
+    "TEL_CCR should not be normalized",
+  );
+
+  assertEquals(
+    imfGdp?.value,
+    2.5,
+    "IMF_GDP should be unchanged (exempted by category)",
+  );
+  assertEquals(imfGdp?.unit, "percent", "IMF_GDP unit should be unchanged");
+
+  assertEquals(
+    customIndex?.value,
+    1250,
+    "CUSTOM_INDEX should be unchanged (exempted by name)",
+  );
+  assertEquals(
+    customIndex?.unit,
+    "index",
+    "CUSTOM_INDEX unit should be unchanged",
+  );
+
+  // Non-exempted items should be processed
+  assertEquals(
+    wbInflation?.value,
+    3.2,
+    "WB_INFLATION should be unchanged (percentage)",
+  );
+  assertEquals(wbInflation?.unit, "percent", "Percentages typically unchanged");
+
+  // Wages should be normalized
+  assertEquals(
+    typeof wagesMfg?.normalized,
+    "number",
+    "WAGES_MFG should be normalized",
+  );
+  assertEquals(
+    wagesMfg?.normalizedUnit?.includes("EUR"),
+    true,
+    "Should be converted to EUR",
+  );
+
+  console.log("✅ Exemptions working correctly:");
+  console.log(`   - TEL_CCR: ${telCcr?.value} ${telCcr?.unit} (exempted)`);
+  console.log(`   - IMF_GDP: ${imfGdp?.value} ${imfGdp?.unit} (exempted)`);
+  console.log(
+    `   - CUSTOM_INDEX: ${customIndex?.value} ${customIndex?.unit} (exempted)`,
+  );
+  console.log(
+    `   - WAGES_MFG: ${wagesMfg?.normalized} ${wagesMfg?.normalizedUnit} (processed)`,
+  );
 });

@@ -8,7 +8,7 @@ import {
   resampleTimeSeries,
   simpleTimeConversion,
   type TimeSeries,
-} from "./time-sampling.ts";
+} from "../src/time/time-sampling.ts";
 
 /**
  * Demonstrate current vs enhanced time conversion
