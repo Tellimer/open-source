@@ -2,7 +2,7 @@
  * Tests for aggregations module
  */
 
-import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { aggregate } from "./aggregations.ts";
 import type { FXTable } from "../types.ts";
 

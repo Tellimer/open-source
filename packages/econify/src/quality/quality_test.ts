@@ -2,7 +2,7 @@
  * Tests for quality assessment module
  */
 
-import { assert, assertEquals } from "jsr:@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { assessDataQuality, type DataPoint } from "./quality.ts";
 
 Deno.test("assessDataQuality - high quality data", () => {

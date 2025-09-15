@@ -2,7 +2,7 @@
  * Tests for custom units module
  */
 
-import { assert, assertEquals } from "jsr:@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
   convertCustomUnit,
   type CustomUnit,

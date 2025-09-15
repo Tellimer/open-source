@@ -2,7 +2,7 @@
  * Tests for combined normalization module
  */
 
-import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import { normalizeMonetary, normalizeMonetaryFlow } from "./normalization.ts";
 import type { FXTable } from "../types.ts";
 

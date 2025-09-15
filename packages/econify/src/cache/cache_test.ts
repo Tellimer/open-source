@@ -2,7 +2,7 @@
  * Tests for cache module
  */
 
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import { SmartCache, withCache } from "./cache.ts";
 
 Deno.test("SmartCache - basic get/set operations", () => {

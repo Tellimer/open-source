@@ -10,7 +10,7 @@
  * - Real-world data processing
  */
 
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import {
   getComparableWagesData,
   getWageNormalizationSummary,

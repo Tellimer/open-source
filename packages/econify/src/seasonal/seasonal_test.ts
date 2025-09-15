@@ -2,7 +2,7 @@
  * Tests for seasonal adjustment module
  */
 
-import { assert, assertEquals } from "jsr:@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { deseasonalize } from "./seasonal.ts";
 
 // Helper function to create test data with seasonal pattern

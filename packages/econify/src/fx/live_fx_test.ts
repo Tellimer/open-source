@@ -2,7 +2,7 @@
  * Tests for live FX rates module
  */
 
-import { assert, assertEquals } from "jsr:@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { fetchLiveFXRates } from "./live_fx.ts";
 import type { FXTable } from "../types.ts";
 

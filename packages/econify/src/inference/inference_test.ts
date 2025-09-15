@@ -2,7 +2,7 @@
  * Tests for inference module
  */
 
-import { assert } from "jsr:@std/assert";
+import { assert } from "@std/assert";
 import { inferUnit, validateInferredUnit } from "./inference.ts";
 
 Deno.test("inferUnit - basic functionality", () => {

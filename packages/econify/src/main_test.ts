@@ -2,7 +2,7 @@
  * Integration tests for the main econify functionality
  */
 
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import {
   classifyIndicator,
   type FXTable,

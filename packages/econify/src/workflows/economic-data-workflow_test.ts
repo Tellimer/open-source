@@ -2,7 +2,7 @@
  * Tests for XState pipeline workflow
  */
 
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { createPipeline } from "./economic-data-workflow.ts";
 import type { ParsedData, PipelineConfig } from "./economic-data-workflow.ts";
 

@@ -2,7 +2,7 @@
  * Integration tests for comprehensive unit handling
  */
 
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import { normalizeValue, parseUnit } from "./main.ts";
 import type { FXTable } from "./types.ts";
 

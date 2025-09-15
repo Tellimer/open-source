@@ -2,7 +2,7 @@
  * Tests for scale (magnitude and time) module
  */
 
-import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { assertEquals, assertThrows } from "@std/assert";
 import {
   detectScale,
   fromMillions,
