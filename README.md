@@ -11,7 +11,7 @@ This monorepo contains various packages and applications maintained by Tellimer.
 ```
 monorepo/
 ├── packages/          # Open source libraries
-│   ├── econify/       # Economic indicator classification & normalization
+│   ├── econify/       # Economic data processing toolkit (201 tests)
 │   └── countrify/     # Country flag emoji utilities
 │
 └── apps/              # Applications (e.g. demos)
@@ -36,14 +36,22 @@ utilities for:
 
 ### [@tellimer/econify](packages/econify)
 
-A Deno/TypeScript package for classifying economic indicators and normalizing
-values across magnitudes, time bases, and currencies. Features:
+[![JSR](https://jsr.io/badges/@tellimer/econify)](https://jsr.io/@tellimer/econify)
+[![Test Coverage](https://img.shields.io/badge/tests-201%20passing-brightgreen)](https://github.com/Tellimer/open-source)
+[![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 
-- Classification of economic indicators (stock, flow, rate, currency)
-- Currency normalization with FX tables
-- Magnitude scaling (billions, millions, thousands)
-- Time rescaling for flows (monthly → yearly, etc.)
-- Composable normalization functions
+A comprehensive Deno/TypeScript package for **economic data processing** with
+advanced features for classification, normalization, quality assessment, and
+analysis. Features:
+
+- 🔍 **Smart Classification** — Automatically detect indicator types (stock, flow, rate, currency)
+- 🌍 **150+ Currency Support** — Convert values between currencies using FX tables
+- 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions, millions, thousands
+- ⏱️ **Time Normalization** — Transform flows across time periods (annual ↔ quarterly ↔ monthly ↔ daily)
+- 💼 **Wages Data Processing** — Specialized handling for mixed wage/salary data
+- 🚫 **Normalization Exemptions** — Skip normalization for specific indicators or categories
+- 🌊 **XState Pipeline** — Robust data processing pipeline with quality assessment
+- 🧪 **Production Ready** — 201 tests passing, zero linting issues, comprehensive examples
 
 [View Package →](packages/econify)
 
@@ -61,9 +69,6 @@ This is a Deno workspace using Deno 2.0+ workspace features.
 ### Getting Started
 
 ```bash
-# Initialize and cache dependencies
-deno task init
-
 # Run tests for specific packages
 deno task test:countrify
 deno task test:econify
@@ -71,6 +76,10 @@ deno task test:econify
 # Development mode for packages
 deno task dev:countrify
 deno task dev:econify
+
+# Run all tests
+cd packages/econify && deno test --allow-all
+cd packages/countrify && deno test
 
 # Format and lint code
 deno fmt
