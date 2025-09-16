@@ -164,6 +164,19 @@ export function buildExplainMetadata(
     normalizedUnit: normalizedUnitString,
     originalFullUnit: originalFullUnit || originalUnit,
     normalizedFullUnit: normalizedFullUnit,
+    // 🆕 Separate unit components for easy frontend access
+    original: effectiveCurrency || originalScale || originalTimeScale
+      ? {
+        currency: effectiveCurrency,
+        scale: originalScale,
+        periodicity: originalTimeScale || undefined,
+      }
+      : undefined,
+    normalized: {
+      currency: options.toCurrency || effectiveCurrency || "USD",
+      scale: targetScale,
+      periodicity: options.toTimeScale,
+    },
   };
 
   // Conversion summary - order: Scale → Currency → Time (logical processing order)

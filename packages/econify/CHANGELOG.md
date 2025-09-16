@@ -2,6 +2,30 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.5] - 2025-01-16
+
+### Enhanced
+
+- **Separate Unit Components**: Added individual currency, scale, and
+  periodicity fields for easy frontend access
+  - **Original Components**: `units.original.currency`, `units.original.scale`,
+    `units.original.periodicity` for source data
+  - **Normalized Components**: `units.normalized.currency`,
+    `units.normalized.scale`, `units.normalized.periodicity` for target data
+  - **Frontend Benefits**: No string parsing needed - direct object property
+    access
+  - **UI Integration**: Perfect for building dynamic components, tooltips, and
+    localized displays
+
+### Technical Improvements
+
+- **Enhanced TypeScript Interfaces**: Extended `Explain.units` interface with
+  separate component fields
+- **Improved Developer Experience**: Eliminates need for frontend string parsing
+  of unit information
+- **Better Component Architecture**: Clear separation between original and
+  normalized unit components
+
 ## [0.2.4] - 2025-01-16
 
 ### Enhanced

@@ -16,7 +16,7 @@ advanced features for classification, normalization, quality assessment, and
 analysis. Perfect for financial institutions, economic research, data pipelines,
 and quantitative analysis.
 
-**✅ Production Ready** • **237 Tests Passing** • **100% Reliability** • **Zero
+**✅ Production Ready** • **239 Tests Passing** • **100% Reliability** • **Zero
 Linting Issues** • **Enhanced Explain Metadata** • **Type Safe**
 
 ## 🌊 XState Pipeline Architecture
@@ -273,6 +273,8 @@ console.log(JSON.stringify(item.explain, null, 2));
   descriptions
 - **🏷️ Complete Units**: Both simple and full unit strings with time periods
 - **🧮 Total Factor**: Overall conversion factor for manual verification
+- **🎯 Separate Components**: Individual currency, scale, and periodicity fields
+  for easy frontend access
 
 **Example Output:**
 
@@ -286,12 +288,45 @@ console.log(JSON.stringify(item.explain, null, 2));
     "direction": "upsample",
     "description": "year → month (÷12)"
   },
+  "units": {
+    "originalUnit": "USD millions",
+    "normalizedUnit": "USD millions per month",
+    "originalFullUnit": "USD millions per year",
+    "normalizedFullUnit": "USD millions per month",
+    "original": {
+      "currency": "USD",
+      "scale": "millions",
+      "periodicity": "year"
+    },
+    "normalized": {
+      "currency": "USD",
+      "scale": "millions",
+      "periodicity": "month"
+    }
+  },
   "conversion": {
     "summary": "USD millions per year → USD millions per month",
     "totalFactor": 0.08333333333333333,
     "steps": ["Time: year → month (÷12)"]
   }
 }
+```
+
+**Frontend Usage:**
+
+```javascript
+// Easy access to individual components - no string parsing needed!
+const { original, normalized } = item.explain.units;
+
+// Build dynamic UI components
+const currencyChanged = original?.currency !== normalized.currency;
+const scaleChanged = original?.scale !== normalized.scale;
+const periodChanged = original?.periodicity !== normalized.periodicity;
+
+// Create tooltips and labels
+const tooltip =
+  `Converted from ${original?.currency} ${original?.scale} per ${original?.periodicity}
+                 to ${normalized.currency} ${normalized.scale} per ${normalized.periodicity}`;
 ```
 
 ### With Progress Tracking
