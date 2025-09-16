@@ -241,7 +241,8 @@ result.data.forEach((item) => {
 
 ## 🔍 Enhanced Explain Metadata (v0.2.4+)
 
-Get comprehensive transparency into all normalization decisions with the enhanced explain metadata system:
+Get comprehensive transparency into all normalization decisions with the
+enhanced explain metadata system:
 
 ```ts
 const result = await processEconomicData([{
@@ -266,12 +267,15 @@ console.log(JSON.stringify(item.explain, null, 2));
 **Enhanced Features:**
 
 - **🔄 Conversion Summary**: Complete step-by-step conversion chain
-- **📏 Magnitude Details**: Direction ("upscale"/"downscale"), factor, and descriptions
-- **⏰ Periodicity Details**: Factor, direction ("upsample"/"downsample"), clear descriptions
+- **📏 Magnitude Details**: Direction ("upscale"/"downscale"), factor, and
+  descriptions
+- **⏰ Periodicity Details**: Factor, direction ("upsample"/"downsample"), clear
+  descriptions
 - **🏷️ Complete Units**: Both simple and full unit strings with time periods
 - **🧮 Total Factor**: Overall conversion factor for manual verification
 
 **Example Output:**
+
 ```json
 {
   "periodicity": {

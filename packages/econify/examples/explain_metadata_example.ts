@@ -78,8 +78,12 @@ async function demonstrateExplainMetadata() {
 
       // 🆕 Enhanced conversion summary (v0.2.4+)
       if (item.explain.conversion) {
-        console.log(`      🔄 Conversion Summary: ${item.explain.conversion.summary}`);
-        console.log(`         Total Factor: ${item.explain.conversion.totalFactor}`);
+        console.log(
+          `      🔄 Conversion Summary: ${item.explain.conversion.summary}`,
+        );
+        console.log(
+          `         Total Factor: ${item.explain.conversion.totalFactor}`,
+        );
         console.log("         Steps:");
         item.explain.conversion.steps.forEach((step, i) => {
           console.log(`           ${i + 1}. ${step}`);
@@ -88,28 +92,48 @@ async function demonstrateExplainMetadata() {
 
       // 🆕 Enhanced magnitude scaling with direction
       if (item.explain.magnitude) {
-        console.log(`      📏 Magnitude: ${item.explain.magnitude.description}`);
+        console.log(
+          `      📏 Magnitude: ${item.explain.magnitude.description}`,
+        );
         console.log(`         Direction: ${item.explain.magnitude.direction}`);
         console.log(`         Factor: ${item.explain.magnitude.factor}x`);
       }
 
       // 🆕 Enhanced time adjustments with direction
       if (item.explain.periodicity) {
-        console.log(`      ⏰ Periodicity: ${item.explain.periodicity.description || 'No conversion'}`);
-        console.log(`         Direction: ${item.explain.periodicity.direction}`);
+        console.log(
+          `      ⏰ Periodicity: ${
+            item.explain.periodicity.description || "No conversion"
+          }`,
+        );
+        console.log(
+          `         Direction: ${item.explain.periodicity.direction}`,
+        );
         console.log(`         Factor: ${item.explain.periodicity.factor}`);
-        console.log(`         Adjusted: ${item.explain.periodicity.adjusted ? "Yes" : "No"}`);
+        console.log(
+          `         Adjusted: ${
+            item.explain.periodicity.adjusted ? "Yes" : "No"
+          }`,
+        );
       }
 
       // 🆕 Enhanced unit strings with full units
       if (item.explain.units) {
-        console.log(`      🏷️  Original Unit: "${item.explain.units.originalUnit}"`);
-        console.log(`         Normalized Unit: "${item.explain.units.normalizedUnit}"`);
+        console.log(
+          `      🏷️  Original Unit: "${item.explain.units.originalUnit}"`,
+        );
+        console.log(
+          `         Normalized Unit: "${item.explain.units.normalizedUnit}"`,
+        );
         if (item.explain.units.originalFullUnit) {
-          console.log(`         Original Full: "${item.explain.units.originalFullUnit}"`);
+          console.log(
+            `         Original Full: "${item.explain.units.originalFullUnit}"`,
+          );
         }
         if (item.explain.units.normalizedFullUnit) {
-          console.log(`         Normalized Full: "${item.explain.units.normalizedFullUnit}"`);
+          console.log(
+            `         Normalized Full: "${item.explain.units.normalizedFullUnit}"`,
+          );
         }
       }
     }
