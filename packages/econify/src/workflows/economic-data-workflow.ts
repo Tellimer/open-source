@@ -92,6 +92,12 @@ export interface ParsedData {
   id?: string | number;
   value: number;
   unit: string;
+
+  /** Explicit metadata fields - use if provided, otherwise parse from unit string */
+  periodicity?: string;     // "Quarterly", "Monthly", "Yearly" - takes precedence over unit string parsing
+  scale?: string;          // "Millions", "Billions", "Thousands" - takes precedence over unit string parsing
+  currency_code?: string;  // "USD", "SAR", "XOF" - takes precedence over unit string parsing
+
   parsedUnit?: ParsedUnit;
   inferredUnit?: string;
   normalized?: number;

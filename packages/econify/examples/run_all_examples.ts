@@ -19,6 +19,11 @@ const examples = [
     description: "Real-world integration patterns",
   },
   {
+    name: "Explicit Metadata Fields",
+    file: "explicit_metadata_example.ts",
+    description: "🆕 Pass metadata as separate fields (v0.2.2+)",
+  },
+  {
     name: "Exemptions System",
     file: "exemptions_example.ts",
     description: "Skip normalization for specific indicators",

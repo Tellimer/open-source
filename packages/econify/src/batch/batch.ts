@@ -8,10 +8,64 @@ import { parseUnit } from "../units/units.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 
+/**
+ * Normalize scale string from database to Scale type
+ */
+function normalizeScale(scale?: string | null): Scale | null {
+  if (!scale || scale.trim() === "") return null;
+  const normalized = scale.toLowerCase().trim();
+  switch (normalized) {
+    case "ones": return "ones";
+    case "thousands": return "thousands";
+    case "millions": return "millions";
+    case "billions": return "billions";
+    case "trillions": return "trillions";
+    default: return null;
+  }
+}
+
+/**
+ * Normalize time scale string from database to TimeScale type
+ */
+function normalizeTimeScale(periodicity?: string | null): TimeScale | null {
+  if (!periodicity || periodicity.trim() === "") return null;
+  const normalized = periodicity.toLowerCase().trim();
+  switch (normalized) {
+    case "yearly": return "year";
+    case "quarterly": return "quarter";
+    case "monthly": return "month";
+    case "weekly": return "week";
+    case "daily": return "day";
+    case "hourly": return "hour";
+    // Also handle the enum values directly
+    case "year": return "year";
+    case "quarter": return "quarter";
+    case "month": return "month";
+    case "week": return "week";
+    case "day": return "day";
+    case "hour": return "hour";
+    default: return null;
+  }
+}
+
+/**
+ * Normalize currency code from database
+ */
+function normalizeCurrency(currency?: string | null): string | null {
+  if (!currency || currency.trim() === "") return null;
+  return currency.trim().toUpperCase();
+}
+
 export interface BatchItem {
   id?: string | number;
   value: number;
   unit: string;
+
+  /** Explicit metadata fields - use if provided, otherwise parse from unit string */
+  periodicity?: string;     // "Quarterly", "Monthly", "Yearly"
+  scale?: string;          // "Millions", "Billions", "Thousands"
+  currency_code?: string;  // "USD", "SAR", "XOF"
+
   metadata?: Record<string, unknown>;
 }
 
@@ -33,7 +87,7 @@ export interface BatchOptions {
 }
 
 export interface BatchResult<T = BatchItem> {
-  successful: Array<T & { normalized: number; normalizedUnit: string }>;
+  successful: Array<T & { normalized: number; normalizedUnit: string; explain?: Explain }>;
   failed: Array<{
     item: T;
     error: Error;
@@ -264,19 +318,29 @@ function processItem<T extends BatchItem>(
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
 ): { normalized: number; normalizedUnit: string; explain?: Explain } | null {
   try {
-    // Parse unit
+    // Parse unit to get baseline information
     const parsed = parseUnit(item.unit);
     if (parsed.category === "unknown") {
       // Skip unknown units instead of throwing error
       return null;
     }
 
-    // Normalize value
+    // Use explicit fields if provided, otherwise fall back to parsed values
+    // Normalize explicit metadata to match expected types
+    const effectiveCurrency = normalizeCurrency(item.currency_code) || parsed.currency;
+    const effectiveScale = normalizeScale(item.scale) || parsed.scale;
+    const effectiveTimeScale = normalizeTimeScale(item.periodicity) || parsed.timeScale;
+
+    // Normalize value using enhanced metadata
     const normalized = normalizeValue(item.value, item.unit, {
       toCurrency: options.toCurrency,
       toMagnitude: options.toMagnitude,
       toTimeScale: options.toTimeScale,
       fx: options.fx,
+      // Pass explicit metadata for more accurate processing
+      explicitCurrency: effectiveCurrency,
+      explicitScale: effectiveScale,
+      explicitTimeScale: effectiveTimeScale,
     });
 
     // Build normalized unit string
@@ -295,6 +359,10 @@ function processItem<T extends BatchItem>(
         toMagnitude: options.toMagnitude,
         toTimeScale: options.toTimeScale,
         fx: options.fx,
+        // Pass explicit metadata for accurate explain generation
+        explicitCurrency: effectiveCurrency,
+        explicitScale: effectiveScale,
+        explicitTimeScale: effectiveTimeScale,
       });
 
       // Enhance with FX source information if available

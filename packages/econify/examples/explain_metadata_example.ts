@@ -183,7 +183,46 @@ const metadata = {
   `);
 }
 
+async function demonstrateExplicitMetadataWithExplain() {
+  console.log("\n🆕 Demonstrating explicit metadata fields with explain (v0.2.2+)...\n");
+
+  // Data with explicit metadata fields
+  const explicitData = [
+    {
+      value: -482.58,
+      unit: "XOF Billion",           // Clean unit
+      periodicity: "Quarterly",      // 🆕 Explicit periodicity
+      scale: "Billions",            // 🆕 Explicit scale
+      currency_code: "XOF",         // 🆕 Explicit currency
+      name: "Benin Balance of Trade",
+      id: "BEN_EXPLICIT",
+    },
+  ];
+
+  const result = await processEconomicData(explicitData, {
+    targetCurrency: "USD",
+    targetMagnitude: "millions",
+    targetTimeScale: "month",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: snpFallbackRates,
+  });
+
+  const item = result.data[0];
+  const ex = item.explain;
+
+  console.log(`📊 ${item.name}:`);
+  console.log(`   Original: ${item.value} ${item.unit}`);
+  console.log(`   Normalized: ${item.normalized?.toFixed(2)} ${item.normalizedUnit}`);
+  console.log(`   🔍 Metadata sources:`);
+  console.log(`      💱 Currency: ${ex?.fx?.currency} (from explicit field)`);
+  console.log(`      📏 Scale: ${ex?.magnitude?.originalScale} (from explicit field)`);
+  console.log(`      ⏰ Periodicity: ${ex?.periodicity?.original} (from explicit field)`);
+  console.log(`   ✅ All metadata used explicit fields instead of parsing unit string`);
+}
+
 if (import.meta.main) {
   await demonstrateExplainMetadata();
+  await demonstrateExplicitMetadataWithExplain();
   exampleWrapperUpdate();
 }

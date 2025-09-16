@@ -172,39 +172,48 @@ export function normalizeValue(
     toMagnitude?: Scale;
     toTimeScale?: TimeScale;
     fx?: FXTable;
+    // Explicit metadata fields - use if provided, otherwise parse from unitText
+    explicitCurrency?: string | null;
+    explicitScale?: Scale | null;
+    explicitTimeScale?: TimeScale | null;
   },
 ): number {
   const parsed = parseUnit(unitText);
   let result = value;
 
+  // Use explicit fields if provided, otherwise fall back to parsed values
+  const effectiveCurrency = options?.explicitCurrency || parsed.currency;
+  const effectiveScale = options?.explicitScale || parsed.scale;
+  const effectiveTimeScale = options?.explicitTimeScale || parsed.timeScale;
+
   // Handle magnitude scaling
   if (
-    parsed.scale &&
+    effectiveScale &&
     options?.toMagnitude &&
-    parsed.scale !== options.toMagnitude
+    effectiveScale !== options.toMagnitude
   ) {
-    result = rescaleMagnitude(result, parsed.scale, options.toMagnitude);
+    result = rescaleMagnitude(result, effectiveScale, options.toMagnitude);
   }
 
   // Handle time scaling
   if (
-    parsed.timeScale &&
+    effectiveTimeScale &&
     options?.toTimeScale &&
-    parsed.timeScale !== options.toTimeScale
+    effectiveTimeScale !== options.toTimeScale
   ) {
-    result = rescaleTime(result, parsed.timeScale, options.toTimeScale);
+    result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
   }
 
   // Handle currency conversion
   if (
-    parsed.currency &&
+    effectiveCurrency &&
     options?.toCurrency &&
     options.fx &&
-    parsed.currency !== options.toCurrency
+    effectiveCurrency !== options.toCurrency
   ) {
     result = normalizeCurrencyValue(
       result,
-      parsed.currency,
+      effectiveCurrency,
       options.toCurrency,
       options.fx,
     );

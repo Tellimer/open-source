@@ -19,20 +19,29 @@ export function buildExplainMetadata(
     toMagnitude?: Scale;
     toTimeScale?: TimeScale;
     fx?: FXTable;
+    // Explicit metadata fields - use if provided, otherwise parse from originalUnit
+    explicitCurrency?: string | null;
+    explicitScale?: Scale | null;
+    explicitTimeScale?: TimeScale | null;
   },
 ): Explain {
   const parsed = parseUnit(originalUnit);
   const explain: Explain = {};
 
+  // Use explicit fields if provided, otherwise fall back to parsed values
+  const effectiveCurrency = options.explicitCurrency || parsed.currency;
+  const effectiveScale = options.explicitScale || parsed.scale;
+  const effectiveTimeScale = options.explicitTimeScale || parsed.timeScale;
+
   // FX information
   if (
-    parsed.currency && options.toCurrency && options.fx &&
-    parsed.currency !== options.toCurrency
+    effectiveCurrency && options.toCurrency && options.fx &&
+    effectiveCurrency !== options.toCurrency
   ) {
-    const rate = options.fx.rates[parsed.currency];
+    const rate = options.fx.rates[effectiveCurrency];
     if (rate !== undefined) {
       explain.fx = {
-        currency: parsed.currency,
+        currency: effectiveCurrency,
         base: "USD",
         rate: rate,
         source: "fallback", // We'll enhance this when we have live FX info
@@ -42,7 +51,7 @@ export function buildExplainMetadata(
   }
 
   // Magnitude information
-  const originalScale = parsed.scale || getScale(originalUnit);
+  const originalScale = effectiveScale || getScale(originalUnit);
   const targetScale = options.toMagnitude || originalScale;
   if (originalScale !== targetScale) {
     const SCALE_MAP = {
@@ -62,7 +71,7 @@ export function buildExplainMetadata(
   }
 
   // Periodicity information
-  const originalTimeScale = parsed.timeScale ||
+  const originalTimeScale = effectiveTimeScale ||
     parseTimeScaleFromUnit(originalUnit);
   const targetTimeScale = options.toTimeScale;
   if (
@@ -84,11 +93,11 @@ export function buildExplainMetadata(
 
   // Units information
   const originalUnitString = buildOriginalUnitString(
-    parsed.currency,
+    effectiveCurrency,
     originalScale,
   );
   const normalizedUnitString = buildNormalizedUnitString(
-    options.toCurrency || parsed.currency,
+    options.toCurrency || effectiveCurrency,
     targetScale,
     options.toTimeScale,
   );

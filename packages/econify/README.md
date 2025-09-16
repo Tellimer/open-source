@@ -7,7 +7,7 @@
 # @tellimer/econify
 
 [![JSR](https://jsr.io/badges/@tellimer/econify)](https://jsr.io/@tellimer/econify)
-[![Test Coverage](https://img.shields.io/badge/tests-201%20passing-brightgreen)](https://github.com/Tellimer/open-source)
+[![Test Coverage](https://img.shields.io/badge/tests-223%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 [![Deno](https://img.shields.io/badge/deno-2.0+-green)](https://deno.land)
 
@@ -16,7 +16,7 @@ advanced features for classification, normalization, quality assessment, and
 analysis. Perfect for financial institutions, economic research, data pipelines,
 and quantitative analysis.
 
-**✅ Production Ready** • **201 Tests Passing** • **100% Reliability** • **Zero
+**✅ Production Ready** • **223 Tests Passing** • **100% Reliability** • **Zero
 Linting Issues** • **Time Resampling** • **Type Safe**
 
 ## 🌊 XState Pipeline Architecture
@@ -44,6 +44,8 @@ assessment, error handling, and interactive control flow._
   from real-world data
 - 🎯 **Composite Unit Handling** — Handle complex units like "USD Million per
   quarter" or "KRW/Hour"
+- 🏷️ **Explicit Metadata Fields** — Pass `periodicity`, `scale`, and `currency_code`
+  as separate fields instead of concatenating into unit strings
 
 ### Advanced Features
 
@@ -77,7 +79,7 @@ assessment, error handling, and interactive control flow._
   floating-point precision
 - 📁 **Universal I/O** — Import/export CSV, JSON, Excel with automatic unit
   detection
-- 🛡️ **Production Ready** — 199 comprehensive tests, zero hanging promises,
+- 🛡️ **Production Ready** — 223 comprehensive tests, zero hanging promises,
   robust error handling
 
 ## 📦 Installation
@@ -150,6 +152,63 @@ result.data.forEach((item) => {
   console.log(`${item.name}: ${value} ${unit}`);
 });
 ```
+
+### 🆕 Explicit Metadata Fields (v0.2.2+)
+
+Pass metadata as separate fields instead of concatenating into unit strings for cleaner, more reliable processing:
+
+```ts
+import { processEconomicData } from "jsr:@tellimer/econify";
+
+// Clean database-style data with explicit metadata
+const economicData = [
+  {
+    value: -482.58,
+    unit: "XOF Billion",           // Clean unit without time info
+    periodicity: "Quarterly",      // 🆕 Explicit periodicity
+    scale: "Billions",            // 🆕 Explicit scale
+    currency_code: "XOF",         // 🆕 Explicit currency
+    name: "Benin Balance of Trade",
+  },
+  {
+    value: -181.83,
+    unit: "BDT Billion",           // Clean unit
+    periodicity: "Monthly",        // 🆕 Different periodicity
+    scale: "Billions",            // 🆕 Explicit scale
+    currency_code: "BDT",         // 🆕 Different currency
+    name: "Bangladesh Balance of Trade",
+  },
+];
+
+const result = await processEconomicData(economicData, {
+  targetCurrency: "USD",
+  targetMagnitude: "millions",
+  targetTimeScale: "month",        // 🎯 Convert all to monthly
+  explain: true,                   // 🔍 Show conversion details
+  fxFallback: {
+    base: "USD",
+    rates: { XOF: 558.16, BDT: 121.61 },
+  },
+});
+
+// Check conversion details
+result.data.forEach((item) => {
+  console.log(`${item.name}: ${item.normalized?.toFixed(2)} ${item.normalizedUnit}`);
+
+  if (item.explain?.periodicity?.adjusted) {
+    console.log(`  ✅ Time scaling: ${item.explain.periodicity.original} → ${item.explain.periodicity.target}`);
+  }
+  if (item.explain?.fx) {
+    console.log(`  💱 FX rate: ${item.explain.fx.rate} ${item.explain.fx.currency}/USD`);
+  }
+});
+```
+
+**Benefits:**
+- **Higher Accuracy**: Explicit fields are more reliable than string parsing
+- **Better Performance**: Less string parsing overhead
+- **Cleaner Code**: Matches database schema directly
+- **Smart Fallback**: Falls back to unit string parsing when explicit fields not provided
 
 ### With Progress Tracking
 

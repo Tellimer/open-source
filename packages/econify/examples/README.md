@@ -55,6 +55,22 @@ Shows how to exempt specific indicators from normalization.
 - Exempt by name patterns
 - Multiple exemption strategies
 
+### Explicit Metadata Fields (🆕 v0.2.2+)
+
+```bash
+deno run --allow-all examples/explicit_metadata_example.ts
+```
+
+Demonstrates the new explicit metadata fields feature for cleaner, more reliable data processing.
+
+**Features shown:**
+
+- Pass `periodicity`, `scale`, `currency_code` as separate fields
+- Smart fallback to unit string parsing
+- Mixed explicit and parsed metadata
+- Higher accuracy and better performance
+- Database schema compatibility
+
 ### Time Resampling
 
 ```bash
@@ -114,14 +130,15 @@ Deep dive into time conversion and sampling techniques.
 
 ```
 examples/
-├── README.md                    # This file
-├── quickstart.ts               # Basic API usage
-├── simple_consumer.ts          # Real-world integration
-├── wages_processing_example.ts # Wages-specific processing
-├── exemptions_example.ts       # Exemptions system
-├── time_resampling_example.ts  # Time period standardization
-├── advanced_usage.ts           # All advanced features
-└── time_sampling_advanced.ts   # Advanced time sampling
+├── README.md                      # This file
+├── quickstart.ts                 # Basic API usage
+├── simple_consumer.ts            # Real-world integration
+├── explicit_metadata_example.ts  # 🆕 Explicit metadata fields (v0.2.2+)
+├── wages_processing_example.ts   # Wages-specific processing
+├── exemptions_example.ts         # Exemptions system
+├── time_resampling_example.ts    # Time period standardization
+├── advanced_usage.ts             # All advanced features
+└── time_sampling_advanced.ts     # Advanced time sampling
 ```
 
 ## 🎯 Use Case Guide
