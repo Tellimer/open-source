@@ -196,12 +196,17 @@ export function normalizeValue(
   }
 
   // Handle time scaling
-  if (
-    effectiveTimeScale &&
-    options?.toTimeScale &&
-    effectiveTimeScale !== options.toTimeScale
-  ) {
-    result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
+  if (options?.toTimeScale) {
+    if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
+      // Time conversion can be performed
+      result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
+    } else if (!effectiveTimeScale) {
+      // Time conversion requested but no source time scale available
+      console.warn(
+        `⚠️ Time conversion to ${options.toTimeScale} requested but no source time scale found in unit "${unitText}" or explicit fields. Value unchanged.`,
+      );
+    }
+    // If effectiveTimeScale === options.toTimeScale, no conversion needed
   }
 
   // Handle currency conversion

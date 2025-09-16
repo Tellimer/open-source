@@ -2,6 +2,42 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.3] - 2025-01-16
+
+### Fixed
+
+- **Time Conversion Warning System**: Added proper warning when time conversion
+  is requested but no source time scale is available
+- **AFG Data Issue**: Resolved cases where yearly data wasn't being converted to
+  monthly due to missing time scale information
+- **Silent Conversion Failures**: System now provides clear warnings instead of
+  silently failing when time conversion cannot be performed
+
+### Added
+
+- **Enhanced Error Handling**: Clear console warnings when time conversion is
+  requested but impossible to perform
+- **Better Test Coverage**: Added 2 new tests for time conversion warning
+  scenarios
+- **Improved Debugging**: Warning messages help identify data quality issues
+
+### Technical Details
+
+- Enhanced `normalizeValue()` function with warning system for missing time
+  scale information
+- Added test coverage for warning scenarios in `normalization_test.ts`
+- **227 Total Tests**: All passing with enhanced coverage
+- Maintained full backward compatibility
+
+### Example Warning Output
+
+```
+⚠️ Time conversion to month requested but no source time scale found in unit "USD Million" or explicit fields. Value unchanged.
+```
+
+This fix addresses the review issue where AFG data showed
+`periodicity_adjusted: true` but no actual conversion was applied.
+
 ## [0.2.2] - 2025-01-16
 
 ### Added

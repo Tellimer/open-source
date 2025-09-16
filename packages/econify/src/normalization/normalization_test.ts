@@ -3,10 +3,18 @@
  */
 
 import { assertEquals, assertThrows } from "@std/assert";
-import { normalizeMonetary, normalizeMonetaryFlow } from "./normalization.ts";
+import {
+  normalizeMonetary,
+  normalizeMonetaryFlow,
+  normalizeValue,
+} from "./normalization.ts";
 import type { FXTable } from "../types.ts";
 
 const fx: FXTable = { base: "EUR", rates: { USD: 1.1, GBP: 0.85, JPY: 130 } };
+const testFX: FXTable = {
+  base: "USD",
+  rates: { EUR: 0.85, GBP: 0.79, JPY: 149.50 },
+};
 
 Deno.test("normalizeMonetary - basic flow normalization", () => {
   const result = normalizeMonetary(100, {
@@ -150,4 +158,71 @@ Deno.test("normalizeMonetaryFlow - error when cannot infer time basis", () => {
     Error,
     "Cannot infer 'from' time basis",
   );
+});
+
+Deno.test("normalizeValue - time conversion warning when no source time scale", () => {
+  // Capture console warnings
+  const originalWarn = console.warn;
+  let warningMessage = "";
+  console.warn = (msg: string) => {
+    warningMessage = msg;
+  };
+
+  try {
+    const result = normalizeValue(
+      -6798.401,
+      "USD Million", // No time scale in unit string
+      {
+        toCurrency: "USD",
+        toMagnitude: "millions",
+        toTimeScale: "month", // Time conversion requested
+        fx: testFX,
+        // No explicitTimeScale provided
+      },
+    );
+
+    // Value should remain unchanged
+    assertEquals(result, -6798.401);
+
+    // Should have generated a warning
+    assertEquals(
+      warningMessage.includes(
+        "Time conversion to month requested but no source time scale found",
+      ),
+      true,
+    );
+  } finally {
+    console.warn = originalWarn;
+  }
+});
+
+Deno.test("normalizeValue - no warning when time scales match", () => {
+  // Capture console warnings
+  const originalWarn = console.warn;
+  let warningMessage = "";
+  console.warn = (msg: string) => {
+    warningMessage = msg;
+  };
+
+  try {
+    const result = normalizeValue(
+      100,
+      "USD Million", // No time scale in unit string
+      {
+        toCurrency: "USD",
+        toMagnitude: "millions",
+        toTimeScale: "month",
+        fx: testFX,
+        explicitTimeScale: "month", // Same as target
+      },
+    );
+
+    // Value should remain unchanged (no conversion needed)
+    assertEquals(result, 100);
+
+    // Should NOT have generated a warning
+    assertEquals(warningMessage, "");
+  } finally {
+    console.warn = originalWarn;
+  }
 });
