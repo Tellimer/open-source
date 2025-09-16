@@ -8,6 +8,42 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-01-16 - Time Scaling Fix
+
+### 🐛 Bug Fixes
+
+- **Time Scaling**: Fixed missing `toTimeScale` parameter in `processBatch` call
+  for standard economic data processing
+  - Quarterly data now properly converts to monthly when
+    `targetTimeScale: "month"` is specified
+  - Quarterly values are correctly divided by 3 to get monthly equivalents
+  - Explain metadata now accurately shows `periodicity_adjusted: true` when time
+    scaling is applied
+  - Resolves issue where quarterly data wasn't being converted despite correct
+    configuration
+
+### 🔧 Technical Details
+
+- Added `toTimeScale: config.targetTimeScale` to the `normalizeDataService`
+  batch processing options
+- Time scaling was already working for wages data but was missing for general
+  economic indicators
+- All existing tests continue to pass, including time resampling scenarios
+
+### 📊 Impact
+
+Before this fix, data like:
+
+```typescript
+{ value: -482.58, unit: "XOF Billions Quarterly" }
+```
+
+Would not be converted to monthly despite `targetTimeScale: "month"`
+configuration.
+
+After this fix, the same data correctly converts to monthly values with proper
+explain metadata showing the time adjustment.
+
 ## [0.2.0] - 2025-01-16 - Explain Metadata Feature Release
 
 🎯 **Explain Metadata Feature Release**: This release adds comprehensive
