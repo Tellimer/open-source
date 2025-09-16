@@ -5,27 +5,45 @@ All notable changes to the econify package will be documented in this file.
 ## [0.2.2] - 2025-01-16
 
 ### Added
-- **Explicit Metadata Fields Support**: Enhanced `ParsedData` and `BatchItem` interfaces to accept explicit `periodicity`, `scale`, and `currency_code` fields
-- **Smart Metadata Resolution**: Prioritizes explicit fields over unit string parsing for higher accuracy
-- **Automatic Case Normalization**: Converts database values ("Quarterly" → "quarter", "Billions" → "billions") to match expected types
-- **Enhanced Processing Logic**: Updated `normalizeValue()` and `buildExplainMetadata()` to use explicit metadata when available
-- **Comprehensive Test Suite**: Added 5 new tests covering explicit metadata priority logic and fallback behavior
-- **New Example**: Added `explicit_metadata_example.ts` demonstrating the new feature with real-world scenarios
-- **Updated Documentation**: Enhanced README with explicit metadata fields section and updated all examples
+
+- **Explicit Metadata Fields Support**: Enhanced `ParsedData` and `BatchItem`
+  interfaces to accept explicit `periodicity`, `scale`, and `currency_code`
+  fields
+- **Smart Metadata Resolution**: Prioritizes explicit fields over unit string
+  parsing for higher accuracy
+- **Automatic Case Normalization**: Converts database values ("Quarterly" →
+  "quarter", "Billions" → "billions") to match expected types
+- **Enhanced Processing Logic**: Updated `normalizeValue()` and
+  `buildExplainMetadata()` to use explicit metadata when available
+- **Comprehensive Test Suite**: Added 5 new tests covering explicit metadata
+  priority logic and fallback behavior
+- **New Example**: Added `explicit_metadata_example.ts` demonstrating the new
+  feature with real-world scenarios
+- **Updated Documentation**: Enhanced README with explicit metadata fields
+  section and updated all examples
 
 ### Changed
-- **Improved Data Processing**: Uses explicit database fields first, falls back to unit string parsing only when needed
-- **Better API Design**: Matches clean database schema separation instead of forcing concatenated unit strings
-- **Updated Examples**: Enhanced `explain_metadata_example.ts` to show explicit metadata fields integration
-- **Test Coverage**: Increased from 221 to 223 passing tests with comprehensive explicit metadata validation
+
+- **Improved Data Processing**: Uses explicit database fields first, falls back
+  to unit string parsing only when needed
+- **Better API Design**: Matches clean database schema separation instead of
+  forcing concatenated unit strings
+- **Updated Examples**: Enhanced `explain_metadata_example.ts` to show explicit
+  metadata fields integration
+- **Test Coverage**: Increased from 221 to 223 passing tests with comprehensive
+  explicit metadata validation
 
 ### Technical Details
-- Added `normalizeScale()` and `normalizeTimeScale()` helper functions for case normalization
+
+- Added `normalizeScale()` and `normalizeTimeScale()` helper functions for case
+  normalization
 - Enhanced `processItem()` function to extract and use explicit metadata
-- Updated normalization and explain metadata generation to prioritize explicit fields
+- Updated normalization and explain metadata generation to prioritize explicit
+  fields
 - Maintains full backward compatibility with existing unit string parsing
 
 ### Benefits
+
 - **Higher Accuracy**: Explicit fields are more reliable than string parsing
 - **Better Performance**: Less string parsing overhead
 - **Cleaner Consumer Code**: No need to concatenate metadata into unit strings

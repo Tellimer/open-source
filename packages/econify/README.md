@@ -44,8 +44,8 @@ assessment, error handling, and interactive control flow._
   from real-world data
 - 🎯 **Composite Unit Handling** — Handle complex units like "USD Million per
   quarter" or "KRW/Hour"
-- 🏷️ **Explicit Metadata Fields** — Pass `periodicity`, `scale`, and `currency_code`
-  as separate fields instead of concatenating into unit strings
+- 🏷️ **Explicit Metadata Fields** — Pass `periodicity`, `scale`, and
+  `currency_code` as separate fields instead of concatenating into unit strings
 
 ### Advanced Features
 
@@ -155,7 +155,8 @@ result.data.forEach((item) => {
 
 ### 🆕 Explicit Metadata Fields (v0.2.2+)
 
-Pass metadata as separate fields instead of concatenating into unit strings for cleaner, more reliable processing:
+Pass metadata as separate fields instead of concatenating into unit strings for
+cleaner, more reliable processing:
 
 ```ts
 import { processEconomicData } from "jsr:@tellimer/econify";
@@ -164,18 +165,18 @@ import { processEconomicData } from "jsr:@tellimer/econify";
 const economicData = [
   {
     value: -482.58,
-    unit: "XOF Billion",           // Clean unit without time info
-    periodicity: "Quarterly",      // 🆕 Explicit periodicity
-    scale: "Billions",            // 🆕 Explicit scale
-    currency_code: "XOF",         // 🆕 Explicit currency
+    unit: "XOF Billion", // Clean unit without time info
+    periodicity: "Quarterly", // 🆕 Explicit periodicity
+    scale: "Billions", // 🆕 Explicit scale
+    currency_code: "XOF", // 🆕 Explicit currency
     name: "Benin Balance of Trade",
   },
   {
     value: -181.83,
-    unit: "BDT Billion",           // Clean unit
-    periodicity: "Monthly",        // 🆕 Different periodicity
-    scale: "Billions",            // 🆕 Explicit scale
-    currency_code: "BDT",         // 🆕 Different currency
+    unit: "BDT Billion", // Clean unit
+    periodicity: "Monthly", // 🆕 Different periodicity
+    scale: "Billions", // 🆕 Explicit scale
+    currency_code: "BDT", // 🆕 Different currency
     name: "Bangladesh Balance of Trade",
   },
 ];
@@ -183,8 +184,8 @@ const economicData = [
 const result = await processEconomicData(economicData, {
   targetCurrency: "USD",
   targetMagnitude: "millions",
-  targetTimeScale: "month",        // 🎯 Convert all to monthly
-  explain: true,                   // 🔍 Show conversion details
+  targetTimeScale: "month", // 🎯 Convert all to monthly
+  explain: true, // 🔍 Show conversion details
   fxFallback: {
     base: "USD",
     rates: { XOF: 558.16, BDT: 121.61 },
@@ -193,22 +194,30 @@ const result = await processEconomicData(economicData, {
 
 // Check conversion details
 result.data.forEach((item) => {
-  console.log(`${item.name}: ${item.normalized?.toFixed(2)} ${item.normalizedUnit}`);
+  console.log(
+    `${item.name}: ${item.normalized?.toFixed(2)} ${item.normalizedUnit}`,
+  );
 
   if (item.explain?.periodicity?.adjusted) {
-    console.log(`  ✅ Time scaling: ${item.explain.periodicity.original} → ${item.explain.periodicity.target}`);
+    console.log(
+      `  ✅ Time scaling: ${item.explain.periodicity.original} → ${item.explain.periodicity.target}`,
+    );
   }
   if (item.explain?.fx) {
-    console.log(`  💱 FX rate: ${item.explain.fx.rate} ${item.explain.fx.currency}/USD`);
+    console.log(
+      `  💱 FX rate: ${item.explain.fx.rate} ${item.explain.fx.currency}/USD`,
+    );
   }
 });
 ```
 
 **Benefits:**
+
 - **Higher Accuracy**: Explicit fields are more reliable than string parsing
 - **Better Performance**: Less string parsing overhead
 - **Cleaner Code**: Matches database schema directly
-- **Smart Fallback**: Falls back to unit string parsing when explicit fields not provided
+- **Smart Fallback**: Falls back to unit string parsing when explicit fields not
+  provided
 
 ### With Progress Tracking
 

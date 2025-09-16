@@ -15,12 +15,18 @@ function normalizeScale(scale?: string | null): Scale | null {
   if (!scale || scale.trim() === "") return null;
   const normalized = scale.toLowerCase().trim();
   switch (normalized) {
-    case "ones": return "ones";
-    case "thousands": return "thousands";
-    case "millions": return "millions";
-    case "billions": return "billions";
-    case "trillions": return "trillions";
-    default: return null;
+    case "ones":
+      return "ones";
+    case "thousands":
+      return "thousands";
+    case "millions":
+      return "millions";
+    case "billions":
+      return "billions";
+    case "trillions":
+      return "trillions";
+    default:
+      return null;
   }
 }
 
@@ -31,20 +37,33 @@ function normalizeTimeScale(periodicity?: string | null): TimeScale | null {
   if (!periodicity || periodicity.trim() === "") return null;
   const normalized = periodicity.toLowerCase().trim();
   switch (normalized) {
-    case "yearly": return "year";
-    case "quarterly": return "quarter";
-    case "monthly": return "month";
-    case "weekly": return "week";
-    case "daily": return "day";
-    case "hourly": return "hour";
+    case "yearly":
+      return "year";
+    case "quarterly":
+      return "quarter";
+    case "monthly":
+      return "month";
+    case "weekly":
+      return "week";
+    case "daily":
+      return "day";
+    case "hourly":
+      return "hour";
     // Also handle the enum values directly
-    case "year": return "year";
-    case "quarter": return "quarter";
-    case "month": return "month";
-    case "week": return "week";
-    case "day": return "day";
-    case "hour": return "hour";
-    default: return null;
+    case "year":
+      return "year";
+    case "quarter":
+      return "quarter";
+    case "month":
+      return "month";
+    case "week":
+      return "week";
+    case "day":
+      return "day";
+    case "hour":
+      return "hour";
+    default:
+      return null;
   }
 }
 
@@ -62,9 +81,9 @@ export interface BatchItem {
   unit: string;
 
   /** Explicit metadata fields - use if provided, otherwise parse from unit string */
-  periodicity?: string;     // "Quarterly", "Monthly", "Yearly"
-  scale?: string;          // "Millions", "Billions", "Thousands"
-  currency_code?: string;  // "USD", "SAR", "XOF"
+  periodicity?: string; // "Quarterly", "Monthly", "Yearly"
+  scale?: string; // "Millions", "Billions", "Thousands"
+  currency_code?: string; // "USD", "SAR", "XOF"
 
   metadata?: Record<string, unknown>;
 }
@@ -87,7 +106,9 @@ export interface BatchOptions {
 }
 
 export interface BatchResult<T = BatchItem> {
-  successful: Array<T & { normalized: number; normalizedUnit: string; explain?: Explain }>;
+  successful: Array<
+    T & { normalized: number; normalizedUnit: string; explain?: Explain }
+  >;
   failed: Array<{
     item: T;
     error: Error;
@@ -327,9 +348,11 @@ function processItem<T extends BatchItem>(
 
     // Use explicit fields if provided, otherwise fall back to parsed values
     // Normalize explicit metadata to match expected types
-    const effectiveCurrency = normalizeCurrency(item.currency_code) || parsed.currency;
+    const effectiveCurrency = normalizeCurrency(item.currency_code) ||
+      parsed.currency;
     const effectiveScale = normalizeScale(item.scale) || parsed.scale;
-    const effectiveTimeScale = normalizeTimeScale(item.periodicity) || parsed.timeScale;
+    const effectiveTimeScale = normalizeTimeScale(item.periodicity) ||
+      parsed.timeScale;
 
     // Normalize value using enhanced metadata
     const normalized = normalizeValue(item.value, item.unit, {

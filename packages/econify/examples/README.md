@@ -61,7 +61,8 @@ Shows how to exempt specific indicators from normalization.
 deno run --allow-all examples/explicit_metadata_example.ts
 ```
 
-Demonstrates the new explicit metadata fields feature for cleaner, more reliable data processing.
+Demonstrates the new explicit metadata fields feature for cleaner, more reliable
+data processing.
 
 **Features shown:**
 
