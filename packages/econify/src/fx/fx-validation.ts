@@ -16,24 +16,24 @@ const REASONABLE_FX_RANGES: Record<string, { min: number; max: number }> = {
   CAD: { min: 1.0, max: 1.6 },
   AUD: { min: 1.0, max: 1.8 },
   NZD: { min: 1.2, max: 2.0 },
-  
+
   // Asian currencies
   JPY: { min: 80, max: 200 },
   CNY: { min: 6, max: 8 },
   KRW: { min: 1000, max: 1500 },
   INR: { min: 70, max: 100 },
-  
+
   // African currencies (often high rates)
   XOF: { min: 400, max: 700 }, // West African CFA Franc
   XAF: { min: 400, max: 700 }, // Central African CFA Franc
   NGN: { min: 400, max: 2000 }, // Nigerian Naira
   ZAR: { min: 10, max: 25 }, // South African Rand
-  
+
   // Latin American
   BRL: { min: 3, max: 8 }, // Brazilian Real
   MXN: { min: 15, max: 25 }, // Mexican Peso
   ARS: { min: 100, max: 2000 }, // Argentine Peso
-  
+
   // Middle East
   AED: { min: 3.5, max: 4.0 }, // UAE Dirham
   SAR: { min: 3.5, max: 4.0 }, // Saudi Riyal
@@ -49,10 +49,10 @@ export function validateFXRates(fxTable: FXTable): {
 } {
   const warnings: string[] = [];
   const errors: string[] = [];
-  
+
   for (const [currency, rate] of Object.entries(fxTable.rates)) {
     const range = REASONABLE_FX_RANGES[currency.toUpperCase()];
-    
+
     if (!range) {
       // Unknown currency - just check for obviously wrong values
       if (rate <= 0) {
@@ -64,27 +64,39 @@ export function validateFXRates(fxTable: FXTable): {
       }
       continue;
     }
-    
+
     // Check against known reasonable ranges
     if (rate <= 0) {
       errors.push(`${currency}: Rate ${rate} is zero or negative`);
     } else if (rate < range.min) {
       const factor = range.min / rate;
       if (factor > 10) {
-        errors.push(`${currency}: Rate ${rate} is ${factor.toFixed(1)}x too low (expected ${range.min}-${range.max})`);
+        errors.push(
+          `${currency}: Rate ${rate} is ${
+            factor.toFixed(1)
+          }x too low (expected ${range.min}-${range.max})`,
+        );
       } else {
-        warnings.push(`${currency}: Rate ${rate} is below expected range ${range.min}-${range.max}`);
+        warnings.push(
+          `${currency}: Rate ${rate} is below expected range ${range.min}-${range.max}`,
+        );
       }
     } else if (rate > range.max) {
       const factor = rate / range.max;
       if (factor > 10) {
-        errors.push(`${currency}: Rate ${rate} is ${factor.toFixed(1)}x too high (expected ${range.min}-${range.max})`);
+        errors.push(
+          `${currency}: Rate ${rate} is ${
+            factor.toFixed(1)
+          }x too high (expected ${range.min}-${range.max})`,
+        );
       } else {
-        warnings.push(`${currency}: Rate ${rate} is above expected range ${range.min}-${range.max}`);
+        warnings.push(
+          `${currency}: Rate ${rate} is above expected range ${range.min}-${range.max}`,
+        );
       }
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     warnings,
@@ -95,12 +107,15 @@ export function validateFXRates(fxTable: FXTable): {
 /**
  * Get a corrected FX rate suggestion for obviously wrong rates
  */
-export function suggestFXRateCorrection(currency: string, wrongRate: number): number | null {
+export function suggestFXRateCorrection(
+  currency: string,
+  wrongRate: number,
+): number | null {
   const range = REASONABLE_FX_RANGES[currency.toUpperCase()];
   if (!range) return null;
-  
+
   const midpoint = (range.min + range.max) / 2;
-  
+
   // If rate is way too low, try multiplying by common factors
   if (wrongRate < range.min / 10) {
     for (const factor of [1000, 100, 10]) {
@@ -110,7 +125,7 @@ export function suggestFXRateCorrection(currency: string, wrongRate: number): nu
       }
     }
   }
-  
+
   // If rate is way too high, try dividing by common factors
   if (wrongRate > range.max * 10) {
     for (const factor of [1000, 100, 10]) {
@@ -120,7 +135,7 @@ export function suggestFXRateCorrection(currency: string, wrongRate: number): nu
       }
     }
   }
-  
+
   // Return midpoint as fallback
   return midpoint;
 }
@@ -130,15 +145,17 @@ export function suggestFXRateCorrection(currency: string, wrongRate: number): nu
  */
 export function validateAndCorrectFXRates(
   fxTable: FXTable,
-  autoCorrect = false
+  autoCorrect = false,
 ): {
   correctedTable: FXTable;
   validation: ReturnType<typeof validateFXRates>;
   corrections: Array<{ currency: string; original: number; corrected: number }>;
 } {
   const validation = validateFXRates(fxTable);
-  const corrections: Array<{ currency: string; original: number; corrected: number }> = [];
-  
+  const corrections: Array<
+    { currency: string; original: number; corrected: number }
+  > = [];
+
   if (!autoCorrect || validation.isValid) {
     return {
       correctedTable: fxTable,
@@ -146,9 +163,9 @@ export function validateAndCorrectFXRates(
       corrections,
     };
   }
-  
+
   const correctedRates = { ...fxTable.rates };
-  
+
   // Try to auto-correct obvious errors
   for (const [currency, rate] of Object.entries(fxTable.rates)) {
     const suggestion = suggestFXRateCorrection(currency, rate);
@@ -161,7 +178,7 @@ export function validateAndCorrectFXRates(
       });
     }
   }
-  
+
   return {
     correctedTable: {
       ...fxTable,

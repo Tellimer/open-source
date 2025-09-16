@@ -2,8 +2,12 @@
  * Tests for FX rate validation utilities
  */
 
-import { assertEquals, assert } from "@std/assert";
-import { validateFXRates, validateAndCorrectFXRates, suggestFXRateCorrection } from "./fx-validation.ts";
+import { assert, assertEquals } from "@std/assert";
+import {
+  suggestFXRateCorrection,
+  validateAndCorrectFXRates,
+  validateFXRates,
+} from "./fx-validation.ts";
 import type { FXTable } from "../types.ts";
 
 Deno.test("validateFXRates - valid rates", () => {
@@ -36,14 +40,14 @@ Deno.test("validateFXRates - detects obviously wrong rates", () => {
   const result = validateFXRates(invalidFX);
   assertEquals(result.isValid, false);
   assert(result.errors.length > 0);
-  
+
   // Should detect XOF as too low
-  const xofError = result.errors.find(e => e.includes("XOF"));
+  const xofError = result.errors.find((e) => e.includes("XOF"));
   assert(xofError !== undefined);
   assert(xofError.includes("too low"));
-  
+
   // Should detect negative GBP
-  const gbpError = result.errors.find(e => e.includes("GBP"));
+  const gbpError = result.errors.find((e) => e.includes("GBP"));
   assert(gbpError !== undefined);
   assert(gbpError.includes("negative"));
 });
@@ -52,7 +56,7 @@ Deno.test("suggestFXRateCorrection - XOF correction", () => {
   // Test the specific case from user's data
   const wrongRate = 0.55893;
   const suggestion = suggestFXRateCorrection("XOF", wrongRate);
-  
+
   assert(suggestion !== null);
   assert(suggestion >= 400 && suggestion <= 700); // Should be in reasonable range
   assertEquals(suggestion, wrongRate * 1000); // Should multiply by 1000
@@ -77,16 +81,16 @@ Deno.test("validateAndCorrectFXRates - auto correction", () => {
   };
 
   const result = validateAndCorrectFXRates(problematicFX, true);
-  
+
   // Should have made corrections
   assert(result.corrections.length > 0);
-  
+
   // Should have corrected XOF
-  const xofCorrection = result.corrections.find(c => c.currency === "XOF");
+  const xofCorrection = result.corrections.find((c) => c.currency === "XOF");
   assert(xofCorrection !== undefined);
   assertEquals(xofCorrection.original, 0.55893);
   assertEquals(Math.round(xofCorrection.corrected * 100) / 100, 558.93);
-  
+
   // Corrected table should be valid
   assertEquals(result.validation.isValid, true);
 });
@@ -100,7 +104,7 @@ Deno.test("validateAndCorrectFXRates - no auto correction", () => {
   };
 
   const result = validateAndCorrectFXRates(problematicFX, false);
-  
+
   // Should not have made corrections
   assertEquals(result.corrections.length, 0);
   assertEquals(result.correctedTable, problematicFX);
@@ -117,8 +121,8 @@ Deno.test("validateFXRates - unknown currency handling", () => {
   };
 
   const result = validateFXRates(unknownCurrencyFX);
-  
+
   // Should warn about very low rate but not error on unknown currency
-  assert(result.warnings.some(w => w.includes("BADUNK")));
-  assert(result.warnings.some(w => w.includes("very low")));
+  assert(result.warnings.some((w) => w.includes("BADUNK")));
+  assert(result.warnings.some((w) => w.includes("very low")));
 });

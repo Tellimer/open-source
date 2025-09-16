@@ -10,24 +10,37 @@ and this project adheres to
 
 ## [0.2.0] - 2025-01-16 - Explain Metadata Feature Release
 
-🎯 **Explain Metadata Feature Release**: This release adds comprehensive normalization metadata to provide transparency into FX rates, magnitude scaling, and time adjustments.
+🎯 **Explain Metadata Feature Release**: This release adds comprehensive
+normalization metadata to provide transparency into FX rates, magnitude scaling,
+and time adjustments.
 
 ### 🏆 Release Highlights
 
-- **Explain Metadata**: New optional `explain` field provides detailed normalization metadata
-- **FX Transparency**: Shows actual exchange rates used, source (live/fallback), and provider
-- **Magnitude Clarity**: Captures scale conversions with exact factors (e.g., billions→millions = 1000x)
-- **Time Adjustments**: Records periodicity changes and whether temporal scaling was applied
-- **Unit Provenance**: Clear original and normalized unit strings for full transparency
-- **Backward Compatible**: Explain metadata is optional (default: false) to avoid overhead
+- **Explain Metadata**: New optional `explain` field provides detailed
+  normalization metadata
+- **FX Transparency**: Shows actual exchange rates used, source (live/fallback),
+  and provider
+- **Magnitude Clarity**: Captures scale conversions with exact factors (e.g.,
+  billions→millions = 1000x)
+- **Time Adjustments**: Records periodicity changes and whether temporal scaling
+  was applied
+- **Unit Provenance**: Clear original and normalized unit strings for full
+  transparency
+- **Backward Compatible**: Explain metadata is optional (default: false) to
+  avoid overhead
 
 ### ✨ Added
 
-- **New Types**: `Explain` interface with fx, magnitude, periodicity, and units metadata
-- **Pipeline Option**: `explain?: boolean` flag in `PipelineConfig` to enable metadata
-- **FX Source Tracking**: Captures whether rates came from live sources or fallback data
-- **Magnitude Factors**: Exact conversion factors for scale changes (e.g., 1000 for billions→millions)
-- **Time Scale Recording**: Original and target time periods with adjustment flags
+- **New Types**: `Explain` interface with fx, magnitude, periodicity, and units
+  metadata
+- **Pipeline Option**: `explain?: boolean` flag in `PipelineConfig` to enable
+  metadata
+- **FX Source Tracking**: Captures whether rates came from live sources or
+  fallback data
+- **Magnitude Factors**: Exact conversion factors for scale changes (e.g., 1000
+  for billions→millions)
+- **Time Scale Recording**: Original and target time periods with adjustment
+  flags
 - **Unit Strings**: Human-readable original and normalized unit descriptions
 - **Comprehensive Tests**: 10 new tests covering all explain metadata scenarios
 
@@ -35,12 +48,15 @@ and this project adheres to
 
 - **Batch Processing**: Updated to support explain metadata generation
 - **Wages Service**: Enhanced to include explain metadata for wage normalization
-- **Pipeline Workflow**: FX source information now tracked through entire pipeline
-- **Error Handling**: Graceful handling when explain metadata cannot be generated
+- **Pipeline Workflow**: FX source information now tracked through entire
+  pipeline
+- **Error Handling**: Graceful handling when explain metadata cannot be
+  generated
 
 ### 📊 Technical Details
 
-- **Zero Performance Impact**: Explain metadata only generated when explicitly requested
+- **Zero Performance Impact**: Explain metadata only generated when explicitly
+  requested
 - **Memory Efficient**: Metadata objects only created when needed
 - **Type Safe**: Full TypeScript support with proper interfaces
 - **Test Coverage**: All 218 tests passing including new explain functionality

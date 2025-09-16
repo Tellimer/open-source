@@ -7,6 +7,7 @@ import {
   adjustForInflation,
   assessDataQuality,
   deseasonalize,
+  type Explain,
   fetchLiveFXRates,
   type FXTable,
   inferUnit,
@@ -15,7 +16,6 @@ import {
   type QualityScore,
   type Scale,
   type TimeScale,
-  type Explain,
 } from "../main.ts";
 import {
   detectWagesData,
@@ -200,7 +200,7 @@ export const pipelineMachine = setup({
         return fetchLiveFXRates(config.targetCurrency || "USD", {
           fallback: config.fxFallback,
           cache: true,
-        }).then(rates => {
+        }).then((rates) => {
           // Set FX source information in context
           input.fxSource = "live";
           input.fxSourceId = "ECB"; // Default for live rates

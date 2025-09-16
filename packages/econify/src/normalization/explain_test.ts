@@ -25,7 +25,7 @@ Deno.test("buildExplainMetadata - FX conversion", () => {
       toCurrency: "USD",
       toMagnitude: "millions",
       fx: testFX,
-    }
+    },
   );
 
   assertExists(explain.fx);
@@ -44,7 +44,7 @@ Deno.test("buildExplainMetadata - magnitude scaling", () => {
     {
       toCurrency: "USD",
       toMagnitude: "millions",
-    }
+    },
   );
 
   assertExists(explain.magnitude);
@@ -61,7 +61,7 @@ Deno.test("buildExplainMetadata - no magnitude scaling needed", () => {
     {
       toCurrency: "USD",
       toMagnitude: "millions",
-    }
+    },
   );
 
   // Should not have magnitude info when no scaling is needed
@@ -77,7 +77,7 @@ Deno.test("buildExplainMetadata - units information", () => {
       toCurrency: "USD",
       toMagnitude: "millions",
       fx: testFX,
-    }
+    },
   );
 
   assertExists(explain.units);
@@ -94,7 +94,7 @@ Deno.test("buildExplainMetadata - periodicity adjustment", () => {
       toCurrency: "USD",
       toMagnitude: "millions",
       toTimeScale: "month",
-    }
+    },
   );
 
   assertExists(explain.periodicity);
@@ -112,7 +112,7 @@ Deno.test("buildExplainMetadata - no periodicity adjustment", () => {
       toCurrency: "USD",
       toMagnitude: "millions",
       toTimeScale: "month",
-    }
+    },
   );
 
   assertExists(explain.periodicity);
@@ -132,7 +132,7 @@ Deno.test("buildExplainMetadata - complex conversion", () => {
       toMagnitude: "millions",
       toTimeScale: "month",
       fx: testFX,
-    }
+    },
   );
 
   // Should have all metadata types
@@ -168,14 +168,14 @@ Deno.test("enhanceExplainWithFXSource - live source", () => {
     {
       toCurrency: "USD",
       fx: testFX,
-    }
+    },
   );
 
   const enhanced = enhanceExplainWithFXSource(
     baseExplain,
     "live",
     "ECB",
-    "2025-01-15T10:30:00Z"
+    "2025-01-15T10:30:00Z",
   );
 
   assertExists(enhanced.fx);
@@ -192,13 +192,13 @@ Deno.test("enhanceExplainWithFXSource - fallback source", () => {
     {
       toCurrency: "USD",
       fx: testFX,
-    }
+    },
   );
 
   const enhanced = enhanceExplainWithFXSource(
     baseExplain,
     "fallback",
-    "SNP"
+    "SNP",
   );
 
   assertExists(enhanced.fx);
@@ -214,13 +214,13 @@ Deno.test("enhanceExplainWithFXSource - no FX metadata", () => {
     100,
     {
       toCurrency: "USD",
-    }
+    },
   );
 
   const enhanced = enhanceExplainWithFXSource(
     baseExplain,
     "live",
-    "ECB"
+    "ECB",
   );
 
   // Should return unchanged since there's no FX metadata

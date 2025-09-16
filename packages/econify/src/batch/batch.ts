@@ -6,7 +6,7 @@ import { normalizeValue } from "../normalization/normalization.ts";
 import { buildExplainMetadata } from "../normalization/explain.ts";
 import { parseUnit } from "../units/units.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
-import type { FXTable, Scale, TimeScale, Explain } from "../types.ts";
+import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 
 export interface BatchItem {
   id?: string | number;
