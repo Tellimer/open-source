@@ -238,3 +238,10 @@ export {
   filterExemptions,
   shouldExemptFromNormalization,
 } from "./exemptions/exemptions.ts";
+
+// Re-export FX validation utilities
+export {
+  suggestFXRateCorrection,
+  validateAndCorrectFXRates,
+  validateFXRates,
+} from "./fx/fx-validation.ts";
