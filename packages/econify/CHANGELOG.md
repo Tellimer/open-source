@@ -2,6 +2,27 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.7] - 2025-01-16
+
+### Enhanced
+
+- **FX Date Transparency**: Added support for FX rate dates in explain metadata
+  - **Date Tracking**: `FXTable.dates` field to specify when each rate was last
+    updated
+  - **Explain Integration**: `explain.fx.asOf` field shows rate timestamp in
+    metadata
+  - **SNP Database Ready**: Perfect for passing through dates from external FX
+    sources
+  - **Full Transparency**: Users can see exactly when each exchange rate was
+    current
+
+### Technical Improvements
+
+- **Enhanced FXTable Interface**: Added optional `dates` field for rate
+  timestamps
+- **Backward Compatible**: Existing code works unchanged - dates are optional
+- **Documentation Enhanced**: Complete examples showing FX date usage patterns
+
 ## [0.2.6] - 2025-01-16
 
 ### Enhanced

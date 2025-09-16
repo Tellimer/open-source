@@ -44,6 +44,8 @@ export function buildExplainMetadata(
         currency: effectiveCurrency,
         base: "USD",
         rate: rate,
+        // Include the date if available from FX table
+        asOf: options.fx.dates?.[effectiveCurrency],
         source: "fallback", // We'll enhance this when we have live FX info
         sourceId: "SNP", // Default for fallback
       };

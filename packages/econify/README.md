@@ -134,10 +134,11 @@ const result = await processEconomicData(economicData, {
   targetMagnitude: "billions",
   targetTimeScale: "month", // 🆕 Standardize time periods to monthly
 
-  // Provide exchange rates
+  // Provide exchange rates with dates
   fxFallback: {
     base: "USD",
     rates: { EUR: 0.92 },
+    dates: { EUR: "2024-01-15T10:30:00Z" }, // When each rate was last updated
   },
 });
 
@@ -225,7 +226,9 @@ result.data.forEach((item) => {
   // Enhanced FX information
   if (item.explain?.fx) {
     console.log(
-      `  💱 FX: ${item.explain.fx.currency} → ${item.explain.fx.base} (rate: ${item.explain.fx.rate})`,
+      `  💱 FX: ${item.explain.fx.currency} → ${item.explain.fx.base} (rate: ${item.explain.fx.rate})${
+        item.explain.fx.asOf ? ` as of ${item.explain.fx.asOf}` : ""
+      }`,
     );
   }
 });
@@ -897,6 +900,7 @@ interface PipelineOptions {
   fxFallback?: {
     base: string;
     rates: Record<string, number>;
+    dates?: Record<string, string>; // When each rate was last updated
   };
 
   // Exemptions - skip normalization for specific indicators
@@ -1062,6 +1066,45 @@ const value = normalizeValue(100, "EUR Million", {
   toCurrency: "USD",
   fx,
 });
+```
+
+### FX Rate Dates & Transparency
+
+Include when each exchange rate was last updated for full transparency:
+
+```ts
+// From your SNP database - include dates for each rate
+const fxFallback = {
+  base: "USD",
+  rates: {
+    XOF: 558.16,
+    EUR: 0.92,
+    GBP: 0.79,
+  },
+  dates: {
+    XOF: "2024-01-15T10:30:00Z", // When XOF rate was last updated
+    EUR: "2024-01-15T09:45:00Z", // When EUR rate was last updated
+    GBP: "2024-01-15T11:15:00Z", // When GBP rate was last updated
+  },
+};
+
+const result = await processEconomicData(data, {
+  targetCurrency: "USD",
+  fxFallback,
+  explain: true,
+});
+
+// The explain metadata will include the date for each FX conversion:
+// {
+//   "fx": {
+//     "currency": "XOF",
+//     "base": "USD",
+//     "rate": 558.16,
+//     "asOf": "2024-01-15T10:30:00Z",  // ← Date included!
+//     "source": "fallback",
+//     "sourceId": "SNP"
+//   }
+// }
 ```
 
 ### Data Quality Assessment

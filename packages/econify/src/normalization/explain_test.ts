@@ -551,3 +551,45 @@ Deno.test("buildExplainMetadata - component fields with no original time scale",
   assertEquals(explain.timeScale.original, undefined);
   assertEquals(explain.timeScale.normalized, "month");
 });
+
+Deno.test("buildExplainMetadata - FX with date information", () => {
+  const fx: FXTable = {
+    base: "USD",
+    rates: { XOF: 558.16, EUR: 0.85 },
+    dates: {
+      XOF: "2024-01-15T10:30:00Z",
+      EUR: "2024-01-15T10:30:00Z",
+    },
+  };
+
+  const explain = buildExplainMetadata(1000, "XOF billions", 1791.4, {
+    toCurrency: "USD",
+    toMagnitude: "millions",
+    fx,
+  });
+
+  // Should include FX date information
+  assertEquals(explain.fx?.currency, "XOF");
+  assertEquals(explain.fx?.rate, 558.16);
+  assertEquals(explain.fx?.asOf, "2024-01-15T10:30:00Z");
+  assertEquals(explain.fx?.source, "fallback");
+  assertEquals(explain.fx?.sourceId, "SNP");
+});
+
+Deno.test("buildExplainMetadata - FX without date information", () => {
+  const fx: FXTable = {
+    base: "USD",
+    rates: { EUR: 0.85 },
+    // No dates field
+  };
+
+  const explain = buildExplainMetadata(100, "EUR millions", 85, {
+    toCurrency: "USD",
+    fx,
+  });
+
+  // Should not include asOf field when no date available
+  assertEquals(explain.fx?.currency, "EUR");
+  assertEquals(explain.fx?.rate, 0.85);
+  assertEquals(explain.fx?.asOf, undefined);
+});

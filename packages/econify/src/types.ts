@@ -18,6 +18,8 @@ export interface Classification {
 export interface FXTable {
   base: string;
   rates: Record<string, number>;
+  /** Optional dates for each rate - when each rate was last updated */
+  dates?: Record<string, string>;
 }
 
 export type Scale =
