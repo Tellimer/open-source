@@ -50,7 +50,7 @@ export function buildExplainMetadata(
     }
   }
 
-  // Magnitude information
+  // Magnitude information - only provide when scaling actually occurs
   const originalScale = effectiveScale || getScale(originalUnit);
   const targetScale = options.toMagnitude || originalScale;
   if (originalScale !== targetScale) {
@@ -63,10 +63,17 @@ export function buildExplainMetadata(
     };
 
     const factor = SCALE_MAP[originalScale] / SCALE_MAP[targetScale];
+    const direction = SCALE_MAP[originalScale] > SCALE_MAP[targetScale]
+      ? "downscale"
+      : "upscale";
+    const description = `${originalScale} → ${targetScale} (×${factor})`;
+
     explain.magnitude = {
       originalScale,
       targetScale,
       factor,
+      direction,
+      description,
     };
   }
 
@@ -78,16 +85,54 @@ export function buildExplainMetadata(
     originalTimeScale && targetTimeScale &&
     originalTimeScale !== targetTimeScale
   ) {
+    const PER_YEAR = {
+      year: 1,
+      quarter: 4,
+      month: 12,
+      week: 52,
+      day: 365,
+      hour: 8760,
+    };
+
+    const factor = PER_YEAR[originalTimeScale] / PER_YEAR[targetTimeScale];
+    const direction = PER_YEAR[originalTimeScale] < PER_YEAR[targetTimeScale]
+      ? "upsample"
+      : "downsample";
+
+    // Create clear description with intuitive conversion factors
+    let description: string;
+    if (direction === "upsample") {
+      // Going to more frequent time scale (e.g., year → month)
+      const divisionFactor = PER_YEAR[targetTimeScale] /
+        PER_YEAR[originalTimeScale];
+      description =
+        `${originalTimeScale} → ${targetTimeScale} (÷${divisionFactor})`;
+    } else {
+      // Going to less frequent time scale (e.g., month → year)
+      const multiplicationFactor = PER_YEAR[originalTimeScale] /
+        PER_YEAR[targetTimeScale];
+      description =
+        `${originalTimeScale} → ${targetTimeScale} (×${multiplicationFactor})`;
+    }
+
     explain.periodicity = {
       original: originalTimeScale,
       target: targetTimeScale,
       adjusted: true,
+      factor,
+      direction,
+      description,
     };
   } else if (targetTimeScale) {
     explain.periodicity = {
       original: originalTimeScale || undefined,
       target: targetTimeScale,
       adjusted: false,
+      factor: 1,
+      direction: "none",
+      description: originalTimeScale
+        ? `No conversion needed (${originalTimeScale})`
+        : "No source time scale available",
     };
   }
 
@@ -102,10 +147,53 @@ export function buildExplainMetadata(
     options.toTimeScale,
   );
 
+  // Build full unit strings with time periods
+  const originalFullUnit = buildFullUnitString(
+    effectiveCurrency,
+    originalScale,
+    originalTimeScale || undefined,
+  );
+  const normalizedFullUnit = buildFullUnitString(
+    options.toCurrency || effectiveCurrency,
+    targetScale,
+    options.toTimeScale,
+  );
+
   explain.units = {
     originalUnit: originalUnitString || originalUnit,
     normalizedUnit: normalizedUnitString,
+    originalFullUnit: originalFullUnit || originalUnit,
+    normalizedFullUnit: normalizedFullUnit,
   };
+
+  // Conversion summary - order: Scale → Currency → Time (logical processing order)
+  const conversionSteps: string[] = [];
+  let totalFactor = 1;
+
+  if (explain.magnitude && explain.magnitude.factor !== 1) {
+    conversionSteps.push(`Scale: ${explain.magnitude.description}`);
+    totalFactor *= explain.magnitude.factor;
+  }
+
+  if (explain.fx) {
+    conversionSteps.push(
+      `Currency: ${explain.fx.currency} → ${explain.fx.base} (rate: ${explain.fx.rate})`,
+    );
+    totalFactor *= 1 / explain.fx.rate;
+  }
+
+  if (explain.periodicity?.adjusted) {
+    conversionSteps.push(`Time: ${explain.periodicity.description}`);
+    totalFactor *= explain.periodicity.factor || 1;
+  }
+
+  if (conversionSteps.length > 0) {
+    explain.conversion = {
+      steps: conversionSteps,
+      summary: `${originalFullUnit || originalUnit} → ${normalizedFullUnit}`,
+      totalFactor,
+    };
+  }
 
   return explain;
 }
@@ -150,6 +238,29 @@ function buildNormalizedUnitString(
   }
 
   return parts.length > 0 ? parts.join(" ") : "normalized";
+}
+
+/**
+ * Build full unit string with time period
+ */
+function buildFullUnitString(
+  currency?: string,
+  scale?: Scale,
+  timeScale?: TimeScale,
+): string | undefined {
+  if (!currency) return undefined;
+
+  const parts: string[] = [currency];
+
+  if (scale && scale !== "ones") {
+    parts.push(scale);
+  }
+
+  if (timeScale) {
+    parts.push(`per ${timeScale}`);
+  }
+
+  return parts.join(" ");
 }
 
 /**

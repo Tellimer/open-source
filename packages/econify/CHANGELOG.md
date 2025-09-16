@@ -2,6 +2,32 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.4] - 2025-01-16
+
+### Enhanced
+
+- **Enhanced Explain Metadata**: Significantly improved the explain metadata
+  system with comprehensive conversion details:
+  - **Magnitude Scaling**: Added direction ("upscale" | "downscale" | "none"),
+    factor, and human-readable descriptions
+  - **Periodicity Conversion**: Added factor, direction ("upsample" |
+    "downsample" | "none"), and clear descriptions (e.g., "year → month (÷12)")
+  - **Complete Unit Information**: Added both simple and full unit strings with
+    time periods
+  - **Conversion Summary**: Step-by-step conversion chain with total factor
+    calculation
+  - **Logical Processing Order**: Scale → Currency → Time for clearer
+    understanding
+
+### Technical Improvements
+
+- **Enhanced TypeScript Interfaces**: Extended `Explain` interface with detailed
+  conversion metadata
+- **Improved User Experience**: Clear, human-readable conversion descriptions
+  replace technical factors
+- **Better Transparency**: Complete visibility into all normalization decisions
+  and calculations
+
 ## [0.2.3] - 2025-01-16
 
 ### Fixed

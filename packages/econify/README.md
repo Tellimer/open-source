@@ -7,7 +7,7 @@
 # @tellimer/econify
 
 [![JSR](https://jsr.io/badges/@tellimer/econify)](https://jsr.io/@tellimer/econify)
-[![Test Coverage](https://img.shields.io/badge/tests-223%20passing-brightgreen)](https://github.com/Tellimer/open-source)
+[![Test Coverage](https://img.shields.io/badge/tests-237%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 [![Deno](https://img.shields.io/badge/deno-2.0+-green)](https://deno.land)
 
@@ -16,8 +16,8 @@ advanced features for classification, normalization, quality assessment, and
 analysis. Perfect for financial institutions, economic research, data pipelines,
 and quantitative analysis.
 
-**✅ Production Ready** • **223 Tests Passing** • **100% Reliability** • **Zero
-Linting Issues** • **Time Resampling** • **Type Safe**
+**✅ Production Ready** • **237 Tests Passing** • **100% Reliability** • **Zero
+Linting Issues** • **Enhanced Explain Metadata** • **Type Safe**
 
 ## 🌊 XState Pipeline Architecture
 
@@ -192,20 +192,40 @@ const result = await processEconomicData(economicData, {
   },
 });
 
-// Check conversion details
+// Check enhanced conversion details (v0.2.4+)
 result.data.forEach((item) => {
   console.log(
     `${item.name}: ${item.normalized?.toFixed(2)} ${item.normalizedUnit}`,
   );
 
+  // 🆕 Enhanced explain metadata with comprehensive details
+  if (item.explain?.conversion) {
+    console.log(`  🔄 Conversion: ${item.explain.conversion.summary}`);
+    console.log(`  📊 Total Factor: ${item.explain.conversion.totalFactor}`);
+    console.log("  📋 Steps:");
+    item.explain.conversion.steps.forEach((step, i) => {
+      console.log(`     ${i + 1}. ${step}`);
+    });
+  }
+
+  // 🆕 Detailed periodicity information
   if (item.explain?.periodicity?.adjusted) {
     console.log(
-      `  ✅ Time scaling: ${item.explain.periodicity.original} → ${item.explain.periodicity.target}`,
+      `  ⏰ Time: ${item.explain.periodicity.description} (${item.explain.periodicity.direction})`,
     );
   }
+
+  // 🆕 Detailed magnitude information
+  if (item.explain?.magnitude) {
+    console.log(
+      `  📏 Scale: ${item.explain.magnitude.description} (${item.explain.magnitude.direction})`,
+    );
+  }
+
+  // Enhanced FX information
   if (item.explain?.fx) {
     console.log(
-      `  💱 FX rate: ${item.explain.fx.rate} ${item.explain.fx.currency}/USD`,
+      `  💱 FX: ${item.explain.fx.currency} → ${item.explain.fx.base} (rate: ${item.explain.fx.rate})`,
     );
   }
 });
@@ -218,6 +238,57 @@ result.data.forEach((item) => {
 - **Cleaner Code**: Matches database schema directly
 - **Smart Fallback**: Falls back to unit string parsing when explicit fields not
   provided
+
+## 🔍 Enhanced Explain Metadata (v0.2.4+)
+
+Get comprehensive transparency into all normalization decisions with the enhanced explain metadata system:
+
+```ts
+const result = await processEconomicData([{
+  value: -6798.401,
+  unit: "USD Million",
+  periodicity: "Yearly",
+  scale: "Millions",
+  currency_code: "USD",
+  name: "Afghanistan Balance of Trade",
+}], {
+  targetCurrency: "USD",
+  targetMagnitude: "millions",
+  targetTimeScale: "month",
+  explain: true, // 🔍 Enable enhanced explain metadata
+});
+
+const item = result.data[0];
+console.log("Enhanced Explain Metadata:");
+console.log(JSON.stringify(item.explain, null, 2));
+```
+
+**Enhanced Features:**
+
+- **🔄 Conversion Summary**: Complete step-by-step conversion chain
+- **📏 Magnitude Details**: Direction ("upscale"/"downscale"), factor, and descriptions
+- **⏰ Periodicity Details**: Factor, direction ("upsample"/"downsample"), clear descriptions
+- **🏷️ Complete Units**: Both simple and full unit strings with time periods
+- **🧮 Total Factor**: Overall conversion factor for manual verification
+
+**Example Output:**
+```json
+{
+  "periodicity": {
+    "original": "year",
+    "target": "month",
+    "adjusted": true,
+    "factor": 0.08333333333333333,
+    "direction": "upsample",
+    "description": "year → month (÷12)"
+  },
+  "conversion": {
+    "summary": "USD millions per year → USD millions per month",
+    "totalFactor": 0.08333333333333333,
+    "steps": ["Time: year → month (÷12)"]
+  }
+}
+```
 
 ### With Progress Tracking
 

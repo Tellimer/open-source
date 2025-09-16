@@ -1,6 +1,6 @@
 /**
- * Example showing how to use the new explain metadata feature
- * This demonstrates how consumers should update their code to use explain metadata
+ * Example showing how to use the enhanced explain metadata feature (v0.2.4+)
+ * This demonstrates comprehensive conversion transparency and how consumers should use it
  */
 
 import { processEconomicData } from "../src/main.ts";
@@ -76,33 +76,41 @@ async function demonstrateExplainMetadata() {
         }
       }
 
-      // Magnitude scaling
+      // 🆕 Enhanced conversion summary (v0.2.4+)
+      if (item.explain.conversion) {
+        console.log(`      🔄 Conversion Summary: ${item.explain.conversion.summary}`);
+        console.log(`         Total Factor: ${item.explain.conversion.totalFactor}`);
+        console.log("         Steps:");
+        item.explain.conversion.steps.forEach((step, i) => {
+          console.log(`           ${i + 1}. ${step}`);
+        });
+      }
+
+      // 🆕 Enhanced magnitude scaling with direction
       if (item.explain.magnitude) {
-        console.log(
-          `      📏 Magnitude: ${item.explain.magnitude.originalScale} → ${item.explain.magnitude.targetScale}`,
-        );
+        console.log(`      📏 Magnitude: ${item.explain.magnitude.description}`);
+        console.log(`         Direction: ${item.explain.magnitude.direction}`);
         console.log(`         Factor: ${item.explain.magnitude.factor}x`);
       }
 
-      // Time adjustments
+      // 🆕 Enhanced time adjustments with direction
       if (item.explain.periodicity) {
-        console.log(
-          `      ⏰ Periodicity: ${
-            item.explain.periodicity.original || "none"
-          } → ${item.explain.periodicity.target}`,
-        );
-        console.log(
-          `         Adjusted: ${
-            item.explain.periodicity.adjusted ? "Yes" : "No"
-          }`,
-        );
+        console.log(`      ⏰ Periodicity: ${item.explain.periodicity.description || 'No conversion'}`);
+        console.log(`         Direction: ${item.explain.periodicity.direction}`);
+        console.log(`         Factor: ${item.explain.periodicity.factor}`);
+        console.log(`         Adjusted: ${item.explain.periodicity.adjusted ? "Yes" : "No"}`);
       }
 
-      // Unit strings
+      // 🆕 Enhanced unit strings with full units
       if (item.explain.units) {
-        console.log(
-          `      🏷️  Units: "${item.explain.units.originalUnit}" → "${item.explain.units.normalizedUnit}"`,
-        );
+        console.log(`      🏷️  Original Unit: "${item.explain.units.originalUnit}"`);
+        console.log(`         Normalized Unit: "${item.explain.units.normalizedUnit}"`);
+        if (item.explain.units.originalFullUnit) {
+          console.log(`         Original Full: "${item.explain.units.originalFullUnit}"`);
+        }
+        if (item.explain.units.normalizedFullUnit) {
+          console.log(`         Normalized Full: "${item.explain.units.normalizedFullUnit}"`);
+        }
       }
     }
   });
@@ -111,7 +119,7 @@ async function demonstrateExplainMetadata() {
   console.log("\n🔧 Example tooltip metadata generation:");
 
   const benin = result.data.find((item) => item.id === "BEN");
-  if (benin && benin.explain) {
+  if (benin?.explain) {
     const tooltipMetadata = {
       original_value: -482.58,
       normalized_value: benin.normalized!,
@@ -231,8 +239,45 @@ async function demonstrateExplicitMetadataWithExplain() {
   );
 }
 
+async function demonstrateEnhancedExplainFeatures() {
+  console.log("\n🆕 Demonstrating Enhanced Explain Features (v0.2.4+)...\n");
+
+  // Complex conversion example
+  const complexData = [{
+    value: -1447.74,
+    unit: "XOF Million",
+    periodicity: "Quarterly",
+    scale: "Billions",
+    currency_code: "XOF",
+    name: "Complex Conversion Example",
+    id: "COMPLEX",
+  }];
+
+  const result = await processEconomicData(complexData, {
+    targetCurrency: "USD",
+    targetMagnitude: "millions",
+    targetTimeScale: "month",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { XOF: 558.16 } },
+  });
+
+  const item = result.data[0];
+  console.log("🔍 Enhanced Explain Metadata Features:");
+  console.log(JSON.stringify(item.explain, null, 2));
+
+  console.log("\n✨ Key Enhanced Features:");
+  console.log("1. 🔄 Conversion Summary with step-by-step breakdown");
+  console.log("2. 📏 Magnitude direction indicators (upscale/downscale)");
+  console.log("3. ⏰ Periodicity direction indicators (upsample/downsample)");
+  console.log("4. 🏷️ Complete unit information (simple + full units)");
+  console.log("5. 🧮 Total conversion factor for verification");
+  console.log("6. 📝 Human-readable descriptions for all conversions");
+}
+
 if (import.meta.main) {
   await demonstrateExplainMetadata();
   await demonstrateExplicitMetadataWithExplain();
+  await demonstrateEnhancedExplainFeatures();
   exampleWrapperUpdate();
 }

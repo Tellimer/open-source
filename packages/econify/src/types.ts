@@ -68,6 +68,10 @@ export interface Explain {
     targetScale: Scale;
     /** Conversion factor applied (e.g., 1000 for billions→millions) */
     factor: number;
+    /** Direction of scaling */
+    direction: "upscale" | "downscale" | "none";
+    /** Human-readable conversion description */
+    description: string;
   };
   /** Time period adjustment information */
   periodicity?: {
@@ -77,12 +81,31 @@ export interface Explain {
     target: TimeScale;
     /** Whether temporal adjustment was applied */
     adjusted: boolean;
+    /** Conversion factor applied (e.g., 12 for year→month) */
+    factor?: number;
+    /** Direction of time conversion */
+    direction?: "upsample" | "downsample" | "none";
+    /** Human-readable conversion description */
+    description?: string;
   };
   /** Unit string information */
   units?: {
     /** Original unit string (e.g., "XOF Billions") */
     originalUnit?: string;
-    /** Normalized unit string (e.g., "USD Millions") */
+    /** Normalized unit string (e.g., "USD Millions per month") */
     normalizedUnit: string;
+    /** Complete original unit with time period */
+    originalFullUnit?: string;
+    /** Complete normalized unit with time period */
+    normalizedFullUnit?: string;
+  };
+  /** Complete conversion summary */
+  conversion?: {
+    /** Step-by-step conversion chain */
+    steps: string[];
+    /** Overall conversion description */
+    summary: string;
+    /** Total conversion factor applied */
+    totalFactor: number;
   };
 }
