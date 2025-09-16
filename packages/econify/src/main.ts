@@ -21,6 +21,7 @@
 // Re-export all types
 export type {
   Classification,
+  Explain,
   FXTable,
   IndicatorInput,
   IndicatorType,

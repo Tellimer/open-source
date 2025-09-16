@@ -364,7 +364,7 @@ export function processWageTimeSeries(
 /**
  * Parse time scale from unit string
  */
-function parseTimeScaleFromUnit(unit: string): TimeScale | null {
+export function parseTimeScaleFromUnit(unit: string): TimeScale | null {
   const lowerUnit = unit.toLowerCase();
 
   if (lowerUnit.includes("hour")) return "hour";

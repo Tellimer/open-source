@@ -3,9 +3,10 @@
  */
 
 import { normalizeValue } from "../normalization/normalization.ts";
+import { buildExplainMetadata } from "../normalization/explain.ts";
 import { parseUnit } from "../units/units.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
-import type { FXTable, Scale, TimeScale } from "../types.ts";
+import type { FXTable, Scale, TimeScale, Explain } from "../types.ts";
 
 export interface BatchItem {
   id?: string | number;
@@ -26,6 +27,9 @@ export interface BatchOptions {
   toMagnitude?: Scale;
   toTimeScale?: TimeScale;
   fx?: FXTable;
+  explain?: boolean;
+  fxSource?: "live" | "fallback";
+  fxSourceId?: string;
 }
 
 export interface BatchResult<T = BatchItem> {
@@ -206,6 +210,7 @@ async function processInParallel<T extends BatchItem>(
           ...item,
           normalized: res.value.normalized,
           normalizedUnit: res.value.normalizedUnit,
+          ...(res.value.explain && { explain: res.value.explain }),
         });
       } else if (res.status === "rejected") {
         handleItemError(item, res.reason, options, result);
@@ -238,6 +243,7 @@ function processSequentially<T extends BatchItem>(
           ...item,
           normalized: processed.normalized,
           normalizedUnit: processed.normalizedUnit,
+          ...(processed.explain && { explain: processed.explain }),
         });
       }
     } catch (error) {
@@ -256,7 +262,7 @@ function processSequentially<T extends BatchItem>(
 function processItem<T extends BatchItem>(
   item: T,
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
-): { normalized: number; normalizedUnit: string } | null {
+): { normalized: number; normalizedUnit: string; explain?: Explain } | null {
   try {
     // Parse unit
     const parsed = parseUnit(item.unit);
@@ -281,7 +287,24 @@ function processItem<T extends BatchItem>(
       options.toTimeScale,
     );
 
-    return { normalized: normalized, normalizedUnit };
+    // Build explain metadata if requested
+    let explain: Explain | undefined;
+    if (options.explain) {
+      explain = buildExplainMetadata(item.value, item.unit, normalized, {
+        toCurrency: options.toCurrency,
+        toMagnitude: options.toMagnitude,
+        toTimeScale: options.toTimeScale,
+        fx: options.fx,
+      });
+
+      // Enhance with FX source information if available
+      if (explain.fx && options.fxSource) {
+        explain.fx.source = options.fxSource;
+        explain.fx.sourceId = options.fxSourceId;
+      }
+    }
+
+    return { normalized: normalized, normalizedUnit, explain };
   } catch (error) {
     throw error;
   }

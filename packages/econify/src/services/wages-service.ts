@@ -82,6 +82,9 @@ export async function processWagesData(
     targetTimeScale?: string;
     excludeIndexValues?: boolean;
     includeWageMetadata?: boolean;
+    explain?: boolean;
+    fxSource?: "live" | "fallback";
+    fxSourceId?: string;
   },
 ): Promise<ParsedData[]> {
   if (!fxRates) {
@@ -106,6 +109,9 @@ export async function processWagesData(
       toCurrency: config.targetCurrency,
       toMagnitude: "ones" as Scale, // Always use "ones" for wages, not millions
       fx: fxRates,
+      explain: config.explain,
+      fxSource: config.fxSource,
+      fxSourceId: config.fxSourceId,
     });
     return result.successful;
   }

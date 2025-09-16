@@ -15,6 +15,7 @@ import {
   type QualityScore,
   type Scale,
   type TimeScale,
+  type Explain,
 } from "../main.ts";
 import {
   detectWagesData,
@@ -33,6 +34,8 @@ export interface PipelineContext {
   parsedData?: ParsedData[];
   qualityScore?: QualityScore;
   fxRates?: FXTable;
+  fxSource?: "live" | "fallback";
+  fxSourceId?: string;
   normalizedData?: ParsedData[];
   adjustedData?: ParsedData[];
   finalData?: ParsedData[];
@@ -73,6 +76,10 @@ export interface PipelineConfig {
 
   // Normalization exemptions
   exemptions?: NormalizationExemptions;
+
+  // Metadata explanation
+  /** Include detailed normalization metadata for transparency (default: false) */
+  explain?: boolean;
 }
 
 /**
@@ -101,6 +108,8 @@ export interface ParsedData {
     processingTime?: number;
     inferredUnit?: string;
   };
+  /** Detailed normalization explanation (when explain option is enabled) */
+  explain?: Explain;
 }
 
 /**
@@ -191,6 +200,11 @@ export const pipelineMachine = setup({
         return fetchLiveFXRates(config.targetCurrency || "USD", {
           fallback: config.fxFallback,
           cache: true,
+        }).then(rates => {
+          // Set FX source information in context
+          input.fxSource = "live";
+          input.fxSourceId = "ECB"; // Default for live rates
+          return rates;
         });
       } else {
         // When not using live FX, we must have fallback rates
@@ -199,6 +213,9 @@ export const pipelineMachine = setup({
             "fxFallback rates are required when useLiveFX is false",
           );
         }
+        // Set FX source information in context
+        input.fxSource = "fallback";
+        input.fxSourceId = "SNP"; // Default for fallback
         return Promise.resolve(config.fxFallback);
       }
     }),
@@ -239,6 +256,9 @@ export const pipelineMachine = setup({
             targetTimeScale: config.targetTimeScale,
             excludeIndexValues: config.excludeIndexValues,
             includeWageMetadata: config.includeWageMetadata,
+            explain: config.explain,
+            fxSource: input.fxSource,
+            fxSourceId: input.fxSourceId,
           });
 
           // Return processed wages + exempted items unchanged
@@ -253,6 +273,9 @@ export const pipelineMachine = setup({
           toCurrency: config.targetCurrency,
           toMagnitude: config.targetMagnitude as Scale,
           fx: fxRates,
+          explain: config.explain,
+          fxSource: input.fxSource,
+          fxSourceId: input.fxSourceId,
         });
 
         // Return processed data + exempted items unchanged
