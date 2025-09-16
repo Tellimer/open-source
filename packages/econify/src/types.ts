@@ -98,24 +98,27 @@ export interface Explain {
     originalFullUnit?: string;
     /** Complete normalized unit with time period */
     normalizedFullUnit?: string;
-    /** Separate unit components for easy frontend access */
-    original?: {
-      /** Original currency code (e.g., "XOF", "EUR") */
-      currency?: string;
-      /** Original scale (e.g., "billions", "millions") */
-      scale?: Scale;
-      /** Original time period (e.g., "year", "quarter") */
-      periodicity?: TimeScale;
-    };
-    /** Normalized unit components for easy frontend access */
-    normalized: {
-      /** Normalized currency code (e.g., "USD") */
-      currency: string;
-      /** Normalized scale (e.g., "millions") */
-      scale: Scale;
-      /** Normalized time period (e.g., "month") */
-      periodicity?: TimeScale;
-    };
+  };
+  /** Currency information for easy frontend access */
+  currency?: {
+    /** Original currency code (e.g., "XOF", "EUR") */
+    original?: string;
+    /** Normalized currency code (e.g., "USD") */
+    normalized: string;
+  };
+  /** Scale information for easy frontend access */
+  scale?: {
+    /** Original scale (e.g., "billions", "millions") */
+    original?: Scale;
+    /** Normalized scale (e.g., "millions") */
+    normalized: Scale;
+  };
+  /** Time scale information for easy frontend access */
+  timeScale?: {
+    /** Original time period (e.g., "year", "quarter") */
+    original?: TimeScale;
+    /** Normalized time period (e.g., "month") */
+    normalized?: TimeScale;
   };
   /** Complete conversion summary */
   conversion?: {

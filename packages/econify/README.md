@@ -292,17 +292,19 @@ console.log(JSON.stringify(item.explain, null, 2));
     "originalUnit": "USD millions",
     "normalizedUnit": "USD millions per month",
     "originalFullUnit": "USD millions per year",
-    "normalizedFullUnit": "USD millions per month",
-    "original": {
-      "currency": "USD",
-      "scale": "millions",
-      "periodicity": "year"
-    },
-    "normalized": {
-      "currency": "USD",
-      "scale": "millions",
-      "periodicity": "month"
-    }
+    "normalizedFullUnit": "USD millions per month"
+  },
+  "currency": {
+    "original": "USD",
+    "normalized": "USD"
+  },
+  "scale": {
+    "original": "millions",
+    "normalized": "millions"
+  },
+  "timeScale": {
+    "original": "year",
+    "normalized": "month"
   },
   "conversion": {
     "summary": "USD millions per year → USD millions per month",
@@ -315,18 +317,29 @@ console.log(JSON.stringify(item.explain, null, 2));
 **Frontend Usage:**
 
 ```javascript
-// Easy access to individual components - no string parsing needed!
-const { original, normalized } = item.explain.units;
+// ✅ Direct access - no string parsing needed!
+const originalCurrency = item.explain.currency?.original; // "USD"
+const normalizedScale = item.explain.scale?.normalized; // "millions"
+const originalTime = item.explain.timeScale?.original; // "year"
 
-// Build dynamic UI components
-const currencyChanged = original?.currency !== normalized.currency;
-const scaleChanged = original?.scale !== normalized.scale;
-const periodChanged = original?.periodicity !== normalized.periodicity;
+// ✅ Easy conditional logic
+const currencyChanged =
+  item.explain.currency?.original !== item.explain.currency?.normalized;
+const scaleChanged =
+  item.explain.scale?.original !== item.explain.scale?.normalized;
+const timeChanged =
+  item.explain.timeScale?.original !== item.explain.timeScale?.normalized;
 
-// Create tooltips and labels
-const tooltip =
-  `Converted from ${original?.currency} ${original?.scale} per ${original?.periodicity}
-                 to ${normalized.currency} ${normalized.scale} per ${normalized.periodicity}`;
+// ✅ Build UI components easily
+const ConversionDisplay = () => (
+  <div>
+    <span>{item.explain.currency?.original}</span>
+    <span>{item.explain.scale?.original}</span>
+    <span>→</span>
+    <span>{item.explain.currency?.normalized}</span>
+    <span>{item.explain.scale?.normalized}</span>
+  </div>
+);
 ```
 
 ### With Progress Tracking

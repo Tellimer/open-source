@@ -164,20 +164,29 @@ export function buildExplainMetadata(
     normalizedUnit: normalizedUnitString,
     originalFullUnit: originalFullUnit || originalUnit,
     normalizedFullUnit: normalizedFullUnit,
-    // 🆕 Separate unit components for easy frontend access
-    original: effectiveCurrency || originalScale || originalTimeScale
-      ? {
-        currency: effectiveCurrency,
-        scale: originalScale,
-        periodicity: originalTimeScale || undefined,
-      }
-      : undefined,
-    normalized: {
-      currency: options.toCurrency || effectiveCurrency || "USD",
-      scale: targetScale,
-      periodicity: options.toTimeScale,
-    },
   };
+
+  // 🆕 Separate component fields for easy frontend access
+  if (effectiveCurrency || options.toCurrency) {
+    explain.currency = {
+      original: effectiveCurrency,
+      normalized: options.toCurrency || effectiveCurrency || "USD",
+    };
+  }
+
+  if (originalScale || targetScale) {
+    explain.scale = {
+      original: originalScale,
+      normalized: targetScale,
+    };
+  }
+
+  if (originalTimeScale || options.toTimeScale) {
+    explain.timeScale = {
+      original: originalTimeScale || undefined,
+      normalized: options.toTimeScale,
+    };
+  }
 
   // Conversion summary - order: Scale → Currency → Time (logical processing order)
   const conversionSteps: string[] = [];

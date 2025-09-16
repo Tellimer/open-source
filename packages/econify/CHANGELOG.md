@@ -2,6 +2,31 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.6] - 2025-01-16
+
+### Enhanced
+
+- **Clean Component Structure**: Restructured unit components for optimal
+  frontend access
+  - **Direct Access**: `currency.original`, `currency.normalized` for currency
+    components
+  - **Scale Access**: `scale.original`, `scale.normalized` for scale components
+  - **Time Access**: `timeScale.original`, `timeScale.normalized` for time
+    components
+  - **No String Parsing**: Direct property access eliminates need to parse unit
+    strings
+  - **Perfect for UI**: Ideal for conditional logic, component building, and
+    localization
+
+### Technical Improvements
+
+- **Flattened Structure**: Moved from nested `units.original/normalized` to
+  top-level component fields
+- **TypeScript Enhanced**: Better autocomplete and type safety for component
+  access
+- **Frontend Optimized**: Structure designed specifically for frontend
+  consumption patterns
+
 ## [0.2.5] - 2025-01-16
 
 ### Enhanced

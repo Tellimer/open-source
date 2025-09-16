@@ -494,7 +494,7 @@ Deno.test("buildExplainMetadata - quarterly to monthly conversion", () => {
   assertEquals(explain.periodicity.description, "quarter → month (÷3)");
 });
 
-Deno.test("buildExplainMetadata - separate unit components", () => {
+Deno.test("buildExplainMetadata - separate component fields", () => {
   const explain = buildExplainMetadata(
     500,
     "EUR Billions/Quarter",
@@ -507,21 +507,23 @@ Deno.test("buildExplainMetadata - separate unit components", () => {
     },
   );
 
-  assertExists(explain.units);
+  // Check currency components
+  assertExists(explain.currency);
+  assertEquals(explain.currency.original, "EUR");
+  assertEquals(explain.currency.normalized, "USD");
 
-  // Check original components
-  assertExists(explain.units.original);
-  assertEquals(explain.units.original.currency, "EUR");
-  assertEquals(explain.units.original.scale, "billions");
-  assertEquals(explain.units.original.periodicity, "quarter");
+  // Check scale components
+  assertExists(explain.scale);
+  assertEquals(explain.scale.original, "billions");
+  assertEquals(explain.scale.normalized, "millions");
 
-  // Check normalized components
-  assertEquals(explain.units.normalized.currency, "USD");
-  assertEquals(explain.units.normalized.scale, "millions");
-  assertEquals(explain.units.normalized.periodicity, "month");
+  // Check time scale components
+  assertExists(explain.timeScale);
+  assertEquals(explain.timeScale.original, "quarter");
+  assertEquals(explain.timeScale.normalized, "month");
 });
 
-Deno.test("buildExplainMetadata - unit components with no original time scale", () => {
+Deno.test("buildExplainMetadata - component fields with no original time scale", () => {
   const explain = buildExplainMetadata(
     100,
     "EUR Millions",
@@ -534,16 +536,18 @@ Deno.test("buildExplainMetadata - unit components with no original time scale", 
     },
   );
 
-  assertExists(explain.units);
+  // Check currency components
+  assertExists(explain.currency);
+  assertEquals(explain.currency.original, "EUR");
+  assertEquals(explain.currency.normalized, "USD");
 
-  // Check original components
-  assertExists(explain.units.original);
-  assertEquals(explain.units.original.currency, "EUR");
-  assertEquals(explain.units.original.scale, "millions");
-  assertEquals(explain.units.original.periodicity, undefined);
+  // Check scale components
+  assertExists(explain.scale);
+  assertEquals(explain.scale.original, "millions");
+  assertEquals(explain.scale.normalized, "millions");
 
-  // Check normalized components
-  assertEquals(explain.units.normalized.currency, "USD");
-  assertEquals(explain.units.normalized.scale, "millions");
-  assertEquals(explain.units.normalized.periodicity, "month");
+  // Check time scale components
+  assertExists(explain.timeScale);
+  assertEquals(explain.timeScale.original, undefined);
+  assertEquals(explain.timeScale.normalized, "month");
 });
