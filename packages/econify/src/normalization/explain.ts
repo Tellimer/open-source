@@ -11,21 +11,24 @@ import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
  * Build explain metadata for a normalization operation
  */
 export function buildExplainMetadata(
-  originalValue: number,
+  _originalValue: number,
   originalUnit: string,
-  normalizedValue: number,
+  _normalizedValue: number,
   options: {
     toCurrency?: string;
     toMagnitude?: Scale;
     toTimeScale?: TimeScale;
     fx?: FXTable;
-  }
+  },
 ): Explain {
   const parsed = parseUnit(originalUnit);
   const explain: Explain = {};
 
   // FX information
-  if (parsed.currency && options.toCurrency && options.fx && parsed.currency !== options.toCurrency) {
+  if (
+    parsed.currency && options.toCurrency && options.fx &&
+    parsed.currency !== options.toCurrency
+  ) {
     const rate = options.fx.rates[parsed.currency];
     if (rate !== undefined) {
       explain.fx = {
@@ -49,7 +52,7 @@ export function buildExplainMetadata(
       billions: 1_000_000_000,
       trillions: 1_000_000_000_000,
     };
-    
+
     const factor = SCALE_MAP[originalScale] / SCALE_MAP[targetScale];
     explain.magnitude = {
       originalScale,
@@ -59,9 +62,13 @@ export function buildExplainMetadata(
   }
 
   // Periodicity information
-  const originalTimeScale = parsed.timeScale || parseTimeScaleFromUnit(originalUnit);
+  const originalTimeScale = parsed.timeScale ||
+    parseTimeScaleFromUnit(originalUnit);
   const targetTimeScale = options.toTimeScale;
-  if (originalTimeScale && targetTimeScale && originalTimeScale !== targetTimeScale) {
+  if (
+    originalTimeScale && targetTimeScale &&
+    originalTimeScale !== targetTimeScale
+  ) {
     explain.periodicity = {
       original: originalTimeScale,
       target: targetTimeScale,
@@ -76,13 +83,16 @@ export function buildExplainMetadata(
   }
 
   // Units information
-  const originalUnitString = buildOriginalUnitString(parsed.currency, originalScale);
+  const originalUnitString = buildOriginalUnitString(
+    parsed.currency,
+    originalScale,
+  );
   const normalizedUnitString = buildNormalizedUnitString(
     options.toCurrency || parsed.currency,
     targetScale,
-    options.toTimeScale
+    options.toTimeScale,
   );
-  
+
   explain.units = {
     originalUnit: originalUnitString || originalUnit,
     normalizedUnit: normalizedUnitString,
@@ -94,14 +104,17 @@ export function buildExplainMetadata(
 /**
  * Build original unit string from components
  */
-function buildOriginalUnitString(currency?: string, scale?: Scale): string | undefined {
+function buildOriginalUnitString(
+  currency?: string,
+  scale?: Scale,
+): string | undefined {
   if (!currency) return undefined;
-  
+
   const parts: string[] = [currency];
   if (scale && scale !== "ones") {
     parts.push(scale);
   }
-  
+
   return parts.join(" ");
 }
 
@@ -111,22 +124,22 @@ function buildOriginalUnitString(currency?: string, scale?: Scale): string | und
 function buildNormalizedUnitString(
   currency?: string,
   scale?: Scale,
-  timeScale?: TimeScale
+  timeScale?: TimeScale,
 ): string {
   const parts: string[] = [];
-  
+
   if (currency) {
     parts.push(currency);
   }
-  
+
   if (scale && scale !== "ones") {
     parts.push(scale);
   }
-  
+
   if (timeScale) {
     parts.push(`per ${timeScale}`);
   }
-  
+
   return parts.length > 0 ? parts.join(" ") : "normalized";
 }
 
@@ -137,7 +150,7 @@ export function enhanceExplainWithFXSource(
   explain: Explain,
   source: "live" | "fallback",
   sourceId?: string,
-  asOf?: string
+  asOf?: string,
 ): Explain {
   if (explain.fx) {
     return {
