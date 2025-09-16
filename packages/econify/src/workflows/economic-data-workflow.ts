@@ -272,6 +272,7 @@ export const pipelineMachine = setup({
           parallel: true,
           toCurrency: config.targetCurrency,
           toMagnitude: config.targetMagnitude as Scale,
+          toTimeScale: config.targetTimeScale,
           fx: fxRates,
           explain: config.explain,
           fxSource: input.fxSource,
