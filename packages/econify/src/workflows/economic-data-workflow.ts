@@ -171,9 +171,14 @@ export const pipelineMachine = setup({
       const parsed: ParsedData[] = [];
 
       for (const item of rawData) {
+        // Coerce numeric strings to numbers to avoid skipping normalization
+        const coercedValue = (typeof item.value === "string")
+          ? Number(item.value)
+          : item.value;
+
         let unit = item.unit;
         if (config.inferUnits && (!unit || unit === "unknown" || unit === "")) {
-          const inferred = inferUnit(item.value, {
+          const inferred = inferUnit(coercedValue, {
             text: item.description,
             indicatorName: item.name,
             context: item.context,
@@ -185,6 +190,7 @@ export const pipelineMachine = setup({
         const parsedUnit = parseUnit(unit || "");
         parsed.push({
           ...item,
+          value: coercedValue,
           unit,
           parsedUnit,
           inferredUnit: unit !== item.unit ? unit : undefined,

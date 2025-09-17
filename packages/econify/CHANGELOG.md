@@ -22,6 +22,15 @@ All notable changes to the econify package will be documented in this file.
 - Domain detection: removed currency+time heuristic from wages; prevents
   mislabeling indicators like Balance of Trade as wages
 
+- Workflow parsing: coerce numeric string values (e.g., "13259.000") to numbers
+  to ensure normalization/explain runs. Resolves missed normalization for count
+  indicators like Employed Persons (e.g., ARG).
+- Wages explain/domain: pass `indicatorName` through wages pipeline so
+  `explain.domain` reliably surfaces as "wages" for wage indicators.
+- Non-currency domains (count, percentage, energy, commodity, agriculture,
+  metals, emissions): omit currency in explain/units and use base units for
+  normalized unit strings (e.g., "units per month", "BBL/D/1K per month").
+
 ### Testing
 
 - Negative tests to ensure non-monetary categories ignore

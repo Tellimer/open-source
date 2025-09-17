@@ -118,6 +118,8 @@ export function normalizeWagesData(
               explicitCurrency: parsed.currency,
               explicitScale: parsed.scale,
               explicitTimeScale: parsed.timeScale,
+              indicatorName: (dataPoint as unknown as { name?: string }).name ??
+                undefined,
             },
           );
         }

@@ -128,6 +128,8 @@ export async function processWagesData(
     country: String(item.id || "unknown"),
     value: item.value,
     unit: item.unit,
+    // Preserve indicator name for domain detection in explain metadata
+    name: item.name,
     currency: item.metadata?.currency as string | undefined,
     date: item.metadata?.date as string | undefined,
     metadata: item.metadata,
