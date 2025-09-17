@@ -19,12 +19,16 @@ All notable changes to the econify package will be documented in this file.
   (default true)
 - Normalized unit formatting consistency (prefer "per <time>" style)
 
+- Domain detection: removed currency+time heuristic from wages; prevents mislabeling indicators like Balance of Trade as wages
+
 ### Testing
 
 - Negative tests to ensure non-monetary categories ignore
   targetCurrency/targetTimeScale
 - Workflow stress test with diverse dataset (wages, counts, percentages, energy,
   commodities, emissions, agriculture, metals, inference)
+
+- Comprehensive domain detection suite: wages/count/percentage/energy/commodity/agriculture/metals/emissions, with negative/conflict tests
 
 ### Documentation
 
