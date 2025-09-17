@@ -6,6 +6,8 @@ import { parseUnit } from "../units/units.ts";
 import { getScale } from "../scale/scale.ts";
 import { parseTimeScaleFromUnit } from "../time/time-sampling.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
+import { PER_YEAR, SCALE_MAP } from "../patterns.ts";
+import { parseWithCustomUnits } from "../custom/custom_units.ts";
 
 /**
  * Build explain metadata for a normalization operation
@@ -23,6 +25,8 @@ export function buildExplainMetadata(
     explicitCurrency?: string | null;
     explicitScale?: Scale | null;
     explicitTimeScale?: TimeScale | null;
+    /** Optional indicator name to improve domain detection */
+    indicatorName?: string | null;
   },
 ): Explain {
   const parsed = parseUnit(originalUnit);
@@ -56,13 +60,7 @@ export function buildExplainMetadata(
   const originalScale = effectiveScale || getScale(originalUnit);
   const targetScale = options.toMagnitude || originalScale;
   if (originalScale !== targetScale) {
-    const SCALE_MAP = {
-      ones: 1,
-      thousands: 1_000,
-      millions: 1_000_000,
-      billions: 1_000_000_000,
-      trillions: 1_000_000_000_000,
-    };
+    // Using SCALE_MAP imported from patterns.ts
 
     const factor = SCALE_MAP[originalScale] / SCALE_MAP[targetScale];
     const direction = SCALE_MAP[originalScale] > SCALE_MAP[targetScale]
@@ -87,14 +85,7 @@ export function buildExplainMetadata(
     originalTimeScale && targetTimeScale &&
     originalTimeScale !== targetTimeScale
   ) {
-    const PER_YEAR = {
-      year: 1,
-      quarter: 4,
-      month: 12,
-      week: 52,
-      day: 365,
-      hour: 8760,
-    };
+    // Using PER_YEAR imported from patterns.ts
 
     const factor = PER_YEAR[originalTimeScale] / PER_YEAR[targetTimeScale];
     const direction = PER_YEAR[originalTimeScale] < PER_YEAR[targetTimeScale]
@@ -167,6 +158,64 @@ export function buildExplainMetadata(
     originalFullUnit: originalFullUnit || originalUnit,
     normalizedFullUnit: normalizedFullUnit,
   };
+
+  // Surface detected domain for FE formatting using robust detection
+  const text = `${options.indicatorName ?? ""} ${originalUnit}`.trim();
+  const lower = text.toLowerCase();
+  const customDomain = parseWithCustomUnits(text) ||
+    parseWithCustomUnits(originalUnit);
+  let detectedDomain: string | undefined = customDomain
+    ? (customDomain as unknown as { category?: string }).category
+    : (parsed.category === "energy" ? "energy" : undefined);
+
+  // Heuristic fallbacks to align with workflow router predicates
+  if (!detectedDomain) {
+    if (
+      /(gwh|\bmegawatts?\b|\bmw\b|\bterajoules?\b|\btj\b|\bmmbtu\b|\bbtu\b)/i
+        .test(lower)
+    ) {
+      detectedDomain = "energy";
+    } else if (
+      /(troy\s*oz|barrels?|\bbbls?\b|crude|wti|brent|gold)/i.test(lower)
+    ) {
+      detectedDomain = "commodity";
+    } else if (/\bbushels?\b|short\s+tons?|metric\s+tonnes?/i.test(lower)) {
+      detectedDomain = "agriculture";
+    } else if (
+      /\bsilver\b|\bcopper\b|\bsteel\b|\blithium\b|\bnickel\b|\bzinc\b/i.test(
+        lower,
+      )
+    ) {
+      detectedDomain = "metals";
+    } else if (/(co2e?|carbon\s+credits?)/i.test(lower)) {
+      detectedDomain = "emissions";
+    }
+  }
+
+  // Prefer metals over generic agriculture when both keywords present (e.g., "copper tonnes")
+  if (
+    detectedDomain === "agriculture" &&
+    /\bcopper\b|\bsilver\b|\bsteel\b|\blithium\b|\bnickel\b|\bzinc\b/i.test(
+      lower,
+    )
+  ) {
+    detectedDomain = "metals";
+  }
+
+  if (detectedDomain) {
+    explain.domain = detectedDomain;
+  }
+
+  // Base unit for non-currency measures to support frontend formatting
+  if (
+    parsed.category && parsed.category !== "currency" &&
+    parsed.category !== "composite"
+  ) {
+    explain.baseUnit = {
+      normalized: parsed.normalized,
+      category: parsed.category,
+    };
+  }
 
   // 🆕 Separate component fields for easy frontend access
   if (effectiveCurrency || options.toCurrency) {

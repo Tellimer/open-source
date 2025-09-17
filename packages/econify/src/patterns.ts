@@ -34,6 +34,7 @@ export const FLOW_PATTERNS = [
   "receipts",
   "payments",
   "turnover",
+  "registrations",
 ] as const;
 
 export const RATE_PATTERNS = [
@@ -113,6 +114,12 @@ export const CURRENCY_SYMBOLS: Record<string, string[]> = {
   HKD: ["HK$"],
   AED: ["د.إ"],
   SAR: ["﷼"],
+  ARS: ["$", "AR$"],
+  AOA: ["Kz"],
+  XOF: ["CFA"],
+  XAF: ["FCFA"],
+  EGP: ["E£"],
+  NGN: ["₦"],
 };
 
 export const ISO_CODES: ReadonlySet<string> = new Set<string>(
@@ -122,6 +129,7 @@ export const ISO_CODES: ReadonlySet<string> = new Set<string>(
 // ----------------------- Scale and Time Constants -----------------------
 export type Scale =
   | "ones"
+  | "hundreds"
   | "thousands"
   | "millions"
   | "billions"
@@ -129,6 +137,7 @@ export type Scale =
 
 export const SCALE_MAP: Record<Scale, number> = {
   ones: 1,
+  hundreds: 1e2,
   thousands: 1e3,
   millions: 1e6,
   billions: 1e9,
@@ -140,6 +149,7 @@ export const SCALE_TOKENS: Array<[Scale, RegExp]> = [
   ["billions", /\bbill?i?on?s?\b|\bbn\b/i],
   ["millions", /\bmill?i?on?s?\b|\bmn\b|\bmio\b/i],
   ["thousands", /\bthou?sand?s?\b|\bk\b|\b000s\b/i],
+  ["hundreds", /\bhundreds?\b/i],
 ];
 
 export type TimeScale = "year" | "quarter" | "month" | "week" | "day" | "hour";

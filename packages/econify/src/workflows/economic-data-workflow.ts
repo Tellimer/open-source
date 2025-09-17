@@ -17,12 +17,22 @@ import {
   type Scale,
   type TimeScale,
 } from "../main.ts";
-import {
-  detectWagesData,
-  processWagesData,
-} from "../services/wages-service.ts";
+import { processWagesData } from "../services/wages-service.ts";
 import { processBatch } from "../batch/batch.ts";
 import { filterExemptions } from "../exemptions/exemptions.ts";
+
+import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
+
+import {
+  loadDomainUnits,
+  parseWithCustomUnits,
+} from "../custom/custom_units.ts";
+
+// Initialize domain-specific units once for stronger detection
+loadDomainUnits("emissions");
+loadDomainUnits("commodities");
+loadDomainUnits("agriculture");
+loadDomainUnits("metals");
 
 // Derived types
 type ParsedUnit = ReturnType<typeof parseUnit>;
@@ -249,32 +259,132 @@ export const pipelineMachine = setup({
           });
         }
 
-        // Check if this looks like wages data (only check non-exempted data)
-        const isWagesData = detectWagesData(nonExempted);
+        // Strategy router: partition non-exempted items by type and route to appropriate normalizer
+        type IndexedItem = { item: ParsedData; idx: number };
+        const indexed: IndexedItem[] = nonExempted.map((item, idx) => ({
+          item,
+          idx,
+        }));
 
-        if (isWagesData) {
-          console.log(
-            "🔧 Detected wages data - applying specialized normalization",
-          );
-          const processedWages = await processWagesData(nonExempted, fxRates, {
-            targetCurrency: config.targetCurrency,
-            targetMagnitude: config.targetMagnitude,
-            targetTimeScale: config.targetTimeScale,
-            excludeIndexValues: config.excludeIndexValues,
-            includeWageMetadata: config.includeWageMetadata,
-            explain: config.explain,
-            fxSource: input.fxSource,
-            fxSourceId: input.fxSourceId,
-          });
+        const wages: IndexedItem[] = [];
+        const counts: IndexedItem[] = [];
+        const percentages: IndexedItem[] = [];
+        const emissions: IndexedItem[] = [];
+        const energy: IndexedItem[] = [];
+        const commodities: IndexedItem[] = [];
+        const agriculture: IndexedItem[] = [];
+        const metals: IndexedItem[] = [];
+        const defaults: IndexedItem[] = [];
 
-          // Return processed wages + exempted items unchanged
-          return [...processedWages, ...exempted];
+        for (const entry of indexed) {
+          const { item } = entry;
+          const parsed = parseUnit(item.unit);
+          const name = (item.name || "").toLowerCase();
+          const unitLower = (item.unit || "").toLowerCase();
+          const custom = parseWithCustomUnits(`${name} ${item.unit || ""}`) ||
+            parseWithCustomUnits(item.unit || "");
+
+          // Wages-like: require both currency and timeScale unless explicit name mentions wage/salary
+          const wageLike = (/\bwage\b|\bsalary\b/.test(name)) ||
+            (!!parsed.currency && !!parsed.timeScale);
+          if (wageLike) {
+            wages.push(entry);
+            continue;
+          }
+
+          // Emissions (CO2, carbon credits)
+          const isEmissions = (custom &&
+            (custom as unknown as { category?: string }).category ===
+              "emissions") ||
+            /co2e?|carbon\s+credits?/i.test(unitLower + " " + name);
+          if (isEmissions) {
+            emissions.push(entry);
+            continue;
+          }
+
+          // Energy (GWh, TJ, MW, MMBtu, BTU, etc.)
+          const isEnergy = parsed.category === "energy" ||
+            /(gwh|\bmegawatts?\b|\bmw\b|\bterajoules?\b|\btj\b|\bmmbtu\b|\bbtu\b)/i
+              .test(unitLower);
+          if (isEnergy) {
+            energy.push(entry);
+            continue;
+          }
+
+          // Commodities (barrel, bbl, troy oz, crude, WTI, Brent, gold, bushels)
+          const isCommodity = (custom &&
+            (custom as unknown as { category?: string }).category ===
+              "commodity") ||
+            /(troy\s*oz|barrels?|\bbbls?\b|crude|wti|brent|gold)/i.test(
+              unitLower + " " + name,
+            );
+          if (isCommodity) {
+            commodities.push(entry);
+            continue;
+          }
+
+          // Agriculture (bushels, short ton, tonnes)
+          const isAgriculture = (custom &&
+            (custom as unknown as { category?: string }).category ===
+              "agriculture") ||
+            /\bbushels?\b|short\s+tons?|metric\s+tonnes?/i.test(
+              unitLower + " " + name,
+            );
+          if (isAgriculture) {
+            agriculture.push(entry);
+            continue;
+          }
+
+          // Metals (silver oz, copper tonne, steel tonne)
+          const isMetals = (custom &&
+            (custom as unknown as { category?: string }).category ===
+              "metals") ||
+            /silver\s+oz|silver\s+troy\s+ounces?|copper\s+tonnes?|steel\s+tonnes?/i
+              .test(unitLower + " " + name);
+          if (isMetals) {
+            metals.push(entry);
+            continue;
+          }
+
+          // Counts
+          if (
+            isCountIndicator(item.name, item.unit) ||
+            isCountUnit(item.unit || "")
+          ) {
+            counts.push(entry);
+            continue;
+          }
+
+          // Percentages
+          if (parsed.category === "percentage") {
+            percentages.push(entry);
+            continue;
+          }
+
+          defaults.push(entry);
         }
 
-        // Standard processing for non-wages data (only process non-exempted items)
-        const result = await processBatch(nonExempted, {
+        const mergeByKey = <T extends ParsedData>(
+          bucket: IndexedItem[],
+          processed: T[],
+        ): ParsedData[] => {
+          const key = (d: ParsedData) =>
+            `${d.id ?? ""}::${d.name ?? ""}::${d.unit}::${d.value}`;
+          const map = new Map<string, ParsedData>();
+          for (const p of processed) map.set(key(p), p);
+          const out: ParsedData[] = [];
+          for (const b of bucket) {
+            const k = key(b.item);
+            const v = map.get(k);
+            if (v) out.push(v);
+          }
+          return out;
+        };
+
+        // Process each bucket
+        const batchOptions = {
           validate: false,
-          handleErrors: "skip",
+          handleErrors: "skip" as const,
           parallel: true,
           toCurrency: config.targetCurrency,
           toMagnitude: config.targetMagnitude as Scale,
@@ -283,10 +393,134 @@ export const pipelineMachine = setup({
           explain: config.explain,
           fxSource: input.fxSource,
           fxSourceId: input.fxSourceId,
-        });
+        };
 
-        // Return processed data + exempted items unchanged
-        return [...result.successful, ...exempted];
+        const processed: Array<{ item: ParsedData; idx: number }> = [];
+
+        if (wages.length > 0) {
+          console.log(
+            "🔧 Detected wages items - applying specialized normalization",
+          );
+          const processedWages = await processWagesData(
+            wages.map((w) => w.item),
+            fxRates,
+            {
+              targetCurrency: config.targetCurrency,
+              targetMagnitude: config.targetMagnitude,
+              targetTimeScale: config.targetTimeScale,
+              excludeIndexValues: config.excludeIndexValues,
+              includeWageMetadata: config.includeWageMetadata,
+              explain: config.explain,
+              fxSource: input.fxSource,
+              fxSourceId: input.fxSourceId,
+            },
+          );
+          const mergedWages = mergeByKey(wages, processedWages);
+          mergedWages.forEach((it, i) =>
+            processed.push({ item: it, idx: wages[i].idx })
+          );
+        }
+
+        if (counts.length > 0) {
+          const res = await processBatch(counts.map((c) => c.item), {
+            ...batchOptions,
+            toMagnitude: "ones",
+          });
+          const merged = mergeByKey(counts, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: counts[i].idx })
+          );
+        }
+
+        if (percentages.length > 0) {
+          const res = await processBatch(
+            percentages.map((p) => p.item),
+            batchOptions,
+          );
+          const merged = mergeByKey(percentages, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: percentages[i].idx })
+          );
+        }
+
+        if (emissions.length > 0) {
+          const res = await processBatch(emissions.map((e) => e.item), {
+            ...batchOptions,
+            toCurrency: undefined,
+            toTimeScale: undefined,
+          });
+          const merged = mergeByKey(emissions, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: emissions[i].idx })
+          );
+        }
+
+        if (energy.length > 0) {
+          const res = await processBatch(energy.map((e) => e.item), {
+            ...batchOptions,
+            toCurrency: undefined,
+            toTimeScale: undefined,
+          });
+          const merged = mergeByKey(energy, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: energy[i].idx })
+          );
+        }
+
+        if (commodities.length > 0) {
+          const res = await processBatch(commodities.map((c) => c.item), {
+            ...batchOptions,
+            toCurrency: undefined,
+            toTimeScale: undefined,
+          });
+          const merged = mergeByKey(commodities, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: commodities[i].idx })
+          );
+        }
+
+        if (agriculture.length > 0) {
+          const res = await processBatch(agriculture.map((a) => a.item), {
+            ...batchOptions,
+            toCurrency: undefined,
+            toTimeScale: undefined,
+          });
+          const merged = mergeByKey(agriculture, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: agriculture[i].idx })
+          );
+        }
+
+        if (metals.length > 0) {
+          const res = await processBatch(metals.map((m) => m.item), {
+            ...batchOptions,
+            toCurrency: undefined,
+            toTimeScale: undefined,
+          });
+          const merged = mergeByKey(metals, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: metals[i].idx })
+          );
+        }
+
+        if (defaults.length > 0) {
+          const res = await processBatch(
+            defaults.map((d) => d.item),
+            batchOptions,
+          );
+          const merged = mergeByKey(defaults, res.successful);
+          merged.forEach((it, i) =>
+            processed.push({ item: it, idx: defaults[i].idx })
+          );
+        }
+
+        // Reassemble in original order
+        const ordered: ParsedData[] = new Array(nonExempted.length);
+        for (const p of processed) ordered[p.idx] = p.item;
+        const finalProcessed = ordered.filter((x): x is ParsedData => !!x);
+
+        // Return processed + exempted unchanged
+        return [...finalProcessed, ...exempted];
       },
     ),
 
@@ -353,19 +587,7 @@ export const pipelineMachine = setup({
       ({ input }: { input: PipelineContext }) => {
         const finalData = input.adjustedData || input.normalizedData;
 
-        const formatNormalizedUnit = (u?: string): string | undefined => {
-          if (!u) return u;
-          // Normalize labels like "USD Billion" -> "USD billions"
-          const m = u.match(
-            /^(?<cur>[A-Z]{3})\s+(?<scale>Million|Billion|Thousand|Trillion)s?$/i,
-          );
-          if (m && m.groups) {
-            const cur = m.groups.cur.toUpperCase();
-            const scale = m.groups.scale.toLowerCase();
-            return `${cur} ${scale}s`;
-          }
-          return u;
-        };
+        const formatNormalizedUnit = (u?: string): string | undefined => u;
 
         // Ensure processingTime is populated even before metrics are finalized
         const computedProcessingTime = input.metrics.processingTime ??

@@ -92,17 +92,24 @@ export async function processWagesData(
       "⚠️  No FX rates available for wage normalization, using standard processing with wages-appropriate magnitude",
     );
 
-    // Filter out index values if excludeIndexValues is true
-    let dataToProcess = data;
-    if (config.excludeIndexValues) {
-      dataToProcess = data.filter((item) => {
-        const parsed = parseUnit(item.unit);
-        const isIndex = isIndexOrPointsUnit(item.unit, parsed);
-        return !isIndex;
-      });
+    // Apply index/points exclusion even without FX, to honor user preference
+    const excludeIndexes = config.excludeIndexValues ?? true;
+    const items = excludeIndexes
+      ? data.filter((item) =>
+        !isIndexOrPointsUnit(item.unit, parseUnit(item.unit))
+      )
+      : data;
+
+    if (excludeIndexes && items.length !== data.length) {
+      const excluded = data.length - items.length;
+      console.log(
+        `🧹 Excluded ${excluded} index/points item(s) from wages dataset`,
+      );
     }
 
-    const result = await processBatch(dataToProcess, {
+    if (items.length === 0) return [];
+
+    const result = await processBatch(items, {
       validate: false,
       handleErrors: "skip",
       parallel: true,
@@ -136,6 +143,7 @@ export async function processWagesData(
     fx: fxRates,
     excludeIndexValues: config.excludeIndexValues ?? true, // Use config value, default to true
     includeMetadata: config.includeWageMetadata ?? true,
+    explain: config.explain ?? false, // Pass through explain option
   });
 
   // Convert back to ParsedData format
@@ -146,12 +154,11 @@ export async function processWagesData(
     const wageResult = normalizedWages[i];
 
     if (wageResult.excluded) {
-      // If excludeIndexValues is true, skip excluded items entirely
-      // If excludeIndexValues is false, keep excluded items but mark them
-      if (!config.excludeIndexValues) {
+      // Respect excludeIndexValues flag: keep excluded items only if explicitly requested
+      if (config.excludeIndexValues === false) {
         result.push({
           ...originalItem,
-          normalized: originalItem.value, // Keep original value
+          normalized: originalItem.value,
           normalizedUnit: originalItem.unit,
           metadata: {
             ...originalItem.metadata,
@@ -163,14 +170,14 @@ export async function processWagesData(
           },
         });
       }
-      // If excludeIndexValues is true, we skip this item (don't add to result)
     } else if (wageResult.normalizedValue !== undefined) {
       // Successfully normalized
       result.push({
         ...originalItem,
         normalized: wageResult.normalizedValue,
         normalizedUnit: wageResult.normalizedUnit ||
-          `${config.targetCurrency || "USD"}/month`,
+          `${config.targetCurrency || "USD"} per month`,
+        explain: wageResult.explain, // Include explain metadata if available
         metadata: {
           ...originalItem.metadata,
           wageNormalization: {
@@ -178,19 +185,6 @@ export async function processWagesData(
             dataType: wageResult.dataType,
             originalValue: wageResult.originalValue,
             originalUnit: wageResult.originalUnit,
-          },
-        },
-      });
-    } else {
-      // Failed to normalize - keep original
-      result.push({
-        ...originalItem,
-        metadata: {
-          ...originalItem.metadata,
-          wageNormalization: {
-            excluded: false,
-            dataType: wageResult.dataType,
-            error: "Failed to normalize",
           },
         },
       });
@@ -203,7 +197,7 @@ export async function processWagesData(
   console.log(
     `📊 ${comparableData.length} comparable wage values in ${
       config.targetCurrency || "USD"
-    }/month`,
+    } per month`,
   );
 
   return result;

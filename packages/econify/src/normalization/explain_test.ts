@@ -593,3 +593,20 @@ Deno.test("buildExplainMetadata - FX without date information", () => {
   assertEquals(explain.fx?.rate, 0.85);
   assertEquals(explain.fx?.asOf, undefined);
 });
+
+Deno.test("buildExplainMetadata - normalizedFullUnit never uses slash style", () => {
+  const explain = buildExplainMetadata(
+    1200,
+    "USD Million/Year",
+    100,
+    { toCurrency: "USD", toMagnitude: "millions", toTimeScale: "month" },
+  );
+  // Normalized unit strings should use "per <time>", not slash style
+  if (explain.units?.normalizedFullUnit) {
+    const nf = explain.units.normalizedFullUnit;
+    // Should contain "per month" and not contain "/"
+    if (nf.includes("/")) {
+      throw new Error(`normalizedFullUnit contains slash: ${nf}`);
+    }
+  }
+});

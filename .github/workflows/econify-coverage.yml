@@ -1,0 +1,50 @@
+name: "econify: test & enforce coverage"
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+concurrency:
+  group: "econify-coverage-${{ github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test-and-coverage:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/econify
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Format & Lint
+        run: |
+          deno fmt --check
+          deno lint
+
+      - name: Run tests with coverage
+        run: deno test --allow-read --coverage=coverage
+
+      - name: Generate LCOV
+        run: deno coverage coverage --lcov > coverage/lcov.info
+
+      - name: Enforce 100% coverage
+        run: deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 100
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: econify-coverage-lcov
+          path: packages/econify/coverage/lcov.info

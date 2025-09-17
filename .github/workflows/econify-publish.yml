@@ -30,8 +30,14 @@ jobs:
 
       # v2 supports built-in cache; external cache step not needed
 
-      - name: Run tests
-        run: deno test -A
+      - name: Run tests with coverage
+        run: deno test -A --coverage=coverage
+
+      - name: Generate LCOV
+        run: deno coverage coverage --lcov > coverage/lcov.info
+
+      - name: Enforce 100% coverage
+        run: deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 100
 
   publish:
     needs: test

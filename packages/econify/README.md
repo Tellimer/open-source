@@ -49,10 +49,27 @@ assessment, error handling, and interactive control flow._
 
 ### Advanced Features
 
+> New in 0.2.9
+>
+> - Explain metadata now includes a `domain` field (energy, commodity,
+>   emissions, agriculture, metals) for FE formatting/filtering
+> - Extended domain registries: agriculture (bushel, metric tonnes, short ton)
+>   and metals (copper tonnes, silver oz)
+> - Router is baseUnit-aware; non‑monetary categories ignore currency/time
+>   targets
+> - Wages service honors `excludeIndexValues` even with no FX
+>
+> See docs: [Integration Brief](./docs/INTEGRATION_BRIEF.md) •
+> [Enhanced Explain Example](./docs/ENHANCED_EXPLAIN_EXAMPLE.md) •
+> [Test Coverage](./docs/TEST_COVERAGE.md)
+
 - 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity
   for external consumers
 - 💼 **Wages Data Normalization** — Specialized handling for mixed wage/salary
   data with different currencies and time periods
+- 🚗 **Count Data Normalization** — Specialized handling for count-based
+  indicators like car registrations, births, licenses (scale-only, no currency
+  conversion)
 - 🚫 **Normalization Exemptions** — Skip normalization for specific indicators,
   categories, or name patterns (e.g., IMF WEO, credit ratings, custom indices)
 - ⏰ **Advanced Time Sampling** — Comprehensive upsampling and downsampling for
@@ -100,6 +117,12 @@ import {
 
 // Wages processing (automatic detection in main API)
 import { normalizeWagesData } from "jsr:@tellimer/econify/wages";
+
+// Count data processing
+import {
+  isCountIndicator,
+  normalizeCountData,
+} from "jsr:@tellimer/econify/count";
 
 // Time sampling
 import {
@@ -1249,12 +1272,116 @@ Value range: $1,427 - $15,931 USD/month (comparable!)
 | `step`          | Fixed wage periods       | Quarterly bonus → monthly allocation |
 | `end_of_period` | Latest wage rate         | Use most recent wage data            |
 
+## 🚗 Count Data Normalization
+
+### Problem Solved
+
+Count-based indicators like car registrations, births, licenses, and permits
+should be normalized by scale only, without currency conversion. Previously,
+these were incorrectly treated as rate indicators with inappropriate FX
+conversion.
+
+```ts
+// Before: Incorrect currency conversion applied
+// Car registrations: 16,245 Units → 25,462.38 USD (wrong!)
+
+// After: Proper count normalization
+// Car registrations: 16,245 Units → 16,245 ones (correct!)
+```
+
+### Key Features
+
+- **Automatic Detection**: Recognizes car registrations, vehicle licenses,
+  births, etc.
+- **Scale-Only Normalization**: Converts between thousands, hundreds, units
+  without currency
+- **Context-Aware Units**: "Units" in count context ≠ "Units" in index context
+- **Flow Classification**: Count indicators properly classified as flow, not
+  rate
+
+### Usage
+
+```ts
+import {
+  isCountIndicator,
+  normalizeCountData,
+} from "jsr:@tellimer/econify/count";
+
+// Car registration data (real-world example)
+const carData = [
+  { country: "ARG", value: 50186, unit: "Thousand" },
+  { country: "AUS", value: 16245, unit: "Units" },
+  { country: "BHR", value: 338.02, unit: "Hundreds" },
+];
+
+// Normalize to common scale
+const normalized = normalizeCountData(carData, { targetScale: "ones" });
+
+console.log(normalized);
+// [
+//   { country: "ARG", normalizedValue: 50186000, normalizedUnit: "ones" },
+//   { country: "AUS", normalizedValue: 16245, normalizedUnit: "ones" },
+//   { country: "BHR", normalizedValue: 33802, normalizedUnit: "ones" }
+// ]
+
+// Detection
+isCountIndicator("Car Registrations", "Units"); // true
+isCountIndicator("GDP", "USD Millions"); // false
+```
+
+### Supported Count Indicators
+
+- **Vehicle Data**: Car registrations, vehicle licenses, permits
+- **Demographics**: Births, deaths, arrivals, departures
+- **Administrative**: Licenses, permits, applications
+- **Any indicator with count-like units**: Units, Thousands, Hundreds, Millions
+
+## 💰 Wages Normalization with Explain Metadata
+
+### Problem Solved
+
+Minimum wages and other wage indicators now include comprehensive explain
+metadata showing FX rates, conversion steps, and normalization details.
+Previously, wages processing would complete successfully but return empty
+explain metadata objects.
+
+```ts
+// Before: Empty explain metadata
+{
+  "normalized_value": 219.645293315143,
+  "explain": {} // ❌ Empty!
+}
+
+// After: Complete explain metadata
+{
+  "normalized_value": 219.645293315143,
+  "explain": {
+    "currency": { "original": "ARS", "normalized": "USD" },
+    "fx": { "rate": 0.000682, "source": "fallback" },
+    "conversion": { "summary": "ARS/Month → USD/Month" }
+  } // ✅ Complete!
+}
+```
+
+### Key Features
+
+- **FX Rate Details**: Shows exact exchange rates used in conversion
+- **Source Tracking**: Indicates whether live or fallback rates were used
+- **Conversion Summary**: Clear description of normalization steps
+- **Consistent Metadata**: Same explain format as other economic indicators
+
 ## 🛠️ API Reference
 
 ### Core Types
 
 ```ts
-type Scale = "trillions" | "billions" | "millions" | "thousands" | "ones";
+type Scale =
+  | "trillions"
+  | "billions"
+  | "millions"
+  | "thousands"
+  | "hundreds"
+  | "ones";
 type TimeScale = "year" | "quarter" | "month" | "week" | "day" | "hour";
 type IndicatorType = "stock" | "flow" | "rate" | "currency" | "unknown";
 

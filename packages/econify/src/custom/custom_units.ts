@@ -147,6 +147,42 @@ export const DOMAIN_UNITS = {
       normalized: "barrel",
     },
   },
+
+  agriculture: {
+    bushel: {
+      pattern: /\bbushels?\b/i,
+      category: "agriculture",
+      normalized: "bushel",
+    },
+    short_ton: {
+      pattern: /\bshort\s+tons?\b|\bst\b/i,
+      category: "agriculture",
+      normalized: "short ton",
+    },
+    metric_tonne: {
+      pattern: /\bmetric\s+tonnes?\b|\btonnes?\b/i,
+      category: "agriculture",
+      normalized: "tonnes",
+    },
+  },
+
+  metals: {
+    silver_oz: {
+      pattern: /silver\s+(?:troy\s+)?ounces?|silver\s+oz/i,
+      category: "metals",
+      normalized: "troy oz",
+    },
+    copper_tonne: {
+      pattern: /copper\s+tonnes?/i,
+      category: "metals",
+      normalized: "tonnes",
+    },
+    steel_tonne: {
+      pattern: /steel\s+tonnes?/i,
+      category: "metals",
+      normalized: "tonnes",
+    },
+  },
 };
 
 /**

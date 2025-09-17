@@ -232,6 +232,17 @@ export type {
   PipelineError,
 } from "./workflows/index.ts";
 
+// Re-export count normalization utilities
+export {
+  type CountDataPoint,
+  type CountNormalizationOptions,
+  detectCountData,
+  isCountIndicator,
+  isCountUnit,
+  normalizeCountData,
+  type NormalizedCountData,
+} from "./count/count-normalization.ts";
+
 // Re-export exemption utilities
 export {
   createExemptionSummary,

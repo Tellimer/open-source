@@ -5,7 +5,8 @@
 
 import { parseUnit } from "../units/units.ts";
 import { normalizeValue } from "../normalization/normalization.ts";
-import type { FXTable } from "../types.ts";
+import { buildExplainMetadata } from "../normalization/explain.ts";
+import type { Explain, FXTable } from "../types.ts";
 
 export interface WageDataPoint {
   country: string;
@@ -27,6 +28,7 @@ export interface NormalizedWageData {
   exclusionReason?: string;
   date?: string;
   metadata?: Record<string, unknown>;
+  explain?: Explain;
 }
 
 export interface WageNormalizationOptions {
@@ -35,6 +37,7 @@ export interface WageNormalizationOptions {
   fx?: FXTable;
   excludeIndexValues?: boolean;
   includeMetadata?: boolean;
+  explain?: boolean;
 }
 
 /**
@@ -50,6 +53,7 @@ export function normalizeWagesData(
     fx,
     excludeIndexValues = false,
     includeMetadata = true,
+    explain = false,
   } = options;
 
   const results: NormalizedWageData[] = [];
@@ -99,7 +103,24 @@ export function normalizeWagesData(
         });
 
         result.normalizedValue = normalized;
-        result.normalizedUnit = `${targetCurrency}/${targetTimeScale}`;
+        result.normalizedUnit = `${targetCurrency} per ${targetTimeScale}`;
+
+        // Generate explain metadata if requested
+        if (explain) {
+          result.explain = buildExplainMetadata(
+            dataPoint.value,
+            dataPoint.unit,
+            normalized,
+            {
+              toCurrency: targetCurrency,
+              toTimeScale: targetTimeScale,
+              fx,
+              explicitCurrency: parsed.currency,
+              explicitScale: parsed.scale,
+              explicitTimeScale: parsed.timeScale,
+            },
+          );
+        }
       } else {
         result.dataType = "unknown";
         result.excluded = true;

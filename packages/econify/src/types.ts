@@ -24,6 +24,7 @@ export interface FXTable {
 
 export type Scale =
   | "ones"
+  | "hundreds"
   | "thousands"
   | "millions"
   | "billions"
@@ -122,6 +123,31 @@ export interface Explain {
     /** Normalized time period (e.g., "month") */
     normalized?: TimeScale;
   };
+  /** Base unit information (for non-currency measures like counts, population, physical) */
+  baseUnit?: {
+    /** Original/base unit label if available */
+    original?: string;
+    /** Normalized/base unit label (e.g., "tonnes", "people", "units") */
+    normalized?: string;
+    /** Detected unit category */
+    category?:
+      | "currency"
+      | "percentage"
+      | "index"
+      | "physical"
+      | "energy"
+      | "temperature"
+      | "population"
+      | "count"
+      | "rate"
+      | "time"
+      | "composite"
+      | "unknown";
+  };
+
+  /** Detected domain/category for FE formatting (e.g., commodity, emissions, agriculture, metals, energy) */
+  domain?: string;
+
   /** Complete conversion summary */
   conversion?: {
     /** Step-by-step conversion chain */

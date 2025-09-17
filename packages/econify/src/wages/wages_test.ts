@@ -101,7 +101,7 @@ Deno.test("Wages Normalization - Basic functionality", () => {
   const armResult = results.find((r) => r.country === "ARM");
   assertExists(armResult);
   assertEquals(armResult.dataType, "currency");
-  assertEquals(armResult.normalizedUnit, "USD/month");
+  assertEquals(armResult.normalizedUnit, "USD per month");
 
   // Check that index values are identified
   const autResult = results.find((r) => r.country === "AUT");
@@ -193,7 +193,7 @@ Deno.test("Currency Recognition - Venezuela VEF support", async () => {
   assertEquals(result.data.length, 1);
   const venResult = result.data[0];
   assertExists(venResult.normalized);
-  assertEquals(venResult.normalizedUnit, "USD/month");
+  assertEquals(venResult.normalizedUnit, "USD per month");
 
   // 13,000,000 VEF ÷ 4,200,000 = ~3.10 USD
   const expectedUSD = 13000000 / 4200000;
@@ -290,7 +290,7 @@ Deno.test("Index Exclusion - Costa Rica points handling", async () => {
   const criResult = resultIncluded.data[0];
   assertExists(criResult.normalized);
   assertEquals(criResult.normalized, 6225.77);
-  assertEquals(criResult.normalizedUnit, "USD ones");
+  assertEquals(criResult.normalizedUnit, "USD");
 });
 
 Deno.test("Index Exclusion - Mixed currency and index processing", async () => {
@@ -329,7 +329,7 @@ Deno.test("Index Exclusion - Mixed currency and index processing", async () => {
   const venResult = result.data[0];
   assertEquals(venResult.id, "VEN");
   assertExists(venResult.normalized);
-  assertEquals(venResult.normalizedUnit, "USD/month");
+  assertEquals(venResult.normalizedUnit, "USD per month");
 });
 
 // ============================================================================
@@ -370,7 +370,7 @@ Deno.test("Regression - Wages should not convert to millions", async () => {
     true,
     `Expected ~${expectedUSD} USD/month, got ${argResult.normalized}`,
   );
-  assertEquals(argResult.normalizedUnit, "USD/month");
+  assertEquals(argResult.normalizedUnit, "USD per month");
 
   console.log(
     `✅ Argentina wage correctly normalized: ${
@@ -412,5 +412,122 @@ Deno.test("Utilities - Comparable wages data extraction", () => {
   comparable.forEach((item) => {
     assertExists(item.normalizedValue);
     assertEquals(item.dataType, "currency");
+  });
+});
+
+// ============================================================================
+// Explain Metadata Tests (New in v0.2.8)
+// ============================================================================
+
+Deno.test("Explain Metadata - wages normalization with explain enabled", () => {
+  const testData: WageDataPoint[] = [
+    {
+      country: "ARG",
+      value: 322000,
+      unit: "ARS/Month",
+    },
+    {
+      country: "EUR_TEST",
+      value: 1500,
+      unit: "EUR/Month",
+    },
+  ];
+
+  const results = normalizeWagesData(testData, {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    fx,
+    explain: true, // Enable explain metadata
+  });
+
+  assertEquals(results.length, 2);
+
+  results.forEach((result, index) => {
+    // Should have normalized values
+    assertExists(result.normalizedValue);
+    assertEquals(result.normalizedUnit, "USD per month");
+
+    // Should have explain metadata
+    assertExists(result.explain, `Result ${index} missing explain metadata`);
+    assertExists(result.explain.currency);
+    assertExists(result.explain.fx);
+
+    // Check currency conversion details
+    assertEquals(result.explain.currency.normalized, "USD");
+    assertExists(result.explain.fx.rate);
+    assertEquals(result.explain.fx.source, "fallback");
+
+    // Should have conversion summary
+    assertExists(result.explain.conversion);
+    assertExists(result.explain.conversion.summary);
+  });
+});
+
+Deno.test("Explain Metadata - wages normalization with explain disabled", () => {
+  const testData: WageDataPoint[] = [
+    {
+      country: "ARG",
+      value: 322000,
+      unit: "ARS/Month",
+    },
+  ];
+
+  const results = normalizeWagesData(testData, {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    fx,
+    explain: false, // Disable explain metadata
+  });
+
+  assertEquals(results.length, 1);
+  const result = results[0];
+
+  // Should have normalized values
+  assertExists(result.normalizedValue);
+  assertEquals(result.normalizedUnit, "USD per month");
+
+  // Should NOT have explain metadata
+  assertEquals(result.explain, undefined);
+});
+
+Deno.test("Explain Metadata - integration with processEconomicData", async () => {
+  const wagesData = [
+    {
+      id: "ARG_WAGE",
+      name: "Argentina Minimum Wage",
+      value: 322000,
+      unit: "ARS/Month",
+    },
+    {
+      id: "EUR_WAGE",
+      name: "European Minimum Wage",
+      value: 1500,
+      unit: "EUR/Month",
+    },
+  ];
+
+  const result = await processEconomicData(wagesData, {
+    targetCurrency: "USD",
+    targetMagnitude: "ones",
+    explain: true, // Enable explain metadata
+    useLiveFX: false,
+    fxFallback: fx,
+  });
+
+  assertEquals(result.data.length, 2);
+
+  result.data.forEach((item) => {
+    // Should have normalized values
+    assertExists(item.normalized);
+    assertExists(item.normalizedUnit);
+
+    // Should have explain metadata
+    assertExists(item.explain, `Item ${item.id} missing explain metadata`);
+    assertExists(item.explain.currency);
+    assertExists(item.explain.fx);
+
+    // Check explain metadata structure
+    assertEquals(item.explain.currency.normalized, "USD");
+    assertExists(item.explain.fx.rate);
   });
 });

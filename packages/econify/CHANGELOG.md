@@ -2,6 +2,84 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.9] - 2025-09-17
+
+### Added
+
+- Explain metadata now surfaces `domain` for non-monetary categories (energy,
+  commodity, emissions, agriculture, metals)
+- Extended custom unit registries: agriculture (bushel, metric tonnes, short
+  ton) and metals (copper tonnes, silver oz)
+- Router enhancements: baseUnit-aware predicates; non-monetary buckets ignore
+  currency and time normalization
+
+### Fixed
+
+- Wages service respects `excludeIndexValues` even when FX rates are unavailable
+  (default true)
+- Normalized unit formatting consistency (prefer "per <time>" style)
+
+### Testing
+
+- Negative tests to ensure non-monetary categories ignore
+  targetCurrency/targetTimeScale
+- Workflow stress test with diverse dataset (wages, counts, percentages, energy,
+  commodities, emissions, agriculture, metals, inference)
+
+### Documentation
+
+- Organized docs: moved supplemental guides under `packages/econify/docs/`
+- README updated with domain feature and docs links
+
+## [0.2.8] - 2025-01-16
+
+### Fixed
+
+- **Car Registration Normalization**: Fixed incorrect normalization of car
+  registration data
+  - **Scale Support**: Added proper support for "hundreds" scale (1e2
+    multiplier)
+  - **Indicator Classification**: Car registrations now correctly classified as
+    "flow" indicators instead of "rate"
+  - **Count Data Handling**: Created specialized normalization for count-based
+    indicators
+  - **No Currency Conversion**: Count indicators (like car registrations) no
+    longer get inappropriate currency conversion
+  - **Unit Context**: "Units" in car registration context now treated as count
+    data, not index data
+  - **Pattern Detection**: Added "registrations" to flow patterns for proper
+    classification
+- **Wages Explain Metadata**: Fixed empty explain metadata in minimum wages
+  processing
+  - **Explain Generation**: Added explain metadata support to
+    `normalizeWagesData()`
+  - **Metadata Passthrough**: Enhanced wages service to include explain metadata
+    in results
+  - **FX Rate Details**: Wages normalization now includes proper FX rates and
+    conversion steps
+
+### Added
+
+- **Count Normalization Module**: New `count/count-normalization.ts` module for
+  count-based indicators
+  - `isCountIndicator()` - Detects car registrations and similar count data
+  - `isCountUnit()` - Identifies count units vs index units
+  - `normalizeCountData()` - Scale-only normalization for count data
+  - `detectCountData()` - Dataset-level count detection
+- **Enhanced Scale System**: Extended scale support to include "hundreds"
+  - Updated `Scale` type to include "hundreds"
+  - Added "hundreds" to `SCALE_MAP` and `SCALE_TOKENS`
+  - Fixed `MAGNITUDE_PATTERNS` for proper hundreds handling
+
+### Technical Improvements
+
+- **Normalization Logic**: Updated `normalizeValue()` to skip currency
+  conversion for count data
+- **Pattern Matching**: Enhanced unit parsing to better distinguish count vs
+  index contexts
+- **Type Safety**: Fixed TypeScript issues with scale type definitions
+- **Code Quality**: Addressed linting issues and improved code formatting
+
 ## [0.2.7] - 2025-01-16
 
 ### Enhanced
@@ -836,7 +914,7 @@ Comparable ranges like $1,427 - $15,931 USD/month (meaningful)
 ```
 WAGES_IN_MANUFACTURING:
 - ARM: 240,450 AMD/Month
-- AUS: 1,631.1 AUD/Week  
+- AUS: 1,631.1 AUD/Week
 - CAN: 30.66 CAD/Hour
 - AUT: 132.1 points
 Value range: 4.1 to 5,582,097 (incomparable)

@@ -11,6 +11,7 @@ import {
   rescaleTime,
 } from "../scale/scale.ts";
 import { parseUnit } from "../units/units.ts";
+import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 
 // ----------------------- Combined Normalization -----------------------
 
@@ -83,7 +84,7 @@ export function normalizeMonetary(
     unitText?: string;
     toMagnitude?: Scale;
     fromTimeScale?: TimeScale | null;
-    toTimeScale?: TimeScale;
+    toTimeScale: TimeScale;
   },
 ): number {
   const fromScale = getScale(opts.unitText);
@@ -96,7 +97,7 @@ export function normalizeMonetary(
   const timeNormalized = rescaleTime(
     magnitudeNormalized,
     fromBasis,
-    opts.toTimeScale!,
+    opts.toTimeScale,
   );
   return normalizeCurrencyValue(
     timeNormalized,
@@ -158,6 +159,7 @@ export function normalizeMonetaryFlow(
  * Generic normalization using parsed unit components.
  *
  * Applies magnitude, time, and currency conversions when targets are provided.
+ * For count indicators, only applies magnitude and time scaling (no currency conversion).
  *
  * @param value Input numeric value
  * @param unitText Unit text to parse
@@ -176,6 +178,8 @@ export function normalizeValue(
     explicitCurrency?: string | null;
     explicitScale?: Scale | null;
     explicitTimeScale?: TimeScale | null;
+    // Context for count detection
+    indicatorName?: string;
   },
 ): number {
   const parsed = parseUnit(unitText);
@@ -185,6 +189,10 @@ export function normalizeValue(
   const effectiveCurrency = options?.explicitCurrency || parsed.currency;
   const effectiveScale = options?.explicitScale || parsed.scale;
   const effectiveTimeScale = options?.explicitTimeScale || parsed.timeScale;
+
+  // Check if this is count data that should not have currency conversion
+  const isCountData = isCountIndicator(options?.indicatorName, unitText) ||
+    isCountUnit(unitText);
 
   // Handle magnitude scaling
   if (
@@ -209,8 +217,9 @@ export function normalizeValue(
     // If effectiveTimeScale === options.toTimeScale, no conversion needed
   }
 
-  // Handle currency conversion
+  // Handle currency conversion (skip for count data)
   if (
+    !isCountData &&
     effectiveCurrency &&
     options?.toCurrency &&
     options.fx &&

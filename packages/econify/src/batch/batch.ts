@@ -5,6 +5,7 @@
 import { normalizeValue } from "../normalization/normalization.ts";
 import { buildExplainMetadata } from "../normalization/explain.ts";
 import { parseUnit } from "../units/units.ts";
+import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 
@@ -341,6 +342,11 @@ function processItem<T extends BatchItem>(
   try {
     // Parse unit to get baseline information
     const parsed = parseUnit(item.unit);
+
+    // Determine if this is count data (e.g., car registrations) to avoid currency parts in unit
+    const indicatorName = (item as unknown as { name?: string }).name;
+    const isCountData = isCountIndicator(indicatorName, item.unit) ||
+      isCountUnit(item.unit);
     if (parsed.category === "unknown") {
       // Skip unknown units instead of throwing error
       return null;
@@ -364,15 +370,26 @@ function processItem<T extends BatchItem>(
       explicitCurrency: effectiveCurrency,
       explicitScale: effectiveScale,
       explicitTimeScale: effectiveTimeScale,
+      indicatorName,
     });
 
     // Build normalized unit string
-    const normalizedUnit = buildNormalizedUnit(
-      item.unit,
-      options.toCurrency,
-      options.toMagnitude,
-      options.toTimeScale,
-    );
+    let normalizedUnit: string;
+    const isPercentage = parsed.category === "percentage";
+    if (isPercentage) {
+      // Preserve percentage unit exactly; no currency, magnitude, or time scale applied
+      normalizedUnit = "%";
+    } else if (isCountData) {
+      const scale = options.toMagnitude ?? parsed.scale ?? "ones";
+      normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
+    } else {
+      normalizedUnit = buildNormalizedUnit(
+        item.unit,
+        options.toCurrency,
+        options.toMagnitude,
+        options.toTimeScale,
+      );
+    }
 
     // Build explain metadata if requested
     let explain: Explain | undefined;
@@ -386,6 +403,7 @@ function processItem<T extends BatchItem>(
         explicitCurrency: effectiveCurrency,
         explicitScale: effectiveScale,
         explicitTimeScale: effectiveTimeScale,
+        indicatorName,
       });
 
       // Enhance with FX source information if available
@@ -446,6 +464,10 @@ function handleItemError<T extends BatchItem>(
 /**
  * Build normalized unit string
  */
+function titleCase(s: string): string {
+  return s.length ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+}
+
 function buildNormalizedUnit(
   original: string,
   currency?: string,
@@ -453,30 +475,19 @@ function buildNormalizedUnit(
   timeScale?: TimeScale,
 ): string {
   const parsed = parseUnit(original);
+
+  const cur = (currency || parsed.currency)?.toUpperCase();
+  const mag = magnitude ?? parsed.scale;
+  const ts = timeScale ?? parsed.timeScale;
+
   const parts: string[] = [];
+  if (cur) parts.push(cur);
+  if (mag && mag !== "ones") parts.push(String(mag)); // keep lowercase per tests
 
-  // Currency
-  if (currency) {
-    parts.push(currency);
-  } else if (parsed.currency) {
-    parts.push(parsed.currency);
-  }
+  let out = parts.join(" ");
+  if (ts) out = `${out}${out ? " " : ""}per ${ts}`;
 
-  // Magnitude
-  if (magnitude) {
-    parts.push(magnitude);
-  } else if (parsed.scale) {
-    parts.push(parsed.scale);
-  }
-
-  // Time scale
-  if (timeScale) {
-    parts.push(`per ${timeScale}`);
-  } else if (parsed.timeScale) {
-    parts.push(`per ${parsed.timeScale}`);
-  }
-
-  return parts.length > 0 ? parts.join(" ") : original;
+  return out || original;
 }
 
 /**

@@ -198,7 +198,7 @@ export const MAGNITUDE_PATTERNS: UnitPattern[] = [
     category: "currency",
     scale: "thousands",
   },
-  { pattern: /\bhundreds?\b/i, category: "currency", scale: "ones" },
+  { pattern: /\bhundreds?\b/i, category: "currency", scale: "hundreds" },
 ];
 
 // Time-based patterns for flow indicators
@@ -336,6 +336,16 @@ export const COUNT_PATTERNS: UnitPattern[] = [
     category: "rate",
     normalized: "per million people",
   },
+  {
+    pattern: /car\s+registrations?/i,
+    category: "count",
+    normalized: "car registrations",
+  },
+  {
+    pattern: /vehicle\s+registrations?/i,
+    category: "count",
+    normalized: "vehicle registrations",
+  },
   { pattern: /persons?/i, category: "population", normalized: "persons" },
   { pattern: /people/i, category: "population", normalized: "people" },
   { pattern: /doses?/i, category: "count", normalized: "doses" },
@@ -387,7 +397,7 @@ function detectRatio(unitText: string): {
 } {
   // Check for currency/something patterns
   const ratioPattern = /([A-Z]{3})\s*\/\s*(.+)/i;
-  const match = unitText.match(ratioPattern);
+  const match = ratioPattern.exec(unitText);
 
   if (match) {
     const possibleCurrency = match[1].toUpperCase();

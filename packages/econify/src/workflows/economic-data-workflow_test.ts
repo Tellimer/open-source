@@ -428,15 +428,15 @@ Deno.test("Pipeline - wages processing with FX fallback rates", async () => {
 
   // ARM: 233,931 AMD/Month → ~603.69 USD/month
   assertEquals(Math.round(armResult.normalized || 0), 604);
-  assertEquals(armResult.normalizedUnit, "USD/month");
+  assertEquals(armResult.normalizedUnit, "USD per month");
 
   // AUS: 1,631 AUD/Week → ~4,650 USD/month (1631/1.52 * 4.33)
   assertEquals(Math.round(ausResult.normalized || 0), 4650);
-  assertEquals(ausResult.normalizedUnit, "USD/month");
+  assertEquals(ausResult.normalizedUnit, "USD per month");
 
   // AWG: 3,500 AWG/Month → ~1,944 USD/month
   assertEquals(Math.round(awgResult.normalized || 0), 1944);
-  assertEquals(awgResult.normalizedUnit, "USD/month");
+  assertEquals(awgResult.normalizedUnit, "USD per month");
 });
 
 Deno.test("Pipeline - wages processing without FX rates falls back gracefully", async () => {
@@ -513,4 +513,212 @@ Deno.test("Pipeline - time resampling with targetTimeScale", async () => {
   assertExists(annualResult);
   // Annual to monthly: should be roughly 1/12 of original
   assertEquals(annualResult.normalized !== annualResult.value, true);
+});
+
+Deno.test("Workflow Router - partitions mixed dataset and preserves order", async () => {
+  const data: ParsedData[] = [
+    { id: "w1", value: 3000, unit: "USD per month", name: "Average Wage" },
+    { id: "c1", value: 12, unit: "Thousands", name: "Car Registrations" },
+    { id: "p1", value: 2.5, unit: "percent", name: "Inflation Rate" },
+    { id: "w2", value: 48000, unit: "EUR per year", name: "Median Salary" },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 1.0 } },
+    explain: true,
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(data);
+
+  // Same length and order preserved by id
+  assertEquals(result.length, data.length);
+  const [r0, r1, r2, r3] = result;
+  assertEquals(r0.id, "w1");
+  assertEquals(r1.id, "c1");
+  assertEquals(r2.id, "p1");
+  assertEquals(r3.id, "w2");
+
+  // Bucket-specific expectations
+  assertEquals(r0.normalizedUnit, "USD per month");
+  assertEquals(r1.normalizedUnit, "ones");
+  assertEquals(r2.normalizedUnit, "%");
+  assertEquals(r3.normalizedUnit, "USD per month");
+});
+
+Deno.test("Workflow Router - routes energy/commodities/emissions and preserves order without per <time>", async () => {
+  const data: ParsedData[] = [
+    { id: "w", value: 2000, unit: "USD per month", name: "Wage" },
+    { id: "en", value: 150, unit: "GWh", name: "Electricity production" },
+    { id: "co", value: 10, unit: "barrel", name: "Crude output" },
+    { id: "em", value: 25, unit: "CO2 tonnes", name: "CO2 emissions" },
+    { id: "pc", value: 4.2, unit: "%", name: "Inflation" },
+    { id: "ct", value: 2, unit: "Thousands", name: "Car registrations" },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    useLiveFX: false,
+    explain: true,
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(data);
+
+  assertEquals(result.map((r) => r.id), ["w", "en", "co", "em", "pc", "ct"]);
+
+  const byId = Object.fromEntries(result.map((r) => [r.id, r]));
+  assertEquals(byId["w"].normalizedUnit, "USD per month");
+  assertEquals(byId["en"].normalizedUnit, "GWh");
+  assertEquals(byId["co"].normalizedUnit, "barrel");
+  assertEquals(byId["em"].normalizedUnit, "CO2 tonnes");
+  assertEquals(byId["pc"].normalizedUnit, "%");
+  assertEquals(byId["ct"].normalizedUnit, "ones");
+
+  // Domain surfaced in explain metadata
+  assertEquals(byId["en"].explain?.domain, "energy");
+  assertEquals(byId["co"].explain?.domain, "commodity");
+  assertEquals(byId["em"].explain?.domain, "emissions");
+});
+
+Deno.test("Workflow Router - routes agriculture/metals without currency/time and preserves order", async () => {
+  const data: ParsedData[] = [
+    { id: "w", value: 2500, unit: "USD per month", name: "Wage" },
+    { id: "ag", value: 700, unit: "metric tonnes", name: "Wheat production" },
+    { id: "me", value: 120, unit: "copper tonnes", name: "Copper production" },
+    { id: "ct", value: 3, unit: "Thousands", name: "Car registrations" },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    useLiveFX: false,
+    explain: true,
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(data);
+
+  // Order preserved
+  assertEquals(result.map((r) => r.id), ["w", "ag", "me", "ct"]);
+
+  const byId = Object.fromEntries(result.map((r) => [r.id, r]));
+  assertEquals(byId["w"].normalizedUnit, "USD per month");
+  assertEquals(byId["ag"].normalizedUnit, "metric tonnes");
+  assertEquals(byId["me"].normalizedUnit, "copper tonnes");
+  assertEquals(byId["ct"].normalizedUnit, "ones");
+
+  // Domain surfaced in explain metadata
+  assertEquals(byId["ag"].explain?.domain, "agriculture");
+  assertEquals(byId["me"].explain?.domain, "metals");
+});
+
+Deno.test("Workflow Router - non-monetary categories ignore targetCurrency and targetTimeScale", async () => {
+  const data: ParsedData[] = [
+    { id: "en", value: 150, unit: "GWh", name: "Electricity production" },
+    { id: "em", value: 25, unit: "CO2 tonnes", name: "CO2 emissions" },
+    { id: "co", value: 10, unit: "barrel", name: "Crude output" },
+    { id: "ag", value: 500, unit: "metric tonnes", name: "Corn output" },
+    { id: "me", value: 60, unit: "copper tonnes", name: "Copper mined" },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    useLiveFX: false,
+    explain: true,
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(data);
+  const byId = Object.fromEntries(result.map((r) => [r.id, r]));
+
+  // Ensure currency/time were NOT applied
+  assertEquals(byId["en"].normalizedUnit, "GWh");
+  assertEquals(byId["em"].normalizedUnit, "CO2 tonnes");
+  assertEquals(byId["co"].normalizedUnit, "barrel");
+  assertEquals(byId["ag"].normalizedUnit, "metric tonnes");
+  assertEquals(byId["me"].normalizedUnit, "copper tonnes");
+
+  // Domain surfaced in explain metadata
+  assertEquals(byId["en"].explain?.domain, "energy");
+  assertEquals(byId["em"].explain?.domain, "emissions");
+  assertEquals(byId["co"].explain?.domain, "commodity");
+  assertEquals(byId["ag"].explain?.domain, "agriculture");
+  assertEquals(byId["me"].explain?.domain, "metals");
+});
+
+Deno.test("Workflow Router - stress test with diverse dataset", async () => {
+  const data: ParsedData[] = [
+    // Wages (various time bases)
+    { id: "w_hr", value: 30, unit: "CAD/Hour", name: "Average Hourly Wage" },
+    { id: "w_wk", value: 1500, unit: "EUR/Week", name: "Average Weekly Wage" },
+    { id: "w_yr", value: 60000, unit: "GBP/Year", name: "Average Salary" },
+    { id: "w_mo", value: 3200, unit: "USD/Month", name: "Median Salary" },
+    // Counts
+    { id: "cnt_k", value: 12, unit: "Thousands", name: "Car Registrations" },
+    { id: "cnt_u", value: 850, unit: "Units", name: "Licenses Issued" },
+    // Percentage
+    { id: "pct", value: 3.2, unit: "%", name: "Inflation Rate" },
+    // Physical/non-monetary domains
+    { id: "en", value: 150, unit: "GWh", name: "Electricity production" },
+    { id: "co", value: 10, unit: "barrel", name: "Crude output" },
+    { id: "em", value: 25, unit: "CO2 tonnes", name: "CO2 emissions" },
+    { id: "ag", value: 700, unit: "metric tonnes", name: "Wheat production" },
+    { id: "me", value: 120, unit: "copper tonnes", name: "Copper production" },
+    // Inference/unknown
+    { id: "unk", value: 2.5, unit: "", name: "Interest Rate" },
+  ];
+
+  const config: PipelineConfig = {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { CAD: 1.36, EUR: 0.92, GBP: 0.79 } },
+    explain: true,
+    inferUnits: true,
+  };
+
+  const pipeline = createPipeline(config);
+  const result = await pipeline.run(data);
+
+  // Same length and order by id preserved
+  assertEquals(result.length, data.length);
+  assertEquals(result.map((r) => r.id), data.map((d) => d.id));
+
+  const byId = Object.fromEntries(result.map((r) => [r.id, r]));
+
+  // Wages normalize to USD per month
+  assertEquals(byId["w_hr"].normalizedUnit, "USD per month");
+  assertEquals(byId["w_wk"].normalizedUnit, "USD per month");
+  assertEquals(byId["w_yr"].normalizedUnit, "USD per month");
+  assertEquals(byId["w_mo"].normalizedUnit, "USD per month");
+
+  // Counts → ones
+  assertEquals(byId["cnt_k"].normalizedUnit, "ones");
+  assertEquals(byId["cnt_u"].normalizedUnit, "ones");
+
+  // Percent untouched
+  assertEquals(byId["pct"].normalizedUnit, "%");
+
+  // Non-monetary domains ignore currency/time
+  assertEquals(byId["en"].normalizedUnit, "GWh");
+  assertEquals(byId["co"].normalizedUnit, "barrel");
+  assertEquals(byId["em"].normalizedUnit, "CO2 tonnes");
+  assertEquals(byId["ag"].normalizedUnit, "metric tonnes");
+  assertEquals(byId["me"].normalizedUnit, "copper tonnes");
+
+  // Domain surfaced in explain metadata
+  assertEquals(byId["en"].explain?.domain, "energy");
+  assertEquals(byId["co"].explain?.domain, "commodity");
+  assertEquals(byId["em"].explain?.domain, "emissions");
+  assertEquals(byId["ag"].explain?.domain, "agriculture");
+  assertEquals(byId["me"].explain?.domain, "metals");
+
+  // Inference did not crash pipeline; result contains pipeline metadata
+  assertEquals("pipeline" in byId["unk"], true);
 });
