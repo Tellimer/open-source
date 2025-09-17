@@ -170,10 +170,10 @@ export function buildExplainMetadata(
   // 1) Wages (router prioritizes this bucket)
   const nameLower = (options.indicatorName ?? "").toLowerCase();
   const isWageName =
-    /\bwage\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b/i
+    /\bwage\b|\bminimum\s*wage\b|\bwages\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b/i
       .test(nameLower);
-  const hasCurrencyAndTime = !!(parsed.currency && parsed.timeScale);
-  if (isWageName || hasCurrencyAndTime) {
+  // IMPORTANT: Do NOT infer wages solely from currency+time (too broad: e.g., trade balances)
+  if (isWageName) {
     detectedDomain = "wages";
   }
 
