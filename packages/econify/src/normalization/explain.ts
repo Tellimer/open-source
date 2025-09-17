@@ -130,28 +130,53 @@ export function buildExplainMetadata(
     };
   }
 
-  // Units information
-  const originalUnitString = buildOriginalUnitString(
-    effectiveCurrency,
-    originalScale,
-  );
-  const normalizedUnitString = buildNormalizedUnitString(
-    options.toCurrency || effectiveCurrency,
-    targetScale,
-    options.toTimeScale,
-  );
+  // Units information (currency vs non-currency domains)
+  const isNonCurrencyCategory =
+    !!(parsed.category && parsed.category !== "currency" &&
+      parsed.category !== "composite");
 
-  // Build full unit strings with time periods
-  const originalFullUnit = buildFullUnitString(
-    effectiveCurrency,
-    originalScale,
-    originalTimeScale || undefined,
-  );
-  const normalizedFullUnit = buildFullUnitString(
-    options.toCurrency || effectiveCurrency,
-    targetScale,
-    options.toTimeScale,
-  );
+  let originalUnitString: string | undefined;
+  let normalizedUnitString: string;
+  let originalFullUnit: string | undefined;
+  let normalizedFullUnit: string;
+
+  if (isNonCurrencyCategory) {
+    // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency
+    const base = parsed.normalized || "units";
+    originalUnitString = base;
+    normalizedUnitString = options.toTimeScale
+      ? `${base} per ${options.toTimeScale}`
+      : base;
+    originalFullUnit = originalTimeScale
+      ? `${base} per ${originalTimeScale}`
+      : base;
+    normalizedFullUnit = options.toTimeScale
+      ? `${base} per ${options.toTimeScale}`
+      : base;
+  } else {
+    // Monetary/currency-based units (default behavior)
+    originalUnitString = buildOriginalUnitString(
+      effectiveCurrency,
+      originalScale,
+    );
+    normalizedUnitString = buildNormalizedUnitString(
+      options.toCurrency || effectiveCurrency,
+      targetScale,
+      options.toTimeScale,
+    );
+
+    // Build full unit strings with time periods
+    originalFullUnit = buildFullUnitString(
+      effectiveCurrency,
+      originalScale,
+      originalTimeScale || undefined,
+    );
+    normalizedFullUnit = buildFullUnitString(
+      options.toCurrency || effectiveCurrency,
+      targetScale,
+      options.toTimeScale,
+    ) || normalizedUnitString;
+  }
 
   explain.units = {
     originalUnit: originalUnitString || originalUnit,
@@ -250,7 +275,7 @@ export function buildExplainMetadata(
   }
 
   // 🆕 Separate component fields for easy frontend access
-  if (effectiveCurrency || options.toCurrency) {
+  if (!isNonCurrencyCategory && (effectiveCurrency || options.toCurrency)) {
     explain.currency = {
       original: effectiveCurrency,
       normalized: options.toCurrency || effectiveCurrency || "USD",
