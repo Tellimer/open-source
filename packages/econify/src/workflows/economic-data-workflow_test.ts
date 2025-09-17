@@ -718,6 +718,11 @@ Deno.test("Workflow Router - stress test with diverse dataset", async () => {
   assertEquals(byId["em"].explain?.domain, "emissions");
   assertEquals(byId["ag"].explain?.domain, "agriculture");
   assertEquals(byId["me"].explain?.domain, "metals");
+  // Newly surfaced domains
+  assertEquals(byId["w_hr"].explain?.domain, "wages");
+  assertEquals(byId["cnt_k"].explain?.domain, "count");
+  assertEquals(byId["cnt_u"].explain?.domain, "count");
+  assertEquals(byId["pct"].explain?.domain, "percentage");
 
   // Inference did not crash pipeline; result contains pipeline metadata
   assertEquals("pipeline" in byId["unk"], true);

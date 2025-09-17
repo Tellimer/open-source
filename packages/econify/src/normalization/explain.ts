@@ -8,6 +8,7 @@ import { parseTimeScaleFromUnit } from "../time/time-sampling.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 import { PER_YEAR, SCALE_MAP } from "../patterns.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
+import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 
 /**
  * Build explain metadata for a normalization operation
@@ -164,11 +165,42 @@ export function buildExplainMetadata(
   const lower = text.toLowerCase();
   const customDomain = parseWithCustomUnits(text) ||
     parseWithCustomUnits(originalUnit);
-  let detectedDomain: string | undefined = customDomain
-    ? (customDomain as unknown as { category?: string }).category
-    : (parsed.category === "energy" ? "energy" : undefined);
+  let detectedDomain: string | undefined;
 
-  // Heuristic fallbacks to align with workflow router predicates
+  // 1) Wages (router prioritizes this bucket)
+  const nameLower = (options.indicatorName ?? "").toLowerCase();
+  const isWageName =
+    /\bwage\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b/i
+      .test(nameLower);
+  const hasCurrencyAndTime = !!(parsed.currency && parsed.timeScale);
+  if (isWageName || hasCurrencyAndTime) {
+    detectedDomain = "wages";
+  }
+
+  // 2) Domain units registry (emissions, commodities, agriculture, metals)
+  if (!detectedDomain && customDomain) {
+    detectedDomain =
+      (customDomain as unknown as { category?: string }).category;
+  }
+
+  // 3) Direct percentage and count checks aligned with router
+  if (!detectedDomain && parsed.category === "percentage") {
+    detectedDomain = "percentage";
+  }
+  if (
+    !detectedDomain &&
+    (isCountIndicator(options.indicatorName ?? undefined, originalUnit) ||
+      isCountUnit(originalUnit))
+  ) {
+    detectedDomain = "count";
+  }
+
+  // 4) Energy via parsed category
+  if (!detectedDomain && parsed.category === "energy") {
+    detectedDomain = "energy";
+  }
+
+  // 5) Heuristic fallbacks to align with workflow router predicates
   if (!detectedDomain) {
     if (
       /(gwh|\bmegawatts?\b|\bmw\b|\bterajoules?\b|\btj\b|\bmmbtu\b|\bbtu\b)/i
