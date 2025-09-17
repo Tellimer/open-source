@@ -610,3 +610,82 @@ Deno.test("buildExplainMetadata - normalizedFullUnit never uses slash style", ()
     }
   }
 });
+
+// ========================================
+// Domain detection tests (comprehensive)
+// ========================================
+
+Deno.test("domain detection - wages by name only", () => {
+  const ex = buildExplainMetadata(100, "USD Millions/Month", 100, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    indicatorName: "Minimum Wage",
+  });
+  assertEquals(ex.domain, "wages");
+});
+
+Deno.test("domain detection - trade balance is NOT wages (currency+time alone)", () => {
+  const ex = buildExplainMetadata(1000, "USD Millions/Quarter", 333.33, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    indicatorName: "Balance of Trade",
+  });
+  // Should not be misclassified as wages
+  assertEquals(ex.domain, undefined);
+});
+
+Deno.test("domain detection - percentage", () => {
+  const ex = buildExplainMetadata(5.2, "%", 5.2, {
+    indicatorName: "Unemployment rate",
+  });
+  assertEquals(ex.domain, "percentage");
+});
+
+Deno.test("domain detection - count by name and unit", () => {
+  const ex = buildExplainMetadata(502, "Units Thousands", 502000, {
+    indicatorName: "Car registrations",
+  });
+  assertEquals(ex.domain, "count");
+});
+
+Deno.test("domain detection - energy (GWh)", () => {
+  const ex = buildExplainMetadata(150, "GWh", 150, {
+    indicatorName: "Electricity production",
+  });
+  assertEquals(ex.domain, "energy");
+});
+
+Deno.test("domain detection - commodity (barrels)", () => {
+  const ex = buildExplainMetadata(200, "barrels", 200, {
+    indicatorName: "Crude oil production",
+  });
+  assertEquals(ex.domain, "commodity");
+});
+
+Deno.test("domain detection - agriculture (bushels)", () => {
+  const ex = buildExplainMetadata(1000, "bushels", 1000, {
+    indicatorName: "Wheat production",
+  });
+  assertEquals(ex.domain, "agriculture");
+});
+
+Deno.test("domain detection - metals (copper tonnes)", () => {
+  const ex = buildExplainMetadata(50, "metric tonnes", 50, {
+    indicatorName: "Copper production",
+  });
+  assertEquals(ex.domain, "metals");
+});
+
+Deno.test("domain detection - emissions (CO2 tonnes)", () => {
+  const ex = buildExplainMetadata(123, "CO2 tonnes", 123, {
+    indicatorName: "CO2 emissions",
+  });
+  assertEquals(ex.domain, "emissions");
+});
+
+Deno.test("domain detection - prefer metals over agriculture when both present", () => {
+  const ex = buildExplainMetadata(75, "metric tonnes", 75, {
+    indicatorName: "Copper harvest",
+  });
+  assertEquals(ex.domain, "metals");
+});
