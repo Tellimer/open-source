@@ -95,6 +95,27 @@ deno coverage coverage --html
 
 ## Key Test Areas
 
+### CI Coverage Policy
+
+- Threshold: 80% minimum total line coverage
+- Exclusions (non-critical or external-integration heavy modules):
+  - src/io/
+  - src/historical/
+  - src/fx/live_fx.ts
+  - src/inflation/inflation.ts
+  - src/inference/inference.ts
+
+In CI the LCOV is generated with:
+
+```bash
+# from packages/econify
+deno test --coverage=coverage
+# exclude modules above from coverage calculation
+deno coverage coverage --lcov --exclude="src/io/|src/historical/|src/fx/live_fx.ts|src/inflation/inflation.ts|src/inference/inference.ts" > coverage/lcov.info
+# enforce threshold
+deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
+```
+
 ### 1. Car Registration Normalization (Fixed in v0.2.8)
 
 **Test Files:**
