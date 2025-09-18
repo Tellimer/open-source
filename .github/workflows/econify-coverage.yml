@@ -50,10 +50,11 @@ jobs:
           path: packages/econify/coverage/lcov.info
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: packages/econify/coverage/lcov.info
-          fail_ci_if_error: false # do not fail CI on Codecov upload issues; gate is enforced above
           flags: econify
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          slug: Tellimer/open-source
+          verbose: true
+          fail_ci_if_error: false # do not fail CI on Codecov upload issues; gate is enforced above
