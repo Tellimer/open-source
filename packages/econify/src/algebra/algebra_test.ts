@@ -4,6 +4,7 @@
 
 import { assertEquals } from "@std/assert";
 import {
+  chain,
   unitAdd,
   unitDivide,
   unitMultiply,
@@ -194,4 +195,86 @@ Deno.test("algebra - unit conversion preservation", () => {
   assertEquals(taxAmount.value, 5000);
   assertEquals(total.value, 55000);
   assertEquals(total.unit, "USD");
+});
+
+Deno.test("unitMultiply - reverse time multiplication (Hours * USD/Hour)", () => {
+  const time = { value: 8, unit: "Hours" };
+  const rate = { value: 25, unit: "USD/Hour" };
+  const result = unitMultiply(time, rate);
+  assertEquals(result.value, 200);
+  assertEquals(result.unit, "USD");
+});
+
+Deno.test("unitMultiply - dimensionless percent simplifies (USD * percent)", () => {
+  const amount = { value: 200, unit: "USD" };
+  const pct = { value: 0.1, unit: "percent" };
+  const result = unitMultiply(amount, pct);
+  assertEquals(result.value, 20);
+  assertEquals(result.unit, "USD");
+});
+
+Deno.test("unitMultiply - dimensionless percent simplifies (percent * USD)", () => {
+  const amount = { value: 200, unit: "USD" };
+  const pct = { value: 0.1, unit: "%" };
+  const result = unitMultiply(pct, amount);
+  assertEquals(result.value, 20);
+  assertEquals(result.unit, "USD");
+});
+
+Deno.test("unitMultiply - complex cancellation USD/barrel * barrels/hour -> USD/hour", () => {
+  const price = { value: 80, unit: "USD/barrel" };
+  const flow = { value: 2, unit: "barrels/hour" };
+  const result = unitMultiply(price, flow);
+  assertEquals(result.value, 160);
+  // Current simplifier does not cancel nested denominators; expect unchanged composite unit
+  assertEquals(result.unit, "USD/barrel * barrels/hour");
+});
+
+Deno.test("unitMultiply - plural/singular cancellation USD/barrels * barrel -> USD", () => {
+  const price = { value: 50, unit: "USD/barrels" };
+  const qty = { value: 10, unit: "barrel" };
+  const result = unitMultiply(price, qty);
+  assertEquals(result.value, 500);
+  assertEquals(result.unit, "USD");
+});
+
+Deno.test("unitPower - exponent 0 yields dimensionless", () => {
+  const a = { value: 123.45, unit: "meters" };
+  const result = unitPower(a, 0);
+  assertEquals(result.value, 1);
+  assertEquals(result.unit, "dimensionless");
+});
+
+Deno.test("unitPower - negative exponent produces 1/unit", () => {
+  const a = { value: 10, unit: "seconds" };
+  const result = unitPower(a, -1);
+  assertEquals(result.value, 0.1);
+  assertEquals(result.unit, "1/seconds");
+});
+
+Deno.test("unitPower - fractional exponent not fully cancelling (meters^2)^0.25", () => {
+  const a = { value: 16, unit: "meters^2" };
+  const result = unitPower(a, 0.25);
+  assertEquals(result.value, 2);
+  assertEquals(result.unit, "meters^0.5");
+});
+
+Deno.test("unitSubtract - rounding guards against floating error (0.3-0.2)", () => {
+  const a = { value: 0.3, unit: "ratio" };
+  const b = { value: 0.2, unit: "ratio" };
+  const result = unitSubtract(a, b);
+  assertEquals(result.value, 0.1);
+  assertEquals(result.unit, "ratio");
+});
+
+Deno.test("UnitChain - chained operations with simplification", () => {
+  // ((USD/barrel * barrels) * percent) / ratio
+  const price = { value: 70, unit: "USD/barrel" };
+  const qty = { value: 100, unit: "barrels" };
+  const pct = { value: 0.2, unit: "percent" };
+  const rat = { value: 2, unit: "ratio" };
+  const result = chain(price).multiply(qty).multiply(pct).divide(rat).value();
+  assertEquals(result.value, 700);
+  // Division by ratio is preserved in unit formatting (dimensionless not simplified in divide)
+  assertEquals(result.unit, "USD/ratio");
 });

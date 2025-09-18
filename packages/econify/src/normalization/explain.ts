@@ -287,6 +287,12 @@ export function buildExplainMetadata(
     detectedDomain = "energy";
   }
 
+  // 4b) Monetary aggregates (money supply, M0/M1/M2, monetary base)
+  // Apply only for currency-based indicators; non-currency stock-like (e.g., Gold Reserves) should remain metals/commodity
+  if (!detectedDomain && isStockLikeGlobal && parsed.category === "currency") {
+    detectedDomain = "monetary_aggregate";
+  }
+
   // 5) Heuristic fallbacks to align with workflow router predicates
   if (!detectedDomain) {
     if (
@@ -424,6 +430,13 @@ export function buildExplainMetadata(
       original: originalTimeScale || undefined,
       normalized: options.toTimeScale,
     };
+  }
+  // For stock-like monetary (currency) indicators, suppress timeScale component and rely on reportingFrequency
+  if (
+    isStockLikeGlobal && parsed.category === "currency" &&
+    (explain as { timeScale?: unknown }).timeScale
+  ) {
+    delete (explain as { timeScale?: unknown }).timeScale;
   }
 
   // Conversion summary - order: Scale → Currency → Time (logical processing order)

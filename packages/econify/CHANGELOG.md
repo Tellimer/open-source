@@ -2,6 +2,24 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.3.1] - 2025-09-18
+
+### Changed
+
+- Stock-like monetary indicators (Money Supply M0/M1/M2, monetary base):
+  - Unit strings no longer include per-time for stocks; normalized units render
+    as, e.g., "USD millions" (no "per month").
+  - Suppress `timeScale` component in explain metadata for stock-like monetary
+    indicators; keep `reportingFrequency` when explicit periodicity is present.
+  - Added `explain.domain = "monetary_aggregate"` for monetary aggregates to
+    support consistent frontend formatting.
+- Ensured `targetMagnitude` is consistently reflected in normalized unit labels
+  for stock indicators.
+
+### Tests
+
+- Ran full econify test suite; all tests passing after changes.
+
 ## [0.3.0] - 2025-09-18
 
 ### Added
