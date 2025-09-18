@@ -36,7 +36,8 @@ export function buildExplainMetadata(
   // Use explicit fields if provided, otherwise fall back to parsed values
   const effectiveCurrency = options.explicitCurrency || parsed.currency;
   const effectiveScale = options.explicitScale || parsed.scale;
-  const effectiveTimeScale = options.explicitTimeScale || parsed.timeScale;
+  // Prefer time component extracted from unit over dataset periodicity (reporting frequency)
+  const effectiveTimeScale = parsed.timeScale || options.explicitTimeScale;
 
   // FX information
   if (
@@ -82,6 +83,12 @@ export function buildExplainMetadata(
   const originalTimeScale = effectiveTimeScale ||
     parseTimeScaleFromUnit(originalUnit);
   const targetTimeScale = options.toTimeScale;
+
+  // Surface dataset reporting frequency separately (explicit periodicity)
+  if (options.explicitTimeScale) {
+    (explain as { reportingFrequency?: TimeScale }).reportingFrequency = options
+      .explicitTimeScale;
+  }
   if (
     originalTimeScale && targetTimeScale &&
     originalTimeScale !== targetTimeScale
@@ -140,6 +147,14 @@ export function buildExplainMetadata(
   let originalFullUnit: string | undefined;
   let normalizedFullUnit: string;
 
+  // Detect per-capita indicators for special handling (keep scale as ones; no millions label)
+  const isPerCapita = /\bper\s*capita\b/i.test(options.indicatorName ?? "");
+
+  // Detect stock-like indicators (levels), e.g. reserves, money supply, M0/M1/M2, monetary base
+  const isStockLikeGlobal =
+    /(reserve(s)?|stock(s)?|money\s*supply|\bM0\b|\bM1\b|\bM2\b|monetary\s*base|broad\s*money|narrow\s*money)/i
+      .test(options.indicatorName ?? "");
+
   if (isNonCurrencyCategory) {
     // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency
     const base = parsed.normalized || "units";
@@ -176,6 +191,39 @@ export function buildExplainMetadata(
       targetScale,
       options.toTimeScale,
     ) || normalizedUnitString;
+
+    // Per-capita: avoid adding scale label like 'millions' to currency units
+    if (isPerCapita) {
+      normalizedUnitString = buildNormalizedUnitString(
+        options.toCurrency || effectiveCurrency,
+        "ones",
+        options.toTimeScale,
+      );
+      normalizedFullUnit = buildFullUnitString(
+        options.toCurrency || effectiveCurrency,
+        "ones",
+        options.toTimeScale,
+      ) || normalizedUnitString;
+    }
+
+    // Stock-like currency indicators: omit per-time in unit strings
+    if (isStockLikeGlobal) {
+      normalizedUnitString = buildNormalizedUnitString(
+        options.toCurrency || effectiveCurrency,
+        targetScale,
+        undefined,
+      );
+      originalFullUnit = buildFullUnitString(
+        effectiveCurrency,
+        originalScale,
+        undefined,
+      );
+      normalizedFullUnit = buildFullUnitString(
+        options.toCurrency || effectiveCurrency,
+        targetScale,
+        undefined,
+      ) || normalizedUnitString;
+    }
   }
 
   explain.units = {
@@ -184,6 +232,20 @@ export function buildExplainMetadata(
     originalFullUnit: originalFullUnit || originalUnit,
     normalizedFullUnit: normalizedFullUnit,
   };
+
+  // Per-capita: align explain components (no magnitude scaling, scale stays 'ones')
+  if (isPerCapita) {
+    if ((explain as { magnitude?: unknown }).magnitude) {
+      delete (explain as { magnitude?: unknown }).magnitude;
+    }
+    if (
+      (explain as { scale?: { original?: unknown; normalized?: unknown } })
+        .scale
+    ) {
+      (explain as { scale?: { original?: unknown; normalized?: unknown } })
+        .scale!.normalized = "ones" as unknown as Scale;
+    }
+  }
 
   // Surface detected domain for FE formatting using robust detection
   const text = `${options.indicatorName ?? ""} ${originalUnit}`.trim();
@@ -258,15 +320,80 @@ export function buildExplainMetadata(
   ) {
     detectedDomain = "metals";
   }
+  // Prefer metals over generic commodity when precious/industrial metal keywords present
+  if (
+    detectedDomain === "commodity" &&
+    /\bgold\b|\bsilver\b|\bcopper\b|\bsteel\b|\blithium\b|\bnickel\b|\bzinc\b/i
+      .test(lower)
+  ) {
+    detectedDomain = "metals";
+  }
 
   if (detectedDomain) {
     explain.domain = detectedDomain;
   }
 
+  // Enforce non-currency presentation when domain indicates non-currency
+  const isNonCurrencyDomain = !!(detectedDomain && [
+    "count",
+    "percentage",
+    "energy",
+    "commodity",
+    "agriculture",
+    "metals",
+    "emissions",
+  ].includes(detectedDomain));
+
+  if (isNonCurrencyDomain) {
+    const base = parsed.normalized || "units";
+    const nameLower2 = (options.indicatorName ?? "").toLowerCase();
+    const isStockLike = /\breserve(s)?\b|\bstock(s)?\b/.test(nameLower2);
+
+    originalUnitString = base;
+    normalizedUnitString = options.toTimeScale && !isStockLike
+      ? `${base} per ${options.toTimeScale}`
+      : base;
+    originalFullUnit = originalTimeScale && !isStockLike
+      ? `${base} per ${originalTimeScale}`
+      : base;
+    normalizedFullUnit = options.toTimeScale && !isStockLike
+      ? `${base} per ${options.toTimeScale}`
+      : base;
+
+    explain.units = {
+      originalUnit: originalUnitString || originalUnit,
+      normalizedUnit: normalizedUnitString,
+      originalFullUnit: originalFullUnit || originalUnit,
+      normalizedFullUnit: normalizedFullUnit,
+    };
+
+    // Ensure no currency component is emitted for non-currency domains
+    if ((explain as { currency?: unknown }).currency) {
+      delete (explain as { currency?: unknown }).currency;
+    }
+
+    // Keep scale component aligned with no magnitude change for non-currency
+    if (
+      (explain as { scale?: { original?: unknown; normalized?: unknown } })
+        .scale
+    ) {
+      (explain as { scale?: { original?: unknown; normalized?: unknown } })
+        .scale!.normalized =
+          (explain as { scale?: { original?: unknown; normalized?: unknown } })
+            .scale!.original;
+    }
+
+    // Suppress magnitude scaling for non-currency domains
+    if ((explain as { magnitude?: unknown }).magnitude) {
+      delete (explain as { magnitude?: unknown }).magnitude;
+    }
+  }
+
   // Base unit for non-currency measures to support frontend formatting
   if (
-    parsed.category && parsed.category !== "currency" &&
-    parsed.category !== "composite"
+    (parsed.category && parsed.category !== "currency" &&
+      parsed.category !== "composite") ||
+    isNonCurrencyDomain
   ) {
     explain.baseUnit = {
       normalized: parsed.normalized,
@@ -275,7 +402,10 @@ export function buildExplainMetadata(
   }
 
   // 🆕 Separate component fields for easy frontend access
-  if (!isNonCurrencyCategory && (effectiveCurrency || options.toCurrency)) {
+  if (
+    !isNonCurrencyCategory && !isNonCurrencyDomain &&
+    (effectiveCurrency || options.toCurrency)
+  ) {
     explain.currency = {
       original: effectiveCurrency,
       normalized: options.toCurrency || effectiveCurrency || "USD",

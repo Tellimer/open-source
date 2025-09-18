@@ -2,6 +2,26 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.2.10] - 2025-09-18
+
+### Added
+
+- explain.reportingFrequency: surfaces dataset reporting frequency (explicit periodicity) separately from unit time basis used for conversion.
+
+### Changed
+
+- Time conversion now prefers time components extracted from units over dataset periodicity. Periodicity is treated as reporting frequency and is surfaced via reportingFrequency.
+- normalization.ts updated to align with explain.ts for the new precedence (unit time > dataset periodicity).
+
+### Tests
+
+- Added tests verifying reportingFrequency behavior when explicit periodicity is present, absent, and when unit time differs from dataset periodicity.
+
+### Documentation
+
+- README updated with "New in 0.2.10" and references to reportingFrequency.
+- Enhanced Explain Example updated to include reportingFrequency and clarify unit-time vs reporting frequency.
+
 ## [0.2.9] - 2025-09-17
 
 ### Added

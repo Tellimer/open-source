@@ -188,7 +188,8 @@ export function normalizeValue(
   // Use explicit fields if provided, otherwise fall back to parsed values
   const effectiveCurrency = options?.explicitCurrency || parsed.currency;
   const effectiveScale = options?.explicitScale || parsed.scale;
-  const effectiveTimeScale = options?.explicitTimeScale || parsed.timeScale;
+  // Prefer unit time scale over dataset periodicity (reporting frequency)
+  const effectiveTimeScale = parsed.timeScale || options?.explicitTimeScale;
 
   // Check if this is count data that should not have currency conversion
   const isCountData = isCountIndicator(options?.indicatorName, unitText) ||

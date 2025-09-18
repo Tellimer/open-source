@@ -2,6 +2,11 @@
 
 ## 📊 **What's New in v0.2.4**
 
+### Update in v0.2.10
+
+- Added `reportingFrequency` to explain metadata to surface dataset reporting frequency separately from the unit's time basis used for conversion
+- Time conversion now prefers the unit's time component (e.g., "per week") over dataset periodicity; dataset periodicity remains informational via `reportingFrequency`
+
 The explain metadata system now provides **comprehensive conversion
 transparency** with:
 
@@ -45,6 +50,8 @@ const options = {
   "normalized": -566.533416666667,
   "normalizedUnit": "USD millions per month",
   "explain": {
+    "reportingFrequency": "year",
+
     "periodicity": {
       "original": "year",
       "target": "month",
@@ -117,6 +124,7 @@ const options = {
       "direction": "downscale",
       "description": "billions → millions (×1000)"
     },
+    "reportingFrequency": "quarter",
     "periodicity": {
       "original": "quarter",
       "target": "month",
@@ -152,7 +160,7 @@ const options = {
 Original: -1447.74 XOF Billions per Quarter
 
 Step 1 - Scale: -1447.74 × 1000 = -1,447,740 XOF Millions
-Step 2 - Currency: -1,447,740 ÷ 558.16 = -2,594.4 USD Millions  
+Step 2 - Currency: -1,447,740 ÷ 558.16 = -2,594.4 USD Millions
 Step 3 - Time: -2,594.4 ÷ 3 = -864.8 USD Millions per Month
 
 Expected: ~-864.8

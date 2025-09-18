@@ -48,6 +48,13 @@ assessment, error handling, and interactive control flow._
   `currency_code` as separate fields instead of concatenating into unit strings
 
 ### Advanced Features
+### New in 0.2.10
+
+- reportingFrequency added to explain metadata to surface dataset reporting frequency separately from the unit’s time basis used for conversion
+- Time conversion precedence updated: prefer unit time (e.g., “per week”) over dataset periodicity; periodicity remains informational and is exposed via reportingFrequency
+- Normalization and explain are aligned on this precedence; comprehensive tests added
+
+
 
 > New in 0.2.9
 >

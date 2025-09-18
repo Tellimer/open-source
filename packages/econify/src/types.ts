@@ -123,6 +123,8 @@ export interface Explain {
     /** Normalized time period (e.g., "month") */
     normalized?: TimeScale;
   };
+  /** Dataset reporting frequency (separate from unit time basis used for conversion) */
+  reportingFrequency?: TimeScale;
   /** Base unit information (for non-currency measures like counts, population, physical) */
   baseUnit?: {
     /** Original/base unit label if available */

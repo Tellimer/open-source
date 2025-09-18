@@ -1,6 +1,6 @@
 {
   "name": "@tellimer/econify",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "tasks": {
     "dev": "deno run --watch src/helpers/sample_usage.ts",
     "test": "deno test",

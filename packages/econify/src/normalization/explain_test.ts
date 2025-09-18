@@ -689,3 +689,116 @@ Deno.test("domain detection - prefer metals over agriculture when both present",
   });
   assertEquals(ex.domain, "metals");
 });
+
+// ========================================
+// New tests for per-capita and stock-like indicators
+// ========================================
+
+Deno.test("per-capita (GDP per Capita) - no millions label; monthly timing only", () => {
+  const ex = buildExplainMetadata(2364.85, "USD", 197.070833333333, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    indicatorName: "GDP per Capita",
+  });
+  // Units should be USD per month (no 'millions')
+  if (!ex.units) throw new Error("units missing");
+  if (!ex.scale) throw new Error("scale missing");
+  assertEquals(ex.units.normalizedUnit, "USD per month");
+  assertEquals(ex.units.normalizedFullUnit, "USD per month");
+  // No magnitude step for per-capita
+  assertEquals(ex.magnitude, undefined);
+  // Scale normalized should be ones
+  assertEquals(ex.scale.normalized, "ones");
+});
+
+Deno.test("non-currency stock-like (Gold Reserves) - metals domain; no per-time; no magnitude", () => {
+  const ex = buildExplainMetadata(61.74, "Tonnes/Quarter", 61.74, {
+    toTimeScale: "month",
+    indicatorName: "Gold Reserves",
+  });
+  // Domain should be metals
+  assertEquals(ex.domain, "metals");
+  // Units should be base 'tonnes' with no per-time
+  if (!ex.units) throw new Error("units missing");
+  assertEquals(ex.units.normalizedUnit, "tonnes");
+  assertEquals(ex.units.normalizedFullUnit, "tonnes");
+  // No currency or magnitude for non-currency stocks
+  assertEquals(ex.currency, undefined);
+  assertEquals(ex.magnitude, undefined);
+});
+
+Deno.test("currency stock-like (Money Supply M0) - omit per-time in unit strings", () => {
+  const ex = buildExplainMetadata(168100, "AED Millions/Month", 45762.66, {
+    toCurrency: "USD",
+    toMagnitude: "millions",
+    toTimeScale: "month",
+    indicatorName: "Money Supply M0",
+    fx: { base: "USD", rates: { AED: 3.6733 } },
+  });
+  if (!ex.units) throw new Error("units missing");
+  // Should not include 'per month' for stock-like monetary levels
+  assertEquals(ex.units.normalizedUnit, "USD millions");
+  assertEquals(ex.units.normalizedFullUnit, "USD millions");
+});
+
+Deno.test("prefer unit time over dataset periodicity (AUD/Week → USD per month)", () => {
+  const ex = buildExplainMetadata(1631.1, "AUD/Week", 0, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    explicitTimeScale: "quarter", // dataset reporting frequency should NOT drive conversion
+    indicatorName: "Wages in Manufacturing",
+    fx: { base: "USD", rates: { AUD: 1.499 } },
+  });
+  if (!ex.units || !ex.periodicity) {
+    throw new Error("missing units/periodicity");
+  }
+  // Periodicity should reflect week→month conversion (from unit), not quarter→month
+  assertEquals(ex.periodicity.original, "week");
+  assertEquals(ex.periodicity.target, "month");
+  assertEquals(ex.periodicity.direction, "downsample");
+  // Factor ≈ 52/12
+  const expected = 52 / 12;
+  if (Math.abs((ex.periodicity.factor ?? 0) - expected) > 1e-12) {
+    throw new Error(`unexpected factor: ${ex.periodicity.factor}`);
+  }
+  // Units and conversion summary
+  assertEquals(ex.units.originalFullUnit, "AUD per week");
+  assertEquals(ex.units.normalizedFullUnit, "USD per month");
+  if (!ex.conversion) throw new Error("missing conversion");
+  assertEquals(ex.conversion.summary, "AUD per week → USD per month");
+});
+
+Deno.test("reportingFrequency is set when explicit periodicity is provided (unit has different time)", () => {
+  const ex = buildExplainMetadata(1631.1, "AUD/Week", 0, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    explicitTimeScale: "quarter",
+    indicatorName: "Wages in Manufacturing",
+    fx: { base: "USD", rates: { AUD: 1.499 } },
+  });
+  // Reporting frequency should reflect dataset periodicity
+  assertEquals(ex.reportingFrequency, "quarter");
+  // Periodicity (conversion) should reflect unit time basis
+  assertEquals(ex.periodicity?.original, "week");
+});
+
+Deno.test("reportingFrequency is set when unit has no time (fallback to dataset periodicity)", () => {
+  const ex = buildExplainMetadata(300, "USD Million", 0, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    explicitTimeScale: "quarter",
+  });
+  // Here unit has no time; conversion uses dataset periodicity and reportingFrequency matches it
+  assertEquals(ex.reportingFrequency, "quarter");
+  assertEquals(ex.periodicity?.original, "quarter");
+  assertEquals(ex.periodicity?.target, "month");
+});
+
+Deno.test("reportingFrequency is undefined when not provided", () => {
+  const ex = buildExplainMetadata(100, "USD Millions/Year", 8.3333333333, {
+    toCurrency: "USD",
+    toMagnitude: "millions",
+    toTimeScale: "month",
+  });
+  assertEquals(ex.reportingFrequency, undefined);
+});
