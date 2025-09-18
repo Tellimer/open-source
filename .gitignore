@@ -44,3 +44,8 @@ ehthumbs.db
 Thumbs.db
 
 .env
+
+
+# Deno coverage outputs
+.coverage/
+coverage.lcov
