@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { processWagesData } from "./wages-service.ts";
+import { processWagesData, detectWagesData } from "./wages-service.ts";
 import type { FXTable } from "../types.ts";
 import type { ParsedData } from "../main.ts";
 
@@ -215,4 +215,76 @@ Deno.test("Wages Service - metadata passthrough", async () => {
   const wn2 = md2.wageNormalization as Record<string, unknown>;
   assertEquals(wn2.excluded as boolean, false);
   assertEquals(wn2.dataType as string, "currency");
+});
+
+
+Deno.test("Wages Service - default excludes index values (with FX)", async () => {
+  const mixed: ParsedData[] = [
+    ...wagesTestData,
+    { id: "IDX1", name: "Wage Index", value: 500, unit: "index", metadata: {} },
+  ];
+  const res = await processWagesData(mixed, testFX, {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    explain: false,
+    // excludeIndexValues omitted → should default to true
+  });
+  assertEquals(res.length, 3);
+});
+
+Deno.test("Wages Service - default excludes index values (no FX)", async () => {
+  const mixed: ParsedData[] = [
+    ...wagesTestData,
+    { id: "IDX2", name: "Wage Index", value: 700, unit: "points", metadata: {} },
+  ];
+  const res = await processWagesData(mixed, undefined, {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    explain: false,
+  });
+  assertEquals(res.length, 3);
+});
+
+Deno.test("Wages Service - default targetCurrency USD and monthly when omitted", async () => {
+  const res = await processWagesData(wagesTestData, testFX, {
+    // Omit targetCurrency and targetTimeScale
+    explain: false,
+  });
+  assertEquals(res.length, 3);
+  res.forEach((r) => assertEquals(r.normalizedUnit, "USD per month"));
+});
+
+Deno.test("Wages Service - weekly → monthly scaling", async () => {
+  const weekly: ParsedData[] = [
+    { id: "W_USD_W", name: "Weekly wage", value: 100, unit: "USD/week", metadata: {} },
+  ];
+  const res = await processWagesData(weekly, testFX, {
+    // default targetTimeScale: month
+  });
+  assertEquals(res.length, 1);
+  const item = res[0];
+  assertEquals(item.normalizedUnit, "USD per month");
+  // Expect ~ 100 * 52 / 12 = 433.33...
+  const expected = 100 * 52 / 12;
+  // Approximate check within a small tolerance
+  const diff = Math.abs((item.normalized as number) - expected);
+  if (diff > 1e-6) {
+    throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  }
+});
+
+Deno.test("Wages Service - detectWagesData identifies wages-like inputs", () => {
+  // currency/time unit
+  const a: ParsedData[] = [{ id: "1", name: "X", value: 10, unit: "USD/Month", metadata: {} }];
+  // wage keyword in name
+  const b: ParsedData[] = [{ id: "2", name: "Average wage", value: 10, unit: "index", metadata: {} }];
+  // mixed currency and index
+  const c: ParsedData[] = [
+    { id: "3", name: "X", value: 10, unit: "USD/Month", metadata: {} },
+    { id: "4", name: "Y", value: 10, unit: "points", metadata: {} },
+  ];
+
+  if (!detectWagesData(a)) throw new Error("Expected detection for currency/time unit");
+  if (!detectWagesData(b)) throw new Error("Expected detection for wage keyword in name");
+  if (!detectWagesData(c)) throw new Error("Expected detection for mixed currency/index units");
 });
