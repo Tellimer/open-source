@@ -288,3 +288,46 @@ Deno.test("Wages Service - detectWagesData identifies wages-like inputs", () => 
   if (!detectWagesData(b)) throw new Error("Expected detection for wage keyword in name");
   if (!detectWagesData(c)) throw new Error("Expected detection for mixed currency/index units");
 });
+
+
+Deno.test("Wages Service - hourly → monthly scaling", async () => {
+  const hourly: ParsedData[] = [
+    { id: "W_USD_H", name: "Hourly wage", value: 10, unit: "USD/hour", metadata: {} },
+  ];
+  const res = await processWagesData(hourly, testFX, {});
+  assertEquals(res.length, 1);
+  const item = res[0];
+  assertEquals(item.normalizedUnit, "USD per month");
+  // Expect 10 * (8760/12) = 10 * 730 = 7300
+  const expected = 10 * (365 * 24) / 12;
+  const diff = Math.abs((item.normalized as number) - expected);
+  if (diff > 1e-6) throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+});
+
+Deno.test("Wages Service - daily → monthly scaling", async () => {
+  const daily: ParsedData[] = [
+    { id: "W_USD_D", name: "Daily wage", value: 100, unit: "USD/day", metadata: {} },
+  ];
+  const res = await processWagesData(daily, testFX, {});
+  assertEquals(res.length, 1);
+  const item = res[0];
+  assertEquals(item.normalizedUnit, "USD per month");
+  // Expect 100 * (365/12)
+  const expected = 100 * 365 / 12;
+  const diff = Math.abs((item.normalized as number) - expected);
+  if (diff > 1e-6) throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+});
+
+Deno.test("Wages Service - yearly → monthly scaling", async () => {
+  const yearly: ParsedData[] = [
+    { id: "W_USD_Y", name: "Yearly wage", value: 60000, unit: "USD/year", metadata: {} },
+  ];
+  const res = await processWagesData(yearly, testFX, {});
+  assertEquals(res.length, 1);
+  const item = res[0];
+  assertEquals(item.normalizedUnit, "USD per month");
+  // Expect 60000 / 12
+  const expected = 60000 / 12;
+  const diff = Math.abs((item.normalized as number) - expected);
+  if (diff > 1e-6) throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+});
