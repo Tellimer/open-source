@@ -6,7 +6,7 @@
 
 # @tellimer/econify
 
-[![JSR](https://jsr.io/badges/@tellimer/econify)](https://jsr.io/@tellimer/econify)
+[![JSR](https://img.shields.io/jsr/v/%40tellimer/econify?label=JSR&logo=deno&style=flat)](https://jsr.io/@tellimer/econify)
 [![codecov](https://codecov.io/github/Tellimer/open-source/graph/badge.svg?token=FFHUVGQA4T&flag=econify)](https://codecov.io/github/Tellimer/open-source)
 
 [![Test Coverage](https://img.shields.io/badge/tests-237%20passing-brightgreen)](https://github.com/Tellimer/open-source)
@@ -24,7 +24,7 @@ Linting Issues** • **Enhanced Explain Metadata** • **Type Safe**
 ## 🌊 XState Pipeline Architecture
 
 <p align="center">
-  <img src="./assets/xstate-machine.png" alt="Econify XState Pipeline State Machine" />
+  <img src="./assets/xstate-machine.png" alt="Econify XState Pipeline State Machine" width="900" />
 </p>
 
 _Robust data processing pipeline powered by XState v5 with automatic quality
