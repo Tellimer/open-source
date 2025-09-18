@@ -7,7 +7,7 @@
 # @tellimer/econify
 
 [![JSR](https://jsr.io/badges/@tellimer/econify)](https://jsr.io/@tellimer/econify)
-[![codecov](https://codecov.io/gh/Tellimer/open-source/branch/main/graph/badge.svg?flag=econify)](https://codecov.io/gh/Tellimer/open-source)
+[![codecov](https://codecov.io/github/Tellimer/open-source/graph/badge.svg?token=FFHUVGQA4T&flag=econify)](https://codecov.io/github/Tellimer/open-source)
 
 [![Test Coverage](https://img.shields.io/badge/tests-237%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
