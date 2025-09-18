@@ -1,0 +1,53 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/fx/fx-validation.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 4709, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "validateFXRates",
+      "ranges": [
+        { "startOffset": 1238, "endOffset": 2787, "count": 6 },
+        { "startOffset": 1381, "endOffset": 2710, "count": 15 },
+        { "startOffset": 1463, "endOffset": 1877, "count": 2 },
+        { "startOffset": 1552, "endOffset": 1631, "count": 0 },
+        { "startOffset": 1655, "endOffset": 1855, "count": 1 },
+        { "startOffset": 1766, "endOffset": 1855, "count": 0 },
+        { "startOffset": 1877, "endOffset": 1942, "count": 13 },
+        { "startOffset": 1942, "endOffset": 2017, "count": 1 },
+        { "startOffset": 2017, "endOffset": 2706, "count": 12 },
+        { "startOffset": 2045, "endOffset": 2361, "count": 4 },
+        { "startOffset": 2238, "endOffset": 2355, "count": 0 },
+        { "startOffset": 2361, "endOffset": 2706, "count": 8 },
+        { "startOffset": 2389, "endOffset": 2706, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "suggestFXRateCorrection",
+      "ranges": [
+        { "startOffset": 2867, "endOffset": 3743, "count": 4 },
+        { "startOffset": 2999, "endOffset": 3011, "count": 0 },
+        { "startOffset": 3157, "endOffset": 3375, "count": 2 },
+        { "startOffset": 3371, "endOffset": 3375, "count": 0 },
+        { "startOffset": 3375, "endOffset": 3471, "count": 2 },
+        { "startOffset": 3471, "endOffset": 3689, "count": 0 },
+        { "startOffset": 3689, "endOffset": 3742, "count": 2 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "validateAndCorrectFXRates",
+      "ranges": [
+        { "startOffset": 3808, "endOffset": 4708, "count": 2 },
+        { "startOffset": 3967, "endOffset": 3988, "count": 1 },
+        { "startOffset": 3990, "endOffset": 4239, "count": 1 },
+        { "startOffset": 4511, "endOffset": 4707, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

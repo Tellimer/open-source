@@ -1,0 +1,178 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/time/time-sampling.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 7990, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "simpleTimeConversion",
+      "ranges": [
+        { "startOffset": 337, "endOffset": 470, "count": 9 },
+        { "startOffset": 405, "endOffset": 418, "count": 1 },
+        { "startOffset": 418, "endOffset": 469, "count": 8 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "resampleTimeSeries",
+      "ranges": [
+        { "startOffset": 623, "endOffset": 1202, "count": 6 },
+        { "startOffset": 735, "endOffset": 745, "count": 0 },
+        { "startOffset": 1064, "endOffset": 1128, "count": 1 },
+        { "startOffset": 1128, "endOffset": 1200, "count": 5 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 813, "endOffset": 856, "count": 47 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "upsample",
+      "ranges": [
+        { "startOffset": 1274, "endOffset": 1748, "count": 1 },
+        { "startOffset": 1389, "endOffset": 1636, "count": 2 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "downsample",
+      "ranges": [
+        { "startOffset": 1820, "endOffset": 2839, "count": 5 },
+        { "startOffset": 2021, "endOffset": 2030, "count": 0 },
+        { "startOffset": 2090, "endOffset": 2205, "count": 2 },
+        { "startOffset": 2212, "endOffset": 2307, "count": 1 },
+        { "startOffset": 2314, "endOffset": 2409, "count": 1 },
+        { "startOffset": 2416, "endOffset": 2497, "count": 1 },
+        { "startOffset": 2504, "endOffset": 2597, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2146, "endOffset": 2169, "count": 34 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2264, "endOffset": 2287, "count": 4 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2553, "endOffset": 2576, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "generateIntermediatePoints",
+      "ranges": [
+        { "startOffset": 2904, "endOffset": 3860, "count": 2 },
+        { "startOffset": 3305, "endOffset": 3841, "count": 26 },
+        { "startOffset": 3560, "endOffset": 3616, "count": 0 },
+        { "startOffset": 3623, "endOffset": 3692, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "groupByPeriod",
+      "ranges": [
+        { "startOffset": 3905, "endOffset": 4197, "count": 5 },
+        { "startOffset": 4002, "endOffset": 4178, "count": 46 },
+        { "startOffset": 4095, "endOffset": 4135, "count": 5 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "getPeriodKey",
+      "ranges": [
+        { "startOffset": 4267, "endOffset": 5067, "count": 46 },
+        { "startOffset": 4435, "endOffset": 4471, "count": 0 },
+        { "startOffset": 4476, "endOffset": 4540, "count": 0 },
+        { "startOffset": 4545, "endOffset": 4619, "count": 30 },
+        { "startOffset": 4624, "endOffset": 4771, "count": 16 },
+        { "startOffset": 4776, "endOffset": 4883, "count": 0 },
+        { "startOffset": 4888, "endOffset": 5015, "count": 0 },
+        { "startOffset": 5020, "endOffset": 5061, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "getIntervalMs",
+      "ranges": [
+        { "startOffset": 5124, "endOffset": 5556, "count": 2 },
+        { "startOffset": 5225, "endOffset": 5266, "count": 0 },
+        { "startOffset": 5271, "endOffset": 5314, "count": 0 },
+        { "startOffset": 5390, "endOffset": 5429, "count": 0 },
+        { "startOffset": 5434, "endOffset": 5468, "count": 0 },
+        { "startOffset": 5473, "endOffset": 5514, "count": 0 },
+        { "startOffset": 5519, "endOffset": 5550, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferFrequency",
+      "ranges": [
+        { "startOffset": 5606, "endOffset": 6213, "count": 6 },
+        { "startOffset": 5661, "endOffset": 5676, "count": 0 },
+        { "startOffset": 5811, "endOffset": 5889, "count": 23 },
+        { "startOffset": 6071, "endOffset": 6084, "count": 5 },
+        { "startOffset": 6084, "endOffset": 6105, "count": 1 },
+        { "startOffset": 6105, "endOffset": 6119, "count": 0 },
+        { "startOffset": 6119, "endOffset": 6140, "count": 1 },
+        { "startOffset": 6140, "endOffset": 6155, "count": 0 },
+        { "startOffset": 6155, "endOffset": 6177, "count": 1 },
+        { "startOffset": 6177, "endOffset": 6194, "count": 0 },
+        { "startOffset": 6194, "endOffset": 6212, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 5929, "endOffset": 5942, "count": 23 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "convertWageTimeScale",
+      "ranges": [
+        { "startOffset": 6324, "endOffset": 6819, "count": 9 },
+        { "startOffset": 6433, "endOffset": 6446, "count": 2 },
+        { "startOffset": 6446, "endOffset": 6525, "count": 7 },
+        { "startOffset": 6525, "endOffset": 6712, "count": 4 },
+        { "startOffset": 6574, "endOffset": 6580, "count": 2 },
+        { "startOffset": 6581, "endOffset": 6591, "count": 2 },
+        { "startOffset": 6712, "endOffset": 6818, "count": 3 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "processWageTimeSeries",
+      "ranges": [
+        { "startOffset": 6878, "endOffset": 7540, "count": 2 },
+        { "startOffset": 6993, "endOffset": 7521, "count": 7 },
+        { "startOffset": 7110, "endOffset": 7190, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "parseTimeScaleFromUnit",
+      "ranges": [
+        { "startOffset": 7593, "endOffset": 7989, "count": 7 },
+        { "startOffset": 7707, "endOffset": 7721, "count": 2 },
+        { "startOffset": 7721, "endOffset": 7755, "count": 5 },
+        { "startOffset": 7755, "endOffset": 7768, "count": 0 },
+        { "startOffset": 7768, "endOffset": 7803, "count": 5 },
+        { "startOffset": 7803, "endOffset": 7817, "count": 1 },
+        { "startOffset": 7817, "endOffset": 7853, "count": 4 },
+        { "startOffset": 7853, "endOffset": 7906, "count": 2 },
+        { "startOffset": 7906, "endOffset": 7923, "count": 0 },
+        { "startOffset": 7923, "endOffset": 7972, "count": 2 },
+        { "startOffset": 7972, "endOffset": 7988, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

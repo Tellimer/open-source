@@ -1,0 +1,23 @@
+{
+  "scriptId": "370",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/currency/currency.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 1245, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeCurrencyValue",
+      "ranges": [
+        { "startOffset": 521, "endOffset": 1244, "count": 2 },
+        { "startOffset": 689, "endOffset": 702, "count": 0 },
+        { "startOffset": 736, "endOffset": 750, "count": 0 },
+        { "startOffset": 857, "endOffset": 903, "count": 0 },
+        { "startOffset": 939, "endOffset": 1029, "count": 0 },
+        { "startOffset": 1063, "endOffset": 1243, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

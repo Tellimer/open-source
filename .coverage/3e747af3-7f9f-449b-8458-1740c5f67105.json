@@ -1,0 +1,118 @@
+{
+  "scriptId": "364",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/classification/classification.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 3780, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeText",
+      "ranges": [
+        { "startOffset": 265, "endOffset": 405, "count": 20 },
+        { "startOffset": 305, "endOffset": 310, "count": 11 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "escapeRegExp",
+      "ranges": [{ "startOffset": 406, "endOffset": 485, "count": 63 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "compileWordBoundaryRegex",
+      "ranges": [{ "startOffset": 486, "endOffset": 606, "count": 5 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 554, "endOffset": 602, "count": 63 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "anyMatch",
+      "ranges": [{ "startOffset": 950, "endOffset": 1024, "count": 25 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1001, "endOffset": 1020, "count": 264 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "detectCurrencyInText",
+      "ranges": [
+        { "startOffset": 1025, "endOffset": 1328, "count": 5 },
+        { "startOffset": 1094, "endOffset": 1165, "count": 61 },
+        { "startOffset": 1149, "endOffset": 1161, "count": 3 },
+        { "startOffset": 1165, "endOffset": 1228, "count": 2 },
+        { "startOffset": 1228, "endOffset": 1311, "count": 45 },
+        { "startOffset": 1257, "endOffset": 1307, "count": 52 },
+        { "startOffset": 1295, "endOffset": 1307, "count": 1 },
+        { "startOffset": 1307, "endOffset": 1311, "count": 44 },
+        { "startOffset": 1311, "endOffset": 1327, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "classifyIndicator",
+      "ranges": [
+        { "startOffset": 1661, "endOffset": 3269, "count": 5 },
+        { "startOffset": 1737, "endOffset": 1760, "count": 1 },
+        { "startOffset": 1761, "endOffset": 1768, "count": 4 },
+        { "startOffset": 2048, "endOffset": 2074, "count": 2 },
+        { "startOffset": 2132, "endOffset": 2162, "count": 0 },
+        { "startOffset": 2241, "endOffset": 2286, "count": 4 },
+        { "startOffset": 2347, "endOffset": 2372, "count": 1 },
+        { "startOffset": 2430, "endOffset": 2454, "count": 1 },
+        { "startOffset": 2512, "endOffset": 2536, "count": 3 },
+        { "startOffset": 2607, "endOffset": 2635, "count": 1 },
+        { "startOffset": 2703, "endOffset": 2713, "count": 3 },
+        { "startOffset": 2715, "endOffset": 2782, "count": 3 },
+        { "startOffset": 2765, "endOffset": 2771, "count": 2 },
+        { "startOffset": 2772, "endOffset": 2777, "count": 1 },
+        { "startOffset": 2782, "endOffset": 2954, "count": 2 },
+        { "startOffset": 2800, "endOffset": 2810, "count": 1 },
+        { "startOffset": 2812, "endOffset": 2886, "count": 1 },
+        { "startOffset": 2858, "endOffset": 2868, "count": 0 },
+        { "startOffset": 2869, "endOffset": 2874, "count": 0 },
+        { "startOffset": 2886, "endOffset": 2954, "count": 1 },
+        { "startOffset": 2993, "endOffset": 3064, "count": 4 },
+        { "startOffset": 3066, "endOffset": 3076, "count": 1 },
+        { "startOffset": 3100, "endOffset": 3173, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1885, "endOffset": 1902, "count": 20 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2006, "endOffset": 2026, "count": 17 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "isStock",
+      "ranges": [{ "startOffset": 3323, "endOffset": 3394, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isFlow",
+      "ranges": [{ "startOffset": 3447, "endOffset": 3516, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isRate",
+      "ranges": [{ "startOffset": 3569, "endOffset": 3638, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isCurrency",
+      "ranges": [{ "startOffset": 3702, "endOffset": 3779, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

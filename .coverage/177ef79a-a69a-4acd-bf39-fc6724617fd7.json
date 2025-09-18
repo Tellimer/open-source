@@ -1,0 +1,206 @@
+{
+  "scriptId": "394",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/workflows/economic-data-workflow.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 25945, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 974, "endOffset": 1467, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1505, "endOffset": 2463, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2504, "endOffset": 2811, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2849, "endOffset": 3676, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3717, "endOffset": 11938, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 11981, "endOffset": 12449, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 12494, "endOffset": 13339, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 13379, "endOffset": 14097, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "qualityPassed",
+      "ranges": [{ "startOffset": 14135, "endOffset": 14308, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "shouldAdjustInflation",
+      "ranges": [{ "startOffset": 14337, "endOffset": 14413, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "shouldRemoveSeasonality",
+      "ranges": [{ "startOffset": 14444, "endOffset": 14522, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "logStep",
+      "ranges": [{ "startOffset": 14554, "endOffset": 14685, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "errors",
+      "ranges": [{ "startOffset": 14724, "endOffset": 15100, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "warnings",
+      "ranges": [{ "startOffset": 15150, "endOffset": 15417, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "logSuccess",
+      "ranges": [{ "startOffset": 15442, "endOffset": 15483, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "logFinalError",
+      "ranges": [{ "startOffset": 15504, "endOffset": 15544, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "emitResults",
+      "ranges": [{ "startOffset": 15563, "endOffset": 15624, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "context",
+      "ranges": [{ "startOffset": 18282, "endOffset": 18493, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "metrics",
+      "ranges": [{ "startOffset": 18629, "endOffset": 18737, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 18912, "endOffset": 18934, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "rawData",
+      "ranges": [{ "startOffset": 19032, "endOffset": 19057, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 19313, "endOffset": 19335, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "parsedData",
+      "ranges": [{ "startOffset": 19441, "endOffset": 19466, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 19733, "endOffset": 19755, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "qualityScore",
+      "ranges": [{ "startOffset": 19866, "endOffset": 19891, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "warnings",
+      "ranges": [{ "startOffset": 20240, "endOffset": 20435, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 20764, "endOffset": 20786, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fxRates",
+      "ranges": [{ "startOffset": 20888, "endOffset": 20913, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fxRates",
+      "ranges": [{ "startOffset": 21081, "endOffset": 21121, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 21310, "endOffset": 21332, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "normalizedData",
+      "ranges": [{ "startOffset": 21439, "endOffset": 21464, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 22092, "endOffset": 22114, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "adjustedData",
+      "ranges": [{ "startOffset": 22245, "endOffset": 22270, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 22871, "endOffset": 22893, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "adjustedData",
+      "ranges": [{ "startOffset": 23032, "endOffset": 23057, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "input",
+      "ranges": [{ "startOffset": 23386, "endOffset": 23408, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "finalData",
+      "ranges": [{ "startOffset": 23508, "endOffset": 23533, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "metrics",
+      "ranges": [{ "startOffset": 23556, "endOffset": 23741, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "createPipeline",
+      "ranges": [{ "startOffset": 24113, "endOffset": 25944, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

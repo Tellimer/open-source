@@ -1,0 +1,105 @@
+{
+  "scriptId": "385",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/inference/inference.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 9160, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferUnit",
+      "ranges": [
+        { "startOffset": 1178, "endOffset": 4167, "count": 3 },
+        { "startOffset": 1342, "endOffset": 1364, "count": 0 },
+        { "startOffset": 1434, "endOffset": 1723, "count": 2 },
+        { "startOffset": 1518, "endOffset": 1719, "count": 0 },
+        { "startOffset": 1885, "endOffset": 2087, "count": 2 },
+        { "startOffset": 2150, "endOffset": 2451, "count": 0 },
+        { "startOffset": 2524, "endOffset": 2542, "count": 0 },
+        { "startOffset": 2544, "endOffset": 2843, "count": 0 },
+        { "startOffset": 3285, "endOffset": 3321, "count": 0 },
+        { "startOffset": 3323, "endOffset": 3629, "count": 0 },
+        { "startOffset": 3752, "endOffset": 3902, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3683, "endOffset": 3718, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 4088, "endOffset": 4159, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "extractNumber",
+      "ranges": [{ "startOffset": 4204, "endOffset": 4328, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "extractExplicitUnit",
+      "ranges": [
+        { "startOffset": 4372, "endOffset": 4733, "count": 2 },
+        { "startOffset": 4626, "endOffset": 4716, "count": 8 },
+        { "startOffset": 4682, "endOffset": 4712, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferFromIndicatorName",
+      "ranges": [
+        { "startOffset": 4776, "endOffset": 5557, "count": 3 },
+        { "startOffset": 4918, "endOffset": 4944, "count": 1 },
+        { "startOffset": 4945, "endOffset": 4972, "count": 1 },
+        { "startOffset": 4974, "endOffset": 5001, "count": 2 },
+        { "startOffset": 5001, "endOffset": 5054, "count": 1 },
+        { "startOffset": 5054, "endOffset": 5079, "count": 0 },
+        { "startOffset": 5079, "endOffset": 5142, "count": 1 },
+        { "startOffset": 5142, "endOffset": 5170, "count": 0 },
+        { "startOffset": 5170, "endOffset": 5281, "count": 1 },
+        { "startOffset": 5281, "endOffset": 5540, "count": 0 },
+        { "startOffset": 5540, "endOffset": 5556, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferFromCompany",
+      "ranges": [{ "startOffset": 5596, "endOffset": 6400, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFromDocumentContext",
+      "ranges": [{ "startOffset": 6440, "endOffset": 7266, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFromMagnitude",
+      "ranges": [
+        { "startOffset": 7305, "endOffset": 7948, "count": 3 },
+        { "startOffset": 7430, "endOffset": 7469, "count": 2 },
+        { "startOffset": 7448, "endOffset": 7458, "count": 0 },
+        { "startOffset": 7471, "endOffset": 7498, "count": 0 },
+        { "startOffset": 7579, "endOffset": 7604, "count": 1 },
+        { "startOffset": 7604, "endOffset": 7808, "count": 2 },
+        { "startOffset": 7632, "endOffset": 7662, "count": 0 },
+        { "startOffset": 7689, "endOffset": 7718, "count": 0 },
+        { "startOffset": 7772, "endOffset": 7808, "count": 0 },
+        { "startOffset": 7874, "endOffset": 7884, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferFromHistory",
+      "ranges": [{ "startOffset": 7989, "endOffset": 8448, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "validateInferredUnit",
+      "ranges": [{ "startOffset": 8533, "endOffset": 9159, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

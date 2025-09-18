@@ -1,0 +1,11 @@
+{
+  "scriptId": "392",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/index.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 378, "count": 1 }],
+      "isBlockCoverage": true
+    }
+  ]
+}

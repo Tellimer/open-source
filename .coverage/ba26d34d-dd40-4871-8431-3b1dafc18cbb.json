@@ -1,0 +1,108 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/seasonal/seasonal.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 4046, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "deseasonalize",
+      "ranges": [
+        { "startOffset": 107, "endOffset": 454, "count": 8 },
+        { "startOffset": 236, "endOffset": 302, "count": 6 },
+        { "startOffset": 307, "endOffset": 376, "count": 1 },
+        { "startOffset": 381, "endOffset": 448, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "deseasonalizeMA",
+      "ranges": [{ "startOffset": 499, "endOffset": 981, "count": 6 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 624, "endOffset": 636, "count": 99 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 737, "endOffset": 749, "count": 99 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 817, "endOffset": 977, "count": 99 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "decomposeTimeSeries",
+      "ranges": [
+        { "startOffset": 1017, "endOffset": 1906, "count": 1 },
+        { "startOffset": 1479, "endOffset": 1597, "count": 24 },
+        { "startOffset": 1631, "endOffset": 1673, "count": 12 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1088, "endOffset": 1100, "count": 24 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 1269, "endOffset": 1296, "count": 24 },
+        { "startOffset": 1291, "endOffset": 1295, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1728, "endOffset": 1902, "count": 24 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "calculateCenteredMA",
+      "ranges": [
+        { "startOffset": 1952, "endOffset": 2484, "count": 7 },
+        { "startOffset": 2105, "endOffset": 2465, "count": 123 },
+        { "startOffset": 2130, "endOffset": 2164, "count": 88 },
+        { "startOffset": 2166, "endOffset": 2239, "count": 67 },
+        { "startOffset": 2239, "endOffset": 2461, "count": 56 },
+        { "startOffset": 2465, "endOffset": 2483, "count": 123 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2398, "endOffset": 2411, "count": 664 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "calculateSeasonalComponent",
+      "ranges": [
+        { "startOffset": 2525, "endOffset": 2883, "count": 6 },
+        { "startOffset": 2716, "endOffset": 2835, "count": 99 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2858, "endOffset": 2879, "count": 64 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "detectSeasonality",
+      "ranges": [{ "startOffset": 2936, "endOffset": 3584, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "autocorrelation",
+      "ranges": [{ "startOffset": 3635, "endOffset": 4045, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

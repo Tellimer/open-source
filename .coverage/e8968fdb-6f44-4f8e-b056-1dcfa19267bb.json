@@ -1,0 +1,41 @@
+{
+  "scriptId": "403",
+  "url": "file:///Users/seanknowles/Library/Caches/deno/npm/registry.npmjs.org/xstate/5.20.2/dist/assign-381d0341.cjs.js",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 3943, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1, "endOffset": 3942, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 214, "endOffset": 3936, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "createSpawner",
+      "ranges": [{ "startOffset": 304, "endOffset": 1781, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "resolveAssign",
+      "ranges": [{ "startOffset": 1783, "endOffset": 2985, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "assign",
+      "ranges": [{ "startOffset": 3718, "endOffset": 3907, "count": 13 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "assign",
+      "ranges": [{ "startOffset": 3750, "endOffset": 3787, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

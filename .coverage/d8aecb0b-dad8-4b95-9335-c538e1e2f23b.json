@@ -1,0 +1,144 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/algebra/algebra.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 6508, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "roundPrecision",
+      "ranges": [{ "startOffset": 174, "endOffset": 304, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "unitsMatch",
+      "ranges": [
+        { "startOffset": 364, "endOffset": 636, "count": 1 },
+        { "startOffset": 423, "endOffset": 435, "count": 0 },
+        { "startOffset": 501, "endOffset": 521, "count": 0 },
+        { "startOffset": 592, "endOffset": 599, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "unitMultiply",
+      "ranges": [
+        { "startOffset": 690, "endOffset": 1478, "count": 6 },
+        { "startOffset": 887, "endOffset": 938, "count": 2 },
+        { "startOffset": 940, "endOffset": 1061, "count": 2 },
+        { "startOffset": 1016, "endOffset": 1037, "count": 0 },
+        { "startOffset": 1038, "endOffset": 1050, "count": 0 },
+        { "startOffset": 1061, "endOffset": 1154, "count": 4 },
+        { "startOffset": 1156, "endOffset": 1267, "count": 1 },
+        { "startOffset": 1267, "endOffset": 1477, "count": 3 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "unitDivide",
+      "ranges": [
+        { "startOffset": 1530, "endOffset": 1890, "count": 5 },
+        { "startOffset": 1686, "endOffset": 1763, "count": 2 },
+        { "startOffset": 1763, "endOffset": 1889, "count": 3 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "unitAdd",
+      "ranges": [
+        { "startOffset": 1939, "endOffset": 2135, "count": 3 },
+        { "startOffset": 1989, "endOffset": 2070, "count": 1 },
+        { "startOffset": 2070, "endOffset": 2134, "count": 2 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "unitSubtract",
+      "ranges": [
+        { "startOffset": 2189, "endOffset": 2411, "count": 3 },
+        { "startOffset": 2244, "endOffset": 2330, "count": 1 },
+        { "startOffset": 2330, "endOffset": 2410, "count": 2 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "unitPower",
+      "ranges": [
+        { "startOffset": 2465, "endOffset": 2857, "count": 3 },
+        { "startOffset": 2521, "endOffset": 2590, "count": 0 },
+        { "startOffset": 2613, "endOffset": 2632, "count": 0 },
+        { "startOffset": 2718, "endOffset": 2733, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "simplifyUnit",
+      "ranges": [
+        { "startOffset": 2895, "endOffset": 5502, "count": 6 },
+        { "startOffset": 3155, "endOffset": 3397, "count": 1 },
+        { "startOffset": 3334, "endOffset": 3393, "count": 0 },
+        { "startOffset": 3606, "endOffset": 3649, "count": 0 },
+        { "startOffset": 3856, "endOffset": 4024, "count": 1 },
+        { "startOffset": 4267, "endOffset": 4442, "count": 0 },
+        { "startOffset": 4556, "endOffset": 4583, "count": 0 },
+        { "startOffset": 4585, "endOffset": 5078, "count": 0 },
+        { "startOffset": 5188, "endOffset": 5479, "count": 2 },
+        { "startOffset": 5340, "endOffset": 5384, "count": 0 },
+        { "startOffset": 5425, "endOffset": 5469, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "isDimensionless",
+      "ranges": [{ "startOffset": 5547, "endOffset": 5746, "count": 4 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "<instance_members_initializer>",
+      "ranges": [{ "startOffset": 5871, "endOffset": 5878, "count": 0 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "UnitChain",
+      "ranges": [{ "startOffset": 5882, "endOffset": 5935, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "multiply",
+      "ranges": [{ "startOffset": 5938, "endOffset": 6030, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "divide",
+      "ranges": [{ "startOffset": 6033, "endOffset": 6121, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "add",
+      "ranges": [{ "startOffset": 6124, "endOffset": 6206, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "subtract",
+      "ranges": [{ "startOffset": 6209, "endOffset": 6301, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "power",
+      "ranges": [{ "startOffset": 6304, "endOffset": 6396, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "value",
+      "ranges": [{ "startOffset": 6399, "endOffset": 6437, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "chain",
+      "ranges": [{ "startOffset": 6447, "endOffset": 6507, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

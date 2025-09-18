@@ -1,0 +1,66 @@
+{
+  "scriptId": "368",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/classification/classification.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 3780, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeText",
+      "ranges": [{ "startOffset": 265, "endOffset": 405, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "escapeRegExp",
+      "ranges": [{ "startOffset": 406, "endOffset": 485, "count": 63 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "compileWordBoundaryRegex",
+      "ranges": [{ "startOffset": 486, "endOffset": 606, "count": 5 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 554, "endOffset": 602, "count": 63 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "anyMatch",
+      "ranges": [{ "startOffset": 950, "endOffset": 1024, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "detectCurrencyInText",
+      "ranges": [{ "startOffset": 1025, "endOffset": 1328, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "classifyIndicator",
+      "ranges": [{ "startOffset": 1661, "endOffset": 3269, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isStock",
+      "ranges": [{ "startOffset": 3323, "endOffset": 3394, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isFlow",
+      "ranges": [{ "startOffset": 3447, "endOffset": 3516, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isRate",
+      "ranges": [{ "startOffset": 3569, "endOffset": 3638, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "isCurrency",
+      "ranges": [{ "startOffset": 3702, "endOffset": 3779, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

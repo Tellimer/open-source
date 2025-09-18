@@ -1,0 +1,154 @@
+{
+  "scriptId": "376",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/batch/batch.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 12874, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeScale",
+      "ranges": [
+        { "startOffset": 448, "endOffset": 865, "count": 1 },
+        { "startOffset": 494, "endOffset": 516, "count": 0 },
+        { "startOffset": 530, "endOffset": 639, "count": 0 },
+        { "startOffset": 644, "endOffset": 687, "count": 0 },
+        { "startOffset": 692, "endOffset": 733, "count": 0 },
+        { "startOffset": 738, "endOffset": 779, "count": 0 },
+        { "startOffset": 784, "endOffset": 827, "count": 0 },
+        { "startOffset": 832, "endOffset": 859, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeTimeScale",
+      "ranges": [
+        { "startOffset": 937, "endOffset": 1680, "count": 1 },
+        { "startOffset": 999, "endOffset": 1027, "count": 0 },
+        { "startOffset": 1041, "endOffset": 1158, "count": 0 },
+        { "startOffset": 1163, "endOffset": 1204, "count": 0 },
+        { "startOffset": 1209, "endOffset": 1246, "count": 0 },
+        { "startOffset": 1251, "endOffset": 1286, "count": 0 },
+        { "startOffset": 1291, "endOffset": 1324, "count": 0 },
+        { "startOffset": 1329, "endOffset": 1364, "count": 0 },
+        { "startOffset": 1413, "endOffset": 1446, "count": 0 },
+        { "startOffset": 1451, "endOffset": 1490, "count": 0 },
+        { "startOffset": 1495, "endOffset": 1530, "count": 0 },
+        { "startOffset": 1535, "endOffset": 1568, "count": 0 },
+        { "startOffset": 1573, "endOffset": 1604, "count": 0 },
+        { "startOffset": 1609, "endOffset": 1642, "count": 0 },
+        { "startOffset": 1647, "endOffset": 1674, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeCurrency",
+      "ranges": [
+        { "startOffset": 1730, "endOffset": 1866, "count": 1 },
+        { "startOffset": 1785, "endOffset": 1810, "count": 0 },
+        { "startOffset": 1824, "endOffset": 1865, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "processBatch",
+      "ranges": [
+        { "startOffset": 2129, "endOffset": 4047, "count": 1 },
+        { "startOffset": 2661, "endOffset": 3231, "count": 0 },
+        { "startOffset": 3475, "endOffset": 3575, "count": 0 },
+        { "startOffset": 4024, "endOffset": 4027, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3295, "endOffset": 3345, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3324, "endOffset": 3344, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "validateBatch",
+      "ranges": [{ "startOffset": 4092, "endOffset": 4771, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processInParallel",
+      "ranges": [{ "startOffset": 4809, "endOffset": 5731, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 5031, "endOffset": 5065, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 5144, "endOffset": 5723, "count": 1 },
+        { "startOffset": 5421, "endOffset": 5476, "count": 0 },
+        { "startOffset": 5496, "endOffset": 5602, "count": 0 },
+        { "startOffset": 5650, "endOffset": 5717, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "processSequentially",
+      "ranges": [{ "startOffset": 5770, "endOffset": 6425, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processItem",
+      "ranges": [
+        { "startOffset": 6457, "endOffset": 9225, "count": 1 },
+        { "startOffset": 6857, "endOffset": 6937, "count": 0 },
+        { "startOffset": 7927, "endOffset": 8051, "count": 0 },
+        { "startOffset": 8074, "endOffset": 8217, "count": 0 },
+        { "startOffset": 8433, "endOffset": 9096, "count": 0 },
+        { "startOffset": 9187, "endOffset": 9223, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "handleItemError",
+      "ranges": [{ "startOffset": 9266, "endOffset": 9997, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "titleCase",
+      "ranges": [{ "startOffset": 10038, "endOffset": 10141, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "buildNormalizedUnit",
+      "ranges": [
+        { "startOffset": 10142, "endOffset": 10636, "count": 1 },
+        { "startOffset": 10277, "endOffset": 10295, "count": 0 },
+        { "startOffset": 10337, "endOffset": 10352, "count": 0 },
+        { "startOffset": 10475, "endOffset": 10499, "count": 0 },
+        { "startOffset": 10567, "endOffset": 10608, "count": 0 },
+        { "startOffset": 10622, "endOffset": 10633, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "chunkArray",
+      "ranges": [{ "startOffset": 10684, "endOffset": 10852, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "createBatchProcessor",
+      "ranges": [{ "startOffset": 11019, "endOffset": 12309, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "streamProcess",
+      "ranges": [{ "startOffset": 12358, "endOffset": 12873, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

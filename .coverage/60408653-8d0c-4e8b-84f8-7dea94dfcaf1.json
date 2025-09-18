@@ -1,0 +1,64 @@
+{
+  "scriptId": "370",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/scale/scale.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 2351, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeText",
+      "ranges": [{ "startOffset": 188, "endOffset": 328, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "detectScale",
+      "ranges": [{ "startOffset": 496, "endOffset": 675, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "getScale",
+      "ranges": [
+        { "startOffset": 757, "endOffset": 924, "count": 4 },
+        { "startOffset": 813, "endOffset": 818, "count": 0 },
+        { "startOffset": 876, "endOffset": 905, "count": 20 },
+        { "startOffset": 892, "endOffset": 905, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "rescaleMagnitude",
+      "ranges": [{ "startOffset": 1007, "endOffset": 1105, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "toMillions",
+      "ranges": [{ "startOffset": 1185, "endOffset": 1295, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "fromMillions",
+      "ranges": [{ "startOffset": 1363, "endOffset": 1469, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "rescaleTime",
+      "ranges": [
+        { "startOffset": 1614, "endOffset": 1738, "count": 10 },
+        { "startOffset": 1673, "endOffset": 1686, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "parseTimeScale",
+      "ranges": [{ "startOffset": 1823, "endOffset": 1993, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "rescaleFlow",
+      "ranges": [{ "startOffset": 2075, "endOffset": 2350, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

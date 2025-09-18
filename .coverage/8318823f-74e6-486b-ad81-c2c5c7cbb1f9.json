@@ -1,0 +1,71 @@
+{
+  "scriptId": "396",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/time/time-sampling.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 7990, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "simpleTimeConversion",
+      "ranges": [{ "startOffset": 337, "endOffset": 470, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "resampleTimeSeries",
+      "ranges": [{ "startOffset": 623, "endOffset": 1202, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "upsample",
+      "ranges": [{ "startOffset": 1274, "endOffset": 1748, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "downsample",
+      "ranges": [{ "startOffset": 1820, "endOffset": 2839, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "generateIntermediatePoints",
+      "ranges": [{ "startOffset": 2904, "endOffset": 3860, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "groupByPeriod",
+      "ranges": [{ "startOffset": 3905, "endOffset": 4197, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "getPeriodKey",
+      "ranges": [{ "startOffset": 4267, "endOffset": 5067, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "getIntervalMs",
+      "ranges": [{ "startOffset": 5124, "endOffset": 5556, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFrequency",
+      "ranges": [{ "startOffset": 5606, "endOffset": 6213, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "convertWageTimeScale",
+      "ranges": [{ "startOffset": 6324, "endOffset": 6819, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processWageTimeSeries",
+      "ranges": [{ "startOffset": 6878, "endOffset": 7540, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "parseTimeScaleFromUnit",
+      "ranges": [{ "startOffset": 7593, "endOffset": 7989, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

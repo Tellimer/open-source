@@ -1,0 +1,53 @@
+{
+  "scriptId": "365",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/services/wages-service.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 5468, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "detectWagesData",
+      "ranges": [{ "startOffset": 604, "endOffset": 1798, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processWagesData",
+      "ranges": [
+        { "startOffset": 1867, "endOffset": 5467, "count": 7 },
+        { "startOffset": 1940, "endOffset": 2918, "count": 3 },
+        { "startOffset": 2322, "endOffset": 2328, "count": 0 },
+        { "startOffset": 2386, "endOffset": 2530, "count": 0 },
+        { "startOffset": 2559, "endOffset": 2569, "count": 0 },
+        { "startOffset": 2918, "endOffset": 3551, "count": 4 },
+        { "startOffset": 3551, "endOffset": 3559, "count": 0 },
+        { "startOffset": 3605, "endOffset": 3615, "count": 1 },
+        { "startOffset": 3684, "endOffset": 3691, "count": 3 },
+        { "startOffset": 3741, "endOffset": 3748, "count": 3 },
+        { "startOffset": 3778, "endOffset": 3786, "count": 2 },
+        { "startOffset": 3891, "endOffset": 5165, "count": 11 },
+        { "startOffset": 3999, "endOffset": 4545, "count": 0 },
+        { "startOffset": 4775, "endOffset": 4823, "count": 0 },
+        { "startOffset": 5165, "endOffset": 5426, "count": 4 },
+        { "startOffset": 5426, "endOffset": 5434, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2259, "endOffset": 2320, "count": 3 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 2982, "endOffset": 3293, "count": 11 },
+        { "startOffset": 3023, "endOffset": 3035, "count": 0 },
+        { "startOffset": 3212, "endOffset": 3222, "count": 3 },
+        { "startOffset": 3249, "endOffset": 3255, "count": 3 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

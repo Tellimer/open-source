@@ -1,0 +1,31 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/currency/currency.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 1245, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeCurrencyValue",
+      "ranges": [
+        { "startOffset": 521, "endOffset": 1244, "count": 16 },
+        { "startOffset": 689, "endOffset": 702, "count": 2 },
+        { "startOffset": 702, "endOffset": 736, "count": 14 },
+        { "startOffset": 736, "endOffset": 750, "count": 6 },
+        { "startOffset": 750, "endOffset": 1029, "count": 8 },
+        { "startOffset": 788, "endOffset": 939, "count": 7 },
+        { "startOffset": 857, "endOffset": 903, "count": 1 },
+        { "startOffset": 903, "endOffset": 939, "count": 6 },
+        { "startOffset": 939, "endOffset": 1029, "count": 1 },
+        { "startOffset": 1029, "endOffset": 1050, "count": 12 },
+        { "startOffset": 1050, "endOffset": 1063, "count": 3 },
+        { "startOffset": 1063, "endOffset": 1129, "count": 9 },
+        { "startOffset": 1129, "endOffset": 1213, "count": 1 },
+        { "startOffset": 1213, "endOffset": 1243, "count": 8 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

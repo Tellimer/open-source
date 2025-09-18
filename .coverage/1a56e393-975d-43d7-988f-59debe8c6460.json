@@ -1,0 +1,41 @@
+{
+  "scriptId": "379",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/cache/cache.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 1263, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "<instance_members_initializer>",
+      "ranges": [{ "startOffset": 76, "endOffset": 104, "count": 0 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "SmartCache",
+      "ranges": [{ "startOffset": 108, "endOffset": 249, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "get",
+      "ranges": [{ "startOffset": 252, "endOffset": 451, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "set",
+      "ranges": [{ "startOffset": 454, "endOffset": 780, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "clear",
+      "ranges": [{ "startOffset": 783, "endOffset": 820, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "withCache",
+      "ranges": [{ "startOffset": 877, "endOffset": 1262, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

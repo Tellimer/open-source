@@ -1,0 +1,96 @@
+{
+  "scriptId": "404",
+  "url": "file:///Users/seanknowles/Library/Caches/deno/npm/registry.npmjs.org/xstate/5.20.2/dist/log-63c8f21f.cjs.js",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 11763, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1, "endOffset": 11762, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 214, "endOffset": 11756, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "resolveEmit",
+      "ranges": [{ "startOffset": 354, "endOffset": 608, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "executeEmit",
+      "ranges": [{ "startOffset": 609, "endOffset": 708, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "emit",
+      "ranges": [{ "startOffset": 1321, "endOffset": 1595, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3111, "endOffset": 3251, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "resolveSendTo",
+      "ranges": [{ "startOffset": 3783, "endOffset": 6142, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "retryResolveSendTo",
+      "ranges": [{ "startOffset": 6143, "endOffset": 6284, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "executeSendTo",
+      "ranges": [{ "startOffset": 6285, "endOffset": 7053, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "sendTo",
+      "ranges": [{ "startOffset": 7433, "endOffset": 7788, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "sendParent",
+      "ranges": [{ "startOffset": 7957, "endOffset": 8052, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "forwardTo",
+      "ranges": [{ "startOffset": 8239, "endOffset": 8340, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "resolveEnqueueActions",
+      "ranges": [{ "startOffset": 8342, "endOffset": 9931, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "enqueueActions",
+      "ranges": [{ "startOffset": 10401, "endOffset": 10645, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "resolveLog",
+      "ranges": [{ "startOffset": 10647, "endOffset": 10862, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "executeLog",
+      "ranges": [{ "startOffset": 10863, "endOffset": 10997, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "log",
+      "ranges": [{ "startOffset": 11280, "endOffset": 11541, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

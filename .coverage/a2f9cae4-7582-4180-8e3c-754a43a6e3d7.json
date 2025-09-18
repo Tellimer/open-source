@@ -1,0 +1,81 @@
+{
+  "scriptId": "374",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/batch/batch.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 12874, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeScale",
+      "ranges": [{ "startOffset": 448, "endOffset": 865, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "normalizeTimeScale",
+      "ranges": [{ "startOffset": 937, "endOffset": 1680, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "normalizeCurrency",
+      "ranges": [{ "startOffset": 1730, "endOffset": 1866, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processBatch",
+      "ranges": [{ "startOffset": 2129, "endOffset": 4047, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "validateBatch",
+      "ranges": [{ "startOffset": 4092, "endOffset": 4771, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processInParallel",
+      "ranges": [{ "startOffset": 4809, "endOffset": 5731, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processSequentially",
+      "ranges": [{ "startOffset": 5770, "endOffset": 6425, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processItem",
+      "ranges": [{ "startOffset": 6457, "endOffset": 9225, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "handleItemError",
+      "ranges": [{ "startOffset": 9266, "endOffset": 9997, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "titleCase",
+      "ranges": [{ "startOffset": 10038, "endOffset": 10141, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "buildNormalizedUnit",
+      "ranges": [{ "startOffset": 10142, "endOffset": 10636, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "chunkArray",
+      "ranges": [{ "startOffset": 10684, "endOffset": 10852, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "createBatchProcessor",
+      "ranges": [{ "startOffset": 11019, "endOffset": 12309, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "streamProcess",
+      "ranges": [{ "startOffset": 12358, "endOffset": 12873, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "scriptId": "365",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/normalization.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 6113, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeFlowValue",
+      "ranges": [{ "startOffset": 936, "endOffset": 1589, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "normalizeMonetary",
+      "ranges": [{ "startOffset": 2136, "endOffset": 2714, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "normalizeMonetaryFlow",
+      "ranges": [{ "startOffset": 3096, "endOffset": 3938, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "normalizeValue",
+      "ranges": [
+        { "startOffset": 4356, "endOffset": 6112, "count": 26 },
+        { "startOffset": 4803, "endOffset": 4832, "count": 1 },
+        { "startOffset": 5058, "endOffset": 5081, "count": 0 },
+        { "startOffset": 5082, "endOffset": 5123, "count": 0 },
+        { "startOffset": 5125, "endOffset": 5206, "count": 0 },
+        { "startOffset": 5260, "endOffset": 5815, "count": 25 },
+        { "startOffset": 5336, "endOffset": 5462, "count": 10 },
+        { "startOffset": 5462, "endOffset": 5738, "count": 15 },
+        { "startOffset": 5493, "endOffset": 5738, "count": 0 },
+        { "startOffset": 5910, "endOffset": 5932, "count": 25 },
+        { "startOffset": 5933, "endOffset": 5946, "count": 25 },
+        { "startOffset": 5947, "endOffset": 5990, "count": 25 },
+        { "startOffset": 5992, "endOffset": 6093, "count": 25 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

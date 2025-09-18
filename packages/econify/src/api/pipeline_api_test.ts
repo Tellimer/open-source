@@ -626,3 +626,73 @@ Deno.test("processEconomicData - exemptions functionality", async () => {
     `   - WAGES_MFG: ${wagesMfg?.normalized} ${wagesMfg?.normalizedUnit} (processed)`,
   );
 });
+
+
+Deno.test("processEconomicData - validate schema on/off matrix", async () => {
+  const base = [
+    { value: 100, unit: "USD Million", name: "OK" },
+    { value: 200, unit: "EUR Million" }, // missing name
+  ];
+
+  // On: should reject due to missing required field
+  await assertRejects(
+    () =>
+      processEconomicData(base, {
+        validateSchema: true,
+        requiredFields: ["value", "unit", "name"],
+      }),
+    Error,
+    "missing required fields",
+  );
+
+  // Off: should process successfully
+  const res = await processEconomicData(base, {
+    validateSchema: false,
+  });
+  assertEquals(res.data.length, 2);
+});
+
+Deno.test("processEconomicData - configuration matrix (targets/combinations)", async () => {
+  const item = { value: 1200, unit: "USD Million", name: "Revenue" };
+
+  // 1) Currency only
+  const r1 = await processEconomicData([item], {
+    targetCurrency: "EUR",
+    fxFallback: { base: "USD", rates: { EUR: 0.8 } },
+  });
+  assertExists(r1.data[0].normalizedUnit?.includes("EUR"));
+
+  // 2) Time only
+  const r2 = await processEconomicData([item], {
+    targetTimeScale: "month",
+  });
+  assertExists(r2.data[0].normalizedUnit?.includes("per month"));
+
+  // 3) Currency + magnitude + time
+  const r3 = await processEconomicData([item], {
+    targetCurrency: "EUR",
+    targetMagnitude: "billions",
+    targetTimeScale: "month",
+    fxFallback: { base: "USD", rates: { EUR: 0.8 } },
+  });
+  assertExists(r3.data[0].normalizedUnit?.includes("EUR billions per month"));
+
+  // 4) No targets (identity on unit parts)
+  const r4 = await processEconomicData([item], {});
+  assertExists(r4.data[0].normalizedUnit?.includes("USD"));
+});
+
+Deno.test("processEconomicData - explain surfaces missing time basis case", async () => {
+  const data = [{ value: 100, unit: "USD Million", name: "Revenue" }];
+
+  const result = await processEconomicData(data, {
+    targetTimeScale: "year",
+    explain: true,
+  });
+
+  const ex = result.data[0].explain;
+  assertExists(ex);
+  assertEquals(ex?.periodicity?.target, "year");
+  assertEquals(ex?.periodicity?.adjusted, false);
+  assertEquals(ex?.periodicity?.description, "No source time scale available");
+});

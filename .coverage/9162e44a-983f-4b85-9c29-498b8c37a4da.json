@@ -1,0 +1,75 @@
+{
+  "scriptId": "364",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/wages/wages-normalization.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 5673, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeWagesData",
+      "ranges": [
+        { "startOffset": 416, "endOffset": 2973, "count": 5 },
+        { "startOffset": 673, "endOffset": 2953, "count": 15 },
+        { "startOffset": 1158, "endOffset": 1565, "count": 2 },
+        { "startOffset": 1227, "endOffset": 1557, "count": 1 },
+        { "startOffset": 1565, "endOffset": 2752, "count": 13 },
+        { "startOffset": 1676, "endOffset": 1762, "count": 0 },
+        { "startOffset": 2177, "endOffset": 2587, "count": 10 },
+        { "startOffset": 2551, "endOffset": 2563, "count": 0 },
+        { "startOffset": 2595, "endOffset": 2752, "count": 0 },
+        { "startOffset": 2759, "endOffset": 2923, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "isIndexOrPointsUnit",
+      "ranges": [
+        { "startOffset": 3044, "endOffset": 3570, "count": 18 },
+        { "startOffset": 3220, "endOffset": 3250, "count": 16 },
+        { "startOffset": 3251, "endOffset": 3279, "count": 16 },
+        { "startOffset": 3280, "endOffset": 3310, "count": 16 },
+        { "startOffset": 3312, "endOffset": 3334, "count": 2 },
+        { "startOffset": 3334, "endOffset": 3435, "count": 16 },
+        { "startOffset": 3435, "endOffset": 3455, "count": 0 },
+        { "startOffset": 3456, "endOffset": 3528, "count": 0 },
+        { "startOffset": 3530, "endOffset": 3552, "count": 0 },
+        { "startOffset": 3552, "endOffset": 3569, "count": 16 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "isCurrencyTimeUnit",
+      "ranges": [
+        { "startOffset": 3643, "endOffset": 4100, "count": 13 },
+        { "startOffset": 3800, "endOffset": 4099, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 4063, "endOffset": 4096, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "getWageNormalizationSummary",
+      "ranges": [{ "startOffset": 4168, "endOffset": 5439, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "getComparableWagesData",
+      "ranges": [{ "startOffset": 5521, "endOffset": 5672, "count": 5 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 5588, "endOffset": 5668, "count": 15 },
+        { "startOffset": 5605, "endOffset": 5633, "count": 14 },
+        { "startOffset": 5634, "endOffset": 5668, "count": 13 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

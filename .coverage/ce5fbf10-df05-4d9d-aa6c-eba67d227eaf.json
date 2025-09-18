@@ -1,0 +1,36 @@
+{
+  "scriptId": "390",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 14169, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "buildExplainMetadata",
+      "ranges": [{ "startOffset": 511, "endOffset": 12886, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "buildOriginalUnitString",
+      "ranges": [{ "startOffset": 12941, "endOffset": 13153, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "buildNormalizedUnitString",
+      "ranges": [{ "startOffset": 13210, "endOffset": 13525, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "buildFullUnitString",
+      "ranges": [{ "startOffset": 13577, "endOffset": 13855, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "enhanceExplainWithFXSource",
+      "ranges": [{ "startOffset": 13926, "endOffset": 14168, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

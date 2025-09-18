@@ -1,0 +1,11 @@
+{
+  "scriptId": "394",
+  "url": "file:///Users/seanknowles/Library/Caches/deno/npm/registry.npmjs.org/xstate/5.20.2/dist/xstate.cjs.mjs",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 678, "count": 1 }],
+      "isBlockCoverage": true
+    }
+  ]
+}

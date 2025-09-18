@@ -1,0 +1,113 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/countrify/src/main.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 2476, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "<instance_members_initializer>",
+      "ranges": [{ "startOffset": 248, "endOffset": 264, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "countryCode",
+      "ranges": [
+        { "startOffset": 458, "endOffset": 715, "count": 7 },
+        { "startOffset": 493, "endOffset": 572, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 641, "endOffset": 709, "count": 993 },
+        { "startOffset": 679, "endOffset": 709, "count": 991 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "searchByName",
+      "ranges": [
+        { "startOffset": 864, "endOffset": 1115, "count": 8 },
+        { "startOffset": 900, "endOffset": 979, "count": 1 },
+        { "startOffset": 979, "endOffset": 1114, "count": 7 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1051, "endOffset": 1109, "count": 1757 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "searchBySlug",
+      "ranges": [
+        { "startOffset": 1264, "endOffset": 1495, "count": 6 },
+        { "startOffset": 1300, "endOffset": 1379, "count": 1 },
+        { "startOffset": 1379, "endOffset": 1494, "count": 5 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1451, "endOffset": 1489, "count": 1255 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "get emojis",
+      "ranges": [{ "startOffset": 1541, "endOffset": 1611, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1581, "endOffset": 1605, "count": 502 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "get codes",
+      "ranges": [{ "startOffset": 1664, "endOffset": 1732, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1703, "endOffset": 1726, "count": 502 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "get names",
+      "ranges": [{ "startOffset": 1785, "endOffset": 1853, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1824, "endOffset": 1847, "count": 502 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "get unicodes",
+      "ranges": [{ "startOffset": 1922, "endOffset": 1996, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1964, "endOffset": 1990, "count": 502 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "slug",
+      "ranges": [
+        { "startOffset": 2159, "endOffset": 2378, "count": 2 },
+        { "startOffset": 2187, "endOffset": 2266, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2335, "endOffset": 2372, "count": 82 }],
+      "isBlockCoverage": true
+    }
+  ]
+}

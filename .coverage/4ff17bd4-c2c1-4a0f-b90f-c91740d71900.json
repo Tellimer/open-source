@@ -1,0 +1,70 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/count/count-normalization.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 2921, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "isCountIndicator",
+      "ranges": [
+        { "startOffset": 332, "endOffset": 814, "count": 10 },
+        { "startOffset": 402, "endOffset": 410, "count": 0 },
+        { "startOffset": 412, "endOffset": 425, "count": 0 },
+        { "startOffset": 458, "endOffset": 463, "count": 0 },
+        { "startOffset": 472, "endOffset": 477, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 781, "endOffset": 810, "count": 43 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "isCountUnit",
+      "ranges": [
+        { "startOffset": 912, "endOffset": 1677, "count": 8 },
+        { "startOffset": 962, "endOffset": 975, "count": 0 },
+        { "startOffset": 1136, "endOffset": 1161, "count": 7 },
+        { "startOffset": 1162, "endOffset": 1186, "count": 6 },
+        { "startOffset": 1187, "endOffset": 1217, "count": 6 },
+        { "startOffset": 1219, "endOffset": 1241, "count": 2 },
+        { "startOffset": 1241, "endOffset": 1371, "count": 6 },
+        { "startOffset": 1371, "endOffset": 1405, "count": 4 },
+        { "startOffset": 1407, "endOffset": 1430, "count": 2 },
+        { "startOffset": 1430, "endOffset": 1637, "count": 4 },
+        { "startOffset": 1637, "endOffset": 1676, "count": 2 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "normalizeCountData",
+      "ranges": [
+        { "startOffset": 1756, "endOffset": 2626, "count": 1 },
+        { "startOffset": 1937, "endOffset": 2606, "count": 2 },
+        { "startOffset": 2525, "endOffset": 2576, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "detectCountData",
+      "ranges": [
+        { "startOffset": 2692, "endOffset": 2920, "count": 2 },
+        { "startOffset": 2750, "endOffset": 2763, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 2838, "endOffset": 2916, "count": 3 },
+        { "startOffset": 2885, "endOffset": 2916, "count": 2 },
+        { "startOffset": 2910, "endOffset": 2915, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

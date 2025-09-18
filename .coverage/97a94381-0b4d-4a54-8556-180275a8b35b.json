@@ -1,0 +1,98 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/inference/inference.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 9160, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferUnit",
+      "ranges": [
+        { "startOffset": 1178, "endOffset": 4167, "count": 11 },
+        { "startOffset": 1342, "endOffset": 1364, "count": 0 },
+        { "startOffset": 1434, "endOffset": 1723, "count": 0 },
+        { "startOffset": 1787, "endOffset": 2091, "count": 0 },
+        { "startOffset": 2150, "endOffset": 2451, "count": 0 },
+        { "startOffset": 2524, "endOffset": 2542, "count": 0 },
+        { "startOffset": 2544, "endOffset": 2843, "count": 0 },
+        { "startOffset": 3285, "endOffset": 3321, "count": 0 },
+        { "startOffset": 3323, "endOffset": 3629, "count": 0 },
+        { "startOffset": 3752, "endOffset": 3902, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3683, "endOffset": 3718, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 4088, "endOffset": 4159, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "extractNumber",
+      "ranges": [{ "startOffset": 4204, "endOffset": 4328, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "extractExplicitUnit",
+      "ranges": [{ "startOffset": 4372, "endOffset": 4733, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFromIndicatorName",
+      "ranges": [{ "startOffset": 4776, "endOffset": 5557, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFromCompany",
+      "ranges": [{ "startOffset": 5596, "endOffset": 6400, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFromDocumentContext",
+      "ranges": [{ "startOffset": 6440, "endOffset": 7266, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "inferFromMagnitude",
+      "ranges": [
+        { "startOffset": 7305, "endOffset": 7948, "count": 11 },
+        { "startOffset": 7430, "endOffset": 7469, "count": 6 },
+        { "startOffset": 7471, "endOffset": 7498, "count": 0 },
+        { "startOffset": 7579, "endOffset": 7604, "count": 1 },
+        { "startOffset": 7604, "endOffset": 7808, "count": 10 },
+        { "startOffset": 7632, "endOffset": 7662, "count": 2 },
+        { "startOffset": 7662, "endOffset": 7808, "count": 8 },
+        { "startOffset": 7689, "endOffset": 7718, "count": 2 },
+        { "startOffset": 7718, "endOffset": 7808, "count": 6 },
+        { "startOffset": 7772, "endOffset": 7808, "count": 0 },
+        { "startOffset": 7874, "endOffset": 7884, "count": 0 },
+        { "startOffset": 7904, "endOffset": 7912, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "inferFromHistory",
+      "ranges": [{ "startOffset": 7989, "endOffset": 8448, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "validateInferredUnit",
+      "ranges": [
+        { "startOffset": 8533, "endOffset": 9159, "count": 6 },
+        { "startOffset": 8735, "endOffset": 8760, "count": 2 },
+        { "startOffset": 8762, "endOffset": 8828, "count": 0 },
+        { "startOffset": 8896, "endOffset": 8911, "count": 1 },
+        { "startOffset": 8913, "endOffset": 8981, "count": 0 },
+        { "startOffset": 9012, "endOffset": 9028, "count": 0 },
+        { "startOffset": 9030, "endOffset": 9094, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    }
+  ]
+}

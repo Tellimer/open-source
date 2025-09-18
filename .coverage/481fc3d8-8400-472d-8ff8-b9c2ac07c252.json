@@ -1,0 +1,41 @@
+{
+  "scriptId": "400",
+  "url": "file:///Users/seanknowles/Library/Caches/deno/npm/registry.npmjs.org/xstate/5.20.2/dev/dist/xstate-dev.cjs.js",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 1291, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1, "endOffset": 1290, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 214, "endOffset": 1284, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "getGlobal",
+      "ranges": [{ "startOffset": 400, "endOffset": 676, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "getDevTools",
+      "ranges": [{ "startOffset": 677, "endOffset": 799, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "registerService",
+      "ranges": [{ "startOffset": 800, "endOffset": 980, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "devToolsAdapter",
+      "ranges": [{ "startOffset": 1005, "endOffset": 1162, "count": 0 }],
+      "isBlockCoverage": false
+    }
+  ]
+}

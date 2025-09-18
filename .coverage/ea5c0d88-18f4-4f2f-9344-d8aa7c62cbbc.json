@@ -1,0 +1,153 @@
+{
+  "scriptId": "335",
+  "url": "file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/pipeline_api.ts",
+  "functions": [
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 0, "endOffset": 8583, "count": 1 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "processEconomicData",
+      "ranges": [{ "startOffset": 955, "endOffset": 4629, "count": 16 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1092, "endOffset": 4625, "count": 16 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 1300, "endOffset": 1397, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 1485, "endOffset": 4555, "count": 128 },
+        { "startOffset": 2192, "endOffset": 2196, "count": 0 },
+        { "startOffset": 2221, "endOffset": 2237, "count": 8 },
+        { "startOffset": 2239, "endOffset": 2298, "count": 8 },
+        { "startOffset": 2421, "endOffset": 2665, "count": 5 },
+        { "startOffset": 2446, "endOffset": 2574, "count": 1 },
+        { "startOffset": 2521, "endOffset": 2525, "count": 0 },
+        { "startOffset": 2735, "endOffset": 2747, "count": 31 },
+        { "startOffset": 2749, "endOffset": 3079, "count": 5 },
+        { "startOffset": 3143, "endOffset": 3717, "count": 15 },
+        { "startOffset": 3210, "endOffset": 3215, "count": 0 },
+        { "startOffset": 3460, "endOffset": 3464, "count": 0 },
+        { "startOffset": 3540, "endOffset": 3544, "count": 0 },
+        { "startOffset": 3775, "endOffset": 4549, "count": 1 },
+        { "startOffset": 3893, "endOffset": 3905, "count": 0 },
+        { "startOffset": 3907, "endOffset": 3948, "count": 0 },
+        { "startOffset": 4290, "endOffset": 4298, "count": 0 },
+        { "startOffset": 4397, "endOffset": 4406, "count": 0 },
+        { "startOffset": 4508, "endOffset": 4539, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 2594, "endOffset": 2652, "count": 5 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 2790, "endOffset": 3069, "count": 5 },
+        { "startOffset": 2853, "endOffset": 3059, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 3267, "endOffset": 3300, "count": 7 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 3825, "endOffset": 3870, "count": 1 },
+        { "startOffset": 3850, "endOffset": 3869, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 4105, "endOffset": 4138, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "processEconomicDataAuto",
+      "ranges": [{ "startOffset": 4972, "endOffset": 7171, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 5048, "endOffset": 7167, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 5323, "endOffset": 5425, "count": 0 }],
+      "isBlockCoverage": false
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 5518, "endOffset": 7097, "count": 18 },
+        { "startOffset": 5611, "endOffset": 5626, "count": 2 },
+        { "startOffset": 5628, "endOffset": 5932, "count": 2 },
+        { "startOffset": 5681, "endOffset": 5841, "count": 1 },
+        { "startOffset": 5756, "endOffset": 5760, "count": 0 },
+        { "startOffset": 5803, "endOffset": 5808, "count": 0 },
+        { "startOffset": 5955, "endOffset": 6359, "count": 0 },
+        { "startOffset": 6396, "endOffset": 6846, "count": 2 },
+        { "startOffset": 6509, "endOffset": 6514, "count": 0 },
+        { "startOffset": 6717, "endOffset": 6721, "count": 0 },
+        { "startOffset": 6881, "endOffset": 7091, "count": 0 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 5861, "endOffset": 5919, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "validateEconomicData",
+      "ranges": [
+        { "startOffset": 7497, "endOffset": 8582, "count": 4 },
+        { "startOffset": 7583, "endOffset": 7712, "count": 0 },
+        { "startOffset": 7791, "endOffset": 8000, "count": 1 },
+        { "startOffset": 8182, "endOffset": 8259, "count": 1 },
+        { "startOffset": 8347, "endOffset": 8417, "count": 1 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 7825, "endOffset": 7886, "count": 2 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 7863, "endOffset": 7885, "count": 6 }],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [
+        { "startOffset": 8063, "endOffset": 8147, "count": 8 },
+        { "startOffset": 8123, "endOffset": 8147, "count": 7 }
+      ],
+      "isBlockCoverage": true
+    },
+    {
+      "functionName": "",
+      "ranges": [{ "startOffset": 8295, "endOffset": 8313, "count": 8 }],
+      "isBlockCoverage": true
+    }
+  ]
+}
