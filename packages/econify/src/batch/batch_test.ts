@@ -309,7 +309,6 @@ Deno.test("Batch Processing - explicit fields override conflicting unit string",
   assertEquals(item.normalizedUnit, "USD millions per month");
 });
 
-
 Deno.test("Batch Processing - sequential mode with progress and error handling (skip/default)", async () => {
   const good: BatchItem = {
     id: "SEQ_GOOD",
@@ -330,14 +329,20 @@ Deno.test("Batch Processing - sequential mode with progress and error handling (
     toCurrency: "USD",
     toMagnitude: "millions",
     toTimeScale: "month",
-    fx: { base: "USD", rates: { /* EUR intentionally missing to force error */ } },
+    fx: {
+      base: "USD",
+      rates: {/* EUR intentionally missing to force error */},
+    },
     explain: false,
     handleErrors: "skip",
     progressCallback: (p) => progress.push(p),
   });
 
   // One succeeds, one fails
-  assertEquals(resSkip.successful.length, 0 /* parseUnit returns currency from unit so FX needed */ + 0);
+  assertEquals(
+    resSkip.successful.length,
+    0 /* parseUnit returns currency from unit so FX needed */ + 0,
+  );
   // In this setup, normalizeValue won't have FX table for EUR->USD; processItem throws; we skip
   assertEquals(resSkip.failed.length, 2);
   // Progress callback should have reached 100
@@ -349,7 +354,7 @@ Deno.test("Batch Processing - sequential mode with progress and error handling (
     toCurrency: "USD",
     toMagnitude: "millions",
     toTimeScale: "month",
-    fx: { base: "USD", rates: { /* EUR missing */ } },
+    fx: { base: "USD", rates: {/* EUR missing */} },
     explain: false,
     handleErrors: "default",
     defaultValue: 0,
@@ -370,14 +375,22 @@ Deno.test("Batch Processing - streaming success and throw behavior", async () =>
   ];
 
   // Case 1: default (skip errors) — yields only the first
-  const out: Array<{ id?: string; normalized: number; normalizedUnit: string }> = [];
-  for await (const rec of streamProcess(items, {
-    toCurrency: "USD",
-    toMagnitude: "millions",
-    toTimeScale: "month",
-    fx: { base: "USD", rates: { USD: 1 } }, // EUR missing → will error and be skipped
-  })) {
-    out.push({ id: (rec as unknown as { id?: string }).id, normalized: rec.normalized, normalizedUnit: rec.normalizedUnit });
+  const out: Array<
+    { id?: string; normalized: number; normalizedUnit: string }
+  > = [];
+  for await (
+    const rec of streamProcess(items, {
+      toCurrency: "USD",
+      toMagnitude: "millions",
+      toTimeScale: "month",
+      fx: { base: "USD", rates: { USD: 1 } }, // EUR missing → will error and be skipped
+    })
+  ) {
+    out.push({
+      id: (rec as unknown as { id?: string }).id,
+      normalized: rec.normalized,
+      normalizedUnit: rec.normalizedUnit,
+    });
   }
   assertEquals(out.length, 1);
   assertEquals(out[0].id, "S_OK");
@@ -406,7 +419,7 @@ Deno.test("Batch Processing - processWithRetry returns partial failures after re
     toCurrency: "USD",
     toMagnitude: "millions",
     toTimeScale: "month",
-    fx: { base: "USD", rates: { /* missing EUR */ } },
+    fx: { base: "USD", rates: {/* missing EUR */} },
     handleErrors: "skip",
   });
 

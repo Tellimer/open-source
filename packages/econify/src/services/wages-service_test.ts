@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { processWagesData, detectWagesData } from "./wages-service.ts";
+import { detectWagesData, processWagesData } from "./wages-service.ts";
 import type { FXTable } from "../types.ts";
 import type { ParsedData } from "../main.ts";
 
@@ -217,7 +217,6 @@ Deno.test("Wages Service - metadata passthrough", async () => {
   assertEquals(wn2.dataType as string, "currency");
 });
 
-
 Deno.test("Wages Service - default excludes index values (with FX)", async () => {
   const mixed: ParsedData[] = [
     ...wagesTestData,
@@ -235,7 +234,13 @@ Deno.test("Wages Service - default excludes index values (with FX)", async () =>
 Deno.test("Wages Service - default excludes index values (no FX)", async () => {
   const mixed: ParsedData[] = [
     ...wagesTestData,
-    { id: "IDX2", name: "Wage Index", value: 700, unit: "points", metadata: {} },
+    {
+      id: "IDX2",
+      name: "Wage Index",
+      value: 700,
+      unit: "points",
+      metadata: {},
+    },
   ];
   const res = await processWagesData(mixed, undefined, {
     targetCurrency: "USD",
@@ -256,7 +261,13 @@ Deno.test("Wages Service - default targetCurrency USD and monthly when omitted",
 
 Deno.test("Wages Service - weekly → monthly scaling", async () => {
   const weekly: ParsedData[] = [
-    { id: "W_USD_W", name: "Weekly wage", value: 100, unit: "USD/week", metadata: {} },
+    {
+      id: "W_USD_W",
+      name: "Weekly wage",
+      value: 100,
+      unit: "USD/week",
+      metadata: {},
+    },
   ];
   const res = await processWagesData(weekly, testFX, {
     // default targetTimeScale: month
@@ -275,24 +286,47 @@ Deno.test("Wages Service - weekly → monthly scaling", async () => {
 
 Deno.test("Wages Service - detectWagesData identifies wages-like inputs", () => {
   // currency/time unit
-  const a: ParsedData[] = [{ id: "1", name: "X", value: 10, unit: "USD/Month", metadata: {} }];
+  const a: ParsedData[] = [{
+    id: "1",
+    name: "X",
+    value: 10,
+    unit: "USD/Month",
+    metadata: {},
+  }];
   // wage keyword in name
-  const b: ParsedData[] = [{ id: "2", name: "Average wage", value: 10, unit: "index", metadata: {} }];
+  const b: ParsedData[] = [{
+    id: "2",
+    name: "Average wage",
+    value: 10,
+    unit: "index",
+    metadata: {},
+  }];
   // mixed currency and index
   const c: ParsedData[] = [
     { id: "3", name: "X", value: 10, unit: "USD/Month", metadata: {} },
     { id: "4", name: "Y", value: 10, unit: "points", metadata: {} },
   ];
 
-  if (!detectWagesData(a)) throw new Error("Expected detection for currency/time unit");
-  if (!detectWagesData(b)) throw new Error("Expected detection for wage keyword in name");
-  if (!detectWagesData(c)) throw new Error("Expected detection for mixed currency/index units");
+  if (!detectWagesData(a)) {
+    throw new Error("Expected detection for currency/time unit");
+  }
+  if (!detectWagesData(b)) {
+    throw new Error("Expected detection for wage keyword in name");
+  }
+  if (!detectWagesData(c)) {
+    throw new Error("Expected detection for mixed currency/index units");
+  }
 });
-
 
 Deno.test("Wages Service - hourly → monthly scaling", async () => {
   const hourly: ParsedData[] = [
-    { id: "W_USD_H", name: "Hourly wage", value: 10, unit: "USD/hour", metadata: {} },
+    {
+      id: "W_USD_H",
+      name: "Hourly wage",
+      value: 10,
+      unit: "USD/hour",
+      metadata: {},
+    },
   ];
   const res = await processWagesData(hourly, testFX, {});
   assertEquals(res.length, 1);
@@ -301,12 +335,20 @@ Deno.test("Wages Service - hourly → monthly scaling", async () => {
   // Expect 10 * (8760/12) = 10 * 730 = 7300
   const expected = 10 * (365 * 24) / 12;
   const diff = Math.abs((item.normalized as number) - expected);
-  if (diff > 1e-6) throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  if (diff > 1e-6) {
+    throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  }
 });
 
 Deno.test("Wages Service - daily → monthly scaling", async () => {
   const daily: ParsedData[] = [
-    { id: "W_USD_D", name: "Daily wage", value: 100, unit: "USD/day", metadata: {} },
+    {
+      id: "W_USD_D",
+      name: "Daily wage",
+      value: 100,
+      unit: "USD/day",
+      metadata: {},
+    },
   ];
   const res = await processWagesData(daily, testFX, {});
   assertEquals(res.length, 1);
@@ -315,12 +357,20 @@ Deno.test("Wages Service - daily → monthly scaling", async () => {
   // Expect 100 * (365/12)
   const expected = 100 * 365 / 12;
   const diff = Math.abs((item.normalized as number) - expected);
-  if (diff > 1e-6) throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  if (diff > 1e-6) {
+    throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  }
 });
 
 Deno.test("Wages Service - yearly → monthly scaling", async () => {
   const yearly: ParsedData[] = [
-    { id: "W_USD_Y", name: "Yearly wage", value: 60000, unit: "USD/year", metadata: {} },
+    {
+      id: "W_USD_Y",
+      name: "Yearly wage",
+      value: 60000,
+      unit: "USD/year",
+      metadata: {},
+    },
   ];
   const res = await processWagesData(yearly, testFX, {});
   assertEquals(res.length, 1);
@@ -329,5 +379,7 @@ Deno.test("Wages Service - yearly → monthly scaling", async () => {
   // Expect 60000 / 12
   const expected = 60000 / 12;
   const diff = Math.abs((item.normalized as number) - expected);
-  if (diff > 1e-6) throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  if (diff > 1e-6) {
+    throw new Error(`Expected ~${expected}, got ${item.normalized}`);
+  }
 });

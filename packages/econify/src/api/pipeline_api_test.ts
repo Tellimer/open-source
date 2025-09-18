@@ -627,7 +627,6 @@ Deno.test("processEconomicData - exemptions functionality", async () => {
   );
 });
 
-
 Deno.test("processEconomicData - validate schema on/off matrix", async () => {
   const base = [
     { value: 100, unit: "USD Million", name: "OK" },
@@ -696,7 +695,6 @@ Deno.test("processEconomicData - explain surfaces missing time basis case", asyn
   assertEquals(ex?.periodicity?.adjusted, false);
   assertEquals(ex?.periodicity?.description, "No source time scale available");
 });
-
 
 Deno.test("processEconomicData - prefer unit time over explicit periodicity (API)", async () => {
   const data: ParsedData[] = [
