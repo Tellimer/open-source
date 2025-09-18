@@ -6,7 +6,6 @@
 
 [![codecov](https://codecov.io/gh/Tellimer/open-source/branch/main/graph/badge.svg)](https://codecov.io/gh/Tellimer/open-source)
 
-
 This monorepo contains various packages and applications maintained by Tellimer.
 
 ## Structure
