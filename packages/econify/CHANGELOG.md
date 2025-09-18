@@ -21,8 +21,8 @@ All notable changes to the econify package will be documented in this file.
 
 - Added tests verifying reportingFrequency behavior when explicit periodicity is
   present, absent, and when unit time differs from dataset periodicity.
-- Versioning: documented SemVer policy (pre-1.0 MINOR may include breaking changes; packages versioned independently in monorepo)
-
+- Versioning: documented SemVer policy (pre-1.0 MINOR may include breaking
+  changes; packages versioned independently in monorepo)
 
 ### Documentation
 

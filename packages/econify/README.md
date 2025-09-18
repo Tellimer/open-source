@@ -82,19 +82,26 @@ We follow Semantic Versioning (SemVer): MAJOR.MINOR.PATCH.
 - PATCH: Backwards‑compatible bug fixes
 
 Pre‑1.0 policy (0.y.z):
-- 0.MINOR may include breaking changes; we call them out clearly in the CHANGELOG
-- Changes that can alter numeric outputs or normalized unit strings are treated as breaking and will bump MINOR (e.g., 0.2.x → 0.3.0)
-- Additive metadata fields (e.g., explain.reportingFrequency) use MINOR when shipped to users
+
+- 0.MINOR may include breaking changes; we call them out clearly in the
+  CHANGELOG
+- Changes that can alter numeric outputs or normalized unit strings are treated
+  as breaking and will bump MINOR (e.g., 0.2.x → 0.3.0)
+- Additive metadata fields (e.g., explain.reportingFrequency) use MINOR when
+  shipped to users
 - Pure fixes and internal tweaks use PATCH
 
 Monorepo policy:
-- Packages are versioned independently; only bump and publish packages that actually changed
+
+- Packages are versioned independently; only bump and publish packages that
+  actually changed
 
 Commit conventions (for automation readiness):
+
 - feat: → MINOR (pre‑1.0)
 - fix: → PATCH
-- feat!: (or breaking change) → MAJOR after 1.0; pre‑1.0 we still bump MINOR and document the break
-
+- feat!: (or breaking change) → MAJOR after 1.0; pre‑1.0 we still bump MINOR and
+  document the break
 
 - 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity
   for external consumers
