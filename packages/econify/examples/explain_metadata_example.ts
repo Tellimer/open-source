@@ -116,12 +116,11 @@ async function demonstrateExplainMetadata() {
           }`,
         );
       }
-          if (item.explain.reportingFrequency) {
-            console.log(
-              `         Reporting Frequency: ${item.explain.reportingFrequency}`,
-            );
-          }
-
+      if (item.explain.reportingFrequency) {
+        console.log(
+          `         Reporting Frequency: ${item.explain.reportingFrequency}`,
+        );
+      }
 
       // 🆕 Enhanced unit strings with full units
       if (item.explain.units) {

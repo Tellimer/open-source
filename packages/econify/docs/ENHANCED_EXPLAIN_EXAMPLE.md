@@ -2,10 +2,13 @@
 
 ## 📊 **What's New in v0.2.4**
 
-### Update in v0.2.10
+### Update in v0.3.0
 
-- Added `reportingFrequency` to explain metadata to surface dataset reporting frequency separately from the unit's time basis used for conversion
-- Time conversion now prefers the unit's time component (e.g., "per week") over dataset periodicity; dataset periodicity remains informational via `reportingFrequency`
+- Added `reportingFrequency` to explain metadata to surface dataset reporting
+  frequency separately from the unit's time basis used for conversion
+- Time conversion now prefers the unit's time component (e.g., "per week") over
+  dataset periodicity; dataset periodicity remains informational via
+  `reportingFrequency`
 
 The explain metadata system now provides **comprehensive conversion
 transparency** with:

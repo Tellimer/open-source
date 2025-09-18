@@ -48,13 +48,16 @@ assessment, error handling, and interactive control flow._
   `currency_code` as separate fields instead of concatenating into unit strings
 
 ### Advanced Features
-### New in 0.2.10
 
-- reportingFrequency added to explain metadata to surface dataset reporting frequency separately from the unit’s time basis used for conversion
-- Time conversion precedence updated: prefer unit time (e.g., “per week”) over dataset periodicity; periodicity remains informational and is exposed via reportingFrequency
-- Normalization and explain are aligned on this precedence; comprehensive tests added
+### New in 0.3.0
 
-
+- reportingFrequency added to explain metadata to surface dataset reporting
+  frequency separately from the unit’s time basis used for conversion
+- Time conversion precedence updated: prefer unit time (e.g., “per week”) over
+  dataset periodicity; periodicity remains informational and is exposed via
+  reportingFrequency
+- Normalization and explain are aligned on this precedence; comprehensive tests
+  added
 
 > New in 0.2.9
 >
@@ -69,6 +72,29 @@ assessment, error handling, and interactive control flow._
 > See docs: [Integration Brief](./docs/INTEGRATION_BRIEF.md) •
 > [Enhanced Explain Example](./docs/ENHANCED_EXPLAIN_EXAMPLE.md) •
 > [Test Coverage](./docs/TEST_COVERAGE.md)
+
+## 🧭 Versioning policy
+
+We follow Semantic Versioning (SemVer): MAJOR.MINOR.PATCH.
+
+- MAJOR: Breaking changes to API/outputs
+- MINOR: Backwards‑compatible features and additions
+- PATCH: Backwards‑compatible bug fixes
+
+Pre‑1.0 policy (0.y.z):
+- 0.MINOR may include breaking changes; we call them out clearly in the CHANGELOG
+- Changes that can alter numeric outputs or normalized unit strings are treated as breaking and will bump MINOR (e.g., 0.2.x → 0.3.0)
+- Additive metadata fields (e.g., explain.reportingFrequency) use MINOR when shipped to users
+- Pure fixes and internal tweaks use PATCH
+
+Monorepo policy:
+- Packages are versioned independently; only bump and publish packages that actually changed
+
+Commit conventions (for automation readiness):
+- feat: → MINOR (pre‑1.0)
+- fix: → PATCH
+- feat!: (or breaking change) → MAJOR after 1.0; pre‑1.0 we still bump MINOR and document the break
+
 
 - 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity
   for external consumers

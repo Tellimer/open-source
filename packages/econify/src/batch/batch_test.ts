@@ -299,11 +299,12 @@ Deno.test("Batch Processing - explicit fields override conflicting unit string",
   // No FX metadata since USD → USD (no conversion needed)
   assertEquals(item.explain.fx, undefined);
   assertEquals(item.explain.magnitude?.originalScale, "billions"); // From explicit field (not millions from unit)
-  assertEquals(item.explain.periodicity?.original, "month"); // From explicit field (not year from unit)
-  assertEquals(item.explain.periodicity?.adjusted, false); // No conversion needed (month → month)
+  // Prefer unit time component over dataset periodicity for conversion
+  assertEquals(item.explain.periodicity?.original, "year"); // From unit string (not month from explicit)
+  assertEquals(item.explain.periodicity?.target, "month");
+  assertEquals(item.explain.periodicity?.adjusted, true); // Year → Month conversion
 
-  // Verify the actual conversion used explicit values
-  // 300 billions → millions = 300 * 1000 = 300,000 (no FX since USD→USD, no time conversion since month→month)
-  assertEquals(item.normalized, 300000);
+  // Verify conversion reflects unit-time preference: 300 billions → millions (×1000) then year → month (÷12)
+  assertEquals(item.normalized, 25000);
   assertEquals(item.normalizedUnit, "USD millions per month");
 });
