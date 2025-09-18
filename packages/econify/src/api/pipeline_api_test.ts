@@ -696,3 +696,62 @@ Deno.test("processEconomicData - explain surfaces missing time basis case", asyn
   assertEquals(ex?.periodicity?.adjusted, false);
   assertEquals(ex?.periodicity?.description, "No source time scale available");
 });
+
+
+Deno.test("processEconomicData - prefer unit time over explicit periodicity (API)", async () => {
+  const data: ParsedData[] = [
+    {
+      value: 1631.1,
+      unit: "AUD/Week",
+      name: "Manufacturing Costs",
+      periodicity: "Quarterly", // explicit dataset reporting frequency
+    },
+  ];
+
+  const result = await processEconomicData(data, {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { AUD: 1.499 } },
+  });
+
+  const item = result.data[0];
+  assertExists(item.explain);
+  // Periodicity should reflect unit time (week → month), not dataset periodicity
+  assertEquals(item.explain?.periodicity?.original, "week");
+  assertEquals(item.explain?.periodicity?.target, "month");
+  assertEquals(item.explain?.periodicity?.direction, "downsample");
+  // Factor ≈ 52/12
+  const expected = 52 / 12;
+  const factor = item.explain?.periodicity?.factor ?? 0;
+  if (Math.abs(factor - expected) > 1e-12) {
+    throw new Error(`unexpected factor: ${factor}`);
+  }
+  // Unit strings (wages path); reportingFrequency may not be surfaced in wages flow
+  assertEquals(item.explain?.units?.originalFullUnit, "AUD per week");
+  assertEquals(item.explain?.units?.normalizedFullUnit, "USD per month");
+});
+
+Deno.test("processEconomicData - use explicit periodicity when unit has no time (API)", async () => {
+  const data: ParsedData[] = [
+    {
+      value: 300,
+      unit: "USD Million",
+      name: "Quarterly Sales",
+      periodicity: "Quarterly", // dataset periodicity used when unit lacks time
+    },
+  ];
+
+  const result = await processEconomicData(data, {
+    targetTimeScale: "month",
+    explain: true,
+  });
+
+  const item = result.data[0];
+  assertExists(item.explain);
+  // Here unit has no time; conversion uses dataset periodicity
+  assertEquals(item.explain?.periodicity?.original, "quarter");
+  assertEquals(item.explain?.periodicity?.target, "month");
+  assertEquals(item.explain?.reportingFrequency, "quarter");
+});
