@@ -290,9 +290,10 @@ export const pipelineMachine = setup({
           const custom = parseWithCustomUnits(`${name} ${item.unit || ""}`) ||
             parseWithCustomUnits(item.unit || "");
 
-          // Wages-like: require both currency and timeScale unless explicit name mentions wage/salary
-          const wageLike = (/\bwage\b|\bsalary\b/.test(name)) ||
-            (!!parsed.currency && !!parsed.timeScale);
+          // Wages-like: only when indicator name explicitly mentions wage/salary/earnings/compensation/pay
+          const wageLike =
+            /\bwage\b|\bwages\b|\bminimum\s*wage\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b/i
+              .test(name);
           if (wageLike) {
             wages.push(entry);
             continue;

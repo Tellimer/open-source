@@ -14,6 +14,9 @@ All notable changes to the econify package will be documented in this file.
   - Correctly falls back to inferred scale when singular tokens are present in
     unit text.
 - Prevent magnitude scaling for percentages.
+- Wages router: stop classifying generic currency+time series as wages; now only
+  triggers on explicit wage/salary/earnings/compensation/pay keywords in
+  indicator name.
 
 ### Changed
 
