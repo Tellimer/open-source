@@ -814,12 +814,8 @@ Deno.test("processEconomicData - mixed scales (AUS/AUT/AZE) → USD millions per
   if (!autUnit.includes("USD millions per month")) {
     throw new Error(`unexpected unit for AUT: ${autUnit}`);
   }
-  // Transitional: AZE currently may surface as "USD per month" in unit string even though numeric is rescaled to millions.
-  // Accept either canonical or transitional until parser covers singular magnitude tokens consistently in unit labeling.
-  if (
-    !(azeUnit.includes("USD millions per month") ||
-      azeUnit.includes("USD per month"))
-  ) {
+  // Strict: AZE must be in USD millions per month
+  if (!azeUnit.includes("USD millions per month")) {
     throw new Error(`unexpected unit for AZE: ${azeUnit}`);
   }
 
@@ -841,15 +837,10 @@ Deno.test("processEconomicData - mixed scales (AUS/AUT/AZE) → USD millions per
 
   // AZE: (2445459.7 * 0.001) / 3
   const azeExpected = (2445459.7 * 0.001) / 3;
-  // Transitional: accept either canonical millions-per-month or thousands-per-month numeric (pending canonical magnitude enforcement in pipeline)
-  const azeExpectedAlt = 2445459.7 / 3; // thousands per month if magnitude step is skipped
   const azeVal = aze?.normalized || 0;
-  if (
-    Math.abs(azeVal - azeExpected) > 1e-9 &&
-    Math.abs(azeVal - azeExpectedAlt) > 1e-9
-  ) {
+  if (Math.abs(azeVal - azeExpected) > 1e-9) {
     throw new Error(
-      `AZE normalized mismatch: got ${azeVal}, expected ~${azeExpected} (or transitional ~${azeExpectedAlt})`,
+      `AZE normalized mismatch: got ${azeVal}, expected ~${azeExpected}`,
     );
   }
 });

@@ -2,6 +2,23 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.3.3] - 2025-09-23 (unreleased)
+
+### Tests
+
+- Mixed scales (AUS/AUT/AZE) test made strict: AZE must be "USD millions per
+  month".
+  - Removed transitional allowances for AZE unit label and numeric value.
+  - Locks in invariant: pipeline honors `targetMagnitude = "millions"` and
+    `targetTimeScale = "month"` for monetary flows.
+
+### Fixed
+
+- Documented wages routing predicate tighten-up: only triggers on explicit wage
+  terms in indicator name.
+  - Prevents misclassifying trade balances (e.g., AZE) as wages, ensuring proper
+    magnitude scaling.
+
 ## [0.3.2] - 2025-09-23
 
 ### Fixed
