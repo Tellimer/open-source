@@ -418,6 +418,19 @@ Notes:
 - You can control inclusion via `allowList`/`denyList` to force specific
   indicators in/out of auto-targeting.
 
+#### Example
+
+- See a runnable example:
+  [examples/auto_targets_example.ts](./examples/auto_targets_example.ts)
+
+#### Batch/Streaming note
+
+- Batch and streaming helpers currently operate item-by-item with fixed targets.
+  If you need auto-target-by-indicator at scale, group items by indicator (e.g.,
+  name), compute targets per group (handled automatically by
+  `processEconomicData` with `autoTargetByIndicator: true`), and process each
+  group. Native batch support for auto-targeting can be added if needed.
+
 ### With Progress Tracking
 
 Monitor pipeline progress for better UX in applications:
