@@ -453,6 +453,7 @@ export const pipelineMachine = setup({
           const res = await processBatch(emissions.map((e) => e.item), {
             ...batchOptions,
             toCurrency: undefined,
+            toMagnitude: undefined,
             toTimeScale: undefined,
           });
           const merged = mergeByKey(emissions, res.successful);
@@ -465,6 +466,7 @@ export const pipelineMachine = setup({
           const res = await processBatch(energy.map((e) => e.item), {
             ...batchOptions,
             toCurrency: undefined,
+            toMagnitude: undefined,
             toTimeScale: undefined,
           });
           const merged = mergeByKey(energy, res.successful);
@@ -477,6 +479,7 @@ export const pipelineMachine = setup({
           const res = await processBatch(commodities.map((c) => c.item), {
             ...batchOptions,
             toCurrency: undefined,
+            toMagnitude: undefined,
             toTimeScale: undefined,
           });
           const merged = mergeByKey(commodities, res.successful);
@@ -489,6 +492,7 @@ export const pipelineMachine = setup({
           const res = await processBatch(agriculture.map((a) => a.item), {
             ...batchOptions,
             toCurrency: undefined,
+            toMagnitude: undefined,
             toTimeScale: undefined,
           });
           const merged = mergeByKey(agriculture, res.successful);
@@ -501,6 +505,7 @@ export const pipelineMachine = setup({
           const res = await processBatch(metals.map((m) => m.item), {
             ...batchOptions,
             toCurrency: undefined,
+            toMagnitude: undefined,
             toTimeScale: undefined,
           });
           const merged = mergeByKey(metals, res.successful);

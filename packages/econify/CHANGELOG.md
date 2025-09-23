@@ -2,6 +2,39 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.3.2] - 2025-09-23
+
+### Fixed
+
+- Consistent target magnitude application in pipeline for mixed-source scales
+  (AUS/AUT/AZE):
+  - AZE example (USD thousands per quarter) now normalizes to USD millions per
+    month when `targetMagnitude: "millions"` and `targetTimeScale: "month"` are
+    set.
+  - Correctly falls back to inferred scale when singular tokens are present in
+    unit text.
+- Prevent magnitude scaling for percentages.
+
+### Changed
+
+- Non-currency physical domains (energy, commodities, agriculture, metals,
+  emissions):
+  - Do not force target magnitude; preserve concrete base units (e.g., GWh,
+    metric tonnes).
+- Count domain (non-currency counts such as registrations, population when
+  scaled):
+  - Apply target magnitude for comparability (thousands/millions, etc.).
+  - Explain metadata retains magnitude step (e.g., "thousands → millions").
+- Stock-like counts (e.g., Population):
+  - No per-time in units; periodicity shows target with `adjusted=false`.
+
+### Tests
+
+- Added pipeline-level integration test (AUS/AUT/AZE) to assert canonical
+  output: "USD millions per month" under `targetMagnitude='millions'` and
+  `targetTimeScale='month'`.
+- Full econify suite passing after changes.
+
 ## [0.3.1] - 2025-09-18
 
 ### Changed

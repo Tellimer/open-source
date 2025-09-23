@@ -802,3 +802,53 @@ Deno.test("reportingFrequency is undefined when not provided", () => {
   });
   assertEquals(ex.reportingFrequency, undefined);
 });
+
+Deno.test("buildExplainMetadata - thousands/quarter → millions/month, no FX (AZE-style)", () => {
+  const explain = buildExplainMetadata(
+    2445459.7,
+    "USD Thousand per quarter",
+    815.1532333333333,
+    {
+      toCurrency: "USD",
+      toMagnitude: "millions",
+      toTimeScale: "month",
+    },
+  );
+
+  assertExists(explain.units);
+  assertEquals(explain.units.originalUnit, "USD thousands");
+  assertEquals(explain.units.normalizedUnit, "USD millions per month");
+
+  // Magnitude step should be present (thousands → millions)
+  assertExists(explain.magnitude);
+  assertEquals(explain.magnitude.originalScale, "thousands");
+  assertEquals(explain.magnitude.targetScale, "millions");
+
+  // Periodicity step should be present (quarter → month)
+  assertExists(explain.periodicity);
+  assertEquals(explain.periodicity.original, "quarter");
+  assertEquals(explain.periodicity.target, "month");
+  assertEquals(explain.periodicity.adjusted, true);
+});
+
+Deno.test("buildExplainMetadata - Population stock: monthly basis without per-time units", () => {
+  const explain = buildExplainMetadata(
+    35.12,
+    "units per year",
+    35.12,
+    {
+      toTimeScale: "month",
+      indicatorName: "Population",
+    },
+  );
+
+  // Units should remain without "per month" since this is stock-like
+  assertExists(explain.units);
+  assertEquals(explain.units.normalizedUnit, "units");
+  assertEquals(explain.units.normalizedFullUnit, "units");
+
+  // Periodicity should indicate target month but adjusted=false
+  assertExists(explain.periodicity);
+  assertEquals(explain.periodicity.target, "month");
+  assertEquals(explain.periodicity.adjusted, false);
+});

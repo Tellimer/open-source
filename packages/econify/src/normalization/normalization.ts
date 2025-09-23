@@ -187,7 +187,9 @@ export function normalizeValue(
 
   // Use explicit fields if provided, otherwise fall back to parsed values
   const effectiveCurrency = options?.explicitCurrency || parsed.currency;
-  const effectiveScale = options?.explicitScale || parsed.scale;
+  // Fallback to getScale when parsed.scale is missing so magnitude normalization always works
+  const effectiveScale = options?.explicitScale || parsed.scale ||
+    getScale(unitText);
   // Prefer unit time scale over dataset periodicity (reporting frequency)
   const effectiveTimeScale = parsed.timeScale || options?.explicitTimeScale;
 
@@ -195,8 +197,10 @@ export function normalizeValue(
   const isCountData = isCountIndicator(options?.indicatorName, unitText) ||
     isCountUnit(unitText);
 
-  // Handle magnitude scaling
+  // Handle magnitude scaling (skip for percentage)
+  const isPercentage = parsed.category === "percentage";
   if (
+    !isPercentage &&
     effectiveScale &&
     options?.toMagnitude &&
     effectiveScale !== options.toMagnitude
@@ -206,16 +210,24 @@ export function normalizeValue(
 
   // Handle time scaling
   if (options?.toTimeScale) {
-    if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
-      // Time conversion can be performed
-      result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
-    } else if (!effectiveTimeScale) {
-      // Time conversion requested but no source time scale available
-      console.warn(
-        `⚠️ Time conversion to ${options.toTimeScale} requested but no source time scale found in unit "${unitText}" or explicit fields. Value unchanged.`,
+    // For stock-like count indicators (e.g., Population), skip time conversion entirely
+    const isCountStockLike = /\b(population|inhabitants|residents|people)\b/i
+      .test(
+        options?.indicatorName || "",
       );
+
+    if (!isCountStockLike) {
+      if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
+        // Time conversion can be performed
+        result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
+      } else if (!effectiveTimeScale) {
+        // Time conversion requested but no source time scale available
+        console.warn(
+          `⚠️ Time conversion to ${options.toTimeScale} requested but no source time scale found in unit "${unitText}" or explicit fields. Value unchanged.`,
+        );
+      }
+      // If effectiveTimeScale === options.toTimeScale, no conversion needed
     }
-    // If effectiveTimeScale === options.toTimeScale, no conversion needed
   }
 
   // Handle currency conversion (skip for count data)

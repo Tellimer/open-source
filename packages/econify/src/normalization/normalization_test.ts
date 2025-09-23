@@ -226,3 +226,30 @@ Deno.test("normalizeValue - no warning when time scales match", () => {
     console.warn = originalWarn;
   }
 });
+
+Deno.test("normalizeValue - thousands per quarter → millions per month (AZE case)", () => {
+  // Example similar to AZE export:
+  // 2,445,459.7 USD Thousand per quarter → USD millions per month
+  const original = 2445459.7;
+  const result = normalizeValue(original, "USD Thousand per quarter", {
+    toCurrency: "USD",
+    toMagnitude: "millions",
+    toTimeScale: "month",
+  });
+  // thousands → millions: ×0.001, quarter → month: ÷3
+  const expected = (original * 0.001) / 3;
+  assertEquals(
+    Math.round(result * 1e9) / 1e9,
+    Math.round(expected * 1e9) / 1e9,
+  );
+});
+
+Deno.test("normalizeValue - Population (stock-like count) does not divide by 12", () => {
+  // Stock-like count should not undergo time conversion; basis changes to month but value stays
+  const original = 35.12; // e.g., millions of people, but unit kept generic here
+  const result = normalizeValue(original, "units per year", {
+    toTimeScale: "month",
+    indicatorName: "Population",
+  });
+  assertEquals(result, original);
+});

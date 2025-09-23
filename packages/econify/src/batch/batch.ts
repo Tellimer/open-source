@@ -7,6 +7,7 @@ import { buildExplainMetadata } from "../normalization/explain.ts";
 import { parseUnit } from "../units/units.ts";
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
+import { getScale } from "../scale/scale.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 
 /**
@@ -360,10 +361,14 @@ function processItem<T extends BatchItem>(
     const effectiveTimeScale = normalizeTimeScale(item.periodicity) ||
       parsed.timeScale;
 
+    // Determine an explicit target magnitude for consistent unit strings (compute before normalization)
+    const targetMagnitude: Scale | undefined = options.toMagnitude ??
+      effectiveScale ?? getScale(item.unit);
+
     // Normalize value using enhanced metadata
     const normalized = normalizeValue(item.value, item.unit, {
       toCurrency: options.toCurrency,
-      toMagnitude: options.toMagnitude,
+      toMagnitude: targetMagnitude,
       toTimeScale: options.toTimeScale,
       fx: options.fx,
       // Pass explicit metadata for more accurate processing
@@ -380,13 +385,13 @@ function processItem<T extends BatchItem>(
       // Preserve percentage unit exactly; no currency, magnitude, or time scale applied
       normalizedUnit = "%";
     } else if (isCountData) {
-      const scale = options.toMagnitude ?? parsed.scale ?? "ones";
+      const scale = targetMagnitude ?? "ones";
       normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
     } else {
       normalizedUnit = buildNormalizedUnit(
         item.unit,
         options.toCurrency,
-        options.toMagnitude,
+        targetMagnitude,
         options.toTimeScale,
       );
     }
@@ -396,7 +401,7 @@ function processItem<T extends BatchItem>(
     if (options.explain) {
       explain = buildExplainMetadata(item.value, item.unit, normalized, {
         toCurrency: options.toCurrency,
-        toMagnitude: options.toMagnitude,
+        toMagnitude: targetMagnitude,
         toTimeScale: options.toTimeScale,
         fx: options.fx,
         // Pass explicit metadata for accurate explain generation
@@ -477,7 +482,8 @@ function buildNormalizedUnit(
   const parsed = parseUnit(original);
 
   const cur = (currency || parsed.currency)?.toUpperCase();
-  const mag = magnitude ?? parsed.scale;
+  // Fallback to detect scale from unit text when parser misses singular forms (e.g., "Thousand")
+  const mag = magnitude ?? parsed.scale ?? getScale(original);
   const ts = timeScale ?? parsed.timeScale;
 
   const parts: string[] = [];

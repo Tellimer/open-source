@@ -157,17 +157,41 @@ export function buildExplainMetadata(
 
   if (isNonCurrencyCategory) {
     // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency
-    const base = parsed.normalized || "units";
+    // Special-case stock-like counts (e.g., Population) to avoid per-time and force base to 'units'
+    const nameLower2 = (options.indicatorName ?? "").toLowerCase();
+    const isStockLikeNonCurrency =
+      /\breserve(s)?\b|\bstock(s)?\b|\bpopulation\b|\bpop\b|\bpeople\b|\binhabitants\b|\bresidents\b/
+        .test(
+          nameLower2,
+        );
+    const base = isStockLikeNonCurrency
+      ? "units"
+      : (parsed.normalized || "units");
+
     originalUnitString = base;
-    normalizedUnitString = options.toTimeScale
+    normalizedUnitString = options.toTimeScale && !isStockLikeNonCurrency
       ? `${base} per ${options.toTimeScale}`
       : base;
-    originalFullUnit = originalTimeScale
+    originalFullUnit = originalTimeScale && !isStockLikeNonCurrency
       ? `${base} per ${originalTimeScale}`
       : base;
-    normalizedFullUnit = options.toTimeScale
+    normalizedFullUnit = options.toTimeScale && !isStockLikeNonCurrency
       ? `${base} per ${options.toTimeScale}`
       : base;
+
+    // For stock-like non-currency indicators (e.g., Population), reflect monthly basis without math
+    if (isStockLikeNonCurrency && options.toTimeScale) {
+      explain.periodicity = {
+        original: originalTimeScale || undefined,
+        target: options.toTimeScale,
+        adjusted: false,
+        factor: 1,
+        direction: "none",
+        description: originalTimeScale
+          ? `Level: no time conversion (${originalTimeScale} → ${options.toTimeScale})`
+          : "Level: no time conversion",
+      };
+    }
   } else {
     // Monetary/currency-based units (default behavior)
     originalUnitString = buildOriginalUnitString(
@@ -353,18 +377,43 @@ export function buildExplainMetadata(
   if (isNonCurrencyDomain) {
     const base = parsed.normalized || "units";
     const nameLower2 = (options.indicatorName ?? "").toLowerCase();
-    const isStockLike = /\breserve(s)?\b|\bstock(s)?\b/.test(nameLower2);
+    const isStockLike =
+      /\breserve(s)?\b|\bstock(s)?\b|\bpopulation\b|\bpop\b|\bpeople\b|\binhabitants\b|\bresidents\b/
+        .test(nameLower2);
 
-    originalUnitString = base;
-    normalizedUnitString = options.toTimeScale && !isStockLike
-      ? `${base} per ${options.toTimeScale}`
-      : base;
-    originalFullUnit = originalTimeScale && !isStockLike
-      ? `${base} per ${originalTimeScale}`
-      : base;
-    normalizedFullUnit = options.toTimeScale && !isStockLike
-      ? `${base} per ${options.toTimeScale}`
-      : base;
+    const isCountDomain = typeof detectedDomain !== "undefined" &&
+      detectedDomain === "count";
+
+    if (isCountDomain) {
+      // For count domain, reflect scale label (thousands/millions/ones) instead of a physical base unit
+      const origLabel = (originalScale && originalScale !== "ones")
+        ? originalScale
+        : "units";
+      const normLabel = (targetScale && targetScale !== "ones")
+        ? targetScale
+        : "units";
+
+      originalUnitString = isStockLike || !originalTimeScale
+        ? origLabel
+        : `${origLabel} per ${originalTimeScale}`;
+      normalizedUnitString = isStockLike || !options.toTimeScale
+        ? normLabel
+        : `${normLabel} per ${options.toTimeScale}`;
+      originalFullUnit = originalUnitString;
+      normalizedFullUnit = normalizedUnitString;
+    } else {
+      // Non-currency physical domains (energy/commodities/agriculture/metals/emissions): keep base unit; no magnitude label
+      originalUnitString = base;
+      normalizedUnitString = options.toTimeScale && !isStockLike
+        ? `${base} per ${options.toTimeScale}`
+        : base;
+      originalFullUnit = originalTimeScale && !isStockLike
+        ? `${base} per ${originalTimeScale}`
+        : base;
+      normalizedFullUnit = options.toTimeScale && !isStockLike
+        ? `${base} per ${options.toTimeScale}`
+        : base;
+    }
 
     explain.units = {
       originalUnit: originalUnitString || originalUnit,
@@ -389,9 +438,41 @@ export function buildExplainMetadata(
             .scale!.original;
     }
 
-    // Suppress magnitude scaling for non-currency domains
-    if ((explain as { magnitude?: unknown }).magnitude) {
+    // Suppress magnitude scaling for non-currency physical domains, but keep it for count domain
+    if (
+      (explain as { magnitude?: unknown }).magnitude &&
+      detectedDomain !== "count"
+    ) {
       delete (explain as { magnitude?: unknown }).magnitude;
+    }
+
+    // For stock-like non-currency indicators (e.g., Population), reflect monthly target without conversion
+    if (isStockLike) {
+      const target = options.toTimeScale;
+      const original = originalTimeScale || undefined;
+      if (target) {
+        explain.periodicity = {
+          original,
+          target,
+          adjusted: false,
+          factor: 1,
+          direction: "none",
+          description: original
+            ? `No conversion needed (stock-like level at ${original})`
+            : "No source time scale available",
+        };
+      }
+
+      // Also ensure timeScale component does not suggest per-time conversion
+      if ((explain as { timeScale?: unknown }).timeScale) {
+        (explain as {
+          timeScale?: { original?: unknown; normalized?: unknown };
+        })
+          .timeScale = {
+            original,
+            normalized: target,
+          } as unknown as typeof explain.timeScale;
+      }
     }
   }
 
@@ -401,9 +482,18 @@ export function buildExplainMetadata(
       parsed.category !== "composite") ||
     isNonCurrencyDomain
   ) {
+    let baseCategory = parsed.category;
+    if (isNonCurrencyDomain) {
+      // For non-currency domains, prefer a safe category mapping
+      baseCategory = (detectedDomain === "count")
+        ? "count"
+        : (parsed.category && parsed.category !== "currency"
+          ? parsed.category
+          : "unknown");
+    }
     explain.baseUnit = {
       normalized: parsed.normalized,
-      category: parsed.category,
+      category: baseCategory,
     };
   }
 
