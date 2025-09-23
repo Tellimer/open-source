@@ -51,60 +51,6 @@ assessment, error handling, and interactive control flow._
 
 ### Advanced Features
 
-### New in 0.3.0
-
-- reportingFrequency added to explain metadata to surface dataset reporting
-  frequency separately from the unit’s time basis used for conversion
-- Time conversion precedence updated: prefer unit time (e.g., “per week”) over
-  dataset periodicity; periodicity remains informational and is exposed via
-  reportingFrequency
-- Normalization and explain are aligned on this precedence; comprehensive tests
-  added
-
-> New in 0.2.9
->
-> - Explain metadata now includes a `domain` field (energy, commodity,
->   emissions, agriculture, metals) for FE formatting/filtering
-> - Extended domain registries: agriculture (bushel, metric tonnes, short ton)
->   and metals (copper tonnes, silver oz)
-> - Router is baseUnit-aware; non‑monetary categories ignore currency/time
->   targets
-> - Wages service honors `excludeIndexValues` even with no FX
->
-> See docs: [Integration Brief](./docs/INTEGRATION_BRIEF.md) •
-> [Enhanced Explain Example](./docs/ENHANCED_EXPLAIN_EXAMPLE.md) •
-> [Test Coverage](./docs/TEST_COVERAGE.md)
-
-## 🧭 Versioning policy
-
-We follow Semantic Versioning (SemVer): MAJOR.MINOR.PATCH.
-
-- MAJOR: Breaking changes to API/outputs
-- MINOR: Backwards‑compatible features and additions
-- PATCH: Backwards‑compatible bug fixes
-
-Pre‑1.0 policy (0.y.z):
-
-- 0.MINOR may include breaking changes; we call them out clearly in the
-  CHANGELOG
-- Changes that can alter numeric outputs or normalized unit strings are treated
-  as breaking and will bump MINOR (e.g., 0.2.x → 0.3.0)
-- Additive metadata fields (e.g., explain.reportingFrequency) use MINOR when
-  shipped to users
-- Pure fixes and internal tweaks use PATCH
-
-Monorepo policy:
-
-- Packages are versioned independently; only bump and publish packages that
-  actually changed
-
-Commit conventions (for automation readiness):
-
-- feat: → MINOR (pre‑1.0)
-- fix: → PATCH
-- feat!: (or breaking change) → MAJOR after 1.0; pre‑1.0 we still bump MINOR and
-  document the break
-
 - 🌊 **Data Processing Pipeline** — Clean API that abstracts XState complexity
   for external consumers
 - 💼 **Wages Data Normalization** — Specialized handling for mixed wage/salary
@@ -219,7 +165,7 @@ result.data.forEach((item) => {
 });
 ```
 
-### 🆕 Explicit Metadata Fields (v0.2.2+)
+### Explicit Metadata Fields
 
 Pass metadata as separate fields instead of concatenating into unit strings for
 cleaner, more reliable processing:
@@ -258,7 +204,7 @@ const result = await processEconomicData(economicData, {
   },
 });
 
-// Check enhanced conversion details (v0.2.4+)
+// Check enhanced conversion details
 result.data.forEach((item) => {
   console.log(
     `${item.name}: ${item.normalized?.toFixed(2)} ${item.normalizedUnit}`,
@@ -307,7 +253,7 @@ result.data.forEach((item) => {
 - **Smart Fallback**: Falls back to unit string parsing when explicit fields not
   provided
 
-## 🔍 Enhanced Explain Metadata (v0.2.4+)
+## 🔍 Enhanced Explain Metadata
 
 Get comprehensive transparency into all normalization decisions with the
 enhanced explain metadata system:
@@ -924,9 +870,6 @@ async function validateEconomicData(
   options?: { requiredFields?: string[] },
 ): Promise<ValidationResult>;
 
-// Note: processWagesIndicator() was removed in v0.1.6
-// Use processEconomicData() instead - it automatically detects wages data
-
 // Advanced time series resampling
 function resampleTimeSeries(
   data: TimeSeries[],
@@ -1002,9 +945,6 @@ interface ParsedData {
   normalizedUnit?: string;
   metadata?: Record<string, any>;
 }
-
-// Note: WagesProcessingResult interface was removed in v0.1.6
-// Use PipelineResult instead - returned by processEconomicData()
 
 interface TimeSeries {
   date: Date;
