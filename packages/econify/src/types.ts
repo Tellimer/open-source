@@ -159,4 +159,17 @@ export interface Explain {
     /** Total conversion factor applied */
     totalFactor: number;
   };
+
+  /** Auto target selection (when autoTargetByIndicator is enabled) */
+  targetSelection?: {
+    mode: "auto-by-indicator";
+    indicatorKey: string;
+    selected: { currency?: string; magnitude?: Scale; time?: TimeScale };
+    shares?: {
+      currency?: Record<string, number>;
+      magnitude?: Record<string, number>;
+      time?: Record<string, number>;
+    };
+    reason?: string;
+  };
 }

@@ -48,6 +48,11 @@ const examples = [
     file: "time_sampling_advanced.ts",
     description: "Advanced time conversion techniques",
   },
+  {
+    name: "Auto Targets Explain",
+    file: "auto_targets_example.ts",
+    description: "Auto-target by indicator with explain.targetSelection",
+  },
 ];
 
 console.log("🚀 Running All Econify Examples");

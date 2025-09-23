@@ -15,3 +15,10 @@ export {
 
 // Export API types
 export type { PipelineOptions, PipelineResult } from "./pipeline_api.ts";
+
+// Export QA helper: auto target detection (dry-run)
+export { computeAutoTargets } from "../normalization/auto_targets.ts";
+export type {
+  AutoTargetOptions,
+  AutoTargets,
+} from "../normalization/auto_targets.ts";

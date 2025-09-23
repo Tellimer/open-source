@@ -2,6 +2,34 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.4.0] - 2025-09-23
+
+### Added
+
+- Auto-target by indicator: compute majority currency/magnitude/time per
+  indicator and normalize accordingly; includes detailed explain.targetSelection
+  with shares and reasons.
+- Public API: computeAutoTargets() helper and AutoTargetOptions types.
+
+### Changed
+
+- PipelineOptions now supports autoTargetByIndicator, indicatorKey,
+  autoTargetDimensions, minMajorityShare, tieBreakers, allowList/denyList.
+  Backward-compatible when not set.
+- Explain metadata enriched (currency/scale/time normalized fields +
+  targetSelection details), following our flatter explain structure preferences.
+
+### Tests
+
+- Added exact shares unit tests for computeAutoTargets on crafted distributions.
+- Added big mock dataset tests and synthetic stress tests across seeds; ensured
+  stability and deterministic tie-break behavior.
+
+### Chore
+
+- Fixed all Deno lint issues (removed `any` casts, added proper types), and
+  formatted codebase.
+
 ## [0.3.3] - 2025-09-23 (unreleased)
 
 ### Tests

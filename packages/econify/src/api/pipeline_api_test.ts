@@ -844,3 +844,675 @@ Deno.test("processEconomicData - mixed scales (AUS/AUT/AZE) → USD millions per
     );
   }
 });
+
+Deno.test("auto-target disabled: no per-indicator normalization", async () => {
+  const data: ParsedData[] = [
+    { id: "AUS", value: 11027, unit: "USD Million", name: "Balance of Trade" },
+    { id: "AUT", value: 365.1, unit: "EUR Million", name: "Balance of Trade" },
+    {
+      id: "AZE",
+      value: 2445459.7,
+      unit: "USD Thousand per quarter",
+      name: "Balance of Trade",
+    },
+  ];
+
+  const res = await processEconomicData(data, {
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.85 } },
+  });
+
+  const units = res.data.map((d) => d.normalizedUnit || d.unit);
+  // Expect at least one to differ in time basis or magnitude since no targets set
+  const unique = new Set(units);
+  if (unique.size === 1) {
+    throw new Error(
+      `unexpected uniform units without auto-target: ${units[0]}`,
+    );
+  }
+});
+
+Deno.test("auto-target per indicator: normalize to majority USD millions per month", async () => {
+  const data: ParsedData[] = [
+    { id: "AUS", value: 11027, unit: "USD Million", name: "Balance of Trade" },
+    { id: "AUT", value: 365.1, unit: "EUR Million", name: "Balance of Trade" },
+    {
+      id: "AZE",
+      value: 2445459.7,
+      unit: "USD Thousand per quarter",
+      name: "Balance of Trade",
+    },
+  ];
+
+  const res = await processEconomicData(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    minMajorityShare: 0.5,
+    indicatorKey: "name",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.8511 } },
+  });
+
+  // All units should be normalized to USD millions per month
+  for (const d of res.data) {
+    const u = d.normalizedUnit || d.explain?.units?.normalizedUnit || "";
+    if (!u.includes("USD millions per month")) {
+      throw new Error(`unexpected unit for ${d.id}: ${u}`);
+    }
+    const ex = d.explain;
+    if (ex) {
+      // Expect targetSelection metadata to be present in explain
+      if (!ex.targetSelection) {
+        throw new Error("missing explain.targetSelection");
+      }
+      if (!ex.targetSelection.selected) {
+        throw new Error("missing targetSelection.selected");
+      }
+      if (ex.targetSelection.selected.time !== "month") {
+        throw new Error("expected time=month");
+      }
+    }
+  }
+});
+
+Deno.test("auto-target: wages still normalize and succeed", async () => {
+  const wagesData = [
+    { value: 233931, unit: "AMD/Month", name: "Armenia Wages", id: "ARM" },
+    { value: 1631, unit: "AUD/Week", name: "Australia Wages", id: "AUS" },
+  ];
+
+  const result = await processEconomicData(wagesData, {
+    autoTargetByIndicator: true,
+    targetCurrency: "USD",
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { AMD: 387.5, AUD: 1.52 } },
+  });
+
+  // Should still process and normalize wages to USD with a per-time unit
+  for (const d of result.data) {
+    if (!d.normalizedUnit?.includes("USD")) {
+      throw new Error("wages not normalized to USD");
+    }
+  }
+});
+
+Deno.test("auto-target: non-monetary unaffected (percent/count/physical)", async () => {
+  const data: ParsedData[] = [
+    { value: 3.5, unit: "percent", name: "CPI" },
+    { value: 1000, unit: "Units", name: "Registrations" },
+    { value: 10, unit: "BBL/D/1K", name: "Oil" },
+  ];
+
+  const res = await processEconomicData(data, { autoTargetByIndicator: true });
+
+  // Values should remain unchanged for these categories
+  assertEquals(res.data[0].value, 3.5);
+  assertEquals(res.data[1].value, 1000);
+  assertEquals(res.data[2].value, 10);
+});
+
+Deno.test("auto-target explain: targetSelection details present", async () => {
+  const data: ParsedData[] = [
+    { id: "AUS", value: 11027, unit: "USD Million", name: "Balance of Trade" },
+    { id: "AUT", value: 365.1, unit: "EUR Million", name: "Balance of Trade" },
+    {
+      id: "AZE",
+      value: 2445459.7,
+      unit: "USD Thousand per quarter",
+      name: "Balance of Trade",
+    },
+  ];
+
+  const res = await processEconomicData(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    minMajorityShare: 0.5,
+    indicatorKey: "name",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.8511 } },
+  });
+
+  for (const d of res.data) {
+    const ex = d.explain;
+    if (!ex?.targetSelection) {
+      throw new Error("missing explain.targetSelection");
+    }
+    const ts = ex.targetSelection;
+    if (ts.mode !== "auto-by-indicator") {
+      throw new Error("expected mode auto-by-indicator");
+    }
+    if (ts.indicatorKey !== "Balance of Trade") {
+      throw new Error("unexpected indicatorKey");
+    }
+    if (ts.selected.currency !== "USD") {
+      throw new Error("expected currency USD");
+    }
+    if (ts.selected.magnitude !== "millions") {
+      throw new Error("expected magnitude millions");
+    }
+    if (ts.selected.time !== "month") throw new Error("expected time month");
+    // Reason should include majority/tie-break details for debugging
+    const reason = String(ts.reason || "");
+    if (!reason.includes("currency=majority(")) {
+      throw new Error("expected reason to include currency=majority(...)");
+    }
+    if (!reason.includes("time=tie-break(")) {
+      throw new Error("expected reason to include time=tie-break(...)");
+    }
+    // Shares sanity: we expect approximately > 0.5 for USD and millions; time may be selected via tie-breaker
+    const s = ts.shares;
+    if (!((s?.currency?.USD ?? 0) > 0.5)) {
+      throw new Error("expected USD share > 0.5");
+    }
+    if (!((s?.magnitude?.millions ?? 0) > 0.5)) {
+      throw new Error("expected millions share > 0.5");
+    }
+  }
+});
+
+Deno.test("auto-target extensive: multi-indicator with mock data and explain reasons", async () => {
+  const data: ParsedData[] = [
+    // Balance of Trade (majority USD, millions, month)
+    { id: "AUS", value: 11027, unit: "USD Million", name: "Balance of Trade" },
+    { id: "AUT", value: 365.1, unit: "EUR Million", name: "Balance of Trade" },
+    {
+      id: "AZE",
+      value: 2445459.7,
+      unit: "USD Thousand per quarter",
+      name: "Balance of Trade",
+    },
+    {
+      id: "ARG",
+      value: 901,
+      unit: "USD Million per month",
+      name: "Balance of Trade",
+    },
+    {
+      id: "BEN",
+      value: 120,
+      unit: "EUR Million per month",
+      name: "Balance of Trade",
+    },
+    {
+      id: "BGR",
+      value: 77,
+      unit: "USD Million per quarter",
+      name: "Balance of Trade",
+    },
+
+    // Exports (no clear time majority -> tie-break to month)
+    { id: "CAN", value: 100, unit: "USD Million", name: "Exports" },
+    { id: "CHE", value: 110, unit: "USD Million per quarter", name: "Exports" },
+    { id: "CHL", value: 95, unit: "EUR Million", name: "Exports" },
+    { id: "CHN", value: 200, unit: "USD Million per month", name: "Exports" },
+    { id: "CIV", value: 50, unit: "USD Million per quarter", name: "Exports" },
+    { id: "COL", value: 80, unit: "EUR Million", name: "Exports" },
+
+    // Non-monetary should be unaffected
+    { id: "USA", value: 3.5, unit: "percent", name: "Unemployment Rate" },
+    { id: "ARG2", value: 1000, unit: "Units", name: "Car Registrations" },
+  ];
+
+  const res = await processEconomicData(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    minMajorityShare: 0.5,
+    indicatorKey: "name",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.9 } },
+  });
+
+  // Group results by indicator name
+  const groups = new Map<string, ParsedData[]>();
+  for (const d of res.data) {
+    const key = String(d.name);
+    const arr = groups.get(key) || [];
+    arr.push(d);
+    groups.set(key, arr);
+  }
+
+  // Balance of Trade: expect majority USD/millions/month and reasons showing majority
+  for (const d of groups.get("Balance of Trade") || []) {
+    const ts = d.explain?.targetSelection;
+    if (!ts) throw new Error("missing targetSelection for Balance of Trade");
+    if (ts.selected.currency !== "USD") {
+      throw new Error("Balance of Trade currency should be USD");
+    }
+    if (ts.selected.magnitude !== "millions") {
+      throw new Error("Balance of Trade magnitude should be millions");
+    }
+    if (ts.selected.time !== "month") {
+      throw new Error("Balance of Trade time should be month");
+    }
+    const reason = String(ts.reason || "");
+    if (!reason.includes("currency=majority(")) {
+      throw new Error("BoT: reason should indicate currency majority");
+    }
+    if (!reason.includes("magnitude=majority(")) {
+      throw new Error("BoT: reason should indicate magnitude majority");
+    }
+  }
+
+  // Exports: expect tie-break on time to month; currency/magnitude to USD/millions
+  for (const d of groups.get("Exports") || []) {
+    const ts = d.explain?.targetSelection;
+    if (!ts) throw new Error("missing targetSelection for Exports");
+    if (ts.selected.currency !== "USD") {
+      throw new Error("Exports currency should be USD");
+    }
+    if (ts.selected.magnitude !== "millions") {
+      throw new Error("Exports magnitude should be millions");
+    }
+    if (ts.selected.time !== "month") {
+      throw new Error("Exports time should be month");
+    }
+    const reason = String(ts.reason || "");
+    if (!reason.includes("time=tie-break(")) {
+      throw new Error("Exports: expected tie-break on time");
+    }
+  }
+
+  // Non-monetary unchanged values
+  const percent = res.data.find((x) => x.name === "Unemployment Rate");
+  if (!percent || percent.value !== 3.5) {
+    throw new Error("percent data should remain unchanged");
+  }
+  const units = res.data.find((x) => x.name === "Car Registrations");
+  if (!units || units.value !== 1000) {
+    throw new Error("count data should remain unchanged");
+  }
+});
+
+Deno.test("auto-target gating: allowList/denyList control which indicators are auto-targeted", async () => {
+  const data: ParsedData[] = [
+    { id: "X1", value: 10, unit: "EUR Million", name: "A" },
+    { id: "X2", value: 20, unit: "USD Million", name: "A" },
+    { id: "Y1", value: 5, unit: "EUR Million", name: "B" },
+    { id: "Y2", value: 6, unit: "USD Million", name: "B" },
+    { id: "Z1", value: 7, unit: "EUR Million", name: "C" },
+    { id: "Z2", value: 8, unit: "USD Million", name: "C" },
+  ];
+
+  const res = await processEconomicData(data, {
+    autoTargetByIndicator: true,
+    indicatorKey: "name",
+    allowList: ["A", "C"],
+    denyList: ["B"],
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.9 } },
+  });
+
+  const byName = (n: string) => res.data.filter((d) => d.name === n);
+
+  // A and C should have targetSelection; B should not (denied)
+  for (const d of byName("A")) {
+    if (!d.explain?.targetSelection) {
+      throw new Error("A should be auto-targeted");
+    }
+  }
+  for (const d of byName("C")) {
+    if (!d.explain?.targetSelection) {
+      throw new Error("C should be auto-targeted");
+    }
+  }
+  for (const d of byName("B")) {
+    if (d.explain?.targetSelection) {
+      throw new Error("B should NOT be auto-targeted");
+    }
+  }
+});
+
+Deno.test("auto-target extensive: GDP/Debt/Imports distributions with share assertions", async () => {
+  const data: ParsedData[] = [
+    // GDP (12): strong majority USD/millions/month
+    { id: "G1", value: 100, unit: "USD Million per month", name: "GDP" },
+    { id: "G2", value: 101, unit: "USD Million per month", name: "GDP" },
+    { id: "G3", value: 102, unit: "USD Million per month", name: "GDP" },
+    { id: "G4", value: 103, unit: "USD Million per month", name: "GDP" },
+    { id: "G5", value: 104, unit: "USD Million per month", name: "GDP" },
+    { id: "G6", value: 105, unit: "USD Million per month", name: "GDP" },
+    { id: "G7", value: 106, unit: "USD Million per month", name: "GDP" },
+    { id: "G8", value: 107, unit: "USD Million per month", name: "GDP" },
+    { id: "G9", value: 108, unit: "EUR Million per month", name: "GDP" },
+    { id: "G10", value: 109, unit: "EUR Million per month", name: "GDP" },
+    { id: "G11", value: 110, unit: "USD Thousand per quarter", name: "GDP" },
+    { id: "G12", value: 111, unit: "USD Thousand per quarter", name: "GDP" },
+
+    // Debt (10): EUR/millions majority; time ambiguous -> tie-break to month
+    { id: "D1", value: 200, unit: "EUR Million per month", name: "Debt" },
+    { id: "D2", value: 201, unit: "EUR Million per month", name: "Debt" },
+    { id: "D3", value: 202, unit: "EUR Million per month", name: "Debt" },
+    { id: "D4", value: 203, unit: "EUR Million per month", name: "Debt" },
+    { id: "D5", value: 204, unit: "EUR Million per month", name: "Debt" },
+    { id: "D6", value: 205, unit: "EUR Million per quarter", name: "Debt" },
+    { id: "D7", value: 206, unit: "EUR Million per quarter", name: "Debt" },
+    { id: "D8", value: 207, unit: "USD Thousand per quarter", name: "Debt" },
+    { id: "D9", value: 208, unit: "USD Thousand per quarter", name: "Debt" },
+    { id: "D10", value: 209, unit: "USD Thousand per quarter", name: "Debt" },
+
+    // Imports (10): no majority in any dimension with minShare 0.6 -> tie-breaks across all
+    { id: "I1", value: 300, unit: "USD Million per quarter", name: "Imports" },
+    { id: "I2", value: 301, unit: "USD Million per quarter", name: "Imports" },
+    { id: "I3", value: 302, unit: "EUR Million per year", name: "Imports" },
+    { id: "I4", value: 303, unit: "EUR Million per year", name: "Imports" },
+    { id: "I5", value: 304, unit: "EUR Million per year", name: "Imports" },
+    { id: "I6", value: 305, unit: "JPY Thousand per month", name: "Imports" },
+    { id: "I7", value: 306, unit: "JPY Thousand per month", name: "Imports" },
+    { id: "I8", value: 307, unit: "JPY Thousand per month", name: "Imports" },
+    { id: "I9", value: 308, unit: "USD Thousand per month", name: "Imports" },
+    { id: "I10", value: 309, unit: "USD Thousand per month", name: "Imports" },
+  ];
+
+  const res = await processEconomicData(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    minMajorityShare: 0.6,
+    indicatorKey: "name",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.9, JPY: 150 } },
+  });
+
+  const byName = (n: string) => res.data.filter((d) => d.name === n);
+
+  // GDP assertions on shares and reasons
+  {
+    const group = byName("GDP");
+    const ts = group[0]?.explain?.targetSelection;
+    if (!ts) throw new Error("GDP missing targetSelection");
+    if (!(ts.shares?.currency?.USD! > 0.6)) {
+      throw new Error("GDP USD share > 0.6 expected");
+    }
+    if (!(ts.shares?.magnitude?.millions! > 0.6)) {
+      throw new Error("GDP millions share > 0.6 expected");
+    }
+    if (!(ts.shares?.time?.month! > 0.6)) {
+      throw new Error("GDP month share > 0.6 expected");
+    }
+    const r = String(ts.reason || "");
+    if (!r.includes("currency=majority(USD")) {
+      throw new Error("GDP currency majority reason expected");
+    }
+    if (!r.includes("magnitude=majority(millions")) {
+      throw new Error("GDP magnitude majority reason expected");
+    }
+    if (!r.includes("time=majority(month")) {
+      throw new Error("GDP time majority reason expected");
+    }
+  }
+
+  // Debt assertions: currency/magnitude majority; time tie-break
+  {
+    const group = byName("Debt");
+    const ts = group[0]?.explain?.targetSelection;
+    if (!ts) throw new Error("Debt missing targetSelection");
+    if (!(ts.shares?.currency?.EUR! > 0.6)) {
+      throw new Error("Debt EUR share > 0.6 expected");
+    }
+    if (!(ts.shares?.magnitude?.millions! > 0.6)) {
+      throw new Error("Debt millions share > 0.6 expected");
+    }
+    const r = String(ts.reason || "");
+    if (!r.includes("time=tie-break(")) {
+      throw new Error("Debt time tie-break expected");
+    }
+  }
+
+  // Imports assertions: all tie-breaks with minShare 0.6
+  {
+    const group = byName("Imports");
+    const ts = group[0]?.explain?.targetSelection;
+    if (!ts) throw new Error("Imports missing targetSelection");
+    const r = String(ts.reason || "");
+    if (!r.includes("currency=tie-break(")) {
+      throw new Error("Imports currency tie-break expected");
+    }
+    if (!r.includes("magnitude=tie-break(")) {
+      throw new Error("Imports magnitude tie-break expected");
+    }
+    if (!r.includes("time=tie-break(")) {
+      throw new Error("Imports time tie-break expected");
+    }
+    if (ts.selected.currency !== "USD") {
+      throw new Error("Imports currency should tie-break to USD");
+    }
+    if (ts.selected.magnitude !== "millions") {
+      throw new Error("Imports magnitude should tie-break to millions");
+    }
+    if (ts.selected.time !== "month") {
+      throw new Error("Imports time should tie-break to month");
+    }
+  }
+});
+
+Deno.test("auto-target stress: synthetic distributions across random seeds", async () => {
+  // Simple deterministic RNG (LCG)
+  const rng = (() => {
+    let s = 123456789;
+    return () => (s = (1664525 * s + 1013904223) >>> 0) / 0x100000000;
+  })();
+  const pick = <T>(weights: Array<[T, number]>) => {
+    const r = rng();
+    let acc = 0;
+    for (const [val, w] of weights) {
+      acc += w;
+      if (r < acc) return val;
+    }
+    return weights[weights.length - 1][0];
+  };
+
+  const currencies = ["USD", "EUR", "JPY"] as const;
+  const magnitudes = ["thousand", "millions"] as const; // use singular Thousand in unit string
+  const times = ["month", "quarter", "year"] as const;
+
+  type Dist<T extends string> = Array<[T, number]>;
+  const makeIndicator = (
+    name: string,
+    n: number,
+    cd: Dist<typeof currencies[number]>,
+    md: Dist<typeof magnitudes[number]>,
+    td: Dist<typeof times[number]>,
+  ) => {
+    const items: ParsedData[] = [];
+    for (let i = 0; i < n; i++) {
+      const c = pick(cd);
+      const m = pick(md);
+      const t = pick(td);
+      const mag = m === "millions" ? "Million" : "Thousand";
+      const unit = `${c} ${mag} per ${t}`;
+      items.push({ id: `${name}-${i}`, value: 100 + i, unit, name });
+    }
+    return items;
+  };
+
+  const data: ParsedData[] = [];
+  const groups: Array<
+    {
+      name: string;
+      cd: Dist<typeof currencies[number]>;
+      md: Dist<typeof magnitudes[number]>;
+      td: Dist<typeof times[number]>;
+    }
+  > = [];
+
+  // Build 6 indicators: 3 skewed, 3 ambiguous (no majority @0.6)
+  const skew = (
+    p: number,
+  ): Dist<typeof currencies[number]> => [["USD", p], ["EUR", (1 - p) / 2], [
+    "JPY",
+    (1 - p) / 2,
+  ]];
+  const skewMag = (
+    p: number,
+  ): Dist<typeof magnitudes[number]> => [["millions", p], ["thousand", 1 - p]];
+  const skewTime = (
+    p: number,
+  ): Dist<typeof times[number]> => [["month", p], ["quarter", (1 - p) / 2], [
+    "year",
+    (1 - p) / 2,
+  ]];
+
+  groups.push({
+    name: "Skewed-A",
+    cd: skew(0.7),
+    md: skewMag(0.8),
+    td: skewTime(0.7),
+  });
+  groups.push({
+    name: "Skewed-B",
+    cd: skew(0.65),
+    md: skewMag(0.7),
+    td: skewTime(0.65),
+  });
+  groups.push({
+    name: "Skewed-C",
+    cd: skew(0.9),
+    md: skewMag(0.75),
+    td: skewTime(0.75),
+  });
+
+  // Ambiguous: max share < 0.6 in all dimensions
+  const ambC: Dist<typeof currencies[number]> = [["USD", 0.4], ["EUR", 0.3], [
+    "JPY",
+    0.3,
+  ]];
+  const ambM: Dist<typeof magnitudes[number]> = [["millions", 0.5], [
+    "thousand",
+    0.5,
+  ]]; // =0.5
+  const ambT: Dist<typeof times[number]> = [["month", 0.4], ["quarter", 0.3], [
+    "year",
+    0.3,
+  ]];
+  groups.push({ name: "Ambiguous-A", cd: ambC, md: ambM, td: ambT });
+  groups.push({ name: "Ambiguous-B", cd: ambC, md: ambM, td: ambT });
+  groups.push({ name: "Ambiguous-C", cd: ambC, md: ambM, td: ambT });
+
+  for (const g of groups) {
+    data.push(...makeIndicator(g.name, 24, g.cd, g.md, g.td));
+  }
+
+  const res = await processEconomicData(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    minMajorityShare: 0.6,
+    indicatorKey: "name",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.9, JPY: 150 } },
+  });
+
+  const byName = (n: string) => res.data.filter((d) => d.name === n);
+  const selectedFrom = (n: string) => (byName(n)[0]?.explain?.targetSelection!);
+
+  // Skewed groups should pick majority per dimension (>=0.6) and reasons reflect majority
+  for (const name of ["Skewed-A", "Skewed-B", "Skewed-C"]) {
+    const ts = selectedFrom(name);
+    if (!ts) throw new Error(`${name} missing targetSelection`);
+    const r = String(ts.reason || "");
+    if (!r.includes("currency=majority(")) {
+      throw new Error(`${name}: expected currency majority reason`);
+    }
+    if (!r.includes("magnitude=majority(")) {
+      throw new Error(`${name}: expected magnitude majority reason`);
+    }
+    if (!r.includes("time=majority(")) {
+      throw new Error(`${name}: expected time majority reason`);
+    }
+  }
+
+  // Ambiguous groups: decide expectation per-dimension based on observed shares @0.6
+  for (const name of ["Ambiguous-A", "Ambiguous-B", "Ambiguous-C"]) {
+    const ts = selectedFrom(name);
+    if (!ts) throw new Error(`${name} missing targetSelection`);
+    const r = String(ts.reason || "");
+
+    // Currency
+    const cShares = ts.shares?.currency || {};
+    const cMax = Math.max(0, ...Object.values(cShares));
+    if (cMax >= 0.6) {
+      if (!r.includes("currency=majority(")) {
+        throw new Error(`${name}: expected currency majority given shares`);
+      }
+    } else {
+      if (!r.includes("currency=tie-break(")) {
+        throw new Error(`${name}: expected currency tie-break given shares`);
+      }
+      if (ts.selected.currency !== "USD") {
+        throw new Error(`${name}: currency should tie-break to USD`);
+      }
+    }
+
+    // Magnitude
+    const mShares = ts.shares?.magnitude || {} as Record<string, number>;
+    const mMax = Math.max(0, ...Object.values(mShares));
+    if (mMax >= 0.6) {
+      if (!r.includes("magnitude=majority(")) {
+        throw new Error(`${name}: expected magnitude majority given shares`);
+      }
+    } else {
+      if (!r.includes("magnitude=tie-break(")) {
+        throw new Error(`${name}: expected magnitude tie-break given shares`);
+      }
+      if (ts.selected.magnitude !== "millions") {
+        throw new Error(`${name}: magnitude should tie-break to millions`);
+      }
+    }
+
+    // Time
+    const tShares = ts.shares?.time || {} as Record<string, number>;
+    const tMax = Math.max(0, ...Object.values(tShares));
+    if (tMax >= 0.6) {
+      if (!r.includes("time=majority(")) {
+        throw new Error(`${name}: expected time majority given shares`);
+      }
+    } else {
+      if (!r.includes("time=tie-break(")) {
+        throw new Error(`${name}: expected time tie-break given shares`);
+      }
+      if (ts.selected.time !== "month") {
+        throw new Error(`${name}: time should tie-break to month`);
+      }
+    }
+  }
+});

@@ -20,6 +20,7 @@ import {
 import { processWagesData } from "../services/wages-service.ts";
 import { processBatch } from "../batch/batch.ts";
 import { filterExemptions } from "../exemptions/exemptions.ts";
+import { computeAutoTargets } from "../normalization/auto_targets.ts";
 
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 
@@ -86,6 +87,24 @@ export interface PipelineConfig {
 
   // Normalization exemptions
   exemptions?: NormalizationExemptions;
+
+  // Auto-target by indicator (additive, off by default)
+  autoTargetByIndicator?: boolean;
+  /** Grouping key for indicator series (default: 'name') */
+  indicatorKey?: "name";
+  /** Dimensions to auto-target (default: currency+magnitude+time) */
+  autoTargetDimensions?: Array<"currency" | "magnitude" | "time">;
+  /** Minimum share required to select a majority value (default: 0.5) */
+  minMajorityShare?: number;
+  /** Tie-breaker preferences when no majority exists */
+  tieBreakers?: {
+    currency?: "prefer-targetCurrency" | "prefer-USD" | "none";
+    magnitude?: "prefer-millions" | "none";
+    time?: "prefer-month" | "none";
+  };
+  /** Optional allow/deny lists to force in/out certain indicators */
+  allowList?: string[];
+  denyList?: string[];
 
   // Metadata explanation
   /** Include detailed normalization metadata for transparency (default: false) */
@@ -516,14 +535,73 @@ export const pipelineMachine = setup({
         }
 
         if (defaults.length > 0) {
-          const res = await processBatch(
-            defaults.map((d) => d.item),
-            batchOptions,
-          );
-          const merged = mergeByKey(defaults, res.successful);
-          merged.forEach((it, i) =>
-            processed.push({ item: it, idx: defaults[i].idx })
-          );
+          // If auto-targeting is enabled, compute per-indicator targets and process by group
+          if (config.autoTargetByIndicator) {
+            const items = defaults.map((d) => d.item);
+            const auto = computeAutoTargets(items, {
+              indicatorKey: config.indicatorKey ?? "name",
+              autoTargetDimensions: config.autoTargetDimensions,
+              minMajorityShare: config.minMajorityShare,
+              tieBreakers: config.tieBreakers,
+              targetCurrency: config.targetCurrency,
+              allowList: config.allowList,
+              denyList: config.denyList,
+            });
+            const groups = new Map<
+              string,
+              { item: ParsedData; idx: number }[]
+            >();
+            for (const entry of defaults) {
+              const key = String(entry.item.name ?? "");
+              const list = groups.get(key) ?? [];
+              list.push(entry);
+              groups.set(key, list);
+            }
+
+            for (const [key, group] of groups.entries()) {
+              const sel = auto.get(key);
+              const grpItems = group.map((g) => g.item);
+              const res = await processBatch(grpItems, {
+                ...batchOptions,
+                toCurrency: sel?.currency ?? batchOptions.toCurrency,
+                toMagnitude: (sel?.magnitude as Scale | undefined) ??
+                  batchOptions.toMagnitude,
+                toTimeScale: sel?.time ?? batchOptions.toTimeScale,
+              });
+              const merged = mergeByKey(group, res.successful);
+              // Attach explain.targetSelection when requested
+              if (config.explain && sel) {
+                for (const m of merged) {
+                  (m.explain ||= {}).targetSelection = {
+                    mode: "auto-by-indicator",
+                    indicatorKey: key,
+                    selected: {
+                      currency: sel.currency,
+                      magnitude: sel.magnitude as Scale | undefined,
+                      time: sel.time,
+                    },
+                    shares: sel.shares,
+                    reason: sel.reason ??
+                      (sel.currency || sel.magnitude || sel.time
+                        ? "majority/tie-break"
+                        : "none"),
+                  };
+                }
+              }
+              merged.forEach((it, i) =>
+                processed.push({ item: it, idx: group[i].idx })
+              );
+            }
+          } else {
+            const res = await processBatch(
+              defaults.map((d) => d.item),
+              batchOptions,
+            );
+            const merged = mergeByKey(defaults, res.successful);
+            merged.forEach((it, i) =>
+              processed.push({ item: it, idx: defaults[i].idx })
+            );
+          }
         }
 
         // Reassemble in original order

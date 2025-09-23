@@ -23,6 +23,18 @@ Real-world integration patterns with progress tracking and validation.
 
 ## 📊 Specialized Examples
 
+### Auto-Target by Indicator + explain.targetSelection (new)
+
+```bash
+deno run --allow-all examples/auto_targets_example.ts
+```
+
+Demonstrates per-indicator auto-targeting (currency, magnitude, time) and how to
+read explain.targetSelection (selected values, shares, and reason strings).
+
+See also: README section “Auto‑Target by Indicator: targetSelection in Explain”
+for payload shape and details.
+
 ### Wages Processing
 
 ```bash
@@ -138,6 +150,7 @@ examples/
 ├── wages_processing_example.ts   # Wages-specific processing
 ├── exemptions_example.ts         # Exemptions system
 ├── time_resampling_example.ts    # Time period standardization
+├── auto_targets_example.ts       # 🆕 Auto-target by indicator + explain.targetSelection
 ├── advanced_usage.ts             # All advanced features
 └── time_sampling_advanced.ts     # Advanced time sampling
 ```
@@ -173,7 +186,7 @@ for file in examples/{quickstart,simple_consumer,exemptions_example}.ts; do
 done
 
 # Run all advanced examples
-for file in examples/{wages_processing_example,time_resampling_example,advanced_usage,time_sampling_advanced}.ts; do
+for file in examples/{wages_processing_example,time_resampling_example,auto_targets_example,advanced_usage,time_sampling_advanced}.ts; do
   echo "Running $file..."
   deno run --allow-all "$file"
   echo "---"

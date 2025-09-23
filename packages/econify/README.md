@@ -356,6 +356,68 @@ const ConversionDisplay = () => (
 );
 ```
 
+### Auto‑Target by Indicator: targetSelection in Explain
+
+When `autoTargetByIndicator` is enabled, Econify detects the most common
+currency, magnitude and time basis per indicator series (e.g., per indicator
+name) and normalizes minority values to match. For transparency, the explain
+metadata includes a `targetSelection` section with the chosen targets, observed
+shares, and rationale.
+
+Enable and inspect:
+
+```ts
+const result = await processEconomicData(data, {
+  autoTargetByIndicator: true,
+  indicatorKey: "name", // default
+  autoTargetDimensions: ["currency", "magnitude", "time"],
+  minMajorityShare: 0.5,
+  tieBreakers: {
+    currency: "prefer-targetCurrency", // falls back to USD if no targetCurrency
+    magnitude: "prefer-millions",
+    time: "prefer-month",
+  },
+  targetCurrency: "USD", // optional, used by tie-breaker
+  explain: true,
+  useLiveFX: false,
+  fxFallback: { base: "USD", rates: { EUR: 0.8511 } },
+});
+
+for (const item of result.data) {
+  console.log(item.explain?.targetSelection);
+}
+```
+
+Payload shape:
+
+```json
+{
+  "mode": "auto-by-indicator",
+  "indicatorKey": "Balance of Trade",
+  "selected": { "currency": "USD", "magnitude": "millions", "time": "month" },
+  "shares": {
+    "currency": { "USD": 0.67, "EUR": 0.33 },
+    "magnitude": { "millions": 1.0 },
+    "time": { "month": 0.67, "quarter": 0.33 }
+  },
+  "reason": "currency=majority(USD,0.67); magnitude=majority(millions,1.00); time=tie-break(prefer-month)"
+}
+```
+
+Notes:
+
+- `shares` are per-dimension observed shares within the indicator group
+  (0.0–1.0).
+- `selected` shows the effective targets applied during normalization per group.
+- `reason` clarifies why each dimension was chosen:
+  - `majority(X,share)` if the top share ≥ `minMajorityShare`
+  - `tie-break(rule)` if no majority and a tie-breaker preference was applied
+  - `none` if neither condition was met
+- Monetary domains (GDP, debt, trade, etc.) are auto‑targeted. Percentages,
+  counts, and physical/commodity domains are left unchanged.
+- You can control inclusion via `allowList`/`denyList` to force specific
+  indicators in/out of auto-targeting.
+
 ### With Progress Tracking
 
 Monitor pipeline progress for better UX in applications:

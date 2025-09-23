@@ -21,6 +21,13 @@ the changes needed in your consumer repository.
 
 ---
 
+> Note: For per-indicator auto-targeting (currency, magnitude, time) and the
+> explain.targetSelection payload used to drive UI transparency, see:
+>
+> - README section: “Auto‑Target by Indicator: targetSelection in Explain”
+> - Example: examples/auto_targets_example.ts (prints targetSelection with
+>   selected values, shares, and reason strings)
+
 ## 📊 Updated Explain Structure
 
 ### New Structure (v0.2.7)
