@@ -140,9 +140,10 @@ export function computeAutoTargets(
     const magnitude = item.scale
       ? getScale(item.scale)
       : (parseUnit(item.unit).scale ?? "ones");
-    const time = item.periodicity
-      ? parseTimeScale(item.periodicity)
-      : parseUnit(item.unit).timeScale;
+    // Prefer unit time token over item.periodicity for time share extraction
+    const unitTs = parseUnit(item.unit).timeScale;
+    const time = unitTs ??
+      (item.periodicity ? parseTimeScale(item.periodicity) : undefined);
 
     inc(g.currency, currency ?? undefined);
     inc(g.magnitude, magnitude ?? undefined);

@@ -111,6 +111,65 @@ export interface PipelineConfig {
   explain?: boolean;
 }
 
+// Normalize share keys for explain.targetSelection to canonical tokens
+function normalizeShareKeys(shares: {
+  currency: Record<string, number>;
+  magnitude: Record<string, number>;
+  time: Record<string, number>;
+}): {
+  currency: Record<string, number>;
+  magnitude: Record<string, number>;
+  time: Record<string, number>;
+} {
+  const normDim = (
+    rec: Record<string, number>,
+    dim: "currency" | "magnitude" | "time",
+  ): Record<string, number> => {
+    const out: Record<string, number> = {};
+    for (const [rawKey, v] of Object.entries(rec)) {
+      let key = rawKey;
+      if (dim === "currency") {
+        // Undo snake/slug like u_s_d -> USD; usd -> USD
+        key = rawKey.replace(/_/g, "").toUpperCase();
+        // Keep only A-Z letters if it somehow contains other chars
+        key = key.replace(/[^A-Z]/g, "");
+      } else if (dim === "magnitude") {
+        const lk = rawKey.toLowerCase().replace(/_/g, "");
+        const map: Record<string, string> = {
+          thousand: "thousands",
+          thousands: "thousands",
+          million: "millions",
+          millions: "millions",
+          billion: "billions",
+          billions: "billions",
+          ones: "ones",
+        };
+        key = map[lk] ?? lk;
+      } else {
+        const lk = rawKey.toLowerCase().replace(/_/g, "");
+        const map: Record<string, string> = {
+          month: "month",
+          monthly: "month",
+          quarter: "quarter",
+          quarterly: "quarter",
+          year: "year",
+          yearly: "year",
+          annual: "year",
+          annually: "year",
+        };
+        key = map[lk] ?? lk;
+      }
+      out[key] = (out[key] ?? 0) + v;
+    }
+    return out;
+  };
+  return {
+    currency: normDim(shares.currency || {}, "currency"),
+    magnitude: normDim(shares.magnitude || {}, "magnitude"),
+    time: normDim(shares.time || {}, "time"),
+  };
+}
+
 /**
  * Data point flowing through the pipeline.
  *
@@ -580,7 +639,7 @@ export const pipelineMachine = setup({
                       magnitude: sel.magnitude as Scale | undefined,
                       time: sel.time,
                     },
-                    shares: sel.shares,
+                    shares: normalizeShareKeys(sel.shares),
                     reason: sel.reason ??
                       (sel.currency || sel.magnitude || sel.time
                         ? "majority/tie-break"
