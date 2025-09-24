@@ -2,6 +2,25 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [0.4.1] - 2025-09-24
+
+### Changed
+
+- Auto-target time basis now prefers unit time token over `item.periodicity` for
+  share extraction, aligning auto-targeting with per-item normalization
+  precedence.
+
+### Docs
+
+- Updated INTERNAL_BRIEF with decision-based flows and clarified time precedence
+  and tie-breakers.
+- Simplified Mermaid syntax for broader renderer compatibility; fixed rendering
+  issues in the auto-target micro-flows and main flow.
+
+### Tests
+
+- Full econify suite passes after the change.
+
 ## [0.4.0] - 2025-09-23
 
 ### Added
