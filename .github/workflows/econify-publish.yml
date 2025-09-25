@@ -39,6 +39,10 @@ jobs:
       - name: Enforce 80% coverage
         run: deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
 
+
+      - name: Enforce 80% coverage on changed files
+        run: deno run --allow-read --allow-run scripts/check_changed_coverage.ts coverage/lcov.info 80
+
   publish:
     needs: test
     runs-on: ubuntu-latest

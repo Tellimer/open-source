@@ -12,6 +12,7 @@ import {
 } from "../scale/scale.ts";
 import { parseUnit } from "../units/units.ts";
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
+import { isStock } from "../classification/classification.ts";
 
 // ----------------------- Combined Normalization -----------------------
 
@@ -210,13 +211,16 @@ export function normalizeValue(
 
   // Handle time scaling
   if (options?.toTimeScale) {
-    // For stock-like count indicators (e.g., Population), skip time conversion entirely
-    const isCountStockLike = /\b(population|inhabitants|residents|people)\b/i
-      .test(
-        options?.indicatorName || "",
-      );
+    // Detect stock indicators (levels) using name+unit; skip time conversion entirely
+    const isStockIndicator = options?.indicatorName
+      ? isStock({ name: options.indicatorName, unit: unitText })
+      : false;
 
-    if (!isCountStockLike) {
+    // For stock-like count indicators (e.g., Population), also skip
+    const isCountStockLike = /\b(population|inhabitants|residents|people)\b/i
+      .test(options?.indicatorName || "");
+
+    if (!isStockIndicator && !isCountStockLike) {
       if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
         // Time conversion can be performed
         result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);

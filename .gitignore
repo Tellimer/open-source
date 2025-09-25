@@ -49,3 +49,6 @@ Thumbs.db
 # Deno coverage outputs
 .coverage/
 coverage.lcov
+
+.coverage_tmp/
+.coverage.lcov

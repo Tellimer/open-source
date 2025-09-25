@@ -30,6 +30,107 @@ Linting Issues** • **Enhanced Explain Metadata** • **Type Safe**
 _Robust data processing pipeline powered by XState v5 with automatic quality
 assessment, error handling, and interactive control flow._
 
+
+### Machine associations overview (Mermaid)
+
+```mermaid
+graph LR
+  P[pipelineMachine] --> FX[fxRatesMachine]
+  P --> N[normalizationMachine]
+  P --> ADJ[adjustmentMachine]
+  N -->|has wages| W[wagesMachine]
+  N -->|no wages| D[domainsMachine]
+  D --> C[countsMachine]
+  D --> PCT[percentagesMachine]
+  D --> CR[cryptoMachine]
+  D --> IDX[indexMachine]
+  D --> RATIO[ratiosMachine]
+  D --> DEF[defaultMonetaryMachine]
+  D --> PHYS[processBatch physical domains]
+  subgraph Monetary Pipeline
+    DEF --> AT[autoTargetMachine]
+    AT --> TB[timeBasisMachine]
+    TB --> MN[monetaryNormalizationMachine]
+  end
+```
+
+> Further reading: Domains Router state machine (fan-out/fan-in, sub-machine orchestration) — see [docs/DOMAINS_ROUTER.md](./docs/DOMAINS_ROUTER.md)
+
+### Domains Router — Mermaid diagrams
+
+Overall state machine flow
+
+```mermaid
+stateDiagram-v2
+  [*] --> classifyAndBucket
+  classifyAndBucket --> spawnDomainFlows
+  state spawnDomainFlows {
+    [*] --> counts
+    [*] --> percentages
+    [*] --> emissions
+    [*] --> energy
+    [*] --> commodities
+    [*] --> agriculture
+    [*] --> metals
+    [*] --> crypto
+    [*] --> index
+    [*] --> ratios
+    [*] --> defaults
+  }
+  spawnDomainFlows --> restoreOrder
+  restoreOrder --> mergeExplain
+  mergeExplain --> done
+  done --> [*]
+```
+
+Routing by indicator type (bucketing)
+
+```mermaid
+graph TD
+  A[Item name and unit] --> B{Exempt?}
+  B -- Yes --> X[Exempted]
+  B -- No --> C{Detect domain}
+  C -->|Emissions| E[emissions]
+  C -->|Energy| EN[energy]
+  C -->|Commodities| COM[commodities]
+  C -->|Agriculture| AGR[agriculture]
+  C -->|Metals| MET[metals]
+  C -->|Crypto| CR[crypto]
+  C -->|Index| IDX[index]
+  C -->|Strict Ratio| R[ratios]
+  C -->|Count| CNT[counts]
+  C -->|Percentage| P[percentages]
+  C -->|Wages| D[defaults]
+  C -->|Default| D[defaults]
+```
+
+Router and sub-machines
+
+```mermaid
+graph LR
+  R[Domains Router] -->|counts| M1[countsMachine]
+  R -->|percentages| M2[percentages pass-through]
+  R -->|crypto| M3[crypto no-op]
+  R -->|index| M4[index no-op]
+  R -->|ratios| M5[ratios guard no-op]
+  R -->|defaults/wages| M6[defaultMonetaryMachine]
+  R -->|emissions/energy/commodities/agriculture/metals| PB[processBatch no targets]
+  subgraph Monetary Pipeline
+    M6 --> AT[autoTargetMachine]
+    AT --> TB[timeBasisMachine]
+    TB --> W[wages handled here]
+    W --> MN[monetaryNormalizationMachine]
+  end
+  M1 --> F[restoreOrder -> mergeExplain -> done]
+  M2 --> F
+  M3 --> F
+  M4 --> F
+  M5 --> F
+  PB --> F
+  MN --> F
+```
+
+
 ## ✨ Features
 
 ### Core Capabilities

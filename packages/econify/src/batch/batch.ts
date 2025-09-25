@@ -6,6 +6,7 @@ import { normalizeValue } from "../normalization/normalization.ts";
 import { buildExplainMetadata } from "../normalization/explain.ts";
 import { parseUnit } from "../units/units.ts";
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
+import { isStock } from "../classification/classification.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import { getScale } from "../scale/scale.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
@@ -358,8 +359,11 @@ function processItem<T extends BatchItem>(
     const effectiveCurrency = normalizeCurrency(item.currency_code) ||
       parsed.currency;
     const effectiveScale = normalizeScale(item.scale) || parsed.scale;
-    const effectiveTimeScale = normalizeTimeScale(item.periodicity) ||
-      parsed.timeScale;
+    // Detect stock indicators early; for stocks, ignore dataset periodicity (snapshot levels)
+    const isStockIndicator = isStock({ name: indicatorName ?? "", unit: item.unit, description: (item as any)?.description, notes: (item as any)?.notes });
+
+    // Prefer unit time token; only fall back to item.periodicity for non-stock flows
+    const effectiveTimeScale = (parsed.timeScale || (isStockIndicator ? null : normalizeTimeScale(item.periodicity))) || null;
 
     // Determine an explicit target magnitude for consistent unit strings (compute before normalization)
     const targetMagnitude: Scale | undefined = options.toMagnitude ??
@@ -388,11 +392,13 @@ function processItem<T extends BatchItem>(
       const scale = targetMagnitude ?? "ones";
       normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
     } else {
+      // For stock indicators, omit per-time in the normalized unit label
+      const timeScaleForUnit = isStockIndicator ? undefined : options.toTimeScale;
       normalizedUnit = buildNormalizedUnit(
         item.unit,
         options.toCurrency,
         targetMagnitude,
-        options.toTimeScale,
+        timeScaleForUnit,
       );
     }
 

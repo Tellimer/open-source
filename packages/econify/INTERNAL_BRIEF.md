@@ -17,6 +17,36 @@ targets, and how to interpret outputs.
   applied. Share keys are canonicalized (USD, millions, month).
 
 ---
+## Machines architecture overview (current)
+
+```mermaid
+graph LR
+  P[pipelineMachine] --> FX[fxRatesMachine]
+  P --> N[normalizationMachine]
+  P --> ADJ[adjustmentMachine]
+  N -->|has wages| W[wagesMachine]
+  N -->|no wages| D[domainsMachine]
+  D --> C[countsMachine]
+  D --> PCT[percentagesMachine]
+  D --> CR[cryptoMachine]
+  D --> IDX[indexMachine]
+  D --> RATIO[ratiosMachine]
+  D --> DEF[defaultMonetaryMachine]
+  D --> PHYS[processBatch physical domains]
+  subgraph Monetary Pipeline
+    DEF --> AT[autoTargetMachine]
+    AT --> TB[timeBasisMachine]
+    TB --> MN[monetaryNormalizationMachine]
+  end
+```
+
+Notes:
+- Normalization stage now routes to wagesMachine when wage-like items are present; otherwise to domainsMachine (domains router).
+- Physical domains (emissions, energy, commodities, agriculture, metals) run via processBatch with no currency/magnitude/time targets.
+- Percentages, crypto, index, ratios are effectively pass-through/no-op lanes with explain annotations when enabled.
+- Defaults lane uses the monetary pipeline (autoTarget + timeBasis + monetaryNormalization).
+- See docs/DOMAINS_ROUTER.md for the router’s detailed flow and sub-machines.
+
 
 ## Flow diagram
 

@@ -29,11 +29,16 @@ import {
   parseWithCustomUnits,
 } from "../custom/custom_units.ts";
 
+import { fxRatesMachine } from "./machines/fx/index.ts";
+import { adjustmentMachine } from "./machines/stages/adjustment/index.ts";
+import { normalizationMachine } from "./machines/stages/normalization/normalization.machine.ts";
+
 // Initialize domain-specific units once for stronger detection
 loadDomainUnits("emissions");
 loadDomainUnits("commodities");
 loadDomainUnits("agriculture");
 loadDomainUnits("metals");
+loadDomainUnits("crypto");
 
 // Derived types
 type ParsedUnit = ReturnType<typeof parseUnit>;
@@ -757,6 +762,11 @@ export const pipelineMachine = setup({
         );
       },
     ),
+
+    adjustmentActor: adjustmentMachine,
+    normalizationActor: normalizationMachine,
+
+    fxRatesActor: fxRatesMachine,
   },
   guards: {
     qualityPassed: ({ context }) => {
@@ -800,6 +810,12 @@ export const pipelineMachine = setup({
           ? (err as { message?: string }).message
           : undefined) || "Warning occurred";
         return [...context.warnings, message];
+      },
+    }),
+    appendWarnings: assign({
+      warnings: ({ context, event }) => {
+        const w = (event as any)?.output?.warnings as string[] | undefined;
+        return w && w.length ? [...context.warnings, ...w] : context.warnings;
       },
     }),
     logSuccess: () => {
@@ -931,12 +947,19 @@ export const pipelineMachine = setup({
       entry: "logStep",
       invoke: {
         id: "fetchRates",
-        src: "fetchRatesService",
-        input: ({ context }) => context,
+        src: "fxRatesActor",
+        input: ({ context }) => ({ config: context.config }),
         onDone: {
           target: "normalizing",
           actions: assign({
-            fxRates: ({ event }) => event.output,
+            fxRates: ({ context, event }) =>
+              (event as any).output?.rates ?? context.config.fxFallback,
+            fxSource: ({ context, event }) =>
+              (event as any).output?.source ??
+                (context.config.fxFallback ? "fallback" : undefined),
+            fxSourceId: ({ context, event }) =>
+              (event as any).output?.sourceId ??
+                (context.config.fxFallback ? "SNP" : undefined),
           }),
         },
         onError: {
@@ -955,13 +978,24 @@ export const pipelineMachine = setup({
       entry: "logStep",
       invoke: {
         id: "normalize",
-        src: "normalizeDataService",
-        input: ({ context }) => context,
+        src: "normalizationActor",
+        input: ({ context }: { context: PipelineContext }) => ({
+          config: context.config,
+          parsedData: context.parsedData!,
+          fxRates: context.fxRates,
+          fxSource: context.fxSource,
+          fxSourceId: context.fxSourceId,
+          explain: context.config.explain,
+        }),
         onDone: {
           target: "adjusting",
-          actions: assign({
-            normalizedData: ({ event }) => event.output,
-          }),
+          actions: [
+            assign({
+              normalizedData: ({ event }) =>
+                (event as any)?.output?.normalizedData,
+            }),
+            "appendWarnings",
+          ],
         },
         onError: {
           target: "error",
@@ -972,66 +1006,26 @@ export const pipelineMachine = setup({
 
     adjusting: {
       entry: "logStep",
-      initial: "checkingInflation",
-      states: {
-        checkingInflation: {
-          always: [
-            {
-              target: "adjustingInflation",
-              guard: "shouldAdjustInflation",
-            },
-            {
-              target: "checkingSeasonality",
-            },
+      invoke: {
+        id: "adjustment",
+        src: "adjustmentActor",
+        input: ({ context }) => ({
+          config: context.config,
+          normalizedData: context.normalizedData,
+          adjustedData: context.adjustedData,
+        }),
+        onDone: {
+          target: "finalizing",
+          actions: [
+            assign({
+              adjustedData: ({ event }) => (event as any)?.output?.adjustedData,
+            }),
+            "appendWarnings",
           ],
         },
-
-        adjustingInflation: {
-          invoke: {
-            id: "adjustInflation",
-            src: "adjustInflationService",
-            input: ({ context }) => context,
-            onDone: {
-              target: "checkingSeasonality",
-              actions: assign({
-                adjustedData: ({ event }) => event.output,
-              }),
-            },
-            onError: {
-              target: "checkingSeasonality",
-              actions: "logWarning",
-            },
-          },
-        },
-
-        checkingSeasonality: {
-          always: [
-            {
-              target: "removingSeasonality",
-              guard: "shouldRemoveSeasonality",
-            },
-            {
-              target: "#econifyPipeline.finalizing",
-            },
-          ],
-        },
-
-        removingSeasonality: {
-          invoke: {
-            id: "removeSeasonality",
-            src: "removeSeasonalityService",
-            input: ({ context }) => context,
-            onDone: {
-              target: "#econifyPipeline.finalizing",
-              actions: assign({
-                adjustedData: ({ event }) => event.output,
-              }),
-            },
-            onError: {
-              target: "#econifyPipeline.finalizing",
-              actions: "logWarning",
-            },
-          },
+        onError: {
+          target: "finalizing",
+          actions: "logWarning",
         },
       },
     },

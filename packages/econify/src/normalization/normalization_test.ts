@@ -253,3 +253,48 @@ Deno.test("normalizeValue - Population (stock-like count) does not divide by 12"
   });
   assertEquals(result, original);
 });
+
+
+Deno.test("stock monetary - ignore item.periodicity and do not upsample", async () => {
+  const { processBatch } = await import("../batch/batch.ts");
+  const items = [{
+    name: "Foreign Exchange Reserves",
+    value: 120,
+    unit: "USD Million",
+    periodicity: "Monthly", // reporting frequency present
+    currency_code: "USD",
+  }];
+  const res = await processBatch(items, {
+    validate: false,
+    toCurrency: "USD",
+    toMagnitude: "millions",
+    toTimeScale: "month",
+    explain: true,
+  });
+  const out = res.successful[0];
+  // No upsampling: keep value as-is and do not append per month in unit
+  assertEquals(out.normalized, 120);
+  assertEquals(out.normalizedUnit.includes("per"), false);
+});
+
+Deno.test("flow monetary - time conversion applies (year -> month)", async () => {
+  const { processBatch } = await import("../batch/batch.ts");
+  const items = [{
+    name: "Trade Balance",
+    value: 120,
+    unit: "USD Million per year",
+    periodicity: "Monthly",
+    currency_code: "USD",
+  }];
+  const res = await processBatch(items, {
+    validate: false,
+    toCurrency: "USD",
+    toMagnitude: "millions",
+    toTimeScale: "month",
+    explain: true,
+  });
+  const out = res.successful[0];
+  // 120 per year -> 10 per month
+  assertEquals(out.normalized, 10);
+  assertEquals(out.normalizedUnit.toLowerCase(), "usd millions per month");
+});
