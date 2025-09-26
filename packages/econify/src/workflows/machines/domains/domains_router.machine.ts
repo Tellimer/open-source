@@ -6,8 +6,8 @@ Output: { normalizedData }
 Key states: classifyAndBucket → spawnDomainFlows (parallel) → restoreOrder → mergeExplain → done
 */
 
-import { setup, fromPromise, assign, createActor } from "npm:xstate@^5.20.2";
-import type { ParsedData, FXTable } from "../../../main.ts";
+import { assign, createActor, fromPromise, setup } from "npm:xstate@^5.20.2";
+import type { FXTable, ParsedData } from "../../../main.ts";
 import type { PipelineConfig } from "../../economic-data-workflow.ts";
 import { filterExemptions } from "../../../exemptions/exemptions.ts";
 import { processBatch } from "../../../batch/batch.ts";
@@ -18,8 +18,14 @@ import { cryptoMachine } from "./crypto/crypto.machine.ts";
 import { indexDomainMachine } from "./index/index.machine.ts";
 import { ratiosMachine } from "./ratios/ratios.machine.ts";
 import { parseUnit } from "../../../units/units.ts";
-import { parseWithCustomUnits, loadDomainUnits } from "../../../custom/custom_units.ts";
-import { isCountIndicator, isCountUnit } from "../../../count/count-normalization.ts";
+import {
+  loadDomainUnits,
+  parseWithCustomUnits,
+} from "../../../custom/custom_units.ts";
+import {
+  isCountIndicator,
+  isCountUnit,
+} from "../../../count/count-normalization.ts";
 
 interface DomainsInput {
   config: PipelineConfig;
@@ -82,129 +88,250 @@ export const domainsMachine = setup({
       const { parsedData, config } = input;
       if (!parsedData) throw new Error("No parsed data available");
       // Ensure crypto custom units are registered for classification
-      try { loadDomainUnits("crypto"); } catch (_) { /* no-op */ }
-      const { exempted, nonExempted } = filterExemptions(parsedData, config.exemptions);
-      const indexed: IndexedItem[] = nonExempted.map((item, idx) => ({ item, idx }));
-      const buckets: Buckets = { counts: [], percentages: [], emissions: [], energy: [], commodities: [], agriculture: [], metals: [], crypto: [], index: [], ratios: [], defaults: [] };
+      try {
+        loadDomainUnits("crypto");
+      } catch (_) { /* no-op */ }
+      const { exempted, nonExempted } = filterExemptions(
+        parsedData,
+        config.exemptions,
+      );
+      const indexed: IndexedItem[] = nonExempted.map((item, idx) => ({
+        item,
+        idx,
+      }));
+      const buckets: Buckets = {
+        counts: [],
+        percentages: [],
+        emissions: [],
+        energy: [],
+        commodities: [],
+        agriculture: [],
+        metals: [],
+        crypto: [],
+        index: [],
+        ratios: [],
+        defaults: [],
+      };
       for (const entry of indexed) {
         const { item } = entry;
         const parsed = parseUnit(item.unit);
         const name = (item.name || "").toLowerCase();
         const unitLower = (item.unit || "").toLowerCase();
-        const custom = parseWithCustomUnits(`${name} ${item.unit || ""}`) || parseWithCustomUnits(item.unit || "");
-        const isEmissions = (custom && (custom as { category?: string }).category === "emissions") || /co2e?|carbon\s+credits?/i.test(unitLower + " " + name);
-        if (isEmissions) { buckets.emissions.push(entry); continue; }
-        const isEnergy = parsed.category === "energy" || /(gwh|\bmegawatts?\b|\bmw\b|\bterajoules?\b|\btj\b|\bmmbtu\b|\bbtu\b)/i.test(unitLower);
-        if (isEnergy) { buckets.energy.push(entry); continue; }
-        const isCommodity = (custom && (custom as { category?: string }).category === "commodity") || /(troy\s*oz|barrels?|\bbbls?\b|crude|wti|brent|gold)/i.test(unitLower + " " + name);
-        if (isCommodity) { buckets.commodities.push(entry); continue; }
-        const isAgriculture = (custom && (custom as { category?: string }).category === "agriculture") || /\bbushels?\b|short\s+tons?|metric\s+tonnes?/i.test(unitLower + " " + name);
-        if (isAgriculture) { buckets.agriculture.push(entry); continue; }
-        const isMetals = (custom && (custom as { category?: string }).category === "metals") || /silver\s+oz|silver\s+troy\s+ounces?|copper\s+tonnes?|steel\s+tonnes?/i.test(unitLower + " " + name);
-        if (isMetals) { buckets.metals.push(entry); continue; }
-        const isCrypto = (custom && (custom as { category?: string }).category === "cryptocurrency") || /(\bbtc\b|bitcoin|\beth\b|ethereum|\bwei\b)/i.test(unitLower + " " + name);
-        if (isCrypto) { buckets.crypto.push(entry); continue; }
+        const custom = parseWithCustomUnits(`${name} ${item.unit || ""}`) ||
+          parseWithCustomUnits(item.unit || "");
+        const isEmissions = (custom &&
+          (custom as { category?: string }).category === "emissions") ||
+          /co2e?|carbon\s+credits?/i.test(unitLower + " " + name);
+        if (isEmissions) {
+          buckets.emissions.push(entry);
+          continue;
+        }
+        const isEnergy = parsed.category === "energy" ||
+          /(gwh|\bmegawatts?\b|\bmw\b|\bterajoules?\b|\btj\b|\bmmbtu\b|\bbtu\b)/i
+            .test(unitLower);
+        if (isEnergy) {
+          buckets.energy.push(entry);
+          continue;
+        }
+        const isCommodity = (custom &&
+          (custom as { category?: string }).category === "commodity") ||
+          /(troy\s*oz|barrels?|\bbbls?\b|crude|wti|brent|gold)/i.test(
+            unitLower + " " + name,
+          );
+        if (isCommodity) {
+          buckets.commodities.push(entry);
+          continue;
+        }
+        const isAgriculture = (custom &&
+          (custom as { category?: string }).category === "agriculture") ||
+          /\bbushels?\b|short\s+tons?|metric\s+tonnes?/i.test(
+            unitLower + " " + name,
+          );
+        if (isAgriculture) {
+          buckets.agriculture.push(entry);
+          continue;
+        }
+        const isMetals =
+          (custom && (custom as { category?: string }).category === "metals") ||
+          /silver\s+oz|silver\s+troy\s+ounces?|copper\s+tonnes?|steel\s+tonnes?/i
+            .test(unitLower + " " + name);
+        if (isMetals) {
+          buckets.metals.push(entry);
+          continue;
+        }
+        const isCrypto = (custom &&
+          (custom as { category?: string }).category === "cryptocurrency") ||
+          /(\bbtc\b|bitcoin|\beth\b|ethereum|\bwei\b)/i.test(
+            unitLower + " " + name,
+          );
+        if (isCrypto) {
+          buckets.crypto.push(entry);
+          continue;
+        }
         const isIndex = parsed.category === "index";
-        if (isIndex) { buckets.index.push(entry); continue; }
+        if (isIndex) {
+          buckets.index.push(entry);
+          continue;
+        }
         const hasSlash = (item.unit || "").includes("/");
-        const isStrictRatio = hasSlash && parsed.category === "composite" && !parsed.timeScale;
-        if (isStrictRatio) { buckets.ratios.push(entry); continue; }
-        if (isCountIndicator(item.name, item.unit) || isCountUnit(item.unit || "")) { buckets.counts.push(entry); continue; }
-        if (parsed.category === "percentage") { buckets.percentages.push(entry); continue; }
+        const isStrictRatio = hasSlash && parsed.category === "composite" &&
+          !parsed.timeScale;
+        if (isStrictRatio) {
+          buckets.ratios.push(entry);
+          continue;
+        }
+        if (
+          isCountIndicator(item.name, item.unit) || isCountUnit(item.unit || "")
+        ) {
+          buckets.counts.push(entry);
+          continue;
+        }
+        if (parsed.category === "percentage") {
+          buckets.percentages.push(entry);
+          continue;
+        }
         buckets.defaults.push(entry);
       }
       return Promise.resolve({ exempted, nonExempted, buckets });
     }),
 
-    processEmissions: fromPromise(async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
-      const { config, fxRates } = input;
-      const emissions = input.buckets.emissions;
-      if (emissions.length === 0) return [] as ParsedData[];
-      const res = await processBatch(emissions.map((e) => e.item), {
-        validate: false, handleErrors: "skip", parallel: true,
-        toCurrency: undefined, toMagnitude: undefined, toTimeScale: undefined,
-        fx: fxRates,
-        explain: config.explain,
-      });
-      return res.successful;
-    }),
-
-    processEnergy: fromPromise(async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
-      const { config, fxRates } = input;
-      const energy = input.buckets.energy;
-      if (energy.length === 0) return [] as ParsedData[];
-      const res = await processBatch(energy.map((e) => e.item), {
-        validate: false, handleErrors: "skip", parallel: true,
-        toCurrency: undefined, toMagnitude: undefined, toTimeScale: undefined,
-        fx: fxRates,
-        explain: config.explain,
-      });
-      return res.successful;
-    }),
-
-    processCommodities: fromPromise(async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
-      const { config, fxRates } = input;
-      const commodities = input.buckets.commodities;
-      if (commodities.length === 0) return [] as ParsedData[];
-      const res = await processBatch(commodities.map((c) => c.item), {
-        validate: false, handleErrors: "skip", parallel: true,
-        toCurrency: undefined, toMagnitude: undefined, toTimeScale: undefined,
-        fx: fxRates,
-        explain: config.explain,
-      });
-      return res.successful;
-    }),
-
-    processAgriculture: fromPromise(async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
-      const { config, fxRates } = input;
-      const agriculture = input.buckets.agriculture;
-      if (agriculture.length === 0) return [] as ParsedData[];
-      const res = await processBatch(agriculture.map((a) => a.item), {
-        validate: false, handleErrors: "skip", parallel: true,
-        toCurrency: undefined, toMagnitude: undefined, toTimeScale: undefined,
-        fx: fxRates,
-        explain: config.explain,
-      });
-      return res.successful;
-    }),
-
-    processMetals: fromPromise(async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
-      const { config, fxRates } = input;
-      const metals = input.buckets.metals;
-      if (metals.length === 0) return [] as ParsedData[];
-      const res = await processBatch(metals.map((m) => m.item), {
-        validate: false, handleErrors: "skip", parallel: true,
-        toCurrency: undefined, toMagnitude: undefined, toTimeScale: undefined,
-        fx: fxRates,
-        explain: config.explain,
-      });
-      return res.successful;
-    }),
-
-    processDefaults: fromPromise(async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
-      const { config, fxRates, fxSource, fxSourceId } = input;
-      const defaults = input.buckets.defaults;
-      if (defaults.length === 0) return [] as ParsedData[];
-      const defaultsItems = defaults.map((d) => d.item);
-      const actor = createActor(defaultMonetaryMachine, { input: { config, items: defaultsItems, fx: fxRates, fxSource, fxSourceId } });
-      const dmItems: ParsedData[] = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => { try { actor.stop(); } catch (_) { /* ignore */ } reject(new Error("DefaultMonetaryMachine timed out")); }, 30000);
-        actor.subscribe((state) => {
-          if ((state as any).matches?.("done")) {
-            clearTimeout(timeout);
-            const items = ((state as any).output?.items as ParsedData[]) ?? state.context.items;
-            resolve(items);
-          }
+    processEmissions: fromPromise(
+      async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
+        const { config, fxRates } = input;
+        const emissions = input.buckets.emissions;
+        if (emissions.length === 0) return [] as ParsedData[];
+        const res = await processBatch(emissions.map((e) => e.item), {
+          validate: false,
+          handleErrors: "skip",
+          parallel: true,
+          toCurrency: undefined,
+          toMagnitude: undefined,
+          toTimeScale: undefined,
+          fx: fxRates,
+          explain: config.explain,
         });
-        actor.start();
-      });
-      // Reorder to match original bucket order, in case child changed ordering
-      const key = (d: ParsedData) => `${d.id ?? ""}::${d.name ?? ""}::${d.unit}::${d.value}`;
-      const map = new Map<string, ParsedData>();
-      for (const it of dmItems) map.set(key(it), it);
-      const ordered = defaults.map((d) => map.get(key(d.item)) || d.item).filter((x): x is ParsedData => !!x);
-      return ordered;
-    }),
+        return res.successful;
+      },
+    ),
+
+    processEnergy: fromPromise(
+      async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
+        const { config, fxRates } = input;
+        const energy = input.buckets.energy;
+        if (energy.length === 0) return [] as ParsedData[];
+        const res = await processBatch(energy.map((e) => e.item), {
+          validate: false,
+          handleErrors: "skip",
+          parallel: true,
+          toCurrency: undefined,
+          toMagnitude: undefined,
+          toTimeScale: undefined,
+          fx: fxRates,
+          explain: config.explain,
+        });
+        return res.successful;
+      },
+    ),
+
+    processCommodities: fromPromise(
+      async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
+        const { config, fxRates } = input;
+        const commodities = input.buckets.commodities;
+        if (commodities.length === 0) return [] as ParsedData[];
+        const res = await processBatch(commodities.map((c) => c.item), {
+          validate: false,
+          handleErrors: "skip",
+          parallel: true,
+          toCurrency: undefined,
+          toMagnitude: undefined,
+          toTimeScale: undefined,
+          fx: fxRates,
+          explain: config.explain,
+        });
+        return res.successful;
+      },
+    ),
+
+    processAgriculture: fromPromise(
+      async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
+        const { config, fxRates } = input;
+        const agriculture = input.buckets.agriculture;
+        if (agriculture.length === 0) return [] as ParsedData[];
+        const res = await processBatch(agriculture.map((a) => a.item), {
+          validate: false,
+          handleErrors: "skip",
+          parallel: true,
+          toCurrency: undefined,
+          toMagnitude: undefined,
+          toTimeScale: undefined,
+          fx: fxRates,
+          explain: config.explain,
+        });
+        return res.successful;
+      },
+    ),
+
+    processMetals: fromPromise(
+      async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
+        const { config, fxRates } = input;
+        const metals = input.buckets.metals;
+        if (metals.length === 0) return [] as ParsedData[];
+        const res = await processBatch(metals.map((m) => m.item), {
+          validate: false,
+          handleErrors: "skip",
+          parallel: true,
+          toCurrency: undefined,
+          toMagnitude: undefined,
+          toTimeScale: undefined,
+          fx: fxRates,
+          explain: config.explain,
+        });
+        return res.successful;
+      },
+    ),
+
+    processDefaults: fromPromise(
+      async ({ input }: { input: DomainsInput & { buckets: Buckets } }) => {
+        const { config, fxRates, fxSource, fxSourceId } = input;
+        const defaults = input.buckets.defaults;
+        if (defaults.length === 0) return [] as ParsedData[];
+        const defaultsItems = defaults.map((d) => d.item);
+        const actor = createActor(defaultMonetaryMachine, {
+          input: {
+            config,
+            items: defaultsItems,
+            fx: fxRates,
+            fxSource,
+            fxSourceId,
+          },
+        });
+        const dmItems: ParsedData[] = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            try {
+              actor.stop();
+            } catch (_) { /* ignore */ }
+            reject(new Error("DefaultMonetaryMachine timed out"));
+          }, 30000);
+          actor.subscribe((state) => {
+            if ((state as any).matches?.("done")) {
+              clearTimeout(timeout);
+              const items = ((state as any).output?.items as ParsedData[]) ??
+                state.context.items;
+              resolve(items);
+            }
+          });
+          actor.start();
+        });
+        // Reorder to match original bucket order, in case child changed ordering
+        const key = (d: ParsedData) =>
+          `${d.id ?? ""}::${d.name ?? ""}::${d.unit}::${d.value}`;
+        const map = new Map<string, ParsedData>();
+        for (const it of dmItems) map.set(key(it), it);
+        const ordered = defaults.map((d) => map.get(key(d.item)) || d.item)
+          .filter((x): x is ParsedData => !!x);
+        return ordered;
+      },
+    ),
   },
 }).createMachine({
   id: "domains",
@@ -221,7 +348,10 @@ export const domainsMachine = setup({
     classifyAndBucket: {
       invoke: {
         src: "partition",
-        input: ({ context }) => ({ config: context.config, parsedData: context.parsedData! }),
+        input: ({ context }) => ({
+          config: context.config,
+          parsedData: context.parsedData!,
+        }),
         onDone: {
           target: "spawnDomainFlows",
           actions: assign({
@@ -252,7 +382,11 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedCounts: ({ event }) => ((event as any)?.output?.processed ?? []) }),
+                  actions: assign({
+                    processedCounts: (
+                      { event },
+                    ) => ((event as any)?.output?.processed ?? []),
+                  }),
                 },
               },
             },
@@ -275,7 +409,11 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedPercentages: ({ event }) => ((event as any)?.output?.processed ?? []) }),
+                  actions: assign({
+                    processedPercentages: (
+                      { event },
+                    ) => ((event as any)?.output?.processed ?? []),
+                  }),
                 },
               },
             },
@@ -298,7 +436,9 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedEmissions: ({ event }) => (event as any).output }),
+                  actions: assign({
+                    processedEmissions: ({ event }) => (event as any).output,
+                  }),
                 },
               },
             },
@@ -321,7 +461,9 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedEnergy: ({ event }) => (event as any).output }),
+                  actions: assign({
+                    processedEnergy: ({ event }) => (event as any).output,
+                  }),
                 },
               },
             },
@@ -344,7 +486,9 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedCommodities: ({ event }) => (event as any).output }),
+                  actions: assign({
+                    processedCommodities: ({ event }) => (event as any).output,
+                  }),
                 },
               },
             },
@@ -367,7 +511,9 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedAgriculture: ({ event }) => (event as any).output }),
+                  actions: assign({
+                    processedAgriculture: ({ event }) => (event as any).output,
+                  }),
                 },
               },
             },
@@ -390,7 +536,9 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedMetals: ({ event }) => (event as any).output }),
+                  actions: assign({
+                    processedMetals: ({ event }) => (event as any).output,
+                  }),
                 },
               },
             },
@@ -413,7 +561,11 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedCrypto: ({ event }) => ((event as any)?.output?.processed ?? []) }),
+                  actions: assign({
+                    processedCrypto: (
+                      { event },
+                    ) => ((event as any)?.output?.processed ?? []),
+                  }),
                 },
               },
             },
@@ -436,7 +588,11 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedIndex: ({ event }) => ((event as any)?.output?.processed ?? []) }),
+                  actions: assign({
+                    processedIndex: (
+                      { event },
+                    ) => ((event as any)?.output?.processed ?? []),
+                  }),
                 },
               },
             },
@@ -459,7 +615,11 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedRatios: ({ event }) => ((event as any)?.output?.processed ?? []) }),
+                  actions: assign({
+                    processedRatios: (
+                      { event },
+                    ) => ((event as any)?.output?.processed ?? []),
+                  }),
                 },
               },
             },
@@ -482,7 +642,9 @@ export const domainsMachine = setup({
                 }),
                 onDone: {
                   target: "done",
-                  actions: assign({ processedDefaults: ({ event }) => (event as any).output }),
+                  actions: assign({
+                    processedDefaults: ({ event }) => (event as any).output,
+                  }),
                 },
               },
             },
@@ -498,7 +660,9 @@ export const domainsMachine = setup({
         const nonExempted = context.nonExempted ?? [];
         const exempted = context.exempted ?? [];
         const b = context.buckets!;
-        const ordered: (ParsedData | undefined)[] = new Array(nonExempted.length);
+        const ordered: (ParsedData | undefined)[] = new Array(
+          nonExempted.length,
+        );
         const place = (bucket: IndexedItem[], processed?: ParsedData[]) => {
           if (!processed) return;
           const n = Math.min(bucket.length, processed.length);
@@ -563,16 +727,29 @@ export const domainsMachine = setup({
             const name = (item.name || "").toLowerCase();
             const unitLower = (item.unit || "").toLowerCase();
             const parsed = parseUnit(item.unit);
-            const custom = parseWithCustomUnits(`${name} ${item.unit || ""}`) || parseWithCustomUnits(item.unit || "");
-            if ((custom && (custom as { category?: string }).category === "cryptocurrency") || /(\bbtc\b|bitcoin|\beth\b|ethereum|\bwei\b)/i.test(unitLower + " " + name)) domain = "crypto";
+            const custom = parseWithCustomUnits(`${name} ${item.unit || ""}`) ||
+              parseWithCustomUnits(item.unit || "");
+            if (
+              (custom &&
+                (custom as { category?: string }).category ===
+                  "cryptocurrency") ||
+              /(\bbtc\b|bitcoin|\beth\b|ethereum|\bwei\b)/i.test(
+                unitLower + " " + name,
+              )
+            ) domain = "crypto";
             else if (parsed.category === "index") domain = "index";
-            else if ((item.unit || "").includes("/") && parsed.category === "composite" && !parsed.timeScale) domain = "ratios";
+            else if (
+              (item.unit || "").includes("/") &&
+              parsed.category === "composite" && !parsed.timeScale
+            ) domain = "ratios";
           }
 
           // Don’t override domain if already set (e.g., wages pipeline)
           const base = item as unknown as { explain?: Record<string, unknown> };
           const existing = base.explain ? { ...base.explain } : undefined;
-          const mergedExplain: Record<string, unknown> = existing ? { ...existing } : {};
+          const mergedExplain: Record<string, unknown> = existing
+            ? { ...existing }
+            : {};
           if (domain && mergedExplain["domain"] == null) {
             mergedExplain["domain"] = domain;
             mergedExplain["router"] = "domains-router";
@@ -592,9 +769,12 @@ export const domainsMachine = setup({
 
     done: {
       type: "final",
-      output: ({ context }): DomainsOutput => ({ normalizedData: context.normalizedData ?? [] }),
+      output: ({ context }): DomainsOutput => ({
+        normalizedData: context.normalizedData ?? [],
+      }),
     },
   },
-  output: ({ context }): DomainsOutput => ({ normalizedData: context.normalizedData ?? [] }),
+  output: ({ context }): DomainsOutput => ({
+    normalizedData: context.normalizedData ?? [],
+  }),
 });
-

@@ -5,19 +5,87 @@ targets, and how to interpret outputs.
 
 ## TL;DR
 
-- We ingest economic series, classify them (monetary/percent/count/physical),
-  normalize currency (FX), magnitude (k/M/B), and time basis (per
-  month/quarter/year) for comparability.
-- Auto‑targeting by indicator chooses majority units per indicator (currency,
-  magnitude, time) or applies tie‑breakers when silent.
-- Time basis when unit is silent (actual code): unit time token →
-  item.periodicity; auto‑target tie‑breaker still prefer‑month when no majority.
-  No indicator.periodicity fallback today.
-- Explain metadata shows what was selected, why, and the exact conversions
-  applied. Share keys are canonicalized (USD, millions, month).
+- **V2 Engine (Default)**: Uses XState v5 machines with explicit states for
+  predictable processing
+- We ingest economic series, classify them into domains
+  (monetaryStock/monetaryFlow/counts/percentages/commodities/crypto), normalize
+  currency (FX), magnitude (k/M/B), and time basis (per month/quarter/year) for
+  comparability.
+- **Auto-targeting by indicator**: Analyzes data patterns to detect majority
+  currency/magnitude/time (>50% threshold) and normalizes minority values to
+  match. Falls back to explicit targets or tie-breakers when no majority.
+- **Time priority**: Unit time token → item.periodicity → config fallback
+  (prefer-month default)
+- **GDP Special Case**: Without time in unit, classified as monetaryStock (no
+  time normalization)
+- Explain metadata shows conversions with flat structure for easy frontend
+  access
 
 ---
-## Machines architecture overview (current)
+## V2 Architecture Overview (Current Default)
+
+The V2 engine uses explicit state machines for all processing stages:
+
+```mermaid
+graph TD
+  A[Raw Data Input] --> B[validationMachine]
+  B --> C[parsingMachine]
+  C --> D[qualityMachine]
+  D --> E[classifyMachine]
+  E --> F[normalizeRouter]
+
+  subgraph "Normalize Router (Parallel Processing)"
+    F --> G{needsFX?}
+    G -->|monetary items present| H[fxMachine]
+    G -->|no monetary items| I[Skip FX]
+
+    H --> J[Parallel Domain Processing]
+    I --> J
+
+    J --> MS[monetaryStock]
+    J --> MF[monetaryFlow - includes wages]
+    J --> CT[counts]
+    J --> PC[percentages]
+    J --> ID[indices]
+    J --> RT[ratios]
+    J --> EN[energy]
+    J --> CM[commodities]
+    J --> AG[agriculture]
+    J --> MT[metals]
+    J --> CR[crypto]
+  end
+
+  MS --> K[fanIn & preserve order]
+  MF --> K
+  CT --> K
+  PC --> K
+  ID --> K
+  RT --> K
+  EN --> K
+  CM --> K
+  AG --> K
+  MT --> K
+  CR --> K
+
+  K --> L[explainMerge]
+  L --> M[Normalized Output]
+
+  B -->|validation fails| ERR[Error State]
+  C -->|parsing fails| ERR
+  D -->|quality fails| ERR
+  E -->|classification fails| ERR
+  F -->|normalization fails| ERR
+```
+
+### V2 Key Features:
+- **Unified Monetary Processing**: Wages treated as Monetary-Flow (no separate wages machine)
+- **Conditional FX**: Only executes when monetary items are detected (~64% performance improvement)
+- **11 Domain Classification**: Explicit taxonomy-based routing to specialized processors
+- **Parallel Processing**: All domains process simultaneously with order preservation
+- **Flat Explain Structure**: Normalized keys (USD, millions, month) for easier consumption
+- **Auto-target Threshold**: 80% majority required (stricter than V1's 50%)
+
+### V1 Architecture (Legacy)
 
 ```mermaid
 graph LR
@@ -40,12 +108,7 @@ graph LR
   end
 ```
 
-Notes:
-- Normalization stage now routes to wagesMachine when wage-like items are present; otherwise to domainsMachine (domains router).
-- Physical domains (emissions, energy, commodities, agriculture, metals) run via processBatch with no currency/magnitude/time targets.
-- Percentages, crypto, index, ratios are effectively pass-through/no-op lanes with explain annotations when enabled.
-- Defaults lane uses the monetary pipeline (autoTarget + timeBasis + monetaryNormalization).
-- See docs/DOMAINS_ROUTER.md for the router’s detailed flow and sub-machines.
+**Legacy Notes**: V1 normalization routes to separate wagesMachine when wages are present, otherwise to domainsMachine router. Physical domains use processBatch with no targets. See docs/DOMAINS_ROUTER.md for V1 detailed flow.
 
 
 ## Flow diagram
@@ -101,7 +164,6 @@ flowchart TD
   X2 --> X3[releaseCadence from indicator.periodicity]
   X3 --> Z
 ```
-
 ---
 
 ## Classification: stock, flow, counts

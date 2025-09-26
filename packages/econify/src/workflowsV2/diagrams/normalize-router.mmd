@@ -1,0 +1,60 @@
+graph TD
+    %% V2 Router - FX from config, no fetching step
+    Start([Start<br/>FX from config.fxFallback]) --> route
+
+    route --> parallel{{"route<br/>(parallel)"}}
+
+    subgraph domains[Domain Processing - All Parallel]
+        monetaryStock[Monetary Stock<br/>receives FX]
+        monetaryFlow[Monetary Flow<br/>receives FX]
+        counts[Counts]
+        percentages[Percentages]
+        indices[Indices]
+        ratios[Ratios]
+        energy[Energy<br/>receives FX if needed]
+        commodities[Commodities<br/>receives FX if needed]
+        agriculture[Agriculture<br/>receives FX if needed]
+        metals[Metals<br/>receives FX if needed]
+        crypto[Crypto]
+    end
+
+    parallel --> monetaryStock
+    parallel --> monetaryFlow
+    parallel --> counts
+    parallel --> percentages
+    parallel --> indices
+    parallel --> ratios
+    parallel --> energy
+    parallel --> commodities
+    parallel --> agriculture
+    parallel --> metals
+    parallel --> crypto
+
+    monetaryStock --> fanin
+    monetaryFlow --> fanin
+    counts --> fanin
+    percentages --> fanin
+    indices --> fanin
+    ratios --> fanin
+    energy --> fanin
+    commodities --> fanin
+    agriculture --> fanin
+    metals --> fanin
+    crypto --> fanin
+
+    fanin[Fan In] --> explain[Explain Merge]
+    explain --> done[Done]
+    done --> End([End])
+
+    style Start fill:#e1f5e1,stroke:#333,stroke-width:2px
+    style End fill:#e1f5e1
+    style parallel fill:#fff3cd
+    style fanin fill:#cce5ff
+    style explain fill:#d4edda
+    style domains fill:#f0f0f0
+    style monetaryStock fill:#ffd6cc
+    style monetaryFlow fill:#ffd6cc
+    style energy fill:#ffe6cc
+    style commodities fill:#ffe6cc
+    style agriculture fill:#ffe6cc
+    style metals fill:#ffe6cc

@@ -1,0 +1,16 @@
+graph LR
+  C[Classify computeFacts] -->|taxonomy monetaryFlow| MF[Monetary Flow]
+  C -->|taxonomy monetaryStock| MS[Monetary Stock]
+  C -->|taxonomy counts| CNT[Counts]
+  C -->|taxonomy percentages| PCT[Percentages]
+  C -->|taxonomy indices| IDX[Indices]
+  C -->|taxonomy ratios| RAT[Ratios]
+  C -->|taxonomy energy| ENE[Energy]
+  C -->|taxonomy commodities| COM[Commodities]
+  C -->|taxonomy agriculture| AGR[Agriculture]
+  C -->|taxonomy metals| MET[Metals]
+  C -->|taxonomy crypto| CRY[Crypto]
+
+  %% Notes
+  classDef note fill:#f7f7f7,stroke:#ccc,color:#333
+  N1[Legend<br/>taxonomy facts drive bucket assignment<br/>Wages are Monetary Flow<br/>Ratios detected before generic counts<br/>Domain specific checks before generic counts]:::note

@@ -6,7 +6,7 @@ Output: { processed }
 Key states: prepare -> passthrough -> done
 */
 
-import { setup, fromPromise, assign } from "npm:xstate@^5.20.2";
+import { assign, fromPromise, setup } from "npm:xstate@^5.20.2";
 import type { ParsedData } from "../../../../main.ts";
 import type { PipelineConfig } from "../../../economic-data-workflow.ts";
 
@@ -18,7 +18,12 @@ interface IndexInput {
 
 export const indexDomainMachine = setup({
   types: {
-    context: {} as { config: PipelineConfig; items: ParsedData[]; explain?: boolean; processed?: ParsedData[] },
+    context: {} as {
+      config: PipelineConfig;
+      items: ParsedData[];
+      explain?: boolean;
+      processed?: ParsedData[];
+    },
     input: {} as IndexInput,
   },
   actors: {
@@ -28,21 +33,31 @@ export const indexDomainMachine = setup({
   },
 }).createMachine({
   id: "index-domain",
-  context: ({ input }) => ({ config: input.config, items: input.items, explain: input.explain }),
+  context: ({ input }) => ({
+    config: input.config,
+    items: input.items,
+    explain: input.explain,
+  }),
   initial: "prepare",
   states: {
     prepare: { always: { target: "passthrough" } },
     passthrough: {
       invoke: {
         src: "passthrough",
-        input: ({ context }) => ({ config: context.config, items: context.items, explain: context.explain }),
+        input: ({ context }) => ({
+          config: context.config,
+          items: context.items,
+          explain: context.explain,
+        }),
         onDone: {
           target: "done",
           actions: assign(({ event, context }) => {
             const out = (event as { output: ParsedData[] }).output;
             if (!context.explain) return { processed: out };
             const processed = out.map((it) => {
-              const existing = (it as unknown as { explain?: Record<string, unknown> }).explain ?? {};
+              const existing =
+                (it as unknown as { explain?: Record<string, unknown> })
+                  .explain ?? {};
               const merged: Record<string, unknown> = { ...existing };
               if (merged["domain"] == null) merged["domain"] = "index";
               merged["note"] = "no-op normalization";
@@ -53,7 +68,9 @@ export const indexDomainMachine = setup({
         },
       },
     },
-    done: { type: "final", output: ({ context }) => ({ processed: context.processed ?? [] }) },
+    done: {
+      type: "final",
+      output: ({ context }) => ({ processed: context.processed ?? [] }),
+    },
   },
 });
-

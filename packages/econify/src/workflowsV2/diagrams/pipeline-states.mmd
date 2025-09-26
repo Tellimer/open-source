@@ -1,0 +1,18 @@
+graph TD
+    Start([Start]) --> validate
+    validate --> parse
+    validate -->|invalid| error
+    parse --> quality
+    parse -->|parse failed| error
+    quality --> classify
+    quality -->|quality failed| error
+    classify --> normalize
+    classify -->|classify failed| error
+    normalize --> done
+    normalize -->|normalize failed| error
+    done --> End([End])
+    error --> End
+
+    style Start fill:#e1f5e1
+    style End fill:#ffe1e1
+    style error fill:#ff9999

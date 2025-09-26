@@ -99,14 +99,16 @@ export const defaultMonetaryMachine = setup({
             const sel = auto.get(key);
             // Decide time selection for auto-target: use unit/periodicity-derived selection when time dimension is enabled
             const timeDimEnabled =
-              (config.autoTargetDimensions ?? ["currency", "magnitude", "time"]).includes("time");
+              (config.autoTargetDimensions ?? ["currency", "magnitude", "time"])
+                .includes("time");
             const selectedTime = timeDimEnabled
               ? sel?.time
               : (batchOptions.toTimeScale as TimeScale | undefined);
             const res = await processBatch(grpItems, {
               ...batchOptions,
               toCurrency: sel?.currency ?? batchOptions.toCurrency,
-              toMagnitude: (sel?.magnitude as Scale | undefined) ?? batchOptions.toMagnitude,
+              toMagnitude: (sel?.magnitude as Scale | undefined) ??
+                batchOptions.toMagnitude,
               toTimeScale: selectedTime,
             });
             // Attach explain.targetSelection if requested
@@ -121,7 +123,10 @@ export const defaultMonetaryMachine = setup({
                     time: selectedTime,
                   },
                   shares: sel.shares as any,
-                  reason: sel.reason ?? (sel.currency || sel.magnitude || sel.time ? "majority/tie-break" : "none"),
+                  reason: sel.reason ??
+                    (sel.currency || sel.magnitude || sel.time
+                      ? "majority/tie-break"
+                      : "none"),
                 } as any;
 
                 // Enrich FX source info if available
@@ -240,7 +245,9 @@ export const defaultMonetaryMachine = setup({
         }),
         onDone: {
           target: "explaining",
-          actions: assign({ items: ({ event }) => (event as any).output.items }),
+          actions: assign({
+            items: ({ event }) => (event as any).output.items,
+          }),
         },
       },
     },
@@ -271,4 +278,3 @@ export const defaultMonetaryMachine = setup({
     explain: context.explain,
   }),
 });
-

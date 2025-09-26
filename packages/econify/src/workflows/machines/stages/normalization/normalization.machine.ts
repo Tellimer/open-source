@@ -653,7 +653,9 @@ export const normalizationMachine = setup({
         }),
         onDone: {
           target: "done",
-          actions: assign({ normalizedData: ({ event }) => (event as any).output.normalizedData }),
+          actions: assign({
+            normalizedData: ({ event }) => (event as any).output.normalizedData,
+          }),
         },
         onError: {
           target: "done",

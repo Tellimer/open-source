@@ -6,8 +6,8 @@ Output: { processed }
 Key states: prepare → validateDimensionless → passthrough → explainNote → done
 */
 
-import { setup, fromPromise } from "npm:xstate@^5.20.2";
-import type { ParsedData, FXTable, Scale } from "../../../../main.ts";
+import { fromPromise, setup } from "npm:xstate@^5.20.2";
+import type { FXTable, ParsedData, Scale } from "../../../../main.ts";
 import type { PipelineConfig } from "../../../economic-data-workflow.ts";
 import { processBatch } from "../../../../batch/batch.ts";
 
@@ -20,7 +20,9 @@ interface PercentagesInput {
   explain?: boolean;
 }
 
-interface PercentagesOutput { processed: ParsedData[] }
+interface PercentagesOutput {
+  processed: ParsedData[];
+}
 
 export const percentagesMachine = setup({
   types: {
@@ -65,7 +67,9 @@ export const percentagesMachine = setup({
         input: ({ context }) => ({ ...context }),
         onDone: {
           target: "explainNote",
-          actions: ({ event, context }) => { context.processed = (event as any).output as ParsedData[]; },
+          actions: ({ event, context }) => {
+            context.processed = (event as any).output as ParsedData[];
+          },
         },
       },
     },
@@ -75,8 +79,16 @@ export const percentagesMachine = setup({
       always: { target: "done" },
     },
 
-    done: { type: "final", output: ({ context }) => ({ processed: (context.processed ?? []) as ParsedData[] }) as PercentagesOutput },
+    done: {
+      type: "final",
+      output: ({ context }) =>
+        ({
+          processed: (context.processed ?? []) as ParsedData[],
+        }) as PercentagesOutput,
+    },
   },
-  output: ({ context }) => ({ processed: (context.processed ?? []) as ParsedData[] }) as PercentagesOutput,
+  output: ({ context }) =>
+    ({
+      processed: (context.processed ?? []) as ParsedData[],
+    }) as PercentagesOutput,
 });
-

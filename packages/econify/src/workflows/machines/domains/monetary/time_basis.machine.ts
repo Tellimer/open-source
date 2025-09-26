@@ -56,7 +56,9 @@ export const timeBasisMachine = setup({
 
     inferByUnit: {
       entry: assign(({ context }) => ({
-        tempUnitTimes: context.items.map((it) => parseTimeScaleFromUnit(it.unit || "") || undefined),
+        tempUnitTimes: context.items.map((it) =>
+          parseTimeScaleFromUnit(it.unit || "") || undefined
+        ),
       })),
       always: { target: "inferByPeriodicity" },
     },
@@ -79,7 +81,9 @@ export const timeBasisMachine = setup({
         for (let i = 0; i < context.items.length; i++) {
           const it = context.items[i];
           const unitTs = unitList[i];
-          const perTs = unitTs ? undefined : periodicityToScale((it as any).periodicity as string | undefined);
+          const perTs = unitTs
+            ? undefined
+            : periodicityToScale((it as any).periodicity as string | undefined);
           const eff = unitTs || perTs;
           if (eff) {
             counts.set(eff, (counts.get(eff) || 0) + 1);
@@ -99,7 +103,10 @@ export const timeBasisMachine = setup({
           let max = 0;
           let mode: TimeScale | undefined = undefined;
           for (const [k, v] of counts.entries()) {
-            if (v > max) { max = v; mode = k; }
+            if (v > max) {
+              max = v;
+              mode = k;
+            }
           }
           if (mode && max / known >= 0.6) {
             return { selected: mode, rule: "majority-effective" };
@@ -113,10 +120,19 @@ export const timeBasisMachine = setup({
     applyTieBreakers: {
       entry: assign(({ context }) => {
         if (!context.selected && context.config.targetTimeScale) {
-          return { selected: context.config.targetTimeScale as TimeScale, rule: "default-config" };
+          return {
+            selected: context.config.targetTimeScale as TimeScale,
+            rule: "default-config",
+          };
         }
-        if (!context.selected && context.config.tieBreakers?.time === "prefer-month") {
-          return { selected: "month" as TimeScale, rule: "prefer-month-default" };
+        if (
+          !context.selected &&
+          context.config.tieBreakers?.time === "prefer-month"
+        ) {
+          return {
+            selected: "month" as TimeScale,
+            rule: "prefer-month-default",
+          };
         }
         return {};
       }),
@@ -137,7 +153,9 @@ export const timeBasisMachine = setup({
             return undefined;
           };
           for (const it of context.items) {
-            const inferred = periodicityToScale((it as any).periodicity as string | undefined) ||
+            const inferred = periodicityToScale(
+              (it as any).periodicity as string | undefined,
+            ) ||
               parseTimeScaleFromUnit(it.unit || "") || undefined;
             (it.explain ||= {} as any).timeBasisChoice = {
               preferred: context.selected,
@@ -153,9 +171,16 @@ export const timeBasisMachine = setup({
 
     done: {
       type: "final",
-      output: ({ context }) => ({ items: context.items, preferredTimeScale: context.selected }) as TimeBasisOutput,
+      output: ({ context }) =>
+        ({
+          items: context.items,
+          preferredTimeScale: context.selected,
+        }) as TimeBasisOutput,
     },
   },
-  output: ({ context }) => ({ items: context.items, preferredTimeScale: context.selected }) as TimeBasisOutput,
+  output: ({ context }) =>
+    ({
+      items: context.items,
+      preferredTimeScale: context.selected,
+    }) as TimeBasisOutput,
 });
-

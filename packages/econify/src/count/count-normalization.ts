@@ -1,10 +1,12 @@
 /**
- * Specialized normalization for count-based indicators like car registrations
- * that should only be normalized by scale, not currency
+ * Count-specific normalization logic
+ *
+ * This module handles normalization for count-type indicators
+ * that don't have currency units.
  */
 
-import { parseUnit } from "../units/units.ts";
 import { rescaleMagnitude } from "../scale/scale.ts";
+import { parseUnit } from "../units/units.ts";
 import type { Scale } from "../types.ts";
 
 export interface CountDataPoint {
@@ -82,10 +84,14 @@ export function isCountUnit(unitText: string): boolean {
     return false;
   }
 
-  // Treat bare magnitude tokens as count units only when not paired with a currency
+  // Treat bare magnitude tokens as count units only when not paired with a currency or physical unit
   const hasScaleToken =
-    /\bhundreds?\b|\bthousands?\b|\bmillions?\b|\bbillions?\b/.test(lowerUnit);
-  if (hasScaleToken) {
+    /\bhundreds?\b|\bthousands?\b|\bmillions?\b|\bbillions?\b/i.test(lowerUnit);
+  const hasPhysicalUnit =
+    /(tonnes?|tons?|barrels?|gallons?|bushels?|ounces?|metric tons?)/i.test(
+      lowerUnit,
+    );
+  if (hasScaleToken && !hasPhysicalUnit) {
     return true;
   }
 

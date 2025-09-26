@@ -1,0 +1,30 @@
+graph TD
+    Start([Start]) --> timeBasis.decide
+
+    subgraph timeBasis[Time Basis State]
+        timeBasis.decide{hasConfigTargetTime?}
+        timeBasis.decide -->|yes| timeBasis.done
+        timeBasis.decide -->|no| timeBasis.infer[Infer Time Basis]
+        timeBasis.infer --> timeBasis.done
+    end
+
+    timeBasis.done --> targets.decide
+
+    subgraph targets[Targets State]
+        targets.decide{autoTargetEnabled?}
+        targets.decide -->|yes| targets.auto[Auto-targeting]
+        targets.decide -->|no| targets.useConfig[Use Config Values]
+        targets.auto --> targets.done
+        targets.useConfig --> targets.done
+    end
+
+    targets.done --> batch[Batch Processing]
+    batch --> done[Done]
+    done --> End([End])
+
+    style Start fill:#e1f5e1
+    style End fill:#e1f5e1
+    style targets.auto fill:#fff3cd
+    style batch fill:#cce5ff
+    style timeBasis fill:#f0f0f0
+    style targets fill:#f0f0f0

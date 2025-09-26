@@ -154,4 +154,3 @@ export const adjustmentMachine = setup({
     warnings: context.warnings,
   }),
 });
-

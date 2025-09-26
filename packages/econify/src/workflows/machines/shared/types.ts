@@ -7,4 +7,3 @@ export interface FXRatesOutput {
   source: "live" | "fallback";
   sourceId: string;
 }
-

@@ -13,8 +13,8 @@ export type IndicatorKeyResolver =
 
 export interface TieBreakers {
   currency?: "prefer-targetCurrency" | "prefer-USD" | "none";
-  magnitude?: "prefer-millions" | "none";
-  time?: "prefer-month" | "none";
+  magnitude?: "prefer-targetMagnitude" | "prefer-millions" | "none";
+  time?: "prefer-targetTimeScale" | "prefer-month" | "none";
 }
 
 export interface AutoTargetOptions {
@@ -23,6 +23,8 @@ export interface AutoTargetOptions {
   minMajorityShare?: number; // default: 0.5
   tieBreakers?: TieBreakers;
   targetCurrency?: string; // for tie-breaker context
+  targetMagnitude?: string; // for tie-breaker context
+  targetTimeScale?: string; // for tie-breaker context
   allowList?: string[]; // indicator keys forced IN
   denyList?: string[]; // indicator keys forced OUT
 }
@@ -93,11 +95,17 @@ function applyTieBreaker(
     return undefined;
   }
   if (dim === "magnitude") {
-    const pref = tb.magnitude ?? "prefer-millions";
+    const pref = tb.magnitude ?? "prefer-targetMagnitude";
+    if (pref === "prefer-targetMagnitude" && opts.targetMagnitude) {
+      return opts.targetMagnitude;
+    }
     if (pref === "prefer-millions") return "millions";
     return undefined;
   }
-  const pref = tb.time ?? "prefer-month";
+  const pref = tb.time ?? "prefer-targetTimeScale";
+  if (pref === "prefer-targetTimeScale" && opts.targetTimeScale) {
+    return opts.targetTimeScale;
+  }
   if (pref === "prefer-month") return "month";
   return undefined;
 }

@@ -1,0 +1,50 @@
+graph TD
+  A[Input data rows] --> B[Validate]
+  B --> C[Parse]
+  C --> D[Quality Check]
+  D --> E[Classify by taxonomy]
+  E --> F[Normalize Router]
+
+  subgraph "Inside Normalize Router"
+    F --> FX_CHECK{Check FX Needed?}
+    FX_CHECK -->|has monetary| FX[FX Machine<br/>live or fallback]
+    FX_CHECK -->|no monetary| PARALLEL
+
+    FX --> PARALLEL[Parallel Domain Processing]
+
+    %% All domains process in parallel
+    PARALLEL --> MF[Monetary Flow<br/>incl wages]
+    PARALLEL --> MS[Monetary Stock]
+    PARALLEL --> CNT[Counts<br/>magnitude scaling]
+    PARALLEL --> PCT[Percentages<br/>pass through]
+    PARALLEL --> IDX[Indices<br/>minimal normalization]
+    PARALLEL --> RAT[Ratios<br/>complete pass through]
+    PARALLEL --> ENE[Energy<br/>pass through]
+    PARALLEL --> COM[Commodities<br/>pass through]
+    PARALLEL --> AGR[Agriculture<br/>pass through]
+    PARALLEL --> MET[Metals<br/>pass through]
+    PARALLEL --> CRY[Crypto<br/>pass through]
+  end
+
+  %% Fan in merges all results
+  MF --> FANIN
+  MS --> FANIN
+  CNT --> FANIN
+  PCT --> FANIN
+  IDX --> FANIN
+  RAT --> FANIN
+  ENE --> FANIN
+  COM --> FANIN
+  AGR --> FANIN
+  MET --> FANIN
+  CRY --> FANIN
+
+  FANIN[Fan-in restore order<br/>join exempted] --> EXPL[Explain merge<br/>flat v2 metadata]
+  EXPL --> OUT[Normalized output rows]
+
+  %% Error paths
+  B -.->|validation fails| ERR[Error State]
+  C -.->|parse fails| ERR
+  D -.->|quality fails| ERR
+  E -.->|classify fails| ERR
+  F -.->|normalize fails| ERR
