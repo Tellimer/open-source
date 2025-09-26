@@ -164,7 +164,11 @@ export const monetaryMachine = setup({
                   try {
                     if ((context.config as any)?.explain) {
                       const sel = (event as any).output.selected as
-                        | { currency?: string; magnitude?: Scale; time?: TimeScale }
+                        | {
+                          currency?: string;
+                          magnitude?: Scale;
+                          time?: TimeScale;
+                        }
                         | undefined;
                       const indicatorKey = context.items[0]?.name || "";
                       if (sel) {

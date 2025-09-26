@@ -27,6 +27,7 @@ export interface AutoTargetOptions {
   targetTimeScale?: string; // for tie-breaker context
   allowList?: string[]; // indicator keys forced IN
   denyList?: string[]; // indicator keys forced OUT
+  suppressPerKeyIfNoGlobalMajority?: boolean; // pipeline-only behavior
 }
 
 export interface AutoTargetSelection {
@@ -120,15 +121,26 @@ export function computeAutoTargets(
   const dims = new Set(
     options.autoTargetDimensions ?? ["currency", "magnitude", "time"],
   );
-  const minShare = options.minMajorityShare ?? 0.5;
+  const minShare = options.minMajorityShare ?? 0.8;
 
   // Group by indicator key and count dimension tokens
   const groups = new Map<string, {
     currency: Record<string, number>;
     magnitude: Record<string, number>;
-    time: Record<string, number>;
+    time: Record<string, number>; // combined view (legacy)
+    timeUnit: Record<string, number>; // counts from unit tokens only
+    timePeriodicity: Record<string, number>; // counts from periodicity only
     size: number;
+    timeUnitSize: number;
+    timePeriodicitySize: number;
   }>();
+  // Also track global counts across all monetary items to decide if we should emit per-key targets at all
+  const global = {
+    currency: {} as Record<string, number>,
+    magnitude: {} as Record<string, number>,
+    time: {} as Record<string, number>,
+    size: 0,
+  };
 
   for (const item of data) {
     if (!isMonetary(item)) continue;
@@ -139,26 +151,60 @@ export function computeAutoTargets(
     // allowList: if provided, only include those keys
     if (options.allowList && !options.allowList.includes(key)) continue;
 
-    const g = groups.get(key) ??
-      { currency: {}, magnitude: {}, time: {}, size: 0 };
+    const g = groups.get(key) ?? {
+      currency: {},
+      magnitude: {},
+      time: {},
+      timeUnit: {},
+      timePeriodicity: {},
+      size: 0,
+      timeUnitSize: 0,
+      timePeriodicitySize: 0,
+    };
 
-    // Prefer explicit metadata
-    const currency = item.currency_code?.toUpperCase() ??
-      parseUnit(item.unit).currency;
+    // Prefer unit currency token over explicit metadata
+    const parsedUnit = parseUnit(item.unit);
+    const currency = parsedUnit.currency ?? item.currency_code?.toUpperCase();
     // For magnitude, treat missing or implicit 'ones' as unspecified so tie-breakers can apply
-    const parsedScale = parseUnit(item.unit).scale;
+    const parsedScale = parsedUnit.scale;
     const magnitude = item.scale ? getScale(item.scale) : parsedScale;
-    const magnitudeForShare = magnitude && magnitude !== "ones" ? magnitude : undefined;
+    const magnitudeForShare = magnitude && magnitude !== "ones"
+      ? magnitude
+      : undefined;
     // Prefer unit time token over item.periodicity for time share extraction
-    const unitTs = parseUnit(item.unit).timeScale;
-    const time = unitTs ??
-      (item.periodicity ? parseTimeScale(item.periodicity) : undefined);
+    const unitTs = parsedUnit.timeScale;
+    const timeFromPeriodicity = item.periodicity
+      ? parseTimeScale(item.periodicity)
+      : undefined;
+    const time = unitTs ?? timeFromPeriodicity;
 
+    // Per-key counts
     inc(g.currency, currency ?? undefined);
     inc(g.magnitude, magnitudeForShare ?? undefined);
     inc(g.time, time ?? undefined);
+    if (unitTs) {
+      inc(g.timeUnit, unitTs);
+      g.timeUnitSize += 1;
+    } else if (timeFromPeriodicity) {
+      inc(g.timePeriodicity, timeFromPeriodicity);
+      g.timePeriodicitySize += 1;
+    }
     g.size += 1;
     groups.set(key, g);
+
+    // Global counts
+    inc(global.currency, currency ?? undefined);
+    inc(global.magnitude, magnitudeForShare ?? undefined);
+    inc(global.time, time ?? undefined);
+    global.size += 1;
+  }
+
+  // If no single currency dominates globally (by minShare), optionally suppress per-key targets so downstream falls back to config
+  if (options.suppressPerKeyIfNoGlobalMajority && dims.has("currency")) {
+    const { key: gTopKey, share: gShare } = topWithShare(global.currency, global.size);
+    if (!gTopKey || gShare < minShare) {
+      return new Map();
+    }
   }
 
   const result: AutoTargets = new Map();
@@ -222,18 +268,34 @@ export function computeAutoTargets(
     }
 
     if (dims.has("time")) {
-      const { key: topKey, share } = topWithShare(g.time, g.size);
-      const chosen = (topKey && share >= minShare)
-        ? (topKey as TimeScale)
-        : (applyTieBreaker("time", options) as TimeScale | undefined);
-      sel.time = chosen;
-      if (topKey && share >= minShare && chosen === topKey) {
-        reasonParts.push(`time=majority(${topKey},${share.toFixed(2)})`);
-      } else if (chosen) {
-        const pref = options.tieBreakers?.time ?? "prefer-month";
-        reasonParts.push(`time=tie-break(${pref})`);
+      // Precedence of sources: unit tokens > periodicity > tie-breaker/pipeline
+      // For time, use strict priority: if ANY unit tokens exist, use them; else check periodicity; else tie-break
+      const unitAgg = topWithShare(g.timeUnit, g.timeUnitSize);
+      if (unitAgg.key && g.timeUnitSize > 0) {
+        sel.time = unitAgg.key as TimeScale;
+        reasonParts.push(`time=units-priority(${unitAgg.key},${unitAgg.share.toFixed(2)})`);
+        // Normalize shares.time to timeUnit size for transparency
+        sel.shares.time = {};
+        const denom = Math.max(g.timeUnitSize, 1);
+        for (const [k, v] of Object.entries(g.timeUnit)) sel.shares.time[k] = v / denom;
       } else {
-        reasonParts.push("time=none");
+        const perAgg = topWithShare(g.timePeriodicity, g.timePeriodicitySize);
+        if (perAgg.key && g.timePeriodicitySize > 0) {
+          sel.time = perAgg.key as TimeScale;
+          reasonParts.push(`time=periodicity-priority(${perAgg.key},${perAgg.share.toFixed(2)})`);
+          sel.shares.time = {};
+          const denom = Math.max(g.timePeriodicitySize, 1);
+          for (const [k, v] of Object.entries(g.timePeriodicity)) sel.shares.time[k] = v / denom;
+        } else {
+          const chosen = applyTieBreaker("time", options) as TimeScale | undefined;
+          sel.time = chosen;
+          if (chosen) {
+            const pref = options.tieBreakers?.time ?? "prefer-month";
+            reasonParts.push(`time=tie-break(${pref})`);
+          } else {
+            reasonParts.push("time=none");
+          }
+        }
       }
     }
 

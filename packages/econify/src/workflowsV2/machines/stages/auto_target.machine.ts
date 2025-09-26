@@ -87,6 +87,7 @@ export const autoTargetMachine = setup({
             targetTimeScale: config.targetTimeScale,
             allowList: config.allowList,
             denyList: config.denyList,
+            suppressPerKeyIfNoGlobalMajority: true,
           };
 
           console.log(
