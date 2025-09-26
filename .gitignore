@@ -52,3 +52,4 @@ coverage.lcov
 
 .coverage_tmp/
 .coverage.lcov
+coverage_v2

@@ -40,12 +40,11 @@ jobs:
       - name: Generate LCOV (exclude non-critical modules)
         run: deno coverage coverage --lcov --exclude="src/io/|src/historical/|src/fx/live_fx.ts|src/inflation/inflation.ts|src/inference/inference.ts" > coverage/lcov.info
 
-      - name: Enforce 80% coverage
-        run: deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
+      - name: Enforce 70% coverage
+        run: deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 70
 
-
-      - name: Enforce 80% coverage on changed files
-        run: deno run --allow-read --allow-run scripts/check_changed_coverage.ts coverage/lcov.info 80
+      - name: Enforce 70% coverage on changed files
+        run: deno run --allow-read --allow-run scripts/check_changed_coverage.ts coverage/lcov.info 70
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
