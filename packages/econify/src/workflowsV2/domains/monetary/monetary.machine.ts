@@ -19,7 +19,7 @@ interface MonetaryInput {
   fx?: FXTable;
   fxSource?: "live" | "fallback";
   fxSourceId?: string;
-  autoTargets?: any; // Global auto-targets from pipeline
+  autoTargets?: Map<string, any> | Record<string, any>; // Global auto-targets from pipeline
 }
 interface MonetaryOutput {
   items: ParsedData[];
@@ -131,7 +131,7 @@ export const monetaryMachine = setup({
                       : "not a map"
                   })`,
                 );
-                return hasTargets;
+                return !!hasTargets;
               },
               target: "useGlobalTargets",
             },
@@ -191,14 +191,31 @@ export const monetaryMachine = setup({
             }
 
             const indicatorKey = firstItem.name || "";
-            const targets = context.autoTargets.get
+            const targets = context.autoTargets instanceof Map
               ? context.autoTargets.get(indicatorKey)
-              : context.autoTargets[indicatorKey];
+              : (context.autoTargets as Record<string, any>)[indicatorKey];
 
             console.log(
               `[V2 monetary] Using global auto-targets for "${indicatorKey}":`,
               targets,
             );
+
+            // Populate explain.targetSelection for all items when using global auto-targets
+            if (context.config.explain && targets) {
+              for (const item of context.items) {
+                (item.explain ||= {}).targetSelection = {
+                  mode: "auto-by-indicator",
+                  indicatorKey: indicatorKey,
+                  selected: {
+                    currency: targets.currency,
+                    magnitude: targets.magnitude as Scale | undefined,
+                    time: targets.time as TimeScale | undefined,
+                  },
+                  shares: targets.shares || {},
+                  reason: targets.reason || "global-auto-target",
+                };
+              }
+            }
 
             return {
               selected: {

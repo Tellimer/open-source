@@ -50,34 +50,44 @@ See: [Pipeline States Diagram](../diagrams/pipeline-states.mmd)
 
 ### Key Implementation Details
 
-- **Data Passing**: Uses side effect pattern with `self._v2AutoTargets`, `self._v2Classify` and
-  `self._v2Normalized`
+- **Data Passing**: Uses side effect pattern with `self._v2AutoTargets`,
+  `self._v2Classify` and `self._v2Normalized`
 - **Error Handling**: Each stage can transition to error state
 - **FX Execution**: Happens within normalizeRouter, not as separate pipeline
   stage
-- **Auto-Targeting**: NEW - Global auto-target computation before domain processing
+- **Auto-Targeting**: NEW - Global auto-target computation before domain
+  processing
 
 ## Auto-Target Machine
 
 ### Location: `stages/auto_target.machine.ts`
 
-The Auto-Target Machine computes optimal normalization targets (currency, magnitude, time) across all indicators before any domain-specific processing begins.
+The Auto-Target Machine computes optimal normalization targets (currency,
+magnitude, time) across all indicators before any domain-specific processing
+begins.
 
 #### Pipeline Position
+
 **Stage 3**: After parsing, before quality assessment
+
 ```
 validate → parse → autoTarget → quality → classify → normalize
 ```
 
 #### How It Works
 
-1. **Global Computation**: Analyzes ALL items at once to find majority patterns per indicator
+1. **Global Computation**: Analyzes ALL items at once to find majority patterns
+   per indicator
 2. **Indicator Grouping**: Groups items by `indicatorKey` (default: "name")
-3. **Majority Detection**: Finds dominant currency/magnitude/time for each indicator group
-4. **Threshold Check**: Requires 80% dominance (vs V1's 50%) before auto-targeting
-5. **Pipeline Storage**: Stores results in `(self as any)._v2AutoTargets` for downstream access
+3. **Majority Detection**: Finds dominant currency/magnitude/time for each
+   indicator group
+4. **Threshold Check**: Requires 80% dominance (vs V1's 50%) before
+   auto-targeting
+5. **Pipeline Storage**: Stores results in `(self as any)._v2AutoTargets` for
+   downstream access
 
 #### Data Flow Pattern
+
 ```typescript
 // Step 1: Compute targets globally
 const autoTargets = Map {
@@ -101,12 +111,14 @@ batchProcess(items, {
 ```
 
 #### Key Benefits
+
 - **Consistency**: All items for same indicator get same targets
 - **Efficiency**: One computation vs per-item calculations
 - **Transparency**: Auto-targeting decisions visible in explain metadata
 - **Performance**: Enables optimized batch processing
 
 #### Configuration
+
 ```typescript
 {
   autoTargetByIndicator: true,           // Enable auto-targeting
@@ -169,16 +181,20 @@ Infers time scale with precedence:
 **States**: `decide` → (`useGlobalTargets` | `auto` | `useConfig`) → `done`
 
 **NEW Global Auto-Targeting Integration**:
-- **useGlobalTargets**: NEW STATE - Uses auto-targets from pipeline auto-target machine
+
+- **useGlobalTargets**: NEW STATE - Uses auto-targets from pipeline auto-target
+  machine
 - **Priority**: Global auto-targets > Local auto-targeting > Config fallback
 - **Efficiency**: Skips local computation when global targets available
 
 **Critical Configuration**:
-- **V2 Threshold**: 0.8 (80%) for majority dominance  
+
+- **V2 Threshold**: 0.8 (80%) for majority dominance
 - **V1 Threshold**: 0.5 (50%) - more permissive
 - Falls back to config when no clear majority
 
 **Auto-Target Integration Logic**:
+
 ```typescript
 states: {
   targets: {

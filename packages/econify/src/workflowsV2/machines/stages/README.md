@@ -1,22 +1,26 @@
 # Stage Machines
 
-This directory contains the core pipeline stage machines for the V2 workflows engine.
+This directory contains the core pipeline stage machines for the V2 workflows
+engine.
 
 ## Auto-Target Machine
 
 ### Overview
 
-The Auto-Target Machine is a critical component of the V2 pipeline that computes optimal normalization targets (currency, magnitude, time) across all indicators before any domain-specific processing begins.
+The Auto-Target Machine is a critical component of the V2 pipeline that computes
+optimal normalization targets (currency, magnitude, time) across all indicators
+before any domain-specific processing begins.
 
-**Location**: [`auto_target.machine.ts`](./auto_target.machine.ts)
-**Pipeline Position**: Stage 3 (after parsing, before quality assessment)
-**Purpose**: Global auto-targeting computation for consistent indicator-level normalization
+**Location**: [`auto_target.machine.ts`](./auto_target.machine.ts) **Pipeline
+Position**: Stage 3 (after parsing, before quality assessment) **Purpose**:
+Global auto-targeting computation for consistent indicator-level normalization
 
 ### How Auto-Targeting Works
 
 #### 🎯 **Global Auto-Target Computation (Pipeline Level)**
 
-The auto-targeting happens **early in the pipeline** at the global level, not per-item:
+The auto-targeting happens **early in the pipeline** at the global level, not
+per-item:
 
 ```typescript
 // Pipeline: validate → parse → autoTarget → quality → classify → normalize
@@ -110,23 +114,23 @@ The auto-target machine is controlled by several configuration options:
 ```typescript
 interface PipelineConfig {
   // Core auto-targeting control
-  autoTargetByIndicator: boolean;           // Enable/disable auto-targeting
-  autoTargetDimensions?: string[];          // Which dimensions to auto-target
-  indicatorKey?: string;                    // Field to group indicators by (default: "name")
+  autoTargetByIndicator: boolean; // Enable/disable auto-targeting
+  autoTargetDimensions?: string[]; // Which dimensions to auto-target
+  indicatorKey?: string; // Field to group indicators by (default: "name")
 
   // Targeting parameters
-  minMajorityShare?: number;                // Dominance threshold (default: 0.8 = 80%)
+  minMajorityShare?: number; // Dominance threshold (default: 0.8 = 80%)
 
   // Fallback values when auto-targeting disabled or no majority found
-  targetCurrency?: string;                  // Fallback currency
-  targetMagnitude?: string;                 // Fallback magnitude
-  targetTimeScale?: string;                 // Fallback time scale
+  targetCurrency?: string; // Fallback currency
+  targetMagnitude?: string; // Fallback magnitude
+  targetTimeScale?: string; // Fallback time scale
 
   // Tie-breaking preferences
   tieBreakers?: {
-    currency?: 'prefer-USD' | 'prefer-targetCurrency';
-    magnitude?: 'prefer-millions' | 'prefer-targetMagnitude';
-    time?: 'prefer-month' | 'prefer-targetTimeScale';
+    currency?: "prefer-USD" | "prefer-targetCurrency";
+    magnitude?: "prefer-millions" | "prefer-targetMagnitude";
+    time?: "prefer-month" | "prefer-targetTimeScale";
   };
 }
 ```
@@ -143,16 +147,18 @@ interface PipelineConfig {
 Let's trace how auto-targeting works for mixed currency data:
 
 #### **Input Data:**
+
 ```typescript
 [
   { id: "US", name: "Consumer Spending", value: 15000000, unit: "USD Million" },
   { id: "GB", name: "Consumer Spending", value: 2000000, unit: "USD Million" },
   { id: "DE", name: "Consumer Spending", value: 3500000, unit: "USD Million" },
   { id: "AF", name: "Consumer Spending", value: 1301129, unit: "AFN Million" },
-]
+];
 ```
 
 #### **Step 1: Auto-Target Computation**
+
 ```typescript
 // Auto-target machine runs computeAutoTargets()
 const autoTargets = Map {
@@ -171,6 +177,7 @@ const autoTargets = Map {
 ```
 
 #### **Step 2: Pipeline Context Storage**
+
 ```typescript
 // In pipeline.machine.ts
 autoTarget: {
@@ -189,6 +196,7 @@ autoTarget: {
 ```
 
 #### **Step 3: Domain Processing Access**
+
 ```typescript
 // In normalize_router.machine.ts
 invoke: {
@@ -206,21 +214,23 @@ invoke: {
 ```
 
 #### **Step 4: Monetary Domain Application**
+
 ```typescript
 // In monetary.machine.ts
 const targets = autoTargets.get("Consumer Spending");
 if (targets) {
   // Apply to ALL Consumer Spending items
   await batchProcess(consumerSpendingItems, {
-    toCurrency: targets.currency,    // "USD"
-    toMagnitude: targets.magnitude,  // "millions"
-    toTimeScale: targets.time,       // "month"
+    toCurrency: targets.currency, // "USD"
+    toMagnitude: targets.magnitude, // "millions"
+    toTimeScale: targets.time, // "month"
     // This converts AFN → USD for the AF item
   });
 }
 ```
 
 #### **Step 5: Result with Explain Metadata**
+
 ```typescript
 [
   {
@@ -264,21 +274,25 @@ if (targets) {
 ### Key Design Principles
 
 #### 🎯 **Global, Not Per-Item**
+
 - Auto-targets are computed **once** for the entire dataset
 - All items with the same indicator name get the same auto-targets
 - More efficient than per-item calculations
 
 #### 📦 **Pipeline Context Passing**
+
 - Targets flow through XState context via side effects
 - Not stored as individual item properties
 - Accessible to all downstream machines
 
 #### ⚡ **Batch Processing Enablement**
+
 - Auto-targets become **batch processing instructions**
 - Domain machines apply targets to grouped items
 - Enables parallel processing with consistent conversion parameters
 
 #### 🔍 **Transparency via Explain**
+
 - Auto-targeting decisions recorded in explain metadata
 - Shows dominance percentages and selection reasons
 - Helps users understand why certain conversions were applied
@@ -299,9 +313,11 @@ const autoTargetMachine = setup({
     compute: {
       entry: assign(({ context }) => {
         // Skip if auto-targeting not configured
-        if (!context.config.autoTargetByIndicator ||
-            !context.config.autoTargetDimensions ||
-            context.config.autoTargetDimensions.length === 0) {
+        if (
+          !context.config.autoTargetByIndicator ||
+          !context.config.autoTargetDimensions ||
+          context.config.autoTargetDimensions.length === 0
+        ) {
           return { autoTargets: undefined, warnings: [] };
         }
 
@@ -335,9 +351,11 @@ const autoTargetMachine = setup({
 
 ### Integration with Domain Machines
 
-The auto-target machine integrates with domain machines through a consistent pattern:
+The auto-target machine integrates with domain machines through a consistent
+pattern:
 
 #### **1. Monetary Domain Integration**
+
 ```typescript
 // monetary.machine.ts has specific support for auto-targets
 states: {
@@ -368,6 +386,7 @@ states: {
 ```
 
 #### **2. Non-Monetary Domain Behavior**
+
 ```typescript
 // Other domains (counts, percentages, etc.) don't use auto-targets
 // They receive them in context but typically ignore them
@@ -379,12 +398,14 @@ states: {
 The auto-target machine includes comprehensive testing:
 
 #### **E2E Auto-Targeting Tests**
+
 - [`auto-targeting-e2e-validation.test.ts`](../../__tests__/auto-targeting-e2e-validation.test.ts)
 - Tests mixed currency conversion with majority targeting
 - Validates explain metadata includes auto-target information
 - Confirms end-to-end pipeline behavior
 
 #### **Test Scenarios**
+
 1. **Mixed Currency Auto-Targeting**: AFN minority converts to USD majority
 2. **Mixed Indicators**: Different auto-targets per indicator (GDP vs Inflation)
 3. **Explain Metadata Validation**: Complete V2 metadata structure
@@ -395,12 +416,14 @@ The auto-target machine includes comprehensive testing:
 The auto-target machine provides significant performance benefits:
 
 #### ✅ **Efficiency Gains**
+
 - **One computation** instead of per-item calculations in domain machines
 - **Batch processing** with consistent targets per indicator
 - **Parallel domain processing** with shared auto-targets
 - **Reduced complexity** in domain-specific machines
 
 #### 📊 **Benchmarks**
+
 - **V2 with auto-targeting**: ~10ms average processing time
 - **V1 equivalent**: ~23ms average processing time
 - **Performance improvement**: ~64% faster processing
@@ -408,14 +431,18 @@ The auto-target machine provides significant performance benefits:
 ### Migration from V1
 
 #### **Key Differences**
-1. **Timing**: V2 computes auto-targets early in pipeline, V1 during domain processing
+
+1. **Timing**: V2 computes auto-targets early in pipeline, V1 during domain
+   processing
 2. **Scope**: V2 is global across all items, V1 is per-domain
 3. **Threshold**: V2 uses 80% dominance, V1 uses 50%
 4. **Storage**: V2 uses pipeline context, V1 uses individual item context
 
 #### **Migration Considerations**
+
 - **Higher Threshold**: V2 may fallback to config more often than V1
-- **Global Computation**: V2 may produce different results for mixed-domain datasets
+- **Global Computation**: V2 may produce different results for mixed-domain
+  datasets
 - **Explain Structure**: V2 explain metadata has different format
 - **Configuration**: Same config options work, but behavior may differ
 
@@ -427,9 +454,9 @@ The auto-target machine provides significant performance benefits:
    ```typescript
    // Check configuration
    const config = {
-     autoTargetByIndicator: true,        // Must be true
-     autoTargetDimensions: ['currency'], // Must be defined and non-empty
-     indicatorKey: 'name',               // Field to group by
+     autoTargetByIndicator: true, // Must be true
+     autoTargetDimensions: ["currency"], // Must be defined and non-empty
+     indicatorKey: "name", // Field to group by
    };
    ```
 
@@ -454,6 +481,8 @@ The auto-target machine provides significant performance benefits:
 ### See Also
 
 - [Pipeline Machine](../../pipeline/README.md) - Overall pipeline architecture
-- [Monetary Domain](../../domains/monetary/README.md) - How monetary domain uses auto-targets
-- [Explain Merge Machine](../../normalize/README.md) - How auto-target metadata is added to explain
+- [Monetary Domain](../../domains/monetary/README.md) - How monetary domain uses
+  auto-targets
+- [Explain Merge Machine](../../normalize/README.md) - How auto-target metadata
+  is added to explain
 - [V2 Architecture Overview](../../README.md) - Complete V2 system architecture

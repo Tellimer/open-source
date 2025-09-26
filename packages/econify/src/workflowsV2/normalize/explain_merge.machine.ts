@@ -84,26 +84,45 @@ function normalizeExplainMetadata(
   // Normalize auto-target information
   if (explain.targetSelection || explain.autoTarget) {
     const targetData = explain.targetSelection || explain.autoTarget || {};
+
+    // Helper function to extract dominance for selected value
+    const getDominance = (
+      shares: Record<string, number> | undefined,
+      selected: string | undefined,
+    ): number => {
+      if (!shares || !selected) return 0;
+      return shares[selected] || 0;
+    };
+
     normalized.autoTarget = {
       enabled: config?.autoTargetByIndicator ?? false,
       currency: targetData.selected?.currency
         ? {
           selected: targetData.selected.currency,
-          dominance: targetData.shares?.currency || 0,
+          dominance: getDominance(
+            targetData.shares?.currency,
+            targetData.selected.currency,
+          ),
           threshold: 0.8,
         }
         : undefined,
       scale: targetData.selected?.magnitude
         ? {
           selected: targetData.selected.magnitude,
-          dominance: targetData.shares?.magnitude || 0,
+          dominance: getDominance(
+            targetData.shares?.magnitude,
+            targetData.selected.magnitude,
+          ),
           threshold: 0.8,
         }
         : undefined,
       time: targetData.selected?.time
         ? {
           selected: targetData.selected.time,
-          dominance: targetData.shares?.time || 0,
+          dominance: getDominance(
+            targetData.shares?.time,
+            targetData.selected.time,
+          ),
           threshold: 0.8,
         }
         : undefined,
