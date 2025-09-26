@@ -42,6 +42,7 @@ interface RouterContext {
   fxRates?: FXTable;
   fxSource?: "live" | "fallback";
   fxSourceId?: string;
+  autoTargets?: any;
 }
 
 // Guards are defined inline in the setup function
@@ -149,6 +150,7 @@ export const normalizeRouterMachine = setup({
                   fx: context.fxRates,
                   fxSource: "fallback",
                   fxSourceId: "SNP",
+                  autoTargets: (context as any).autoTargets,
                 }),
                 onDone: {
                   target: "done",
@@ -195,6 +197,7 @@ export const normalizeRouterMachine = setup({
                   fx: context.fxRates,
                   fxSource: "fallback",
                   fxSourceId: "SNP",
+                  autoTargets: (context as any).autoTargets,
                 }),
                 onDone: {
                   target: "done",
@@ -558,13 +561,41 @@ export const normalizeRouterMachine = setup({
     explainMerge: {
       invoke: {
         src: "explainMerge",
-        input: ({ context }) => ({
-          items: (context.processed as any).merged || [],
-          enable: (context.config as any).explain || true,
-          config: context.config,
-          fxSource: "fallback",
-          fxSourceId: "SNP",
-        }),
+        input: ({ context }) => {
+          // Calculate which buckets were processed vs skipped based on input buckets
+          const allBuckets = [
+            "monetaryStock",
+            "monetaryFlow",
+            "counts",
+            "percentages",
+            "indices",
+            "ratios",
+            "commodities",
+            "agriculture",
+            "metals",
+            "energy",
+            "crypto",
+          ];
+          const processedBuckets = allBuckets.filter((bucket) => {
+            const bucketItems = (context.buckets as any)[bucket];
+            return bucketItems && bucketItems.length > 0;
+          });
+          const skippedBuckets = allBuckets.filter((bucket) =>
+            !processedBuckets.includes(bucket)
+          );
+
+          return {
+            items: (context.processed as any).merged || [],
+            enable: (context.config as any).explain || true,
+            config: context.config,
+            fxSource: "fallback",
+            fxSourceId: "SNP",
+            routerStats: {
+              processedBuckets,
+              skippedBuckets,
+            },
+          };
+        },
         onDone: {
           target: "done",
           actions: assign({

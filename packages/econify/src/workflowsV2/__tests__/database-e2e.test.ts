@@ -272,7 +272,10 @@ Deno.test("Database E2E - Metals Domain Processing", async () => {
     if (databaseTestConfig.explain && item.explain) {
       assertEquals(item.explain.currency, undefined);
       assertExists(item.explain.domain);
-      assertEquals(item.explain.domain.bucket, "commodities");
+      const domainBucket = typeof item.explain.domain === "string"
+        ? item.explain.domain
+        : item.explain.domain?.bucket;
+      assertEquals(domainBucket, "commodities");
     }
   }
 

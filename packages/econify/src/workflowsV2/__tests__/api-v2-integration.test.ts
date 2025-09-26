@@ -277,3 +277,164 @@ Deno.test("API V2 - Magnitude conversion and pass-through tests", async () => {
   assertEquals(commodity.normalized, 100);
   assertEquals(commodity.normalizedUnit, "Barrels");
 });
+
+Deno.test("API V2 - Auto-Targeting Integration Test", async () => {
+  // Test auto-targeting through the public API
+  const testData = [
+    // Consumer Spending - mixed currencies, should auto-target to majority
+    {
+      id: "usa-consumer-spending",
+      value: 15000000,
+      unit: "USD Million",
+      name: "Consumer Spending",
+      country_iso: "USA",
+      date: "2024-12-31",
+      currency_code: "USD",
+      periodicity: "Yearly",
+    },
+    {
+      id: "gbr-consumer-spending",
+      value: 2000000,
+      unit: "USD Million",
+      name: "Consumer Spending",
+      country_iso: "GBR",
+      date: "2024-12-31",
+      currency_code: "USD",
+      periodicity: "Yearly",
+    },
+    {
+      id: "afg-consumer-spending",
+      value: 1301129,
+      unit: "AFN Million", // Minority currency
+      name: "Consumer Spending",
+      country_iso: "AFG",
+      date: "2023-12-31",
+      currency_code: "AFN",
+      periodicity: "Yearly",
+    },
+    // Interest Rates - different indicator, no currency conversion needed
+    {
+      id: "usa-interest-rate",
+      value: 5.5,
+      unit: "%",
+      name: "Interest Rate",
+      country_iso: "USA",
+      date: "2024-12-31",
+      currency_code: null,
+      periodicity: "Monthly",
+    },
+  ];
+
+  const result = await processEconomicData(testData, {
+    engine: "v2",
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    indicatorKey: "name",
+    minMajorityShare: 0.6, // 67% USD should trigger auto-targeting
+    tieBreakers: {
+      currency: "prefer-USD",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    minQualityScore: 0,
+    useLiveFX: false,
+    fxFallback: {
+      base: "USD",
+      rates: { AFN: 0.014 }, // 1 USD = ~71 AFN
+      dates: { AFN: "2024-01-01" },
+    },
+    explain: true,
+  });
+
+  // Basic validation
+  assertEquals(result.data.length, 4);
+  assertExists(result.data);
+
+  // Create lookup map
+  const byId = Object.fromEntries(result.data.map((d) => [d.id, d]));
+
+  // Test Consumer Spending auto-targeting
+  const usaConsumer = byId["usa-consumer-spending"];
+  const gbrConsumer = byId["gbr-consumer-spending"];
+  const afgConsumer = byId["afg-consumer-spending"];
+
+  assertExists(usaConsumer);
+  assertExists(gbrConsumer);
+  assertExists(afgConsumer);
+
+  // All Consumer Spending should be normalized to the same currency (USD due to majority)
+  assertEquals(
+    usaConsumer.normalizedUnit?.includes("USD"),
+    true,
+    "USA Consumer Spending should be in USD",
+  );
+  assertEquals(
+    gbrConsumer.normalizedUnit?.includes("USD"),
+    true,
+    "GBR Consumer Spending should be in USD",
+  );
+
+  // CRITICAL: AFN should be converted to USD due to auto-targeting
+  assertEquals(
+    afgConsumer.normalizedUnit?.includes("USD"),
+    true,
+    "AFG Consumer Spending should be converted to USD",
+  );
+
+  // Validate conversion happened (value should be different from original AFN amount)
+  assert(
+    afgConsumer.normalizedValue !== 1301129,
+    `AFG value should be converted from original: got ${afgConsumer.normalizedValue}`,
+  );
+  assert(
+    afgConsumer.normalizedValue > 1000000,
+    `Converted USD value should be significant: got ${afgConsumer.normalizedValue}`,
+  );
+
+  // Test Interest Rate (should remain as percentage, no auto-targeting)
+  const usaInterest = byId["usa-interest-rate"];
+  assertExists(usaInterest);
+  assertEquals(
+    usaInterest.normalizedUnit,
+    "%",
+    "Interest rate should remain as percentage",
+  );
+  assertEquals(
+    usaInterest.normalizedValue,
+    5.5,
+    "Interest rate value should be unchanged",
+  );
+
+  // Validate explain metadata for auto-targeting
+  const consumerItems = [usaConsumer, gbrConsumer, afgConsumer];
+  consumerItems.forEach((item) => {
+    assertExists(item.explain, "Should have explain metadata");
+    assertEquals(
+      item.explain.explain_version,
+      "v2",
+      "Should use V2 explain format",
+    );
+
+    // Check for auto-target metadata (if present)
+    if (item.explain.autoTarget?.currency) {
+      assertEquals(
+        item.explain.autoTarget.currency.selected,
+        "USD",
+        "Should auto-target to USD",
+      );
+      assert(
+        item.explain.autoTarget.currency.dominance > 0.6,
+        "USD dominance should be > 60%",
+      );
+    }
+  });
+
+  console.log("✅ API V2 Auto-Targeting Integration Test Passed");
+  console.log(`   📊 Processed ${result.data.length} items`);
+  console.log(
+    `   💱 AFN converted: ${
+      afgConsumer.normalizedValue.toFixed(2)
+    } USD (from ${1301129} AFN)`,
+  );
+  console.log(`   📈 Quality score: ${result.metrics.qualityScore}`);
+});

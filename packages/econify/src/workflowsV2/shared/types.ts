@@ -316,6 +316,7 @@ export interface AutoTargetResult {
  */
 export interface ExplainV2Metadata {
   explainVersion: "v2";
+  explain_version?: string; // Backwards compatibility field
 
   // Normalization targets
   currency?: {

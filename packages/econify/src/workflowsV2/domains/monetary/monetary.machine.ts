@@ -19,6 +19,7 @@ interface MonetaryInput {
   fx?: FXTable;
   fxSource?: "live" | "fallback";
   fxSourceId?: string;
+  autoTargets?: any; // Global auto-targets from pipeline
 }
 interface MonetaryOutput {
   items: ParsedData[];
@@ -106,8 +107,42 @@ export const monetaryMachine = setup({
       initial: "decide",
       states: {
         decide: {
+          entry: ({ context }) => {
+            console.log(
+              `[V2 monetary] Targets decision - autoTargets:`,
+              context.autoTargets,
+            );
+            console.log(
+              `[V2 monetary] Targets decision - autoTargetByIndicator:`,
+              context.config.autoTargetByIndicator,
+            );
+          },
           always: [
-            { guard: autoTargetEnabled(), target: "auto" },
+            {
+              guard: ({ context }) => {
+                const hasTargets = context.autoTargets &&
+                  (context.autoTargets instanceof Map
+                    ? context.autoTargets.size > 0
+                    : Object.keys(context.autoTargets).length > 0);
+                console.log(
+                  `[V2 monetary] Guard useGlobalTargets: ${hasTargets} (Map size: ${
+                    context.autoTargets instanceof Map
+                      ? context.autoTargets.size
+                      : "not a map"
+                  })`,
+                );
+                return hasTargets;
+              },
+              target: "useGlobalTargets",
+            },
+            {
+              guard: ({ context }) => {
+                const autoEnabled = autoTargetEnabled()({ context } as any);
+                console.log(`[V2 monetary] Guard auto: ${autoEnabled}`);
+                return autoEnabled;
+              },
+              target: "auto",
+            },
             { target: "useConfig" },
           ],
         },
@@ -136,6 +171,45 @@ export const monetaryMachine = setup({
                   "millions",
               time: context.config.targetTimeScale ?? context.preferredTime,
             }),
+          }),
+          always: { target: "done" },
+        },
+        useGlobalTargets: {
+          entry: assign(({ context }) => {
+            // Extract auto-targets for the first item (assuming all items in this batch have same indicator)
+            const firstItem = context.items[0];
+            if (!firstItem || !context.autoTargets) {
+              return {
+                selected: {
+                  currency: context.config.targetCurrency,
+                  magnitude:
+                    (context.config.targetMagnitude as Scale | undefined) ??
+                      "millions",
+                  time: context.config.targetTimeScale ?? context.preferredTime,
+                },
+              };
+            }
+
+            const indicatorKey = firstItem.name || "";
+            const targets = context.autoTargets.get
+              ? context.autoTargets.get(indicatorKey)
+              : context.autoTargets[indicatorKey];
+
+            console.log(
+              `[V2 monetary] Using global auto-targets for "${indicatorKey}":`,
+              targets,
+            );
+
+            return {
+              selected: {
+                currency: targets?.currency || context.config.targetCurrency,
+                magnitude: (targets?.magnitude as Scale | undefined) ||
+                  (context.config.targetMagnitude as Scale | undefined) ||
+                  "millions",
+                time: targets?.time || context.config.targetTimeScale ||
+                  context.preferredTime,
+              },
+            };
           }),
           always: { target: "done" },
         },

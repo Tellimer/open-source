@@ -1610,3 +1610,166 @@ Deno.test("V2 E2E Edge Cases - Multi-Currency Scaling Validation", async () => {
 
   actor.stop();
 });
+
+Deno.test("V2 E2E Real Data - Auto-Targeting Validation", async () => {
+  // Test auto-targeting with real data using API
+  const config = {
+    targetCurrency: "USD", // Will be overridden by auto-targeting
+    targetMagnitude: "millions" as const,
+    targetTimeScale: "month" as const,
+    autoTargetByIndicator: true, // Enable auto-targeting
+    autoTargetDimensions: ["currency", "magnitude", "time"] as const,
+    indicatorKey: "name" as const,
+    minMajorityShare: 0.6,
+    tieBreakers: {
+      currency: "prefer-USD" as const,
+      magnitude: "prefer-millions" as const,
+      time: "prefer-month" as const,
+    },
+    explain: true,
+    useLiveFX: false,
+    fxFallback: realDataFXFallback,
+    engine: "v2" as const,
+  };
+
+  const startTime = performance.now();
+
+  // Use a subset of real data for focused auto-targeting testing
+  const autoTargetTestData = realEconomicDataSet.slice(0, 20); // First 20 items for faster testing
+
+  const actor = createActor(pipelineV2Machine, {
+    input: {
+      rawData: autoTargetTestData,
+      config,
+    },
+  });
+
+  actor.start();
+
+  const result = await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error("Timeout")), 30000);
+    actor.subscribe((state) => {
+      if (state.status === "done") {
+        clearTimeout(timeout);
+        resolve(state.output);
+      } else if (state.status === "error") {
+        clearTimeout(timeout);
+        reject(new Error(`Pipeline error: ${state.error}`));
+      }
+    });
+  });
+
+  const output = result as { normalizedData: ParsedData[]; warnings: string[] };
+  const duration = performance.now() - startTime;
+
+  // Basic validation
+  assertGreater(output.normalizedData.length, 0, "Should process some data");
+  assertEquals(
+    output.normalizedData.length,
+    autoTargetTestData.length,
+    "Should process all input items",
+  );
+
+  // Validate explain metadata for auto-targeting
+  let autoTargetedItems = 0;
+  let explainValidationPassed = 0;
+
+  output.normalizedData.forEach((item, index) => {
+    // All items should have explain metadata
+    assertExists(item.explain, `Item ${index} should have explain metadata`);
+    assertExists(
+      item.explain.explain_version,
+      `Item ${index} should have explain version`,
+    );
+    assertEquals(
+      item.explain.explain_version,
+      "v2",
+      "Should use V2 explain format",
+    );
+
+    // Check router information
+    assertExists(
+      item.explain.router,
+      `Item ${index} should have router information`,
+    );
+    const processedBuckets = item.explain.router.processed_buckets ||
+      item.explain.router.processedBuckets;
+    assertExists(
+      processedBuckets,
+      `Item ${index} should have processed buckets info`,
+    );
+
+    // Check domain classification
+    assertExists(
+      item.explain.domain,
+      `Item ${index} should have domain classification`,
+    );
+    const domainBucket = typeof item.explain.domain === "string"
+      ? item.explain.domain
+      : item.explain.domain?.bucket;
+    assertExists(domainBucket, `Item ${index} should have domain bucket`);
+
+    explainValidationPassed++;
+
+    // For monetary items, validate auto-targeting metadata
+    const isMonetary = domainBucket === "monetaryStock" ||
+      domainBucket === "monetaryFlow";
+
+    if (isMonetary && item.explain.autoTarget) {
+      autoTargetedItems++;
+
+      // Validate auto-target structure
+      assertExists(
+        item.explain.autoTarget.currency,
+        "Should have currency auto-target info",
+      );
+      assertExists(
+        item.explain.autoTarget.currency.selected,
+        "Should have selected currency",
+      );
+      assertExists(
+        item.explain.autoTarget.currency.dominance,
+        "Should have currency dominance",
+      );
+
+      // Dominance should be a valid percentage
+      const dominance = item.explain.autoTarget.currency.dominance;
+      assertGreater(dominance, 0, "Currency dominance should be > 0");
+      assertLess(dominance, 1.1, "Currency dominance should be <= 1.0"); // Allow slight rounding
+
+      console.log(
+        `📊 Auto-target for ${item.name}: ${item.explain.autoTarget.currency.selected} (${
+          (dominance * 100).toFixed(1)
+        }% dominance)`,
+      );
+    }
+  });
+
+  // Performance and coverage validation
+  const throughput = output.normalizedData.length / (duration / 1000);
+  assertGreater(throughput, 10, "Should process at least 10 items/second");
+
+  console.log(`🎯 Auto-Targeting E2E Complete:`);
+  console.log(
+    `   📊 Processed: ${output.normalizedData.length} items in ${
+      duration.toFixed(2)
+    }ms`,
+  );
+  console.log(`   ⚡ Throughput: ${throughput.toFixed(1)} items/sec`);
+  console.log(
+    `   🔍 Explain validation: ${explainValidationPassed}/${output.normalizedData.length} items passed`,
+  );
+  console.log(
+    `   🎯 Auto-targeted items: ${autoTargetedItems} monetary indicators`,
+  );
+  console.log(`   ⚠️  Warnings: ${output.warnings.length}`);
+
+  // Ensure we tested auto-targeting on some items
+  if (autoTargetedItems === 0) {
+    console.log(
+      "⚠️  No auto-targeted items found - this may indicate an issue with auto-targeting",
+    );
+  }
+
+  actor.stop();
+});

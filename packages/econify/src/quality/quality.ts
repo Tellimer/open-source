@@ -108,14 +108,34 @@ export function assessDataQuality(
     };
   }
 
-  // Check for insufficient data
-  if (dataArray.length < 3) {
+  // Detect if this is cross-sectional data by checking metadata patterns
+  // Cross-sectional data typically has multiple entities with same indicator
+  const hasCountryMetadata = dataArray.some((d) =>
+    d.metadata && (
+      (d.metadata as any).country_iso ||
+      (d.metadata as any).country ||
+      (d.metadata as any).entity
+    )
+  );
+
+  // For cross-sectional data, be more lenient with data point requirements
+  const isCrossSectional = hasCountryMetadata && dataArray.length > 1;
+
+  // Check for insufficient data (adjust for cross-sectional vs time series)
+  const minDataPoints = isCrossSectional ? 1 : 3; // Cross-sectional needs only 1 point per entity
+  if (dataArray.length < minDataPoints) {
     issues.push({
       severity: "warning",
       type: "insufficient_data",
       message: `Insufficient data points: ${dataArray.length}`,
     });
-    dimensions.completeness = Math.max(0, 100 - (3 - dataArray.length) * 35);
+    dimensions.completeness = Math.max(
+      0,
+      100 - (minDataPoints - dataArray.length) * 35,
+    );
+  } else if (dataArray.length === 1) {
+    // Single data point is acceptable for cross-sectional or snapshot data
+    dimensions.completeness = 85; // Good score for single data point
   }
 
   // 1. Completeness checks

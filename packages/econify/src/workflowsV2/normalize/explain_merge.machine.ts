@@ -11,6 +11,10 @@ interface ExplainInput {
     targetTimeScale?: string;
     autoTargetByIndicator?: boolean;
   };
+  routerStats?: {
+    processedBuckets: string[];
+    skippedBuckets: string[];
+  };
 }
 interface ExplainOutput {
   items: ParsedData[];
@@ -22,9 +26,11 @@ interface ExplainOutput {
 function normalizeExplainMetadata(
   explain: any,
   config?: ExplainInput["config"],
+  routerStats?: ExplainInput["routerStats"],
 ): ExplainV2Metadata {
   const normalized: ExplainV2Metadata = {
     explainVersion: "v2",
+    explain_version: "v2", // Add backwards compatibility field
   };
 
   // Preserve existing FX structure if present (don't normalize it yet)
@@ -105,22 +111,21 @@ function normalizeExplainMetadata(
   }
 
   // Add router provenance
-  if (explain.router || explain.domain) {
-    normalized.router = {
-      totalBuckets: 11, // Standard V2 bucket count
-      processedBuckets: explain.router?.processedBuckets || [],
-      skippedBuckets: explain.router?.skippedBuckets || [],
-    };
-  }
+  normalized.router = {
+    totalBuckets: 11, // Standard V2 bucket count
+    processedBuckets: routerStats?.processedBuckets ||
+      explain.router?.processedBuckets || [],
+    skippedBuckets: routerStats?.skippedBuckets ||
+      explain.router?.skippedBuckets || [],
+  };
 
-  // Add domain information
-  if (explain.domain) {
-    normalized.domain = {
-      bucket: explain.domain as DomainBucket,
-      processingType: explain.processingType || "batch",
-      conversionSummary: explain.conversionSummary,
-    };
-  }
+  // Add domain information - always include for V2
+  normalized.domain = {
+    bucket: (explain.domain?.bucket || explain.domain ||
+      "monetaryStock") as DomainBucket,
+    processingType: explain.processingType || "batch",
+    conversionSummary: explain.conversionSummary,
+  };
 
   // Preserve any additional V2-specific fields
   Object.keys(explain).forEach((key) => {
@@ -155,6 +160,7 @@ export const explainMergeMachine = setup({
     items: input.items,
     enable: input.enable,
     config: input.config,
+    routerStats: input.routerStats,
   }),
   initial: "maybe",
   states: {
@@ -191,6 +197,7 @@ export const explainMergeMachine = setup({
           const normalizedExplain = normalizeExplainMetadata(
             existingExplain,
             context.config,
+            context.routerStats,
           );
 
           // Map V2 field names to V1 field names for compatibility with tests

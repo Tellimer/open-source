@@ -150,7 +150,12 @@ export interface Explain {
   };
 
   /** Detected domain/category for FE formatting (e.g., commodity, emissions, agriculture, metals, energy) */
-  domain?: string;
+  /** V2 Domain classification - can be string or object with bucket */
+  domain?: string | {
+    bucket?: string;
+    processingType?: string;
+    conversionSummary?: string;
+  };
 
   /** Complete conversion summary */
   conversion?: {
@@ -174,4 +179,36 @@ export interface Explain {
     };
     reason?: string;
   };
+
+  /** V2 Auto-targeting metadata */
+  autoTarget?: {
+    currency?: {
+      selected: string;
+      dominance: number;
+      threshold: number;
+    };
+    scale?: {
+      selected: Scale;
+      dominance: number;
+      threshold: number;
+    };
+    time?: {
+      selected: TimeScale;
+      dominance: number;
+      threshold: number;
+    };
+  };
+
+  /** V2 Router information */
+  router?: {
+    total_buckets?: number;
+    totalBuckets?: number;
+    processed_buckets?: string[];
+    processedBuckets?: string[];
+    skipped_buckets?: string[];
+    skippedBuckets?: string[];
+  };
+
+  /** V2 Explain version */
+  explain_version?: string;
 }

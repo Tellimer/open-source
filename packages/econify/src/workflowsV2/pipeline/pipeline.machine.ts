@@ -7,6 +7,7 @@ import {
 } from "../machines/index.ts";
 import { classifyMachine } from "../classify/classify.machine.ts";
 import { normalizeRouterMachine } from "../normalize/normalize_router.machine.ts";
+import { autoTargetMachine } from "../machines/stages/auto_target.machine.ts";
 
 interface PipelineInput {
   config: unknown;
@@ -21,6 +22,8 @@ interface PipelineOutput {
 type PipelineContext = PipelineInput & {
   validatedData?: ParsedData[];
   parsedData?: ParsedData[];
+  autoTargetedData?: ParsedData[];
+  autoTargets?: any;
   qualityScore?: number;
   qualityReport?: unknown;
   warnings: string[];
@@ -36,6 +39,7 @@ export const pipelineV2Machine = setup({
   actors: {
     validate: validationMachine,
     parse: parsingMachine,
+    autoTarget: autoTargetMachine,
     quality: qualityMachine,
     classify: classifyMachine,
     normalizeRouter: normalizeRouterMachine,
@@ -83,7 +87,7 @@ export const pipelineV2Machine = setup({
           validatedData: context.validatedData || [],
         }),
         onDone: {
-          target: "quality",
+          target: "autoTarget",
           actions: assign({
             parsedData: ({ event }) => (event as any).output.parsedData,
             warnings: ({ context, event }) => [
@@ -100,12 +104,41 @@ export const pipelineV2Machine = setup({
         },
       },
     },
+    autoTarget: {
+      invoke: {
+        src: "autoTarget",
+        input: ({ context }) => ({
+          config: context.config as any,
+          parsedData: context.parsedData || [],
+        }),
+        onDone: {
+          target: "quality",
+          actions: assign({
+            autoTargetedData: ({ event }) => (event as any).output.parsedData,
+            autoTargets: ({ event }) => (event as any).output.autoTargets,
+            warnings: ({ context, event }) => [
+              ...context.warnings,
+              ...(event as any).output.warnings,
+            ],
+          }),
+        },
+        onError: {
+          target: "error",
+          actions: ({ event }: { event: any }) => {
+            console.error(
+              "[Pipeline] Auto-target stage error:",
+              (event as any).error,
+            );
+          },
+        },
+      },
+    },
     quality: {
       invoke: {
         src: "quality",
         input: ({ context }) => ({
           config: context.config as any,
-          parsedData: context.parsedData || [],
+          parsedData: context.autoTargetedData || context.parsedData || [],
         }),
         onDone: {
           target: "classify",
@@ -132,7 +165,8 @@ export const pipelineV2Machine = setup({
         src: "classify",
         input: ({ context }) => ({
           config: context.config as any,
-          parsedData: context.parsedData || [],
+          parsedData: context.autoTargetedData || context.parsedData || [],
+          autoTargets: context.autoTargets,
         }),
         onDone: {
           target: "normalize",
@@ -160,6 +194,7 @@ export const pipelineV2Machine = setup({
             exempted: cls.exempted,
             nonExempted: cls.nonExempted,
             processed: {},
+            autoTargets: context.autoTargets,
           };
         },
         onDone: {

@@ -46,50 +46,52 @@ from raw data input to normalized output:
 graph TD
 A[Raw Data] --> B[Validation Machine]
 B --> C[Parsing Machine]
-C --> D[Quality Machine]
-D --> E[Classification Machine]
-E --> F[Normalize Router]
+C --> D[Auto-Target Machine]
+D --> E[Quality Machine]
+E --> F[Classification Machine]
+F --> G[Normalize Router]
 
 subgraph "Inside Normalize Router"
-  F --> G{Check FX Needed?}
-  G -->|has monetary items| H[FX Machine]
-  G -->|no monetary items| J
+  G --> H{Check FX Needed?}
+  H -->|has monetary items| I[FX Machine]
+  H -->|no monetary items| K
 
-  H --> J[Parallel Domain Processing]
+  I --> K[Parallel Domain Processing]
 
-  J --> K[Monetary Stock]
-  J --> L[Monetary Flow]
-  J --> M[Counts]
-  J --> N[Percentages]
-  J --> O[Indices]
-  J --> P[Ratios]
-  J --> Q[Energy]
-  J --> R[Commodities]
-  J --> S[Agriculture]
-  J --> T[Metals]
-  J --> U[Crypto]
+  K --> L[Monetary Stock]
+  K --> M[Monetary Flow]
+  K --> N[Counts]
+  K --> O[Percentages]
+  K --> P[Indices]
+  K --> Q[Ratios]
+  K --> R[Energy]
+  K --> S[Commodities]
+  K --> T[Agriculture]
+  K --> U[Metals]
+  K --> V[Crypto]
 end
 
-K --> V[Fan-in & Merge]
-L --> V
-M --> V
-N --> V
-O --> V
-P --> V
-Q --> V
-R --> V
-S --> V
-T --> V
-U --> V
+L --> W[Fan-in & Merge]
+M --> W
+N --> W
+O --> W
+P --> W
+Q --> W
+R --> W
+S --> W
+T --> W
+U --> W
+V --> W
 
-V --> W[Explain Merge]
-W --> X[Normalized Output]
+W --> X[Explain Merge]
+X --> Y[Normalized Output]
 
 B -->|validation fails| ERR[Error State]
 C -->|parse fails| ERR
-D -->|quality fails| ERR
-E -->|classification fails| ERR
-F -->|normalize fails| ERR
+D -->|auto-target fails| ERR
+E -->|quality fails| ERR
+F -->|classification fails| ERR
+G -->|normalize fails| ERR
 ```
 
 ### Pipeline Stages
@@ -97,17 +99,21 @@ F -->|normalize fails| ERR
 1. **Validation Machine**: Schema validation, required fields, data quality
    warnings
 2. **Parsing Machine**: Unit parsing, inference, numeric coercion
-3. **Quality Machine**: Data quality assessment, outlier detection, completeness
+3. **Auto-Target Machine**: **NEW** - Computes global auto-targets across all
+   indicators before processing
+4. **Quality Machine**: Data quality assessment, outlier detection, completeness
    checks
-4. **Classification Machine**: Taxonomy-based routing to domain processors (3
+5. **Classification Machine**: Taxonomy-based routing to domain processors (3
    states: classify → bucketize → done)
-5. **Normalize Router**: Parallel domain processing with conditional FX
+6. **Normalize Router**: Parallel domain processing with conditional FX
    execution
-6. **FX Machine**: Conditional execution - only runs for monetary indicators
-7. **Domain Processing**: All 11 domains process in parallel
-8. **Fan-in & Merge**: Collects results from all domains preserving order
-9. **Explain Merge**: Adds comprehensive metadata
-10. **Output**: Merged results with explain metadata
+7. **FX Machine**: Conditional execution - only runs for monetary indicators
+8. **Domain Processing**: All 11 domains process in parallel with access to
+   auto-targets
+9. **Fan-in & Merge**: Collects results from all domains preserving order
+10. **Explain Merge**: Adds comprehensive metadata including auto-target
+    information
+11. **Output**: Merged results with complete explain metadata
 
 ### Machine Organization
 
@@ -224,10 +230,13 @@ IN[Monetary items incl. wages] --> TB{hasConfigTargetTime?}
 TB -->|yes| TGT[targets.machine]
 TB -->|no| TBI[time_basis.machine infer]
 TBI --> TGT
-TGT --> TGT_DECIDE{autoTargetEnabled?}
-TGT_DECIDE -->|yes| AUTO[auto-targeting logic]
-TGT_DECIDE -->|no| CONFIG[use config values]
-AUTO --> BATCH[batch processing]
+TGT --> TGT_DECIDE{autoTargetEnabled & hasGlobalTargets?}
+TGT_DECIDE -->|yes| GLOBAL[use global auto-targets from pipeline]
+TGT_DECIDE -->|no| LOCAL{localAutoTargetEnabled?}
+LOCAL -->|yes| AUTO[local auto-targeting logic]
+LOCAL -->|no| CONFIG[use config values]
+GLOBAL --> BATCH[batch processing]
+AUTO --> BATCH
 CONFIG --> BATCH
 BATCH --> OUT[Monetary output]
 

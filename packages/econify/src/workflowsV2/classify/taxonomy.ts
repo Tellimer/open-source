@@ -43,7 +43,7 @@ const matchers = {
   // Check if it's a monetary flow indicator (even without explicit time in unit)
   // These are inherently flows that measure money movement over a period
   isMonetaryFlow: (name: string) =>
-    /\b(current\s+account|trade\s+balance|exports?|imports?|fdi|foreign\s+direct\s+investment|remittances?|capital\s+flows?|portfolio\s+investment|financial\s+account|balance\s+of\s+payments|trade\s+deficit|trade\s+surplus)\b/i
+    /\b(current\s+account|trade\s+balance|balance\s+of\s+trade|exports?|imports?|fdi|foreign\s+direct\s+investment|remittances?|capital\s+flows?|portfolio\s+investment|financial\s+account|balance\s+of\s+payments|trade\s+deficit|trade\s+surplus)\b/i
       .test(name),
 
   // Check if it's a percentage unit
