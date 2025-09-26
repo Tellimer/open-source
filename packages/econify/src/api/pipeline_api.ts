@@ -156,7 +156,10 @@ export function processEconomicData(
             processingTime: Date.now() - startTime,
             recordsProcessed: v2Output.normalizedData?.length || 0,
             recordsFailed: data.length - (v2Output.normalizedData?.length || 0),
-            qualityScore: (state.context as any).qualityScore?.overall,
+            qualityScore: (() => {
+              const qs = (state.context as any).qualityScore;
+              return typeof qs === "object" ? (qs as any)?.overall : qs;
+            })(),
           },
         };
 

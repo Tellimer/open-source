@@ -39,7 +39,6 @@ jobs:
       # - name: Enforce 70% coverage
       #   run: deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 70
 
-
       # - name: Enforce 70% coverage on changed files
       #   run: deno run --allow-read --allow-run scripts/check_changed_coverage.ts coverage/lcov.info 70
 

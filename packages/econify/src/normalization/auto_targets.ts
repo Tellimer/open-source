@@ -145,16 +145,17 @@ export function computeAutoTargets(
     // Prefer explicit metadata
     const currency = item.currency_code?.toUpperCase() ??
       parseUnit(item.unit).currency;
-    const magnitude = item.scale
-      ? getScale(item.scale)
-      : (parseUnit(item.unit).scale ?? "ones");
+    // For magnitude, treat missing or implicit 'ones' as unspecified so tie-breakers can apply
+    const parsedScale = parseUnit(item.unit).scale;
+    const magnitude = item.scale ? getScale(item.scale) : parsedScale;
+    const magnitudeForShare = magnitude && magnitude !== "ones" ? magnitude : undefined;
     // Prefer unit time token over item.periodicity for time share extraction
     const unitTs = parseUnit(item.unit).timeScale;
     const time = unitTs ??
       (item.periodicity ? parseTimeScale(item.periodicity) : undefined);
 
     inc(g.currency, currency ?? undefined);
-    inc(g.magnitude, magnitude ?? undefined);
+    inc(g.magnitude, magnitudeForShare ?? undefined);
     inc(g.time, time ?? undefined);
     g.size += 1;
     groups.set(key, g);

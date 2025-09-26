@@ -58,9 +58,7 @@ export const autoTargetMachine = setup({
         const { config, parsedData } = input;
 
         if (
-          !config.autoTargetByIndicator || parsedData.length === 0 ||
-          !config.autoTargetDimensions ||
-          config.autoTargetDimensions.length === 0
+          !config.autoTargetByIndicator || parsedData.length === 0
         ) {
           return {
             autoTargets: undefined,

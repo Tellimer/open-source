@@ -156,9 +156,42 @@ export const monetaryMachine = setup({
             }),
             onDone: {
               target: "done",
-              actions: assign({
-                selected: ({ event }) => (event as any).output.selected,
-              }),
+              actions: [
+                assign({
+                  selected: ({ event }) => (event as any).output.selected,
+                }),
+                assign(({ context, event }) => {
+                  try {
+                    if ((context.config as any)?.explain) {
+                      const sel = (event as any).output.selected as
+                        | { currency?: string; magnitude?: Scale; time?: TimeScale }
+                        | undefined;
+                      const indicatorKey = context.items[0]?.name || "";
+                      if (sel) {
+                        for (const item of context.items) {
+                          (item as any).explain ||= {};
+                          (item as any).explain.targetSelection = {
+                            mode: "auto-by-indicator",
+                            indicatorKey,
+                            selected: {
+                              currency: sel.currency,
+                              magnitude: sel.magnitude,
+                              time: sel.time,
+                            },
+                            // Local auto-target doesn't compute shares; global targets will
+                            // populate shares when available.
+                            shares: undefined,
+                            reason: "local-auto-target",
+                          };
+                        }
+                      }
+                    }
+                  } catch (_) {
+                    // best-effort explain enrichment; do not fail the pipeline
+                  }
+                  return {} as any;
+                }),
+              ],
             },
           },
         },

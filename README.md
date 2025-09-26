@@ -44,23 +44,37 @@ utilities for:
 [![Test Coverage](https://img.shields.io/badge/tests-239%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 
-A comprehensive Deno/TypeScript package for **economic data processing** with advanced features for classification, normalization, quality assessment, and analysis. Now includes **V2 workflows** with enhanced parallel processing and explicit state management using XState v5.
+A comprehensive Deno/TypeScript package for **economic data processing** with
+advanced features for classification, normalization, quality assessment, and
+analysis. Now includes **V2 workflows** with enhanced parallel processing and
+explicit state management using XState v5.
 
 #### Key Features:
 
-- 🔍 **Smart Classification** — Automatically detect indicator types (stock, flow, rate, currency) and route to appropriate processing domains
-- 🎯 **Auto-targeting** — Intelligent unit detection with precedence: unit time token → periodicity → tie-breaker defaults
-- 💱 **FX Conversion** — Built-in currency conversion with live/fallback rates support
-- 📊 **Domain-specific Processing** — Specialized handlers for 11+ domains: monetary, counts, percentages, indices, ratios, energy, commodities, agriculture, metals, crypto
-- ⚡ **V2 Parallel Architecture** — Maximum parallelization with fan-out/fan-in pattern for optimal performance
-- 🔄 **State Machine Orchestration** — Explicit state transitions using XState v5 for predictable, testable workflows
-- 📈 **Quality Assessment** — Data quality scoring with detailed metrics and confidence levels
-- 🌍 **International Support** — 150+ currency codes, 200+ countries, multiple languages
-- 📝 **Explain Metadata** — Detailed transformation tracking with flat normalized keys (USD, millions, month)
+- 🔍 **Smart Classification** — Automatically detect indicator types (stock,
+  flow, rate, currency) and route to appropriate processing domains
+- 🎯 **Auto-targeting** — Intelligent unit detection with precedence: unit time
+  token → periodicity → tie-breaker defaults
+- 💱 **FX Conversion** — Built-in currency conversion with live/fallback rates
+  support
+- 📊 **Domain-specific Processing** — Specialized handlers for 11+ domains:
+  monetary, counts, percentages, indices, ratios, energy, commodities,
+  agriculture, metals, crypto
+- ⚡ **V2 Parallel Architecture** — Maximum parallelization with fan-out/fan-in
+  pattern for optimal performance
+- 🔄 **State Machine Orchestration** — Explicit state transitions using XState
+  v5 for predictable, testable workflows
+- 📈 **Quality Assessment** — Data quality scoring with detailed metrics and
+  confidence levels
+- 🌍 **International Support** — 150+ currency codes, 200+ countries, multiple
+  languages
+- 📝 **Explain Metadata** — Detailed transformation tracking with flat
+  normalized keys (USD, millions, month)
 
 #### V2 Architecture (New!)
 
-The V2 workflow engine (`PipelineConfig.engine = "v2"`) provides significant improvements:
+The V2 workflow engine (`PipelineConfig.engine = "v2"`) provides significant
+improvements:
 
 ```mermaid
 graph LR
@@ -85,6 +99,7 @@ graph LR
 ```
 
 **V2 Benefits:**
+
 - FX detection during classification (not during processing)
 - All domains process in parallel (not sequential)
 - Explicit state transitions with guards
@@ -105,25 +120,28 @@ coming soon!
 
 ### Overview
 
-The V2 workflow engine represents a complete architectural redesign focused on parallelization, explicit state management, and improved developer experience. Built on XState v5, it provides predictable, testable, and highly performant economic data processing.
+The V2 workflow engine represents a complete architectural redesign focused on
+parallelization, explicit state management, and improved developer experience.
+Built on XState v5, it provides predictable, testable, and highly performant
+economic data processing.
 
 ### Domain Classification Taxonomy
 
 V2 introduces a refined 11-domain taxonomy:
 
-| Domain | Description | FX Required | Example Indicators |
-|--------|-------------|-------------|-------------------|
-| **monetaryStock** | Currency-based stocks | Always | GDP, debt, reserves |
-| **monetaryFlow** | Currency-based flows (includes wages) | Always | Income, expenditure, salaries |
-| **counts** | Count-based indicators | Never | Population, vehicles, facilities |
-| **percentages** | Percentage values | Never | Unemployment rate, inflation |
-| **indices** | Index values | Never | CPI, stock indices |
-| **ratios** | Composite ratios | Never | Density (persons/km²) |
-| **energy** | Energy & emissions | Conditional | GWh, CO2e, oil rigs |
-| **commodities** | Commodity prices | Conditional | Oil ($/barrel), gold ($/oz) |
-| **agriculture** | Agricultural products | Conditional | Wheat ($/bushel), corn |
-| **metals** | Metal commodities | Conditional | Silver, copper, steel |
-| **crypto** | Cryptocurrency | Conditional | BTC, ETH, SOL |
+| Domain            | Description                           | FX Required | Example Indicators               |
+| ----------------- | ------------------------------------- | ----------- | -------------------------------- |
+| **monetaryStock** | Currency-based stocks                 | Always      | GDP, debt, reserves              |
+| **monetaryFlow**  | Currency-based flows (includes wages) | Always      | Income, expenditure, salaries    |
+| **counts**        | Count-based indicators                | Never       | Population, vehicles, facilities |
+| **percentages**   | Percentage values                     | Never       | Unemployment rate, inflation     |
+| **indices**       | Index values                          | Never       | CPI, stock indices               |
+| **ratios**        | Composite ratios                      | Never       | Density (persons/km²)            |
+| **energy**        | Energy & emissions                    | Conditional | GWh, CO2e, oil rigs              |
+| **commodities**   | Commodity prices                      | Conditional | Oil ($/barrel), gold ($/oz)      |
+| **agriculture**   | Agricultural products                 | Conditional | Wheat ($/bushel), corn           |
+| **metals**        | Metal commodities                     | Conditional | Silver, copper, steel            |
+| **crypto**        | Cryptocurrency                        | Conditional | BTC, ETH, SOL                    |
 
 ### Pipeline State Machine
 
@@ -167,15 +185,15 @@ stateDiagram-v2
 
 ### Key Improvements Over V1
 
-| Aspect | V1 | V2 |
-|--------|----|----|
-| **FX Processing** | Sequential, blocking | Parallel, non-blocking |
-| **State Management** | Implicit conditions | Explicit XState machines |
-| **Domain Processing** | Sequential pipeline | Parallel fan-out/fan-in |
-| **Wages Handling** | Separate domain | Unified as monetaryFlow |
-| **Error Recovery** | Limited | Comprehensive error states |
-| **Metadata Structure** | Nested | Flat with normalized keys |
-| **Testing** | Integration-focused | Unit-testable states |
+| Aspect                 | V1                   | V2                         |
+| ---------------------- | -------------------- | -------------------------- |
+| **FX Processing**      | Sequential, blocking | Parallel, non-blocking     |
+| **State Management**   | Implicit conditions  | Explicit XState machines   |
+| **Domain Processing**  | Sequential pipeline  | Parallel fan-out/fan-in    |
+| **Wages Handling**     | Separate domain      | Unified as monetaryFlow    |
+| **Error Recovery**     | Limited              | Comprehensive error states |
+| **Metadata Structure** | Nested               | Flat with normalized keys  |
+| **Testing**            | Integration-focused  | Unit-testable states       |
 
 ### Migration Guide
 
@@ -190,9 +208,9 @@ const result = await econify({
     targetCurrency: "USD",
     targetScale: "millions",
     targetTimeScale: "month",
-    autoTarget: true
+    autoTarget: true,
   },
-  data: [/* your data */]
+  data: [/* your data */],
 });
 ```
 
