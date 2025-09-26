@@ -6,8 +6,8 @@ Output: { processed }
 Key states: prepare → normalizeCounts → enrichExplain → done
 */
 
-import { setup, fromPromise } from "npm:xstate@^5.20.2";
-import type { ParsedData, FXTable, Scale } from "../../../../main.ts";
+import { fromPromise, setup } from "npm:xstate@^5.20.2";
+import type { FXTable, ParsedData, Scale } from "../../../../main.ts";
 import type { PipelineConfig } from "../../../economic-data-workflow.ts";
 import { processBatch } from "../../../../batch/batch.ts";
 
@@ -20,7 +20,9 @@ interface CountsInput {
   explain?: boolean;
 }
 
-interface CountsOutput { processed: ParsedData[] }
+interface CountsOutput {
+  processed: ParsedData[];
+}
 
 export const countsMachine = setup({
   types: {
@@ -59,7 +61,9 @@ export const countsMachine = setup({
         input: ({ context }) => ({ ...context }),
         onDone: {
           target: "enrichExplain",
-          actions: ({ event, context }) => { context.processed = (event as any).output as ParsedData[]; },
+          actions: ({ event, context }) => {
+            context.processed = (event as any).output as ParsedData[];
+          },
         },
       },
     },
@@ -69,8 +73,14 @@ export const countsMachine = setup({
       always: { target: "done" },
     },
 
-    done: { type: "final", output: ({ context }) => ({ processed: (context.processed ?? []) as ParsedData[] }) as CountsOutput },
+    done: {
+      type: "final",
+      output: ({ context }) =>
+        ({
+          processed: (context.processed ?? []) as ParsedData[],
+        }) as CountsOutput,
+    },
   },
-  output: ({ context }) => ({ processed: (context.processed ?? []) as ParsedData[] }) as CountsOutput,
+  output: ({ context }) =>
+    ({ processed: (context.processed ?? []) as ParsedData[] }) as CountsOutput,
 });
-

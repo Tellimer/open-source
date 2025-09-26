@@ -257,6 +257,11 @@ export const PERCENTAGE_PATTERNS: UnitPattern[] = [
     category: "percentage",
     normalized: "pp",
   },
+  {
+    pattern: /\bpp\b/i,
+    category: "percentage",
+    normalized: "pp",
+  },
   { pattern: /percent|%/i, category: "percentage", normalized: "%" },
   {
     pattern: /basis\s+points?|bps/i,
@@ -317,6 +322,7 @@ export const ENERGY_PATTERNS: UnitPattern[] = [
 export const INDEX_PATTERNS: UnitPattern[] = [
   { pattern: /points?(?!\s+of)/i, category: "index", normalized: "points" },
   { pattern: /index/i, category: "index", normalized: "index" },
+  { pattern: /\bdxy\b/i, category: "index", normalized: "DXY" },
 ];
 
 // Population and count patterns
@@ -448,7 +454,11 @@ export function parseUnit(unitText: string): ParsedUnit {
   // Check for magnitude/scale (but not if it's part of a compound physical unit)
   if (
     !normalized.includes("thousand tonnes") &&
-    !normalized.includes("thousand tons")
+    !normalized.includes("thousand tons") &&
+    !normalized.includes("million tonnes") &&
+    !normalized.includes("million tons") &&
+    !normalized.includes("billion tonnes") &&
+    !normalized.includes("billion tons")
   ) {
     for (const pattern of MAGNITUDE_PATTERNS) {
       if (pattern.pattern.test(normalized)) {

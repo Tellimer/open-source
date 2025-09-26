@@ -254,7 +254,6 @@ Deno.test("normalizeValue - Population (stock-like count) does not divide by 12"
   assertEquals(result, original);
 });
 
-
 Deno.test("stock monetary - ignore item.periodicity and do not upsample", async () => {
   const { processBatch } = await import("../batch/batch.ts");
   const items = [{

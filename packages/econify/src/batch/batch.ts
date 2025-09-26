@@ -86,7 +86,7 @@ export interface BatchItem {
   /** Explicit metadata fields - use if provided, otherwise parse from unit string */
   periodicity?: string; // "Quarterly", "Monthly", "Yearly"
   scale?: string; // "Millions", "Billions", "Thousands"
-  currency_code?: string; // "USD", "SAR", "XOF"
+  currency_code?: string | null; // "USD", "SAR", "XOF"
 
   metadata?: Record<string, unknown>;
 }
@@ -360,10 +360,17 @@ function processItem<T extends BatchItem>(
       parsed.currency;
     const effectiveScale = normalizeScale(item.scale) || parsed.scale;
     // Detect stock indicators early; for stocks, ignore dataset periodicity (snapshot levels)
-    const isStockIndicator = isStock({ name: indicatorName ?? "", unit: item.unit, description: (item as any)?.description, notes: (item as any)?.notes });
+    const isStockIndicator = isStock({
+      name: indicatorName ?? "",
+      unit: item.unit,
+      description: (item as any)?.description,
+      notes: (item as any)?.notes,
+    });
 
     // Prefer unit time token; only fall back to item.periodicity for non-stock flows
-    const effectiveTimeScale = (parsed.timeScale || (isStockIndicator ? null : normalizeTimeScale(item.periodicity))) || null;
+    const effectiveTimeScale = (parsed.timeScale ||
+      (isStockIndicator ? null : normalizeTimeScale(item.periodicity))) ||
+      null;
 
     // Determine an explicit target magnitude for consistent unit strings (compute before normalization)
     const targetMagnitude: Scale | undefined = options.toMagnitude ??
@@ -393,7 +400,9 @@ function processItem<T extends BatchItem>(
       normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
     } else {
       // For stock indicators, omit per-time in the normalized unit label
-      const timeScaleForUnit = isStockIndicator ? undefined : options.toTimeScale;
+      const timeScaleForUnit = isStockIndicator
+        ? undefined
+        : options.toTimeScale;
       normalizedUnit = buildNormalizedUnit(
         item.unit,
         options.toCurrency,

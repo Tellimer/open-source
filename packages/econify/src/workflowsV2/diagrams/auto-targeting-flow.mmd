@@ -1,0 +1,62 @@
+graph TD
+    Start([Start]) --> decide{autoTargetByIndicator?}
+
+    decide -->|true| auto[Auto-targeting]
+    decide -->|false| useConfig[Use Config Values]
+
+    subgraph autoLogic[Auto-targeting Process]
+        extract[Extract from items]
+        extract --> currencies[Extract currencies]
+        extract --> scales[Extract scales]
+        extract --> timeScales[Extract time scales from unit/periodicity]
+
+        currencies --> modeCurr[Mode of currencies]
+        scales --> modeScale[Mode of scales]
+        timeScales --> modeTime[Mode of time scales]
+
+        modeCurr --> currCheck{ratio >= threshold?}
+        modeScale --> scaleCheck{ratio >= threshold?}
+        modeTime --> timeCheck{ratio >= threshold?}
+
+        currCheck -->|yes| useMajorityCurr[Use majority currency]
+        currCheck -->|no| useConfigCurr[Use config.targetCurrency]
+
+        scaleCheck -->|yes| useMajorityScale[Use majority scale]
+        scaleCheck -->|no| useConfigScale[Use config.targetMagnitude or millions]
+
+        timeCheck -->|yes| useMajorityTime[Use majority time]
+        timeCheck -->|no| useConfigTime[Use config.targetTimeScale or prefer]
+
+        useMajorityCurr --> combine[Combine selections]
+        useConfigCurr --> combine
+        useMajorityScale --> combine
+        useConfigScale --> combine
+        useMajorityTime --> combine
+        useConfigTime --> combine
+    end
+
+    auto --> extract
+    combine --> done
+
+    subgraph configLogic[Config Values Process]
+        configCurr[currency = config.targetCurrency]
+        configScale[magnitude = config.targetMagnitude or millions]
+        configTime[time = prefer or config.targetTimeScale]
+
+        configCurr --> configDone[Config selection complete]
+        configScale --> configDone
+        configTime --> configDone
+    end
+
+    useConfig --> configCurr
+    configDone --> done
+
+    done[Done] --> End([End with TargetsSelection])
+
+    style Start fill:#e1f5e1
+    style End fill:#e1f5e1
+    style currCheck fill:#fff3cd
+    style scaleCheck fill:#fff3cd
+    style timeCheck fill:#fff3cd
+    style autoLogic fill:#f0f0f0
+    style configLogic fill:#f0f0f0

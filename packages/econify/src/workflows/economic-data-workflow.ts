@@ -33,6 +33,9 @@ import { fxRatesMachine } from "./machines/fx/index.ts";
 import { adjustmentMachine } from "./machines/stages/adjustment/index.ts";
 import { normalizationMachine } from "./machines/stages/normalization/normalization.machine.ts";
 
+import { pipelineV2Machine } from "../workflowsV2/pipeline/pipeline.machine.ts";
+import { fxMachine as fxRatesMachineV2 } from "../workflowsV2/machines/fx/fx.machine.ts";
+
 // Initialize domain-specific units once for stronger detection
 loadDomainUnits("emissions");
 loadDomainUnits("commodities");
@@ -112,6 +115,9 @@ export interface PipelineConfig {
   denyList?: string[];
 
   // Metadata explanation
+  /** Select pipeline engine (default: "v1"). V2 uses workflowsV2 state machines */
+  engine?: "v1" | "v2";
+
   /** Include detailed normalization metadata for transparency (default: false) */
   explain?: boolean;
 }
@@ -189,7 +195,11 @@ export interface ParsedData {
   /** Explicit metadata fields - use if provided, otherwise parse from unit string */
   periodicity?: string; // "Quarterly", "Monthly", "Yearly" - takes precedence over unit string parsing
   scale?: string; // "Millions", "Billions", "Thousands" - takes precedence over unit string parsing
-  currency_code?: string; // "USD", "SAR", "XOF" - takes precedence over unit string parsing
+  currency_code?: string | null; // "USD", "SAR", "XOF" - takes precedence over unit string parsing
+  country_iso?: string; // "USA", "SAU", "CMR" - ISO 3166-1 alpha-3 code
+  category_group?: string; //"Trade", "Government", "Energy", "Labour", "Prices", "Wages", "Debt", "Reserves", "Agriculture", "Metals", "Commodities", "Emissions", "Energy", "Temperature", "Population", "Indices", "Percentages", "Rates", "Time", "Counts", "Unknown"?: string; // "Trade", "Government", "Energy" - high-level category
+  source_name?: string; // "World Bank", "IMF", "Eurostat", "BLS", "Census Bureau", "Unknown" - high-level source
+  expected_domain?: string; // Used for testing
 
   parsedUnit?: ParsedUnit;
   inferredUnit?: string;
@@ -765,8 +775,10 @@ export const pipelineMachine = setup({
 
     adjustmentActor: adjustmentMachine,
     normalizationActor: normalizationMachine,
+    normalizationActorV2: pipelineV2Machine,
 
     fxRatesActor: fxRatesMachine,
+    fxRatesActorV2: fxRatesMachineV2,
   },
   guards: {
     qualityPassed: ({ context }) => {
@@ -780,6 +792,7 @@ export const pipelineMachine = setup({
     shouldRemoveSeasonality: ({ context }) => {
       return context.config.removeSeasonality === true;
     },
+    engineIsV2: ({ context }) => context.config.engine === "v2",
   },
   actions: {
     logStep: ({ event: _event }) => {
@@ -859,6 +872,14 @@ export const pipelineMachine = setup({
 
     validating: {
       entry: "logStep",
+      always: [
+        { guard: "engineIsV2", target: "pipelineV2" },
+        { target: "validatingV1" },
+      ],
+    },
+
+    validatingV1: {
+      entry: "logStep",
       invoke: {
         id: "validateInput",
         src: "validateInputData",
@@ -868,6 +889,33 @@ export const pipelineMachine = setup({
           actions: assign({
             rawData: ({ event }) => event.output,
           }),
+        },
+        onError: {
+          target: "error",
+          actions: "logError",
+        },
+      },
+    },
+
+    pipelineV2: {
+      entry: "logStep",
+      invoke: {
+        id: "pipelineV2",
+        src: "normalizationActorV2",
+        input: ({ context }: { context: PipelineContext }) => ({
+          config: context.config,
+          rawData: context.rawData,
+        }),
+        onDone: {
+          target: "adjusting",
+          actions: [
+            assign({
+              normalizedData: ({ event }) =>
+                (event as any)?.output?.normalizedData,
+            }),
+            () => console.log("[Pipeline] pipelineV2 complete"),
+            "appendWarnings",
+          ],
         },
         onError: {
           target: "error",
@@ -917,7 +965,7 @@ export const pipelineMachine = setup({
     qualityDecision: {
       always: [
         {
-          target: "fetchingRates",
+          target: "fxRouter",
           guard: "qualityPassed",
         },
         {
@@ -937,20 +985,27 @@ export const pipelineMachine = setup({
     qualityReview: {
       entry: "logStep",
       on: {
-        CONTINUE: "fetchingRates",
+        CONTINUE: "fxRouter",
         ABORT: "error",
         FIX: "parsing",
       },
     },
 
-    fetchingRates: {
+    fxRouter: {
+      always: [
+        { guard: "engineIsV2", target: "fetchingRatesV2" },
+        { target: "fetchingRates" },
+      ],
+    },
+
+    fetchingRatesV2: {
       entry: "logStep",
       invoke: {
-        id: "fetchRates",
-        src: "fxRatesActor",
-        input: ({ context }) => ({ config: context.config }),
+        id: "fetchRatesV2",
+        src: "fxRatesActorV2",
+        input: ({ context }) => ({ config: context.config } as any),
         onDone: {
-          target: "normalizing",
+          target: "normalizingRouter",
           actions: assign({
             fxRates: ({ context, event }) =>
               (event as any).output?.rates ?? context.config.fxFallback,
@@ -963,7 +1018,7 @@ export const pipelineMachine = setup({
           }),
         },
         onError: {
-          target: "normalizing",
+          target: "normalizingRouter",
           actions: [
             "logWarning",
             assign({
@@ -974,10 +1029,48 @@ export const pipelineMachine = setup({
       },
     },
 
-    normalizing: {
+    fetchingRates: {
       entry: "logStep",
       invoke: {
-        id: "normalize",
+        id: "fetchRates",
+        src: "fxRatesActor",
+        input: ({ context }) => ({ config: context.config }),
+        onDone: {
+          target: "normalizingRouter",
+          actions: assign({
+            fxRates: ({ context, event }) =>
+              (event as any).output?.rates ?? context.config.fxFallback,
+            fxSource: ({ context, event }) =>
+              (event as any).output?.source ??
+                (context.config.fxFallback ? "fallback" : undefined),
+            fxSourceId: ({ context, event }) =>
+              (event as any).output?.sourceId ??
+                (context.config.fxFallback ? "SNP" : undefined),
+          }),
+        },
+        onError: {
+          target: "normalizingRouter",
+          actions: [
+            "logWarning",
+            assign({
+              fxRates: ({ context }) => context.config.fxFallback,
+            }),
+          ],
+        },
+      },
+    },
+
+    normalizingRouter: {
+      always: [
+        { guard: "engineIsV2", target: "normalizingV2" },
+        { target: "normalizingV1" },
+      ],
+    },
+
+    normalizingV1: {
+      entry: "logStep",
+      invoke: {
+        id: "normalizeV1",
         src: "normalizationActor",
         input: ({ context }: { context: PipelineContext }) => ({
           config: context.config,
@@ -994,6 +1087,36 @@ export const pipelineMachine = setup({
               normalizedData: ({ event }) =>
                 (event as any)?.output?.normalizedData,
             }),
+            "appendWarnings",
+          ],
+        },
+        onError: {
+          target: "error",
+          actions: "logError",
+        },
+      },
+    },
+
+    normalizingV2: {
+      entry: "logStep",
+      invoke: {
+        id: "normalizeV2",
+        src: "normalizationActorV2",
+        input: ({ context }: { context: PipelineContext }) => ({
+          config: context.config,
+          parsedData: context.parsedData!,
+          fxRates: context.fxRates,
+          fxSource: context.fxSource,
+          fxSourceId: context.fxSourceId,
+        } as any),
+        onDone: {
+          target: "adjusting",
+          actions: [
+            assign({
+              normalizedData: ({ event }) =>
+                (event as any)?.output?.normalizedData,
+            }),
+            () => console.log("[Pipeline] normalizeV2 done"),
             "appendWarnings",
           ],
         },
@@ -1073,7 +1196,10 @@ export function createPipeline(config: PipelineConfig) {
   return {
     run(data: ParsedData[]): Promise<ParsedData[]> {
       return new Promise((resolve, reject) => {
-        const actor = createActor(pipelineMachine, {
+        // Use V2 pipeline if specified in config
+        const isV2 = config.engine === "v2";
+        const machine = isV2 ? pipelineV2Machine : pipelineMachine;
+        const actor = createActor(machine, {
           input: {
             rawData: data,
             config,
@@ -1083,25 +1209,41 @@ export function createPipeline(config: PipelineConfig) {
         // Add timeout to prevent hanging
         const timeout = setTimeout(() => {
           actor.stop();
-          reject(new Error("Pipeline timeout after 3 seconds"));
-        }, 3000);
+          reject(new Error("Pipeline timeout after 30 seconds"));
+        }, 30000);
 
         actor.subscribe((state) => {
-          if (state.matches("success")) {
+          // V2 uses "done" state, V1 uses "success"
+          const successState = isV2 ? "done" : "success";
+
+          if ((state as any).matches(successState as any)) {
             clearTimeout(timeout);
             actor.stop();
-            resolve(state.context.finalData || []);
-          } else if (state.matches("error")) {
+
+            // V2 outputs normalizedData in the output, V1 has finalData in context
+            if (isV2) {
+              const output = (state as any).output;
+              resolve(output?.normalizedData || []);
+            } else {
+              resolve(((state as any).context as any).finalData || []);
+            }
+          } else if ((state as any).matches("error")) {
             clearTimeout(timeout);
             actor.stop();
-            reject(
-              new Error("Pipeline failed: " + state.context.errors[0]?.message),
-            );
+            const errorMsg = isV2
+              ? "V2 Pipeline failed"
+              : ("Pipeline failed: " +
+                ((state as any).context?.errors?.[0]?.message));
+            reject(new Error(errorMsg));
           }
         });
 
         actor.start();
-        actor.send({ type: "START" });
+
+        // V2 doesn't need START event, V1 does
+        if (!isV2) {
+          actor.send({ type: "START" });
+        }
       });
     },
 

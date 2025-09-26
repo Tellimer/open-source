@@ -4,12 +4,14 @@
 
 import { createActor } from "npm:xstate@^5.20.2";
 import { pipelineMachine } from "../workflows/economic-data-workflow.ts";
+import { pipelineV2Machine } from "../workflowsV2/pipeline/pipeline.machine.ts";
 import type {
   ParsedData,
   PipelineConfig,
 } from "../workflows/economic-data-workflow.ts";
 
 export interface PipelineOptions extends PipelineConfig {
+  engine?: "v1" | "v2";
   onProgress?: (step: string, progress: number) => void;
   onWarning?: (warning: string) => void;
   onError?: (error: Error) => void;
@@ -60,7 +62,12 @@ export function processEconomicData(
   const { onProgress, onWarning, onError, ...config } = options;
 
   return new Promise((resolve, reject) => {
-    const actor = createActor(pipelineMachine, {
+    // Use V2 pipeline if specified
+    const machine = options.engine === "v2"
+      ? pipelineV2Machine
+      : pipelineMachine;
+
+    const actor = createActor(machine, {
       input: {
         rawData: data,
         config,
@@ -111,12 +118,13 @@ export function processEconomicData(
       }
 
       // Auto-continue on quality review (like processEconomicDataAuto)
-      if (state.matches("qualityReview")) {
+      if ((state as any).matches && (state as any).matches("qualityReview")) {
         if (onWarning) {
+          const score = typeof state.context.qualityScore === "object"
+            ? (state.context.qualityScore as any).overall
+            : state.context.qualityScore;
           onWarning(
-            `Quality score ${
-              state.context.qualityScore?.overall || 0
-            } below threshold, continuing anyway`,
+            `Quality score ${score || 0} below threshold, continuing anyway`,
           );
         }
         setTimeout(() => actor.send({ type: "CONTINUE" }), 0);
@@ -134,19 +142,46 @@ export function processEconomicData(
         });
       }
 
-      // Handle completion
-      if (state.matches("success")) {
+      // Handle V2 completion
+      if (
+        options.engine === "v2" &&
+        ((state as any).matches?.("done") || state.status === "done")
+      ) {
+        const v2Output = (state as any).output || {};
         const result: PipelineResult = {
-          data: state.context.finalData || [],
+          data: v2Output.normalizedData || [],
+          warnings: v2Output.warnings || [],
+          errors: [],
+          metrics: {
+            processingTime: Date.now() - startTime,
+            recordsProcessed: v2Output.normalizedData?.length || 0,
+            recordsFailed: data.length - (v2Output.normalizedData?.length || 0),
+            qualityScore: (state.context as any).qualityScore?.overall,
+          },
+        };
+
+        clearTimeout(timeout);
+        actor.stop();
+        resolve(result);
+        return;
+      }
+
+      // Handle V1 completion
+      if ((state as any).matches?.("success")) {
+        const result: PipelineResult = {
+          data: (state.context as any).finalData || [],
           warnings: state.context.warnings.filter(
             (w) => !w.startsWith("_processed_"),
           ),
           errors: [],
           metrics: {
             processingTime: Date.now() - startTime,
-            recordsProcessed: state.context.finalData?.length || 0,
-            recordsFailed: data.length - (state.context.finalData?.length || 0),
-            qualityScore: state.context.qualityScore?.overall,
+            recordsProcessed: (state.context as any).finalData?.length || 0,
+            recordsFailed: data.length -
+              ((state.context as any).finalData?.length || 0),
+            qualityScore: typeof state.context.qualityScore === "object"
+              ? (state.context.qualityScore as any)?.overall
+              : state.context.qualityScore,
           },
         };
         clearTimeout(timeout);
@@ -155,26 +190,30 @@ export function processEconomicData(
       }
 
       // Handle errors
-      if (state.matches("error")) {
-        const errors = state.context.errors.map(
-          (e) => new Error(e.message || "Pipeline error"),
-        );
+      if ((state as any).matches?.("error")) {
+        const errors = (state.context as any).errors?.map?.(
+          (e: any) => new Error(e.message || "Pipeline error"),
+        ) || [];
 
         if (onError && errors[0]) {
           onError(errors[0]);
         }
 
         const _result: PipelineResult = {
-          data: state.context.normalizedData || state.context.parsedData || [],
+          data: (state.context as any).normalizedData ||
+            state.context.parsedData || [],
           warnings: state.context.warnings.filter(
             (w) => !w.startsWith("_processed_"),
           ),
           errors,
           metrics: {
             processingTime: Date.now() - startTime,
-            recordsProcessed: state.context.normalizedData?.length || 0,
+            recordsProcessed: (state.context as any).normalizedData?.length ||
+              0,
             recordsFailed: data.length,
-            qualityScore: state.context.qualityScore?.overall,
+            qualityScore: typeof state.context.qualityScore === "object"
+              ? (state.context.qualityScore as any)?.overall
+              : state.context.qualityScore,
           },
         };
         clearTimeout(timeout);
@@ -220,12 +259,14 @@ export function processEconomicDataAuto(
 
     actor.subscribe((state) => {
       // Auto-continue on quality review
-      if (state.matches("qualityReview") && !hasReviewed) {
+      if ((state as any).matches?.("qualityReview") && !hasReviewed) {
         hasReviewed = true;
         if (onWarning) {
           onWarning(
             `Quality score ${
-              state.context.qualityScore?.overall || 0
+              typeof state.context.qualityScore === "object"
+                ? (state.context.qualityScore as any)?.overall
+                : state.context.qualityScore || 0
             } below threshold ${
               config.minQualityScore || 70
             }, continuing anyway`,
@@ -251,23 +292,25 @@ export function processEconomicDataAuto(
         onProgress(state.value as string, progress);
       }
 
-      if (state.matches("success")) {
+      if ((state as any).matches?.("success")) {
         clearTimeout(timeout);
         actor.stop();
         resolve({
-          data: state.context.finalData || [],
+          data: (state.context as any).finalData || [],
           warnings: state.context.warnings,
           errors: [],
           metrics: {
             processingTime: Date.now() - startTime,
-            recordsProcessed: state.context.finalData?.length || 0,
+            recordsProcessed: (state.context as any).finalData?.length || 0,
             recordsFailed: 0,
-            qualityScore: state.context.qualityScore?.overall,
+            qualityScore: typeof state.context.qualityScore === "object"
+              ? (state.context.qualityScore as any)?.overall
+              : state.context.qualityScore,
           },
         });
       }
 
-      if (state.matches("error")) {
+      if ((state as any).matches?.("error")) {
         const error = new Error(
           state.context.errors[0]?.message || "Pipeline failed",
         );

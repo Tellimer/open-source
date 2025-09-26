@@ -20,6 +20,8 @@ export interface FXTable {
   rates: Record<string, number>;
   /** Optional dates for each rate - when each rate was last updated */
   dates?: Record<string, string>;
+  /** Optional timestamp for when the entire table was generated */
+  asOf?: string;
 }
 
 export type Scale =

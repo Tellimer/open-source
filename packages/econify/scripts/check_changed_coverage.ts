@@ -4,7 +4,9 @@
 // It reads LCOV and checks per-file line coverage for files within the current package.
 
 // Minimal LCOV parser for per-file line coverage
-function parseLcovByFile(content: string): Map<string, { total: number; covered: number }> {
+function parseLcovByFile(
+  content: string,
+): Map<string, { total: number; covered: number }> {
   const map = new Map<string, { total: number; covered: number }>();
   let current: string | null = null;
   for (const raw of content.split(/\r?\n/)) {
@@ -33,8 +35,14 @@ function parseLcovByFile(content: string): Map<string, { total: number; covered:
   return map;
 }
 
-async function git(args: string[]): Promise<{ code: number; stdout: string; stderr: string }> {
-  const cmd = new Deno.Command("git", { args, stdout: "piped", stderr: "piped" });
+async function git(
+  args: string[],
+): Promise<{ code: number; stdout: string; stderr: string }> {
+  const cmd = new Deno.Command("git", {
+    args,
+    stdout: "piped",
+    stderr: "piped",
+  });
   const out = await cmd.output();
   const stdout = new TextDecoder().decode(out.stdout).trim();
   const stderr = new TextDecoder().decode(out.stderr).trim();
@@ -97,12 +105,19 @@ if (import.meta.main) {
     .filter((s) => s.endsWith(".ts") || s.endsWith(".tsx"));
 
   if (changed.length === 0) {
-    console.log("No changed TS files detected in this package; skipping per-file coverage gate.");
+    console.log(
+      "No changed TS files detected in this package; skipping per-file coverage gate.",
+    );
     Deno.exit(0);
   }
 
   // Check coverage for each changed file
-  const failures: { file: string; percent: number; covered: number; total: number }[] = [];
+  const failures: {
+    file: string;
+    percent: number;
+    covered: number;
+    total: number;
+  }[] = [];
 
   for (const file of changed) {
     // Attempt to find matching coverage entry by suffix
@@ -119,18 +134,26 @@ if (import.meta.main) {
     }
     const pct = toPercent(entry.covered, entry.total);
     if (pct + 1e-9 < threshold) {
-      failures.push({ file, percent: pct, covered: entry.covered, total: entry.total });
+      failures.push({
+        file,
+        percent: pct,
+        covered: entry.covered,
+        total: entry.total,
+      });
     }
   }
 
   if (failures.length > 0) {
     console.error("Changed-files coverage below threshold:");
     for (const f of failures) {
-      console.error(`  ${f.file}: ${f.percent.toFixed(2)}% (covered ${f.covered}/${f.total}) < ${threshold}%`);
+      console.error(
+        `  ${f.file}: ${
+          f.percent.toFixed(2)
+        }% (covered ${f.covered}/${f.total}) < ${threshold}%`,
+      );
     }
     Deno.exit(1);
   }
 
   console.log(`All changed TS files meet coverage ≥ ${threshold}%`);
 }
-

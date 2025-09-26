@@ -39,6 +39,8 @@ export const autoTargetMachine = setup({
         // pipeline-config targetMagnitude in a post-processing step.
         tieBreakers: { ...config.tieBreakers },
         targetCurrency: config.targetCurrency,
+        targetMagnitude: config.targetMagnitude,
+        targetTimeScale: config.targetTimeScale,
         allowList: config.allowList,
         denyList: config.denyList,
       };
@@ -82,6 +84,8 @@ export const autoTargetMachine = setup({
           minMajorityShare: context.config.minMajorityShare,
           tieBreakers: { ...context.config.tieBreakers },
           targetCurrency: context.config.targetCurrency,
+          targetMagnitude: context.config.targetMagnitude,
+          targetTimeScale: context.config.targetTimeScale,
           allowList: context.config.allowList,
           denyList: context.config.denyList,
         });
@@ -133,4 +137,3 @@ export const autoTargetMachine = setup({
     selections: context.selections!,
   }),
 });
-

@@ -23,14 +23,20 @@ export const fxRatesMachine = setup({
     input: {} as { config: PipelineConfig },
   },
   actors: {
-    fetchLive: fromPromise(async ({ input }: { input: { config: PipelineConfig } }) => {
-      const cfg = input.config || {};
-      const res = await fetchLiveFXRates(cfg.targetCurrency || "USD", {
-        fallback: cfg.fxFallback,
-        cache: true,
-      });
-      return { rates: res as FXTable, source: "live" as const, sourceId: "ECB" };
-    }),
+    fetchLive: fromPromise(
+      async ({ input }: { input: { config: PipelineConfig } }) => {
+        const cfg = input.config || {};
+        const res = await fetchLiveFXRates(cfg.targetCurrency || "USD", {
+          fallback: cfg.fxFallback,
+          cache: true,
+        });
+        return {
+          rates: res as FXTable,
+          source: "live" as const,
+          sourceId: "ECB",
+        };
+      },
+    ),
   },
 }).createMachine({
   id: "fxRates",
@@ -39,7 +45,10 @@ export const fxRatesMachine = setup({
   states: {
     chooseSource: {
       always: [
-        { target: "fetchLive", guard: ({ context }) => !!context.config?.useLiveFX },
+        {
+          target: "fetchLive",
+          guard: ({ context }) => !!context.config?.useLiveFX,
+        },
         { target: "fetchFallback" },
       ],
     },
@@ -64,7 +73,9 @@ export const fxRatesMachine = setup({
       entry: assign(({ context }) => {
         const cfg = context.config || {};
         if (!cfg.fxFallback) {
-          throw new Error("fxFallback rates are required when useLiveFX is false");
+          throw new Error(
+            "fxFallback rates are required when useLiveFX is false",
+          );
         }
         return {
           tempRates: cfg.fxFallback as FXTable,
@@ -99,4 +110,3 @@ export const fxRatesMachine = setup({
   },
   output: ({ context }) => context.result!,
 });
-

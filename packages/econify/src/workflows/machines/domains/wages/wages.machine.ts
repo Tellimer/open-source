@@ -7,7 +7,12 @@ Key states: partitioning → prepWagePoints → excludeIndexValues → deriveTim
 */
 
 import { assign, createActor, fromPromise, setup } from "npm:xstate@^5.20.2";
-import type { FXTable, ParsedData, Scale, TimeScale } from "../../../../main.ts";
+import type {
+  FXTable,
+  ParsedData,
+  Scale,
+  TimeScale,
+} from "../../../../main.ts";
 import type { PipelineConfig } from "../../../economic-data-workflow.ts";
 import { filterExemptions } from "../../../../exemptions/exemptions.ts";
 import { parseUnit } from "../../../../units/units.ts";
@@ -279,7 +284,11 @@ export const wagesMachine = setup({
           fxSource: input.fxSource,
           fxSourceId: input.fxSourceId,
         });
-        return { processed: result.successful.map((p) => ({ ...(p as any), domain: "wages" }) as unknown as ParsedData) };
+        return {
+          processed: result.successful.map((p) =>
+            ({ ...(p as any), domain: "wages" }) as unknown as ParsedData
+          ),
+        };
       },
     ),
 
@@ -300,24 +309,26 @@ export const wagesMachine = setup({
           const originalItem = buckets.wages[idx].item;
           const wageResult = normalized[j];
           if (wageResult.normalizedValue !== undefined) {
-            out.push({
-              ...originalItem,
-              normalized: wageResult.normalizedValue,
-              normalizedUnit: wageResult.normalizedUnit ||
-                `${
-                  config.targetCurrency || "USD"
-                } per ${((config.targetTimeScale as any) || "month")}`,
-              explain: wageResult.explain,
-              metadata: {
-                ...originalItem.metadata,
-                wageNormalization: {
-                  excluded: false,
-                  dataType: wageResult.dataType,
-                  originalValue: wageResult.originalValue,
-                  originalUnit: wageResult.originalUnit,
+            out.push(
+              {
+                ...originalItem,
+                normalized: wageResult.normalizedValue,
+                normalizedUnit: wageResult.normalizedUnit ||
+                  `${
+                    config.targetCurrency || "USD"
+                  } per ${((config.targetTimeScale as any) || "month")}`,
+                explain: wageResult.explain,
+                metadata: {
+                  ...originalItem.metadata,
+                  wageNormalization: {
+                    excluded: false,
+                    dataType: wageResult.dataType,
+                    originalValue: wageResult.originalValue,
+                    originalUnit: wageResult.originalUnit,
+                  },
                 },
-              },
-            } as unknown as ParsedData & { domain?: string });
+              } as unknown as ParsedData & { domain?: string },
+            );
             (out[out.length - 1] as any).domain = "wages";
           }
         }
@@ -549,7 +560,8 @@ export const wagesMachine = setup({
     deriveTimeBasis: {
       entry: assign(({ context }) => ({
         // prefer config, otherwise default monthly per wages policy
-        preferredWageTimeScale: (context.config.targetTimeScale as any) || "month",
+        preferredWageTimeScale: (context.config.targetTimeScale as any) ||
+          "month",
       })),
       always: { target: "fxWithFallback" },
     },
@@ -672,4 +684,3 @@ export const wagesMachine = setup({
     normalizedData: context.normalizedData ?? [],
   }),
 });
-

@@ -423,8 +423,11 @@ export function buildExplainMetadata(
     };
 
     // Ensure no currency component is emitted for non-currency domains
+    // But preserve currency component when FX was applied (price-like with currency per unit)
     if ((explain as { currency?: unknown }).currency) {
-      delete (explain as { currency?: unknown }).currency;
+      if (!(explain as any).fx) {
+        delete (explain as { currency?: unknown }).currency;
+      }
     }
 
     // Keep scale component aligned with no magnitude change for non-currency
@@ -499,8 +502,8 @@ export function buildExplainMetadata(
 
   // 🆕 Separate component fields for easy frontend access
   if (
-    !isNonCurrencyCategory && !isNonCurrencyDomain &&
-    (effectiveCurrency || options.toCurrency)
+    (effectiveCurrency || options.toCurrency) &&
+    ((!isNonCurrencyCategory && !isNonCurrencyDomain) || (explain as any).fx)
   ) {
     explain.currency = {
       original: effectiveCurrency,

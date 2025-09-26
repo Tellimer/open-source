@@ -1,0 +1,15 @@
+graph TD
+    Start([Start]) --> fetching[Fetching FX Rates]
+    
+    fetching -->|onDone| done[Done]
+    fetching -->|onError| error[Error]
+    
+    done --> End([End with FX Data])
+    error --> EndError([Error End])
+    
+    style Start fill:#e1f5e1
+    style End fill:#e1f5e1
+    style EndError fill:#ffe1e1
+    style error fill:#ff9999
+    style fetching fill:#cce5ff
+    style done fill:#d4edda
