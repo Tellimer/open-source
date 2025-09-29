@@ -2,6 +2,32 @@
 
 All notable changes to the econify package will be documented in this file.
 
+
+## [1.0.5] - 2025-09-29
+
+### ✨ Cross‑country, indicator‑level normalization consistency (V2)
+
+- Monetary flows now standardize time, currency, and magnitude per indicator across all countries:
+  - Time: If the majority is monthly, quarterly items are rescaled to monthly (÷3), yearly to monthly (÷12); week/day use calendar factors. Stocks are not divided by time and omit "per <time>" in units.
+  - Currency & Magnitude: When a single currency or magnitude dominates globally across the batch (≥ 0.8), it is applied to all items to ensure cross‑country comparability.
+  - Per‑indicator time majority still applies with a prefer‑month tie‑breaker when ambiguous.
+- Explain metadata improved:
+  - `targetSelection` reflects effective selections (including global overrides), with shares and reason.
+  - Periodicity conversion direction and factors (e.g., quarter → month, factor 1/3) are recorded.
+- Targets selection robustness:
+  - Majority share ratios use total items as the denominator for consistency.
+  - Currency detection falls back to metadata (e.g., `currency_code`) when unit text lacks a currency token.
+
+### 🧪 Tests
+- Fixed and validated:
+  - V2 monetary: dominant currency/magnitude selection at 0.8 threshold
+  - V2 transitions: auto‑target enabled vs disabled (EUR‑dominant)
+
+### Developer note
+- Changes primarily in V2 monetary domain batching and targets selection:
+  - `src/workflowsV2/domains/monetary/monetary.machine.ts`
+  - `src/workflowsV2/domains/monetary/targets.machine.ts`
+
 ## [1.0.2] - 2025-09-26
 
 ### 🧪 **Comprehensive Balance of Trade E2E Test Suite**

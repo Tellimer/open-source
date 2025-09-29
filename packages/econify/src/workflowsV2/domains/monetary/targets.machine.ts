@@ -34,11 +34,10 @@ function mode<T extends string | undefined>(
   values: (T | null | undefined)[],
 ): { value?: T; ratio: number } {
   const counts = new Map<T, number>();
-  let total = 0;
+  const total = values.length; // denominator = all items
   for (const v of values) {
     if (v) {
       counts.set(v as T, (counts.get(v as T) || 0) + 1);
-      total++;
     }
   }
   let best: T | undefined = undefined;
@@ -74,9 +73,11 @@ export const targetsMachine = setup({
     auto: {
       entry: assign(({ context }) => {
         const thresh = context.threshold ?? 0.8;
-        const currencies = (context.items || []).map((i) =>
-          extractCurrency((i as any).unit || "") || undefined
-        );
+        const currencies = (context.items || []).map((i) => {
+          const u = (i as any).unit || "";
+          const parsed = parseUnit(u);
+          return (parsed.currency || (i as any).currency_code?.toUpperCase() || undefined);
+        });
         const scales = (context.items || []).map((i) =>
           extractScale((i as any).unit || "") || undefined
         );

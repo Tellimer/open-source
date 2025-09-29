@@ -5,6 +5,8 @@ import { timeBasisMachine } from "./time_basis.machine.ts";
 import { targetsMachine } from "./targets.machine.ts";
 import { normalizeMonetaryBatch } from "./batch.ts";
 import { autoTargetEnabled, hasConfigTargetTime } from "../../shared/guards.ts";
+import { parseUnit } from "../../shared/units.ts";
+import { getScale } from "../../shared/scale.ts";
 
 interface MonetaryInput {
   config: {
@@ -44,8 +46,120 @@ export const monetaryMachine = setup({
         fx?: FXTable;
         fxSource?: "live" | "fallback";
         fxSourceId?: string;
+        autoTargets?: Map<string, any> | Record<string, any>;
       };
     }) => {
+      const hasGlobalTargets = !!(input.autoTargets && (
+        input.autoTargets instanceof Map
+          ? input.autoTargets.size > 0
+          : Object.keys(input.autoTargets).length > 0
+      ));
+
+      if (hasGlobalTargets) {
+        const indicatorKeyName = (input.config as any).indicatorKey ?? "name";
+        const targetsMap: Map<string, any> =
+          input.autoTargets instanceof Map
+            ? input.autoTargets
+            : new Map<string, any>(Object.entries(input.autoTargets as Record<string, any>));
+
+        const groups = new Map<string, ParsedData[]>();
+        for (const item of input.items) {
+          const key = String((item as any)[indicatorKeyName] || item.name || "");
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key)!.push(item);
+        }
+
+        const threshold = (input.config as any)?.minMajorityShare ?? 0.8;
+        const results: ParsedData[] = [];
+
+        const extractUnitTime = (u: string): string | undefined => {
+          const m = /per\s+(month|quarter|year|week|day|hour)|\/(month|quarter|year|week|day|hour)/i.exec(
+            u,
+          );
+          return (m?.[1] || m?.[2])?.toLowerCase();
+        };
+
+        // Compute global dominance across entire batch for currency & magnitude
+        const totalN = input.items.length || 0;
+        const curCounts = new Map<string, number>();
+        const magCounts = new Map<string, number>();
+        for (const it of input.items) {
+          const parsed = parseUnit((it as any).unit || "");
+          const cur = (parsed.currency || (it as any).currency_code?.toUpperCase() || undefined) as string | undefined;
+          const mag = ((parsed.scale as string | undefined) || ((it as any).scale ? getScale((it as any).scale as any) : undefined)) as string | undefined;
+          if (cur) curCounts.set(cur, (curCounts.get(cur) || 0) + 1);
+          if (mag && mag !== "ones") magCounts.set(mag, (magCounts.get(mag) || 0) + 1);
+        }
+        const topOf = (m: Map<string, number>) => {
+          let k: string | undefined; let c = 0;
+          for (const [kk, vv] of m.entries()) if (vv > c) { k = kk; c = vv; }
+          const share = totalN > 0 ? c / totalN : 0;
+          return { key: k, share };
+        };
+        const gCur = topOf(curCounts);
+        const gMag = topOf(magCounts);
+        const globalCurrency = gCur.key && gCur.share >= threshold ? gCur.key : undefined;
+        const globalMagnitude = gMag.key && gMag.share >= threshold ? (gMag.key as Scale) : undefined;
+
+        for (const [key, items] of groups.entries()) {
+          const tg = targetsMap.get(key) as any;
+
+          const unitTimes = items
+            .map((i) => (i.unit || "").toLowerCase())
+            .map((u) => extractUnitTime(u))
+            .filter(Boolean) as string[];
+          const counts = new Map<string, number>();
+          for (const t of unitTimes) counts.set(t, (counts.get(t) || 0) + 1);
+          let best: string | undefined;
+          let bestCount = 0;
+          for (const [k, c] of counts.entries()) {
+            if (c > bestCount) {
+              best = k;
+              bestCount = c;
+            }
+          }
+          const ratio = items.length > 0 ? bestCount / items.length : 0;
+          const resolvedTime: TimeScale | undefined =
+            (best && ratio >= threshold)
+              ? (best as TimeScale)
+              : ((tg?.time as TimeScale | undefined) ||
+                (input.config.targetTimeScale as TimeScale | undefined) ||
+                input.preferredTime);
+
+          if ((input.config as any)?.explain && tg) {
+            for (const item of items) {
+              (item as any).explain ||= {};
+              (item as any).explain.targetSelection = {
+                mode: "auto-by-indicator",
+                indicatorKey: key,
+                selected: {
+                  currency: (globalCurrency ?? tg.currency),
+                  magnitude: (globalMagnitude ?? (tg.magnitude as Scale | undefined)),
+                  time: resolvedTime,
+                },
+                shares: tg.shares || {},
+                reason: tg.reason || "global-auto-target",
+              };
+            }
+          }
+
+          const out = await normalizeMonetaryBatch(items, {
+            isStock: input.isStock,
+            toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
+            toMagnitude: (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ??
+              (input.config.targetMagnitude as Scale | undefined))),
+            toTimeScale: resolvedTime,
+            fx: input.fx,
+            explain: (input.config as any)?.explain ?? true,
+            fxSource: input.fxSource,
+            fxSourceId: input.fxSourceId,
+          });
+          results.push(...(out as ParsedData[]));
+        }
+
+        return results;
+      }
+
       const toCurrency = input.selected?.currency ??
         input.config.targetCurrency;
       const toMagnitude = (input.selected?.magnitude as Scale | undefined) ??
@@ -58,7 +172,7 @@ export const monetaryMachine = setup({
         toMagnitude,
         toTimeScale,
         fx: input.fx,
-        explain: input.config.explain ?? true,
+        explain: (input.config as any)?.explain ?? true,
         fxSource: input.fxSource,
         fxSourceId: input.fxSourceId,
       });
@@ -212,99 +326,10 @@ export const monetaryMachine = setup({
           always: { target: "done" },
         },
         useGlobalTargets: {
-          entry: assign(({ context }) => {
-            // Extract auto-targets for the first item (assuming all items in this batch have same indicator)
-            const firstItem = context.items[0];
-            if (!firstItem || !context.autoTargets) {
-              return {
-                selected: {
-                  currency: context.config.targetCurrency,
-                  magnitude:
-                    (context.config.targetMagnitude as Scale | undefined) ??
-                      "millions",
-                  time: context.config.targetTimeScale ?? context.preferredTime,
-                },
-              };
-            }
-
-            const indicatorKey = firstItem.name || "";
-            const targets = context.autoTargets instanceof Map
-              ? context.autoTargets.get(indicatorKey)
-              : (context.autoTargets as Record<string, any>)[indicatorKey];
-
-            console.log(
-              `[V2 monetary] Using global auto-targets for "${indicatorKey}":`,
-              targets,
-            );
-
-            // Decide time with unit precedence within this batch
-            // If any item has a time token in its unit, prefer the mode of unit time tokens
-            // BUT only if it is dominant (>= 0.8). Otherwise, fall back to global auto-target
-            // selection, then pipeline config, then inferred preferred time.
-            const unitTimes = (context.items || [])
-              .map((i) => (i.unit || "").toLowerCase())
-              .map((u) =>
-                /per\s+(month|quarter|year|week|day|hour)|\/(month|quarter|year|week|day|hour)/i
-                  .exec(u)?.[1] ||
-                (/\/(month|quarter|year|week|day|hour)/i.exec(u)?.[1])
-              )
-              .filter(Boolean) as string[];
-
-            const { bestUnitTime, bestUnitRatio } = (() => {
-              const counts = new Map<string, number>();
-              for (const t of unitTimes) {
-                counts.set(t, (counts.get(t) || 0) + 1);
-              }
-              let best: string | undefined;
-              let bestCount = 0;
-              for (const [k, c] of counts.entries()) {
-                if (c > bestCount) {
-                  best = k;
-                  bestCount = c;
-                }
-              }
-              const totalItems = (context.items || []).length;
-              const ratio = totalItems > 0 ? bestCount / totalItems : 0;
-              return {
-                bestUnitTime: best as TimeScale | undefined,
-                bestUnitRatio: ratio,
-              };
-            })();
-
-            const threshold = (context.config as any)?.minMajorityShare ?? 0.8;
-            const resolvedTime: TimeScale | undefined =
-              (bestUnitTime && bestUnitRatio >= threshold)
-                ? (bestUnitTime as TimeScale)
-                : ((targets?.time as TimeScale | undefined) ||
-                  context.config.targetTimeScale || context.preferredTime);
-
-            // Populate explain.targetSelection for all items when using global auto-targets
-            if (context.config.explain && targets) {
-              for (const item of context.items) {
-                (item.explain ||= {}).targetSelection = {
-                  mode: "auto-by-indicator",
-                  indicatorKey: indicatorKey,
-                  selected: {
-                    currency: targets.currency,
-                    magnitude: targets.magnitude as Scale | undefined,
-                    time: resolvedTime,
-                  },
-                  shares: targets.shares || {},
-                  reason: targets.reason || "global-auto-target",
-                };
-              }
-            }
-
-            return {
-              selected: {
-                currency: targets?.currency || context.config.targetCurrency,
-                magnitude: (targets?.magnitude as Scale | undefined) ||
-                  (context.config.targetMagnitude as Scale | undefined) ||
-                  "millions",
-                time: resolvedTime,
-              },
-            };
-          }),
+          entry: assign((_args) => ({
+            // Defer target resolution to the batch actor per-indicator cohort
+            selected: undefined,
+          })),
           always: { target: "done" },
         },
         done: { type: "final" },
@@ -323,6 +348,7 @@ export const monetaryMachine = setup({
           fx: context.fx,
           fxSource: context.fxSource,
           fxSourceId: context.fxSourceId,
+          autoTargets: context.autoTargets,
         }),
         onDone: {
           target: "done",
