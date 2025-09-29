@@ -125,6 +125,18 @@ export const monetaryMachine = setup({
           ? (gMag.key as Scale)
           : undefined;
 
+        // Compute global time dominance across entire batch (flows-only, symmetric)
+        const timeCounts = new Map<string, number>();
+        for (const it of input.items) {
+          const u = String((it as any).unit || "").toLowerCase();
+          const t = extractUnitTime(u) || (String((it as any).periodicity || "").toLowerCase() || undefined);
+          if (t) timeCounts.set(t, (timeCounts.get(t) || 0) + 1);
+        }
+        const gTime = topOf(timeCounts);
+        const globalTime: TimeScale | undefined = (!input.isStock) && gTime.key && gTime.share >= threshold
+          ? (gTime.key as TimeScale)
+          : undefined;
+
         for (const [key, items] of groups.entries()) {
           const tg = targetsMap.get(key) as any;
 
@@ -143,16 +155,21 @@ export const monetaryMachine = setup({
             }
           }
           const ratio = items.length > 0 ? bestCount / items.length : 0;
-          const resolvedTime: TimeScale | undefined =
+          const resolvedTimeBase: TimeScale | undefined =
             (best && ratio >= threshold)
               ? (best as TimeScale)
               : ((tg?.time as TimeScale | undefined) ||
                 (input.config.targetTimeScale as TimeScale | undefined) ||
                 input.preferredTime);
+          const resolvedTime: TimeScale | undefined = globalTime ?? resolvedTimeBase;
 
           if ((input.config as any)?.explain && tg) {
             for (const item of items) {
               (item as any).explain ||= {};
+              const baseReason = tg.reason || "global-auto-target";
+              const reason = globalTime
+                ? `${baseReason}; time=global-majority(${String(globalTime)},${gTime.share.toFixed(2)})`
+                : baseReason;
               (item as any).explain.targetSelection = {
                 mode: "auto-by-indicator",
                 indicatorKey: key,
@@ -163,7 +180,7 @@ export const monetaryMachine = setup({
                   time: resolvedTime,
                 },
                 shares: tg.shares || {},
-                reason: tg.reason || "global-auto-target",
+                reason,
               };
             }
           }
@@ -181,6 +198,14 @@ export const monetaryMachine = setup({
             fxSource: input.fxSource,
             fxSourceId: input.fxSourceId,
           });
+          // Stamp explicit domain bucket on each item when explain is enabled
+          if ((input.config as any)?.explain) {
+            const bucket = input.isStock ? "monetaryStock" : "monetaryFlow";
+            for (const it of out as ParsedData[]) {
+              (it as any).explain ||= {};
+              (it as any).explain.domain = { bucket };
+            }
+          }
           results.push(...(out as ParsedData[]));
         }
 
@@ -203,6 +228,14 @@ export const monetaryMachine = setup({
         fxSource: input.fxSource,
         fxSourceId: input.fxSourceId,
       });
+      // Stamp explicit domain bucket on each item when explain is enabled
+      if ((input.config as any)?.explain) {
+        const bucket = input.isStock ? "monetaryStock" : "monetaryFlow";
+        for (const it of out as ParsedData[]) {
+          (it as any).explain ||= {};
+          (it as any).explain.domain = { bucket };
+        }
+      }
       return out as ParsedData[];
     }),
   },

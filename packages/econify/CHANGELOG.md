@@ -2,6 +2,29 @@
 
 All notable changes to the econify package will be documented in this file.
 
+
+## [1.0.6] - 2025-09-29
+
+### ✨ V2: Explicit domain and router provenance in explain + symmetric time dominance
+
+- Explain metadata now explicitly stamps the domain bucket for monetary items:
+  - monetaryStock and monetaryFlow are written per-item by the monetary domain machine
+  - Removes ambiguous values like "defaults" seen in some outputs
+- Router provenance is preserved via the V2 explain merge with processed/skipped buckets
+- Symmetric global time dominance for monetary flows (auto-target by indicator):
+  - Dominant time (month/quarter/year) is applied to all flows; outliers are up/down scaled
+  - Stocks remain time-less (no division, no "per <time>")
+
+### 🧪 Tests
+- Added E2E validations for global time dominance in both directions:
+  - Monthly dominant → quarterly rows converted to monthly (÷3)
+  - Quarterly dominant → monthly rows converted to quarterly (×3)
+
+### Files touched
+- src/workflowsV2/domains/monetary/monetary.machine.ts
+- src/workflowsV2/__tests__/auto-targeting-e2e-validation.test.ts
+
+
 ## [1.0.5] - 2025-09-29
 
 ### ✨ Cross‑country, indicator‑level normalization consistency (V2)
