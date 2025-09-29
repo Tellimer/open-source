@@ -14,6 +14,8 @@ export type {
   PipelineConfig,
   PipelineContext,
   PipelineError,
+  SpecialHandling,
+  UnitOverride,
 } from "./economic-data-workflow.ts";
 
 // Note: Simple pipeline alternative available if needed

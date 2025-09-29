@@ -121,14 +121,105 @@ Deno.test("computeAutoTargets: allowList / denyList", () => {
   assertEquals(targets.get("credit rating"), undefined);
 });
 
-Deno.test("computeAutoTargets: exclude non-monetary domains", () => {
+Deno.test("computeAutoTargets: include non-monetary indicators for magnitude/time targeting", () => {
   const data: ParsedData[] = [
     { name: "CPI", value: 3.5, unit: "percent" },
-    { name: "Car Registrations", value: 1000, unit: "Units" },
+    {
+      name: "Car Registrations",
+      value: 1000,
+      unit: "Units",
+      periodicity: "Monthly",
+    },
     { name: "Oil Production", value: 10, unit: "BBL/D/1K" },
   ];
 
-  const targets = computeAutoTargets(data, { indicatorKey: "name" });
+  const targets = computeAutoTargets(data, {
+    indicatorKey: "name",
+    autoTargetDimensions: ["magnitude", "time"],
+  });
 
-  assertEquals(targets.size, 0);
+  // Non-monetary indicators should now be included for magnitude/time targeting
+  assertEquals(targets.size, 3, "Should include all non-monetary indicators");
+
+  // Car Registrations should have magnitude and time targets but no currency
+  const carReg = targets.get("car registrations");
+  assertExists(carReg);
+  assertEquals(
+    carReg.currency,
+    undefined,
+    "Non-monetary should not have currency",
+  );
+  assertEquals(carReg.magnitude, "ones", "Should have magnitude target");
+  assertEquals(carReg.time, "month", "Should have time target");
+});
+
+Deno.test("computeAutoTargets: count indicators (non-monetary) participate in magnitude and time targeting", () => {
+  const data: ParsedData[] = [
+    {
+      name: "Car Registrations",
+      value: 51766,
+      unit: "Thousands",
+      periodicity: "Monthly",
+    },
+    {
+      name: "Car Registrations",
+      value: 16245,
+      unit: "Units",
+      periodicity: "Monthly",
+    },
+    {
+      name: "Car Registrations",
+      value: 20010,
+      unit: "Units",
+      periodicity: "Monthly",
+    },
+    {
+      name: "Car Registrations",
+      value: 1501957,
+      unit: "Units",
+      periodicity: "Yearly",
+    },
+  ];
+
+  const targets = computeAutoTargets(data, {
+    indicatorKey: "name",
+    autoTargetDimensions: ["magnitude", "time"],
+    minMajorityShare: 0.5,
+    tieBreakers: {
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+  });
+
+  const carReg = targets.get("car registrations");
+  assertExists(carReg, "Car Registrations should have auto-targets");
+
+  // Should NOT have currency (non-monetary)
+  assertEquals(
+    carReg.currency,
+    undefined,
+    "Count indicators should not have currency target",
+  );
+
+  // Should have magnitude target (majority is "ones" - 3 out of 4)
+  assertEquals(carReg.magnitude, "ones", "Should detect majority magnitude");
+  assertExists(
+    carReg.shares.magnitude["ones"],
+    "Should have 'ones' in magnitude shares",
+  );
+
+  // Should have time target (majority is "month" - 3 out of 4)
+  assertEquals(carReg.time, "month", "Should detect majority time scale");
+  assertExists(
+    carReg.shares.time["month"],
+    "Should have 'month' in time shares",
+  );
+
+  // Verify shares - all 4 items have periodicity, so shares should reflect 3 monthly + 1 yearly
+  const monthShare = carReg.shares.time["month"];
+  assertEquals(
+    monthShare > 0.5,
+    true,
+    "Month should be majority (3 out of 4 = 75%)",
+  );
 });

@@ -72,9 +72,20 @@ export function rescaleTime(
 
 /**
  * Parse a time scale token from text (e.g. "per month" -> "month").
+ * Also handles database periodicity formats like "Yearly", "Monthly", "Quarterly".
  */
 export function parseTimeScale(unitOrText?: string): TimeScale | null {
-  const s = (unitOrText ?? "").toLowerCase();
+  const s = (unitOrText ?? "").toLowerCase().trim();
+
+  // Handle database periodicity formats first (Yearly, Monthly, Quarterly, etc.)
+  if (s === "yearly") return "year";
+  if (s === "quarterly") return "quarter";
+  if (s === "monthly") return "month";
+  if (s === "weekly") return "week";
+  if (s === "daily") return "day";
+  if (s === "hourly") return "hour";
+
+  // Then check TIME_TOKENS patterns for unit strings
   for (const [basis, re] of TIME_TOKENS) if (re.test(s)) return basis;
   return null;
 }

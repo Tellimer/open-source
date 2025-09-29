@@ -84,6 +84,33 @@ export class EconifyBatchSession {
       }
     }
 
+    // Check if any data points are marked as cumulative/YTD
+    const hasCumulativeData = this.dataPoints.some(
+      (d) => d.metadata?.isCumulative === true,
+    );
+
+    if (hasCumulativeData) {
+      console.warn(
+        `⚠️ Cumulative/YTD data detected for "${
+          this.indicatorName || "unknown"
+        }"`,
+      );
+      console.warn(
+        `   Skipping time normalization. Values represent year-to-date or cumulative totals.`,
+      );
+
+      // Remove time from auto-target dimensions if present
+      if (processOptions.autoTargetDimensions?.includes("time")) {
+        processOptions.autoTargetDimensions = processOptions
+          .autoTargetDimensions.filter(
+            (d) => d !== "time",
+          );
+      }
+
+      // Remove targetTimeScale to prevent time conversion
+      delete processOptions.targetTimeScale;
+    }
+
     // Process all data points together
     const result = await processEconomicData(this.dataPoints, processOptions);
 

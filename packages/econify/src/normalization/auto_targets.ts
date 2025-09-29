@@ -149,7 +149,10 @@ export function computeAutoTargets(
   }>();
 
   for (const item of data) {
-    if (!isMonetary(item)) continue;
+    // Allow both monetary and non-monetary indicators for auto-targeting
+    // Non-monetary indicators (counts) will participate in magnitude and time targeting
+    const monetary = isMonetary(item);
+
     const key = resolveKey(item, options.indicatorKey);
     if (!key) continue;
     // denyList filtering - normalize list items for comparison if not using custom resolver
@@ -191,7 +194,10 @@ export function computeAutoTargets(
     const time = parseUnit(item.unit).timeScale ||
       (item.periodicity ? parseTimeScale(item.periodicity) : undefined);
 
-    inc(g.currency, currency ?? undefined);
+    // Only track currency for monetary indicators
+    if (monetary) {
+      inc(g.currency, currency ?? undefined);
+    }
     inc(g.magnitude, magnitude ?? undefined);
     inc(g.time, time ?? undefined);
     g.size += 1;

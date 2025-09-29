@@ -180,6 +180,8 @@ export function normalizeValue(
     explicitTimeScale?: TimeScale | null;
     // Context for count detection
     indicatorName?: string;
+    // Cumulative/YTD detection flag
+    isCumulative?: boolean;
   },
 ): number {
   const parsed = parseUnit(unitText);
@@ -214,13 +216,23 @@ export function normalizeValue(
 
   // Handle time scaling
   if (options?.toTimeScale) {
+    // Check if this is cumulative/YTD data (skip time conversion)
+    const isCumulative = options?.isCumulative === true;
+
     // For stock-like count indicators (e.g., Population), skip time conversion entirely
     const isCountStockLike = /\b(population|inhabitants|residents|people)\b/i
       .test(
         options?.indicatorName || "",
       );
 
-    if (!isCountStockLike) {
+    if (isCumulative) {
+      // Skip time conversion for cumulative/YTD series
+      console.warn(
+        `⚠️ Skipping time conversion for cumulative/YTD data: "${
+          options?.indicatorName || "unknown"
+        }"`,
+      );
+    } else if (!isCountStockLike) {
       if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
         // Time conversion can be performed
         result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);

@@ -63,6 +63,30 @@ export interface PipelineContext {
 }
 
 /**
+ * Unit override configuration for indicators with data quality issues
+ */
+export interface UnitOverride {
+  /** Indicator IDs to apply override to */
+  indicatorIds?: string[];
+  /** Indicator names to apply override to (case-insensitive) */
+  indicatorNames?: string[];
+  /** Override the unit field (e.g., "Units" instead of "Thousand") */
+  overrideUnit?: string;
+  /** Override the scale field (e.g., null to prevent scaling) */
+  overrideScale?: string | null;
+  /** Reason for the override (for documentation/logging) */
+  reason?: string;
+}
+
+/**
+ * Special handling configuration for indicators with data quality issues
+ */
+export interface SpecialHandling {
+  /** Unit/scale overrides for specific indicators */
+  unitOverrides?: UnitOverride[];
+}
+
+/**
  * Configuration for the pipeline engine.
  *
  * Controls quality thresholds, normalization targets, data inference,
@@ -88,6 +112,9 @@ export interface PipelineConfig {
 
   // Normalization exemptions
   exemptions?: NormalizationExemptions;
+
+  // Special handling for data quality issues
+  specialHandling?: SpecialHandling;
 
   // Auto-target by indicator (additive, off by default)
   autoTargetByIndicator?: boolean;
@@ -191,6 +218,35 @@ export const pipelineMachine = setup({
       const { rawData, config } = input;
       const parsed: ParsedData[] = [];
 
+      // Helper to check if item matches unit override
+      const getUnitOverride = (item: ParsedData): UnitOverride | undefined => {
+        if (!config.specialHandling?.unitOverrides) return undefined;
+
+        for (const override of config.specialHandling.unitOverrides) {
+          // Check by indicator ID
+          if (override.indicatorIds && item.id) {
+            const idStr = String(item.id);
+            if (override.indicatorIds.some((id) => String(id) === idStr)) {
+              return override;
+            }
+          }
+
+          // Check by indicator name (case-insensitive)
+          if (override.indicatorNames && item.name) {
+            const nameLower = item.name.toLowerCase();
+            if (
+              override.indicatorNames.some((name) =>
+                name.toLowerCase() === nameLower
+              )
+            ) {
+              return override;
+            }
+          }
+        }
+
+        return undefined;
+      };
+
       for (const item of rawData) {
         // Coerce numeric strings to numbers to avoid skipping normalization
         const coercedValue = (typeof item.value === "string")
@@ -198,6 +254,26 @@ export const pipelineMachine = setup({
           : item.value;
 
         let unit = item.unit;
+        let scale = item.scale;
+
+        // Apply unit overrides if configured
+        const override = getUnitOverride(item);
+        if (override) {
+          if (override.overrideUnit !== undefined) {
+            unit = override.overrideUnit;
+          }
+          if (override.overrideScale !== undefined) {
+            scale = override.overrideScale ?? undefined;
+          }
+          if (override.reason) {
+            console.log(
+              `🔧 Unit override applied to ${
+                item.id || item.name
+              }: ${override.reason}`,
+            );
+          }
+        }
+
         if (config.inferUnits && (!unit || unit === "unknown" || unit === "")) {
           const inferred = inferUnit(coercedValue, {
             text: item.description,
@@ -213,6 +289,7 @@ export const pipelineMachine = setup({
           ...item,
           value: coercedValue,
           unit,
+          scale,
           parsedUnit,
           inferredUnit: unit !== item.unit ? unit : undefined,
         });

@@ -367,6 +367,9 @@ function processItem<T extends BatchItem>(
     const targetMagnitude: Scale | undefined = options.toMagnitude ??
       effectiveScale ?? getScale(item.unit);
 
+    // Check if this is cumulative data
+    const isCumulative = item.metadata?.isCumulative === true;
+
     // Normalize value using enhanced metadata
     const normalized = normalizeValue(item.value, item.unit, {
       toCurrency: options.toCurrency,
@@ -378,6 +381,7 @@ function processItem<T extends BatchItem>(
       explicitScale: effectiveScale,
       explicitTimeScale: effectiveTimeScale,
       indicatorName,
+      isCumulative,
     });
 
     // Build normalized unit string

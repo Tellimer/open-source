@@ -233,6 +233,8 @@ export type {
   ParsedData,
   PipelineConfig,
   PipelineError,
+  SpecialHandling,
+  UnitOverride,
 } from "./workflows/index.ts";
 
 // Re-export count normalization utilities

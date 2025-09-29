@@ -2,6 +2,73 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.6] - 2025-09-29
+
+### Added
+
+- **Special handling configuration for data quality issues**
+  - New `specialHandling.unitOverrides` option to override units/scale for
+    specific indicators
+  - Useful for indicators where database stores misleading labels (e.g.,
+    "Thousand" as label, not scale factor)
+  - Can match by indicator ID or name (case-insensitive)
+  - Prevents double-scaling bugs when database values are already in the labeled
+    unit
+  - Example: Car Registrations with `units: "Thousand"` but value is already the
+    actual count
+  - See usage example in documentation
+
+## [1.1.5] - 2025-09-29
+
+### Added
+
+- **Cumulative/Year-to-Date (YTD) series detection and handling** (optional
+  feature)
+  - New `detectCumulativeSeries()` utility to identify cumulative time series
+    (values that monotonically increase within calendar years)
+  - New `markCumulativeData()` helper to flag data points as cumulative
+  - Econify now respects `metadata.isCumulative` flag and skips time
+    normalization for cumulative data
+  - Prevents meaningless time conversions (e.g., converting YTD August value
+    from yearly to monthly)
+  - User must detect cumulative patterns in their data and pass the flag
+  - See `docs/CUMULATIVE_DETECTION.md` for usage guide
+
+### Fixed
+
+- **Auto-targeting now includes non-monetary indicators** (count data like Car
+  Registrations)
+  - Previously, `computeAutoTargets` skipped all non-monetary indicators,
+    preventing auto-targeting of magnitude and time dimensions for count data
+  - Now count indicators participate in auto-targeting for magnitude and time
+    (currency dimension still skipped for non-monetary)
+  - Fixes issue where yearly count data (e.g., Azerbaijan Car Registrations) was
+    not being converted to monthly when majority of countries report monthly
+- **Enhanced `parseTimeScale` to handle database periodicity formats**
+  - Now recognizes "Yearly", "Monthly", "Quarterly", "Weekly", "Daily", "Hourly"
+    (case-insensitive)
+  - Previously only matched unit string patterns like "per year", "annually",
+    etc.
+  - Ensures periodicity field from database is properly parsed for
+    auto-targeting
+
+### Impact
+
+- **Cumulative indicators** (e.g., year-to-date car registrations):
+  - Time normalization automatically skipped when `metadata.isCumulative = true`
+  - Magnitude conversion still applied (thousands → ones)
+  - Users must detect cumulative patterns in their data and pass the flag (see
+    docs)
+- **Car Registrations and similar count indicators** now benefit from
+  auto-targeting:
+  - Magnitude: Auto-detects dominant scale (e.g., "ones" vs "thousands")
+  - Time: Auto-detects dominant periodicity and converts outliers (e.g., yearly
+    → monthly)
+  - **Note**: Only applies to non-cumulative count data
+- **Example**: With 3 monthly + 1 yearly Car Registrations (non-cumulative):
+  - Auto-target selects: `magnitude: "ones"`, `time: "month"` (75% majority)
+  - Yearly value automatically converted to monthly for comparability
+
 ## [1.1.4] - 2025-09-29
 
 ### Added
