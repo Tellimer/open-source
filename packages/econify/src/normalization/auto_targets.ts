@@ -177,8 +177,12 @@ export function computeAutoTargets(
       { currency: {}, magnitude: {}, time: {}, size: 0 };
 
     // Prefer explicit metadata
-    const currency = item.currency_code?.toUpperCase() ??
-      parseUnit(item.unit).currency;
+    let currency = item.currency_code?.toUpperCase() ?? parseUnit(item.unit).currency;
+    if (currency) currency = currency.toUpperCase();
+    // Filter out non-ISO currency tokens
+    if (currency && !/^[A-Z]{3}$/.test(currency)) {
+      currency = undefined;
+    }
     const magnitude = item.scale
       ? getScale(item.scale)
       : (parseUnit(item.unit).scale ?? "ones");
@@ -213,7 +217,15 @@ export function computeAutoTargets(
       const counts = g[dim];
       const total = Object.values(counts).reduce((a, b) => a + b, 0);
       if (total > 0) {
-        for (const [k, v] of Object.entries(counts)) shares[dim][k] = v / total;
+        for (const [k, v] of Object.entries(counts)) {
+          if (dim === "currency") {
+            // Ensure ISO 4217 uppercase keys only
+            const key = /^[A-Za-z]{3}$/.test(k) ? k.toUpperCase() : undefined;
+            if (key) shares[dim][key] = v / total;
+          } else {
+            shares[dim][k] = v / total;
+          }
+        }
       }
     }
 

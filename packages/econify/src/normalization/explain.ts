@@ -46,10 +46,11 @@ export function buildExplainMetadata(
   ) {
     const rate = options.fx.rates[effectiveCurrency];
     if (rate !== undefined) {
+      const rateRounded = Number(rate.toFixed(6));
       explain.fx = {
         currency: effectiveCurrency,
         base: "USD",
-        rate: rate,
+        rate: rateRounded,
         // Include the date if available from FX table
         asOf: options.fx.dates?.[effectiveCurrency],
         source: "fallback", // We'll enhance this when we have live FX info

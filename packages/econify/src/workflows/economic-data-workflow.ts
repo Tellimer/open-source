@@ -657,8 +657,8 @@ export const pipelineMachine = setup({
               const merged = mergeByKey(group, res.successful);
               // Attach explain.targetSelection when requested
               if (config.explain && sel) {
-                for (const m of merged) {
-                  (m.explain ||= {}).targetSelection = {
+                merged.forEach((m, idx) => {
+                  const ts: NonNullable<ParsedData["explain"]>["targetSelection"] = {
                     mode: "auto-by-indicator",
                     indicatorKey: key,
                     selected: {
@@ -666,13 +666,13 @@ export const pipelineMachine = setup({
                       magnitude: sel.magnitude as Scale | undefined,
                       time: sel.time,
                     },
-                    shares: sel.shares,
                     reason: sel.reason ??
-                      (sel.currency || sel.magnitude || sel.time
-                        ? "majority/tie-break"
-                        : "none"),
+                      (sel.currency || sel.magnitude || sel.time ? "majority/tie-break" : "none"),
                   };
-                }
+                  // Include distribution shares only on the first item of the indicator group to avoid duplication
+                  if (idx === 0) ts.shares = sel.shares;
+                  (m.explain ||= {}).targetSelection = ts;
+                });
               }
               merged.forEach((it, i) =>
                 processed.push({ item: it, idx: group[i].idx })
