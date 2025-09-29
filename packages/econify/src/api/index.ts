@@ -16,6 +16,12 @@ export {
 // Export API types
 export type { PipelineOptions, PipelineResult } from "./pipeline_api.ts";
 
+// Export batch processing API
+export {
+  EconifyBatchSession,
+  processEconomicDataByIndicator,
+} from "./batch_session_api.ts";
+
 // Export QA helper: auto target detection (dry-run)
 export { computeAutoTargets } from "../normalization/auto_targets.ts";
 export type {

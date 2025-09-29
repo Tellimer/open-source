@@ -218,10 +218,13 @@ export {
 
 // Re-export API for data pipeline processing
 export {
+  // Batch processing APIs for proper indicator normalization
+  EconifyBatchSession,
   type PipelineOptions,
   type PipelineResult,
   processEconomicData,
   processEconomicDataAuto,
+  processEconomicDataByIndicator,
   validateEconomicData,
 } from "./api/index.ts";
 

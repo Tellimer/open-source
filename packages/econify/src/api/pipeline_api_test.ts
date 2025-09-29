@@ -995,7 +995,7 @@ Deno.test("auto-target explain: targetSelection details present", async () => {
     if (ts.mode !== "auto-by-indicator") {
       throw new Error("expected mode auto-by-indicator");
     }
-    if (ts.indicatorKey !== "Balance of Trade") {
+    if (ts.indicatorKey !== "balance of trade") { // Keys are normalized to lowercase
       throw new Error("unexpected indicatorKey");
     }
     if (ts.selected.currency !== "USD") {

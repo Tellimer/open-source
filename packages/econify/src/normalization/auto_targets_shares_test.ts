@@ -36,8 +36,8 @@ Deno.test("computeAutoTargets: exact shares computed for crafted distribution", 
     targetCurrency: "USD",
   });
 
-  const sel = out.get("Trade");
-  if (!sel) throw new Error("expected selection for Trade");
+  const sel = out.get("trade");
+  if (!sel) throw new Error("expected selection for trade");
 
   // Currency shares
   assertAlmostEquals(sel.shares.currency.USD ?? 0, 0.6, 1e-12);
@@ -83,8 +83,8 @@ Deno.test("computeAutoTargets: shares handle missing time tokens (reason share v
     targetCurrency: "USD",
   });
 
-  const sel = out.get("GDP");
-  if (!sel) throw new Error("expected selection for GDP");
+  const sel = out.get("gdp");
+  if (!sel) throw new Error("expected selection for gdp");
 
   // Currency shares (USD 5, EUR 3)
   assertAlmostEquals(sel.shares.currency.USD ?? 0, 5 / 8, 1e-12);

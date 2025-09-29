@@ -47,21 +47,31 @@ function resolveKey(
 ): string {
   // If a resolver function is provided, use it
   if (r && r !== "name") return r(d);
+
+  // Normalize the key: trim whitespace and standardize case
+  const normalizeKey = (key: string): string => {
+    return key.trim().toLowerCase().replace(/\s+/g, " ");
+  };
+
   // Default: try common indicator identifiers with sensible fallbacks
   const nameVal = d.name != null && String(d.name).trim() !== ""
-    ? String(d.name)
+    ? normalizeKey(String(d.name))
     : (typeof (d.metadata as Record<string, unknown> | undefined)
         ?.["indicator_name"] === "string"
-      ? String((d.metadata as Record<string, unknown>)?.["indicator_name"])
+      ? normalizeKey(
+        String((d.metadata as Record<string, unknown>)?.["indicator_name"]),
+      )
       : undefined);
   if (nameVal) return nameVal;
+
   const meta = d.metadata as Record<string, unknown> | undefined;
   const idCandidate =
     (typeof meta?.["indicator_id"] === "string"
-      ? (meta?.["indicator_id"] as string)
+      ? normalizeKey(meta?.["indicator_id"] as string)
       : (typeof meta?.["indicatorId"] === "string"
-        ? (meta?.["indicatorId"] as string)
-        : undefined)) ?? (d.id != null ? String(d.id) : undefined);
+        ? normalizeKey(meta?.["indicatorId"] as string)
+        : undefined)) ??
+      (d.id != null ? normalizeKey(String(d.id)) : undefined);
   return idCandidate ?? "";
 }
 
@@ -142,10 +152,26 @@ export function computeAutoTargets(
     if (!isMonetary(item)) continue;
     const key = resolveKey(item, options.indicatorKey);
     if (!key) continue;
-    // denyList filtering
-    if (options.denyList && options.denyList.includes(key)) continue;
-    // allowList: if provided, only include those keys
-    if (options.allowList && !options.allowList.includes(key)) continue;
+    // denyList filtering - normalize list items for comparison if not using custom resolver
+    if (options.denyList) {
+      const normalizedDenyList =
+        (options.indicatorKey && options.indicatorKey !== "name")
+          ? options.denyList
+          : options.denyList.map((k) =>
+            k.trim().toLowerCase().replace(/\s+/g, " ")
+          );
+      if (normalizedDenyList.includes(key)) continue;
+    }
+    // allowList: if provided, only include those keys - normalize list items for comparison
+    if (options.allowList) {
+      const normalizedAllowList =
+        (options.indicatorKey && options.indicatorKey !== "name")
+          ? options.allowList
+          : options.allowList.map((k) =>
+            k.trim().toLowerCase().replace(/\s+/g, " ")
+          );
+      if (!normalizedAllowList.includes(key)) continue;
+    }
 
     const g = groups.get(key) ??
       { currency: {}, magnitude: {}, time: {}, size: 0 };
@@ -156,9 +182,9 @@ export function computeAutoTargets(
     const magnitude = item.scale
       ? getScale(item.scale)
       : (parseUnit(item.unit).scale ?? "ones");
-    const time = item.periodicity
-      ? parseTimeScale(item.periodicity)
-      : parseUnit(item.unit).timeScale;
+    // Prefer time scale from unit parsing, fall back to periodicity field
+    const time = parseUnit(item.unit).timeScale ||
+      (item.periodicity ? parseTimeScale(item.periodicity) : undefined);
 
     inc(g.currency, currency ?? undefined);
     inc(g.magnitude, magnitude ?? undefined);

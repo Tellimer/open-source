@@ -2,6 +2,40 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.0] - 2025-09-29
+
+### Added
+
+- **Batch Processing API** for proper per-indicator normalization
+  - New `EconifyBatchSession` class for accumulating and processing data points
+    together
+  - New `processEconomicDataByIndicator` helper function for automatic indicator
+    grouping
+  - Ensures all items of the same indicator are normalized to consistent units
+    (currency, magnitude, time scale)
+  - Comprehensive documentation in `docs/batch-processing.md` and
+    `PER_INDICATOR_NORMALIZATION.md`
+
+### Fixed
+
+- **Indicator name normalization** - Indicators with name variations (different
+  casing, trailing spaces) are now properly grouped together
+- **Time scale extraction** - Now prefers time scale from unit parsing over
+  periodicity field
+- Fixed inconsistent auto-target normalization when processing countries
+  individually
+- Fixed TypeScript type errors in test files
+- Fixed all lint violations (25 errors resolved)
+
+### Improved
+
+- Enhanced auto-target normalization to handle magnitude differences (thousands
+  vs millions vs billions)
+- Added comprehensive test coverage for batch processing scenarios
+- Added implementation instructions for consuming applications
+- Better handling of indicator key normalization (lowercase, trim, normalize
+  spaces)
+
 ## [1.0.8] - 2025-09-29
 
 ### Fixed

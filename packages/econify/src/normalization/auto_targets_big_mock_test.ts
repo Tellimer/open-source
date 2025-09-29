@@ -114,7 +114,7 @@ Deno.test("auto-target BIG MOCK: many indicators with large synthetic runs", () 
   };
 
   for (const g of indicators) {
-    const sel = out.get(g.name)!;
+    const sel = out.get(g.name.toLowerCase())!;
     if (!sel) throw new Error(`${g.name}: missing selection`);
     const r = String(sel.reason || "");
 

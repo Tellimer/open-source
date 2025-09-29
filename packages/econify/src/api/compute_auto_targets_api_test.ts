@@ -36,8 +36,8 @@ Deno.test("API: computeAutoTargets basic majority selection", () => {
     targetCurrency: "USD",
   });
 
-  const sel = out.get("Balance of Trade");
-  if (!sel) throw new Error("expected selection for Balance of Trade");
+  const sel = out.get("balance of trade");
+  if (!sel) throw new Error("expected selection for balance of trade");
   assertEquals(sel.currency, "USD"); // USD appears 2/3
   assertEquals(sel.magnitude, "millions");
   assertEquals(sel.time, "month"); // month appears in 2/3
@@ -61,8 +61,8 @@ Deno.test("API: computeAutoTargets tie-breakers when no majority", () => {
     targetCurrency: "USD",
   });
 
-  const sel = out.get("GDP");
-  if (!sel) throw new Error("expected selection for GDP");
+  const sel = out.get("gdp");
+  if (!sel) throw new Error("expected selection for gdp");
   // No 2/3 majority on currency (USD 1/2, CAD 1/2) -> prefer targetCurrency (USD)
   assertEquals(sel.currency, "USD");
   // No time tokens -> prefer month
@@ -83,12 +83,12 @@ Deno.test("API: computeAutoTargets allowList / denyList", () => {
     allowList: ["Exports"],
     indicatorKey: "name",
   });
-  assertEquals([...out1.keys()], ["Exports"]);
+  assertEquals([...out1.keys()], ["exports"]);
 
   const out2 = computeAutoTargets(data, {
     denyList: ["Imports"],
     indicatorKey: "name",
   });
-  assertEquals([...out2.keys()].includes("Imports"), false);
-  assertEquals([...out2.keys()].includes("Exports"), true);
+  assertEquals([...out2.keys()].includes("imports"), false);
+  assertEquals([...out2.keys()].includes("exports"), true);
 });

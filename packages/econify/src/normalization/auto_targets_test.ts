@@ -18,7 +18,7 @@ Deno.test("computeAutoTargets: majority selection per dimension", () => {
   });
 
   assertEquals(targets instanceof Map, true);
-  const gdp = targets.get("GDP");
+  const gdp = targets.get("gdp"); // Key is normalized to lowercase
   assertExists(gdp);
   assertEquals(gdp?.currency, "USD");
   assertEquals(gdp?.magnitude as Scale, "millions");
@@ -45,7 +45,7 @@ Deno.test("computeAutoTargets: tie-breakers when no majority", () => {
     },
   });
 
-  const debt = targets.get("Debt");
+  const debt = targets.get("debt"); // Key is normalized to lowercase
   assertExists(debt);
   // prefer targetCurrency (EUR), prefer millions, prefer month
   assertEquals(debt?.currency, "EUR");
@@ -74,7 +74,7 @@ Deno.test("computeAutoTargets: explicit metadata beats unit parsing", () => {
   ];
 
   const targets = computeAutoTargets(data, { indicatorKey: "name" });
-  const exp = targets.get("Exports");
+  const exp = targets.get("exports"); // Key is normalized to lowercase
   assertExists(exp);
   assertEquals(exp?.currency, "USD");
   assertEquals(exp?.magnitude as Scale, "billions");
@@ -101,7 +101,7 @@ Deno.test("computeAutoTargets: grouping by custom key function", () => {
     indicatorKey: (d) => String(d.metadata?.["indicatorId"] ?? d.name),
   });
 
-  assertExists(targets.get("A"));
+  assertExists(targets.get("A")); // Custom keys are not normalized
   assertExists(targets.get("B"));
 });
 
@@ -117,8 +117,8 @@ Deno.test("computeAutoTargets: allowList / denyList", () => {
     denyList: ["Credit Rating"],
   });
 
-  assertExists(targets.get("GDP"));
-  assertEquals(targets.get("Credit Rating"), undefined);
+  assertExists(targets.get("gdp")); // Keys are normalized to lowercase
+  assertEquals(targets.get("credit rating"), undefined);
 });
 
 Deno.test("computeAutoTargets: exclude non-monetary domains", () => {

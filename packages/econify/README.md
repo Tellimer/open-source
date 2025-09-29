@@ -122,6 +122,49 @@ import {
 
 ## 🚀 Quick Start
 
+### Batch Processing (NEW in v1.1.0)
+
+Process multiple countries/regions for an indicator together to ensure
+consistent normalization:
+
+```typescript
+import { EconifyBatchSession } from "@tellimer/econify";
+
+// Create a batch session
+const session = new EconifyBatchSession({
+  targetCurrency: "USD",
+  autoTargetByIndicator: true,
+  autoTargetDimensions: ["magnitude", "time"],
+  fxFallback: { base: "USD", rates: { EUR: 0.92, GBP: 0.79 } },
+});
+
+// Add all countries for "Balance of Trade"
+session.addDataPoint({
+  id: "BALANCE_OF_TRADE",
+  name: "Balance of Trade",
+  value: 100,
+  unit: "USD million/month",
+  metadata: { countryISO: "USA" },
+});
+
+session.addDataPoint({
+  id: "BALANCE_OF_TRADE",
+  name: "Balance of Trade",
+  value: 0.2,
+  unit: "EUR billion/quarter",
+  metadata: { countryISO: "DEU" },
+});
+
+// Process all together for consistent normalization
+const result = await session.process();
+// All countries normalized to same units (e.g., USD millions/month)
+```
+
+See [docs/batch-processing.md](./docs/batch-processing.md) for detailed
+documentation.
+
+## 🚀 Quick Start
+
 ### Economic Data Pipeline (Primary Use Case)
 
 Process economic data through a complete pipeline with validation, quality

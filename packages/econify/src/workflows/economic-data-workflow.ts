@@ -555,7 +555,7 @@ export const pipelineMachine = setup({
             >();
             for (const entry of defaults) {
               const item = entry.item;
-              const key = (typeof config.indicatorKey === "function")
+              let key = (typeof config.indicatorKey === "function")
                 ? (config.indicatorKey as (d: ParsedData) => string)(item)
                 : String(
                   item.name ??
@@ -567,6 +567,13 @@ export const pipelineMachine = setup({
                       ?.["indicator_id"] ??
                     (item.id ?? ""),
                 );
+
+              // Normalize the key to match the normalization in computeAutoTargets
+              // Only normalize if not using a custom resolver function
+              if (key && typeof config.indicatorKey !== "function") {
+                key = key.trim().toLowerCase().replace(/\s+/g, " ");
+              }
+
               if (!key) continue;
               const list = groups.get(key) ?? [];
               list.push(entry);
