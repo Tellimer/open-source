@@ -2,7 +2,6 @@ import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 import { computeAutoTargets, type AutoTargets } from "../normalization/auto_targets.ts";
 import { processEconomicData } from "./pipeline_api.ts";
 import type { PipelineOptions, PipelineResult } from "./pipeline_api.ts";
-import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 
 /**
  * Batch processing session for accumulating data points and processing them together
