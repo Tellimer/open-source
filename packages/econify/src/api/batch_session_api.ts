@@ -1,7 +1,8 @@
 import type { ParsedData } from "../workflows/economic-data-workflow.ts";
-import { computeAutoTargets } from "../normalization/auto_targets.ts";
+import { computeAutoTargets, type AutoTargets } from "../normalization/auto_targets.ts";
 import { processEconomicData } from "./pipeline_api.ts";
 import type { PipelineOptions, PipelineResult } from "./pipeline_api.ts";
+import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 
 /**
  * Batch processing session for accumulating data points and processing them together
@@ -80,7 +81,7 @@ export class EconifyBatchSession {
    * Get a preview of what auto-targets would be computed for the current batch.
    * Useful for debugging and understanding the normalization that will be applied.
    */
-  previewAutoTargets() {
+  previewAutoTargets(): AutoTargets {
     if (this.dataPoints.length === 0) {
       return new Map();
     }
