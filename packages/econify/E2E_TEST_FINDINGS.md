@@ -147,31 +147,38 @@ issues** affecting non-IMF indicators.
 ### ✅ All Tests Passing:
 
 **Monetary Flows:**
+
 - GDP (World Bank, USD billions, annual)
 - Current Account Balance (World Bank, USD billions, annual)
 
 **Stocks/Counts:**
+
 - Population (World Bank, millions, annual)
 
 **Percentages:**
+
 - Unemployment Rate (World Bank, %, annual)
 - Inflation Rate (World Bank, %, annual)
 - Corporate Tax Rate (Guatemala, %, yearly)
 - Government Spending to GDP (Japan OECD, % of GDP, yearly)
 
 **Indexes:**
+
 - CPI Index (World Bank, index, annual)
 - Stock Market Index (Bulgaria SOFIX, points, daily)
 
 **Points:**
+
 - Business Confidence (Bank of Albania, points, monthly)
 
 **Physical Units:**
+
 - Gold Reserves (World Gold Council, tonnes, quarterly)
 - Cement Production (Kenya, tonnes, monthly)
 - Electricity Production (Austria EUROSTAT, gigawatt-hour, monthly)
 
 **Composite Units:**
+
 - Gasoline Prices (Singapore, USD/Liter, monthly)
 
 ---
@@ -202,12 +209,16 @@ issues** affecting non-IMF indicators.
 All 4 critical issues have been resolved:
 
 1. ✅ **Count indicators now return data** - Added "Number" to COUNT_PATTERNS
-2. ✅ **Explicit targets take precedence** - Fixed auto-targeting precedence logic
+2. ✅ **Explicit targets take precedence** - Fixed auto-targeting precedence
+   logic
 3. ✅ **Index indicators properly labeled** - Added dedicated index handling
 4. ✅ **Time conversion warnings eliminated** - Added "Annual" support
 
 Test coverage expanded from 6 to 14 tests, covering:
-- 7 different unit types (monetary, percentage, index, points, physical, composite, ratios)
+
+- 7 different unit types (monetary, percentage, index, points, physical,
+  composite, ratios)
 - 4 different periodicities (daily, monthly, quarterly, yearly)
-- 6 different data sources (World Bank, OECD, EUROSTAT, World Gold Council, central banks, national agencies)
+- 6 different data sources (World Bank, OECD, EUROSTAT, World Gold Council,
+  central banks, national agencies)
 - 10+ different countries across all continents

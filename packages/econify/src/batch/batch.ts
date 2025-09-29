@@ -498,8 +498,24 @@ function buildNormalizedUnit(
   const ts = timeScale ?? parsed.timeScale;
 
   const parts: string[] = [];
-  if (cur) parts.push(cur);
-  if (mag && mag !== "ones") parts.push(String(mag)); // keep lowercase per tests
+
+  // For physical/energy/temperature units, preserve the base unit
+  if (
+    parsed.category === "physical" || parsed.category === "energy" ||
+    parsed.category === "temperature"
+  ) {
+    if (parsed.normalized) {
+      parts.push(parsed.normalized);
+    }
+    // Add magnitude if present (e.g., "thousand tonnes")
+    if (mag && mag !== "ones") {
+      parts.unshift(String(mag));
+    }
+  } else {
+    // For monetary units, build from currency and magnitude
+    if (cur) parts.push(cur);
+    if (mag && mag !== "ones") parts.push(String(mag)); // keep lowercase per tests
+  }
 
   let out = parts.join(" ");
   if (ts) out = `${out}${out ? " " : ""}per ${ts}`;

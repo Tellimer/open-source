@@ -335,7 +335,7 @@ export const PHYSICAL_PATTERNS: UnitPattern[] = [
   { pattern: /kg|kilogram/i, category: "physical", normalized: "kg" },
   { pattern: /kt\b/i, category: "physical", normalized: "KT" },
   { pattern: /mm\b|millimeters?/i, category: "physical", normalized: "mm" },
-  { pattern: /celsius|°C/i, category: "temperature", normalized: "celsius" },
+  { pattern: /celsius|°C/i, category: "physical", normalized: "celsius" },
   {
     pattern: /liters?|litres?|liter\b|l\b/i,
     category: "physical",

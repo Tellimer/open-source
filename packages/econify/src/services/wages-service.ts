@@ -13,7 +13,7 @@ import {
   normalizeWagesData,
 } from "../wages/wages-normalization.ts";
 import type { ParsedData } from "../workflows/economic-data-workflow.ts";
-import type { FXTable, Scale } from "../types.ts";
+import type { FXTable, Scale, TimeScale } from "../types.ts";
 import { parseUnit } from "../units/units.ts";
 
 /**
@@ -115,6 +115,7 @@ export async function processWagesData(
       parallel: true,
       toCurrency: config.targetCurrency,
       toMagnitude: "ones" as Scale, // Always use "ones" for wages, not millions
+      toTimeScale: config.targetTimeScale as TimeScale | undefined, // Apply time scale conversion
       fx: fxRates,
       explain: config.explain,
       fxSource: config.fxSource,
