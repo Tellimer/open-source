@@ -245,27 +245,38 @@ export const monetaryMachine = setup({
               .map((i) => (i.unit || "").toLowerCase())
               .map((u) =>
                 /per\s+(month|quarter|year|week|day|hour)|\/(month|quarter|year|week|day|hour)/i
-                  .exec(u)?.[1] || (/\/(month|quarter|year|week|day|hour)/i.exec(u)?.[1])
+                  .exec(u)?.[1] ||
+                (/\/(month|quarter|year|week|day|hour)/i.exec(u)?.[1])
               )
               .filter(Boolean) as string[];
 
             const { bestUnitTime, bestUnitRatio } = (() => {
               const counts = new Map<string, number>();
-              for (const t of unitTimes) counts.set(t, (counts.get(t) || 0) + 1);
+              for (const t of unitTimes) {
+                counts.set(t, (counts.get(t) || 0) + 1);
+              }
               let best: string | undefined;
               let bestCount = 0;
               for (const [k, c] of counts.entries()) {
-                if (c > bestCount) { best = k; bestCount = c; }
+                if (c > bestCount) {
+                  best = k;
+                  bestCount = c;
+                }
               }
               const totalItems = (context.items || []).length;
               const ratio = totalItems > 0 ? bestCount / totalItems : 0;
-              return { bestUnitTime: best as TimeScale | undefined, bestUnitRatio: ratio };
+              return {
+                bestUnitTime: best as TimeScale | undefined,
+                bestUnitRatio: ratio,
+              };
             })();
 
             const threshold = (context.config as any)?.minMajorityShare ?? 0.8;
-            const resolvedTime: TimeScale | undefined = (bestUnitTime && bestUnitRatio >= threshold)
-              ? (bestUnitTime as TimeScale)
-              : ((targets?.time as TimeScale | undefined) || context.config.targetTimeScale || context.preferredTime);
+            const resolvedTime: TimeScale | undefined =
+              (bestUnitTime && bestUnitRatio >= threshold)
+                ? (bestUnitTime as TimeScale)
+                : ((targets?.time as TimeScale | undefined) ||
+                  context.config.targetTimeScale || context.preferredTime);
 
             // Populate explain.targetSelection for all items when using global auto-targets
             if (context.config.explain && targets) {
