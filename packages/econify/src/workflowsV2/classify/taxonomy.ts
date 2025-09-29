@@ -90,9 +90,9 @@ const matchers = {
 
   // Check for energy patterns
   hasEnergyPattern: (name: string, unit: string) =>
-    /(electricity|distillate|gasoline|fuel|energy|stocks?|oil|gas|crude|wti|brent|barrels?|bbls?|capacity|exports)/i
+    /\b(electricity|distillate|gasoline|fuel|energy|stocks?|oil|gas|crude|wti|brent|barrels?|bbls?|capacity|exports)\b/i
       .test(name) ||
-    /(gwh|kwh|mwh|gw|megawatts?|mw|terajoules?|tj|mmbtu|btu|barrels?|bbls?|mtpa)/i
+    /\b(gwh|kwh|mwh|gw|megawatts?|mw|terajoules?|tj|mmbtu|btu|barrels?|bbls?|mtpa)\b/i
       .test(unit) ||
     /(oil\s+rigs?|crude\s+oil\s+rigs?|drilling\s+rigs?|wells?|refineries)/i
       .test(name),
@@ -107,11 +107,17 @@ const matchers = {
       .test(combined) ||
     /\b(troy\s+oz|troy\s+ounces?|ounces?\s+troy)\b/i.test(combined),
 
-  // Check for agriculture patterns
-  hasAgriculturePattern: (name: string, unit: string) =>
-    /(wheat|rice|corn|soybeans?|coffee|cocoa|cotton|palm.*?oil|tea|sugar|grain|livestock|cattle|farmland|agricultural)/i
-      .test(name) ||
-    /(bushels?|short.*?tons?|metric.*?tonnes?|hectares?)/i.test(unit),
+  // Check for agriculture patterns (avoid misclassifying count-like units as commodities)
+  hasAgriculturePattern: (name: string, unit: string) => {
+    const unitLower = (unit || "").toLowerCase();
+    // If unit looks like a count (farms, cattle, sheep, heads, livestock), treat as counts elsewhere
+    if (/\b(farms?|cattle|sheep|heads|animals?|livestock)\b/i.test(unitLower)) {
+      return false;
+    }
+    const nameMatch = /\b(wheat|rice|corn|soybeans?|coffee|cocoa|cotton|palm.*?oil|tea|sugar|grain)\b/i.test(name);
+    const unitMatch = /\b(bushels?|short.*?tons?|metric.*?tonnes?|hectares?)\b/i.test(unitLower);
+    return nameMatch || unitMatch;
+  },
 
   // Check for crypto patterns
   hasCryptoPattern: (combined: string, unit: string) =>
@@ -125,7 +131,7 @@ const matchers = {
   // Check for infrastructure/physical units
   isInfrastructure: (name: string, unit: string) =>
     /(roads?|railways?|airports?|seaports?|infrastructure)/i.test(name) ||
-    /(km|kilometers?|kilometres?|miles?|facilities)/i.test(unit),
+    /\b(km|kilometers?|kilometres?|miles?|facilities)\b/i.test(unit),
 
   // Check for count indicators
   isCount: (parsed: any, name?: string, unit?: string) => {
@@ -317,6 +323,11 @@ export function bucketForItem(item: ParsedData): BucketKey {
       ({ combined }) => matchers.hasMetalsPattern(combined),
       () => "commodities",
     )
+    .when(
+      ({ name, unitLower }) => matchers.hasAgriculturePattern(name, unitLower),
+      () => "commodities",
+    )
+
     // Check for physical commodity units (tonnes, barrels, etc.) before counts
     .when(
       ({ unit }) => {
@@ -337,18 +348,10 @@ export function bucketForItem(item: ParsedData): BucketKey {
       () => "counts",
     )
     .when(
-      ({ name, unitLower }) => matchers.hasAgriculturePattern(name, unitLower),
-      () => "commodities",
-    )
-    .when(
       ({ parsed }) => parsed.category === "energy",
       () => "commodities",
     )
     // Monetary (wages are always flow, others depend on timeScale)
-    .when(
-      ({ itemName }) => matchers.isWageLike(itemName || ""),
-      () => "monetaryFlow",
-    )
     .otherwise(
       ({ parsed }) =>
         matchers.hasTimeScale(parsed) ? "monetaryFlow" : "monetaryStock",
