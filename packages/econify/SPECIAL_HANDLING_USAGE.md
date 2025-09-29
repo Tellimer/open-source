@@ -10,7 +10,7 @@ Your Car Registrations data has misleading unit labels:
 {
   "ARG": {
     "value": 51766,
-    "units": "Thousand",  // ⚠️ Misleading! Value is already the count
+    "units": "Thousand", // ⚠️ Misleading! Value is already the count
     "periodicity": "Monthly"
   }
 }
@@ -26,33 +26,33 @@ But the value is already `51,766 cars`, not `51,766 thousands`!
 
 ```typescript
 const options: PipelineOptions = {
-  targetCurrency: 'USD',
+  targetCurrency: "USD",
   autoTargetByIndicator: true,
-  autoTargetDimensions: ['magnitude', 'time'],
-  indicatorKey: 'name',
+  autoTargetDimensions: ["magnitude", "time"],
+  indicatorKey: "name",
   minMajorityShare: 0.6,
   tieBreakers: {
     currency: "prefer-targetCurrency",
     magnitude: "prefer-millions",
     time: "prefer-month",
   },
-  
+
   // ✅ ADD THIS: Fix misleading "Thousand" labels
   specialHandling: {
     unitOverrides: [
       {
-        indicatorNames: ['Car Registrations'],
-        overrideUnit: 'Units',
+        indicatorNames: ["Car Registrations"],
+        overrideUnit: "Units",
         overrideScale: null,
-        reason: 'Database stores "Thousand" as label, not scale factor'
-      }
-    ]
+        reason: 'Database stores "Thousand" as label, not scale factor',
+      },
+    ],
   },
-  
+
   minQualityScore: 30,
   inferUnits: true,
   useLiveFX: false,
-  fxFallback: { base: 'USD', rates: fxRates, dates: opts.fxDates || {} },
+  fxFallback: { base: "USD", rates: fxRates, dates: opts.fxDates || {} },
   explain: true,
 };
 
@@ -64,23 +64,25 @@ const result = await processEconomicDataByIndicator(econifyData, options);
 ## What This Does
 
 ### Before (Without Override)
+
 ```json
 {
   "ARG": {
     "value": 51766,
     "units": "Thousand",
-    "normalized_value": 51766000  // ❌ WRONG: 51.7 million cars
+    "normalized_value": 51766000 // ❌ WRONG: 51.7 million cars
   }
 }
 ```
 
 ### After (With Override)
+
 ```json
 {
   "ARG": {
     "value": 51766,
-    "units": "Units",              // ✅ Corrected
-    "normalized_value": 51766      // ✅ CORRECT: 51,766 cars
+    "units": "Units", // ✅ Corrected
+    "normalized_value": 51766 // ✅ CORRECT: 51,766 cars
   }
 }
 ```
@@ -96,16 +98,16 @@ specialHandling: {
   unitOverrides: [
     {
       indicatorIds: [
-        'ARGENTINACARREG',
-        'BRAZILCARREG',
-        'TAIWANCARREG',
+        "ARGENTINACARREG",
+        "BRAZILCARREG",
+        "TAIWANCARREG",
         // ... add more as needed
       ],
-      overrideUnit: 'Units',
+      overrideUnit: "Units",
       overrideScale: null,
-      reason: 'Database stores "Thousand" as label, not scale factor'
-    }
-  ]
+      reason: 'Database stores "Thousand" as label, not scale factor',
+    },
+  ];
 }
 ```
 
@@ -130,18 +132,18 @@ You can add multiple overrides for different indicators:
 specialHandling: {
   unitOverrides: [
     {
-      indicatorNames: ['Car Registrations'],
-      overrideUnit: 'Units',
+      indicatorNames: ["Car Registrations"],
+      overrideUnit: "Units",
       overrideScale: null,
-      reason: 'Database stores "Thousand" as label'
+      reason: 'Database stores "Thousand" as label',
     },
     {
-      indicatorNames: ['Population'],
-      overrideUnit: 'People',
+      indicatorNames: ["Population"],
+      overrideUnit: "People",
       overrideScale: null,
-      reason: 'Database stores "Hundreds" as label'
-    }
-  ]
+      reason: 'Database stores "Hundreds" as label',
+    },
+  ];
 }
 ```
 
@@ -157,6 +159,7 @@ specialHandling: {
 4. ✅ Test with your Car Registrations data
 
 **Result:**
+
 - ✅ No more double-scaling bug
 - ✅ Values stay as actual car counts
 - ✅ All countries comparable
@@ -166,7 +169,7 @@ specialHandling: {
 ## Full Example
 
 ```typescript
-import { processEconomicDataByIndicator } from '@tellimer/econify';
+import { processEconomicDataByIndicator } from "@tellimer/econify";
 
 // Your existing code...
 const econifyData = Object.entries(data.countries).map(([iso, country]) => ({
@@ -181,33 +184,33 @@ const econifyData = Object.entries(data.countries).map(([iso, country]) => ({
 
 // Your existing options with special handling added
 const options = {
-  targetCurrency: 'USD',
+  targetCurrency: "USD",
   autoTargetByIndicator: true,
-  autoTargetDimensions: ['magnitude', 'time'],
-  indicatorKey: 'name',
+  autoTargetDimensions: ["magnitude", "time"],
+  indicatorKey: "name",
   minMajorityShare: 0.6,
   tieBreakers: {
     currency: "prefer-targetCurrency",
     magnitude: "prefer-millions",
     time: "prefer-month",
   },
-  
+
   // ✅ NEW: Fix misleading units
   specialHandling: {
     unitOverrides: [
       {
-        indicatorNames: ['Car Registrations'],
-        overrideUnit: 'Units',
+        indicatorNames: ["Car Registrations"],
+        overrideUnit: "Units",
         overrideScale: null,
-        reason: 'Database stores "Thousand" as label, not scale factor'
-      }
-    ]
+        reason: 'Database stores "Thousand" as label, not scale factor',
+      },
+    ],
   },
-  
+
   minQualityScore: 30,
   inferUnits: true,
   useLiveFX: false,
-  fxFallback: { base: 'USD', rates: fxRates, dates: opts.fxDates || {} },
+  fxFallback: { base: "USD", rates: fxRates, dates: opts.fxDates || {} },
   explain: true,
 };
 
@@ -221,4 +224,3 @@ const result = await processEconomicDataByIndicator(econifyData, options);
 ## Need More Help?
 
 See full documentation: `packages/econify/docs/SPECIAL_HANDLING.md`
-

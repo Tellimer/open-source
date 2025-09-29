@@ -218,6 +218,9 @@ export const pipelineMachine = setup({
       const { rawData, config } = input;
       const parsed: ParsedData[] = [];
 
+      // Track which overrides have been logged to avoid spam
+      const loggedOverrides = new Set<string>();
+
       // Helper to check if item matches unit override
       const getUnitOverride = (item: ParsedData): UnitOverride | undefined => {
         if (!config.specialHandling?.unitOverrides) return undefined;
@@ -265,12 +268,15 @@ export const pipelineMachine = setup({
           if (override.overrideScale !== undefined) {
             scale = override.overrideScale ?? undefined;
           }
-          if (override.reason) {
-            console.log(
-              `🔧 Unit override applied to ${
-                item.id || item.name
-              }: ${override.reason}`,
-            );
+          // Log once per indicator name, not per item
+          if (override.reason && item.name) {
+            const logKey = item.name.toLowerCase();
+            if (!loggedOverrides.has(logKey)) {
+              loggedOverrides.add(logKey);
+              console.log(
+                `🔧 Unit override applied to "${item.name}": ${override.reason}`,
+              );
+            }
           }
         }
 
@@ -568,16 +574,97 @@ export const pipelineMachine = setup({
         }
 
         if (counts.length > 0) {
-          const res = await processBatch(counts.map((c) => c.item), {
-            ...batchOptions,
-            toCurrency: undefined, // Counts don't need currency conversion
-            toMagnitude: "ones",
-          });
-          console.log("DEBUG counts items:", res.successful.map((x) => x.id));
-          const merged = mergeByKey(counts, res.successful);
-          merged.forEach((it, i) =>
-            processed.push({ item: it, idx: counts[i].idx })
-          );
+          // If auto-targeting is enabled, compute per-indicator targets for counts
+          if (config.autoTargetByIndicator) {
+            const items = counts.map((c) => c.item);
+            const auto = computeAutoTargets(items, {
+              indicatorKey: config.indicatorKey ?? "name",
+              autoTargetDimensions: config.autoTargetDimensions,
+              minMajorityShare: config.minMajorityShare,
+              tieBreakers: config.tieBreakers,
+              targetCurrency: config.targetCurrency,
+              allowList: config.allowList,
+              denyList: config.denyList,
+            });
+            const groups = new Map<
+              string,
+              { item: ParsedData; idx: number }[]
+            >();
+            for (const entry of counts) {
+              const item = entry.item;
+              let key = (typeof config.indicatorKey === "function")
+                ? (config.indicatorKey as (d: ParsedData) => string)(item)
+                : String(
+                  item.name ??
+                    (item.metadata as Record<string, unknown> | undefined)
+                      ?.["indicator_name"] ??
+                    (item.metadata as Record<string, unknown> | undefined)
+                      ?.["indicatorId"] ??
+                    (item.metadata as Record<string, unknown> | undefined)
+                      ?.["indicator_id"] ??
+                    (item.id ?? ""),
+                );
+
+              // Normalize the key to match the normalization in computeAutoTargets
+              if (key && typeof config.indicatorKey !== "function") {
+                key = key.trim().toLowerCase().replace(/\s+/g, " ");
+              }
+
+              if (!key) continue;
+              const list = groups.get(key) ?? [];
+              list.push(entry);
+              groups.set(key, list);
+            }
+
+            for (const [key, group] of groups.entries()) {
+              const sel = auto.get(key);
+              const grpItems = group.map((g) => g.item);
+              const res = await processBatch(grpItems, {
+                ...batchOptions,
+                toCurrency: undefined, // Counts don't need currency conversion
+                toMagnitude: (sel?.magnitude as Scale | undefined) ?? "ones",
+                toTimeScale: sel?.time ?? batchOptions.toTimeScale,
+              });
+              const merged = mergeByKey(group, res.successful);
+              // Attach explain.targetSelection when requested
+              if (config.explain && sel) {
+                merged.forEach((m, idx) => {
+                  const ts: NonNullable<
+                    ParsedData["explain"]
+                  >["targetSelection"] = {
+                    mode: "auto-by-indicator",
+                    indicatorKey: key,
+                    selected: {
+                      currency: sel.currency,
+                      magnitude: sel.magnitude as Scale | undefined,
+                      time: sel.time,
+                    },
+                    reason: sel.reason ??
+                      (sel.currency || sel.magnitude || sel.time
+                        ? "majority/tie-break"
+                        : "none"),
+                  };
+                  if (idx === 0) ts.shares = sel.shares;
+                  (m.explain ||= {}).targetSelection = ts;
+                });
+              }
+              merged.forEach((it, i) =>
+                processed.push({ item: it, idx: group[i].idx })
+              );
+            }
+          } else {
+            // No auto-targeting, process all counts together
+            const res = await processBatch(counts.map((c) => c.item), {
+              ...batchOptions,
+              toCurrency: undefined, // Counts don't need currency conversion
+              toMagnitude: "ones",
+            });
+            console.log("DEBUG counts items:", res.successful.map((x) => x.id));
+            const merged = mergeByKey(counts, res.successful);
+            merged.forEach((it, i) =>
+              processed.push({ item: it, idx: counts[i].idx })
+            );
+          }
         }
 
         if (percentages.length > 0) {

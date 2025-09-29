@@ -16,7 +16,20 @@ All notable changes to the econify package will be documented in this file.
     unit
   - Example: Car Registrations with `units: "Thousand"` but value is already the
     actual count
+  - Logs once per indicator (not per item) to reduce verbosity
   - See usage example in documentation
+
+### Fixed
+
+- **Auto-targeting now applies to count indicators**
+  - Count indicators (like Car Registrations) now participate in auto-targeting
+    for magnitude and time dimensions
+  - Previously, counts were processed without auto-targeting, so yearly data
+    wasn't converted to monthly
+  - Now AZE (yearly) will be converted to monthly when majority of countries
+    report monthly
+  - Fixes issue where 1,501,957 units/year wasn't being converted to 125,163
+    units/month
 
 ## [1.1.5] - 2025-09-29
 
