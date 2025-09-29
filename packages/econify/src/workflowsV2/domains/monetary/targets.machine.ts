@@ -76,7 +76,8 @@ export const targetsMachine = setup({
         const currencies = (context.items || []).map((i) => {
           const u = (i as any).unit || "";
           const parsed = parseUnit(u);
-          return (parsed.currency || (i as any).currency_code?.toUpperCase() || undefined);
+          return (parsed.currency || (i as any).currency_code?.toUpperCase() ||
+            undefined);
         });
         const scales = (context.items || []).map((i) =>
           extractScale((i as any).unit || "") || undefined

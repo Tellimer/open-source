@@ -57,14 +57,17 @@ export const monetaryMachine = setup({
 
       if (hasGlobalTargets) {
         const indicatorKeyName = (input.config as any).indicatorKey ?? "name";
-        const targetsMap: Map<string, any> =
-          input.autoTargets instanceof Map
-            ? input.autoTargets
-            : new Map<string, any>(Object.entries(input.autoTargets as Record<string, any>));
+        const targetsMap: Map<string, any> = input.autoTargets instanceof Map
+          ? input.autoTargets
+          : new Map<string, any>(
+            Object.entries(input.autoTargets as Record<string, any>),
+          );
 
         const groups = new Map<string, ParsedData[]>();
         for (const item of input.items) {
-          const key = String((item as any)[indicatorKeyName] || item.name || "");
+          const key = String(
+            (item as any)[indicatorKeyName] || item.name || "",
+          );
           if (!groups.has(key)) groups.set(key, []);
           groups.get(key)!.push(item);
         }
@@ -73,9 +76,11 @@ export const monetaryMachine = setup({
         const results: ParsedData[] = [];
 
         const extractUnitTime = (u: string): string | undefined => {
-          const m = /per\s+(month|quarter|year|week|day|hour)|\/(month|quarter|year|week|day|hour)/i.exec(
-            u,
-          );
+          const m =
+            /per\s+(month|quarter|year|week|day|hour)|\/(month|quarter|year|week|day|hour)/i
+              .exec(
+                u,
+              );
           return (m?.[1] || m?.[2])?.toLowerCase();
         };
 
@@ -85,21 +90,40 @@ export const monetaryMachine = setup({
         const magCounts = new Map<string, number>();
         for (const it of input.items) {
           const parsed = parseUnit((it as any).unit || "");
-          const cur = (parsed.currency || (it as any).currency_code?.toUpperCase() || undefined) as string | undefined;
-          const mag = ((parsed.scale as string | undefined) || ((it as any).scale ? getScale((it as any).scale as any) : undefined)) as string | undefined;
-          if (cur) curCounts.set(cur, (curCounts.get(cur) || 0) + 1);
-          if (mag && mag !== "ones") magCounts.set(mag, (magCounts.get(mag) || 0) + 1);
+          const cur =
+            (parsed.currency || (it as any).currency_code?.toUpperCase() ||
+              undefined) as string | undefined;
+          const mag =
+            ((parsed.scale as string | undefined) || ((it as any).scale
+              ? getScale((it as any).scale as any)
+              : undefined)) as string | undefined;
+          if (cur) {
+            curCounts.set(cur, (curCounts.get(cur) || 0) + 1);
+          }
+          if (mag && mag !== "ones") {
+            magCounts.set(mag, (magCounts.get(mag) || 0) + 1);
+          }
         }
         const topOf = (m: Map<string, number>) => {
-          let k: string | undefined; let c = 0;
-          for (const [kk, vv] of m.entries()) if (vv > c) { k = kk; c = vv; }
+          let k: string | undefined;
+          let c = 0;
+          for (const [kk, vv] of m.entries()) {
+            if (vv > c) {
+              k = kk;
+              c = vv;
+            }
+          }
           const share = totalN > 0 ? c / totalN : 0;
           return { key: k, share };
         };
         const gCur = topOf(curCounts);
         const gMag = topOf(magCounts);
-        const globalCurrency = gCur.key && gCur.share >= threshold ? gCur.key : undefined;
-        const globalMagnitude = gMag.key && gMag.share >= threshold ? (gMag.key as Scale) : undefined;
+        const globalCurrency = gCur.key && gCur.share >= threshold
+          ? gCur.key
+          : undefined;
+        const globalMagnitude = gMag.key && gMag.share >= threshold
+          ? (gMag.key as Scale)
+          : undefined;
 
         for (const [key, items] of groups.entries()) {
           const tg = targetsMap.get(key) as any;
@@ -134,7 +158,8 @@ export const monetaryMachine = setup({
                 indicatorKey: key,
                 selected: {
                   currency: (globalCurrency ?? tg.currency),
-                  magnitude: (globalMagnitude ?? (tg.magnitude as Scale | undefined)),
+                  magnitude:
+                    (globalMagnitude ?? (tg.magnitude as Scale | undefined)),
                   time: resolvedTime,
                 },
                 shares: tg.shares || {},
@@ -145,9 +170,11 @@ export const monetaryMachine = setup({
 
           const out = await normalizeMonetaryBatch(items, {
             isStock: input.isStock,
-            toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
-            toMagnitude: (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ??
-              (input.config.targetMagnitude as Scale | undefined))),
+            toCurrency:
+              (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
+            toMagnitude:
+              (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ??
+                (input.config.targetMagnitude as Scale | undefined))),
             toTimeScale: resolvedTime,
             fx: input.fx,
             explain: (input.config as any)?.explain ?? true,

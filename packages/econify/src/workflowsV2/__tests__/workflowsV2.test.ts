@@ -377,6 +377,57 @@ Deno.test("V2 transitions: auto-target enabled vs disabled (EUR-dominant)", asyn
   }
 });
 
+Deno.test("V2 auto-targeting: cross-country magnitude consistency per indicator", async () => {
+  const config: PipelineConfig = {
+    engine: "v2",
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"] as const,
+    minMajorityShare: 0.6,
+    tieBreakers: {
+      currency: "prefer-USD",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: {} } as any,
+    explain: true,
+  } as PipelineConfig;
+  const pipeline = createPipeline(config);
+  const items = [
+    {
+      id: "ARE_BBS",
+      value: 4.9733,
+      unit: "USD Billion per month",
+      name: "Banks Balance Sheet",
+    },
+    {
+      id: "ALB_BBS",
+      value: 26885.9207729469,
+      unit: "USD Million per month",
+      name: "Banks Balance Sheet",
+    },
+    {
+      id: "AUT_BBS",
+      value: 1354.09,
+      unit: "USD Million per month",
+      name: "Banks Balance Sheet",
+    },
+  ];
+  const result = await pipeline.run(items as any);
+  for (const r of result) {
+    if (String(r.name) !== "Banks Balance Sheet") continue;
+    const u = String(r.normalizedUnit || r.unit || "");
+    if (
+      !u.includes("USD") || !u.toLowerCase().includes("millions") ||
+      !u.toLowerCase().includes("per month")
+    ) {
+      throw new Error(
+        `Expected USD millions per month for all countries; got ${r.normalizedUnit} for ${r.id}`,
+      );
+    }
+  }
+});
+
 Deno.test("V2 transitions: router fan-out/fan-in preserves order across domains", async () => {
   const f = await import("../__fixtures__/indicators-organized.ts");
   const config: PipelineConfig = {
