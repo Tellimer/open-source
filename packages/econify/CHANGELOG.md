@@ -2,6 +2,16 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.3] - 2025-01-29
+
+### Added
+
+- **Export monetary detection utilities** - Export `isMonetaryIndicator` and
+  `isMonetaryUnit` functions from API module
+  - Allows external consumers (like articles project) to detect monetary vs
+    non-monetary data
+  - Enables conditional application of `targetCurrency` based on data type
+
 ## [1.1.2] - 2025-09-29
 
 ### Fixed
