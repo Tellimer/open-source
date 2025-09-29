@@ -2,6 +2,14 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.0.7] - 2025-09-29
+
+### Changed
+
+- Reverted to stable 0.4.1 codebase for production use
+- Removed V2 workflows and experimental features
+- Maintained auto-targeting functionality from 0.4.1
+
 ## [0.4.1] - 2025-09-24
 
 ### Changed
