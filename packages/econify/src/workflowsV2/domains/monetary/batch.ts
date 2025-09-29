@@ -63,7 +63,8 @@ export async function normalizeMonetaryBatch(
       parallel: true,
       toCurrency: options.toCurrency,
       toMagnitude: options.toMagnitude,
-      toTimeScale: undefined, // No time conversion for stocks
+      // Allow time conversion for stocks when provided; we'll strip time suffix later.
+      toTimeScale: options.toTimeScale,
       fx: options.fx,
       explain: options.explain,
     })
@@ -107,10 +108,37 @@ export async function normalizeMonetaryBatch(
     }
   }
 
-  // Map V1 field names to V2 field names
-  return res.successful.map((item: any) => ({
+  // Map V1 field names to V2 field names and enrich periodicity for stocks
+  const mapped = res.successful.map((item: any) => ({
     ...item,
     normalizedValue: item.normalized, // Map V1 'normalized' to V2 'normalizedValue'
     normalizedUnit: item.normalizedUnit, // Pass through normalizedUnit from V1
   })) as ParsedData[];
+
+  if (options.explain) {
+    for (const it of mapped as any[]) {
+      it.explain ||= {};
+      if (options.isStock) {
+        // For stocks, we allow time conversion but keep normalizedUnit free of time suffix.
+        if (typeof it.normalizedUnit === "string") {
+          it.normalizedUnit = it.normalizedUnit.replace(
+            /\s*(per\s+(month|quarter|year|week|day|hour)|\/\s*(month|quarter|year|week|day|hour))\b/gi,
+            "",
+          );
+        }
+        // Only synthesize periodicity explain if processBatch didn't provide one
+        if (!it.explain.periodicity) {
+          const target = options.toTimeScale || "month";
+          it.explain.periodicity = {
+            original: it.periodicity || undefined,
+            target,
+            normalized: target,
+            conversionDirection: "none",
+          } as any;
+        }
+      }
+    }
+  }
+
+  return mapped as ParsedData[];
 }

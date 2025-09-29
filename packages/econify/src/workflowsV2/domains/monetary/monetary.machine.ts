@@ -129,13 +129,15 @@ export const monetaryMachine = setup({
         const timeCounts = new Map<string, number>();
         for (const it of input.items) {
           const u = String((it as any).unit || "").toLowerCase();
-          const t = extractUnitTime(u) || (String((it as any).periodicity || "").toLowerCase() || undefined);
+          const t = extractUnitTime(u) ||
+            (String((it as any).periodicity || "").toLowerCase() || undefined);
           if (t) timeCounts.set(t, (timeCounts.get(t) || 0) + 1);
         }
         const gTime = topOf(timeCounts);
-        const globalTime: TimeScale | undefined = (!input.isStock) && gTime.key && gTime.share >= threshold
-          ? (gTime.key as TimeScale)
-          : undefined;
+        const globalTime: TimeScale | undefined =
+          (!input.isStock) && gTime.key && gTime.share >= threshold
+            ? (gTime.key as TimeScale)
+            : undefined;
 
         for (const [key, items] of groups.entries()) {
           const tg = targetsMap.get(key) as any;
@@ -161,14 +163,17 @@ export const monetaryMachine = setup({
               : ((tg?.time as TimeScale | undefined) ||
                 (input.config.targetTimeScale as TimeScale | undefined) ||
                 input.preferredTime);
-          const resolvedTime: TimeScale | undefined = globalTime ?? resolvedTimeBase;
+          const resolvedTime: TimeScale | undefined = globalTime ??
+            resolvedTimeBase;
 
           if ((input.config as any)?.explain && tg) {
             for (const item of items) {
               (item as any).explain ||= {};
               const baseReason = tg.reason || "global-auto-target";
               const reason = globalTime
-                ? `${baseReason}; time=global-majority(${String(globalTime)},${gTime.share.toFixed(2)})`
+                ? `${baseReason}; time=global-majority(${String(globalTime)},${
+                  gTime.share.toFixed(2)
+                })`
                 : baseReason;
               (item as any).explain.targetSelection = {
                 mode: "auto-by-indicator",
@@ -185,28 +190,119 @@ export const monetaryMachine = setup({
             }
           }
 
-          const out = await normalizeMonetaryBatch(items, {
-            isStock: input.isStock,
-            toCurrency:
-              (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
-            toMagnitude:
-              (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ??
-                (input.config.targetMagnitude as Scale | undefined))),
-            toTimeScale: resolvedTime,
-            fx: input.fx,
-            explain: (input.config as any)?.explain ?? true,
-            fxSource: input.fxSource,
-            fxSourceId: input.fxSourceId,
-          });
+          // If there's a clear global majority for flows, override per-item time to enforce dominance
+          const batchOutputs: ParsedData[] = [];
+          const preferConfigDueToConflict = !globalTime && !input.isStock &&
+            counts.size > 1 && ratio < threshold;
+
+          if (globalTime) {
+            const outAll = await normalizeMonetaryBatch(items, {
+              isStock: input.isStock,
+              toCurrency: (globalCurrency ??
+                (tg?.currency ?? input.config.targetCurrency)),
+              toMagnitude:
+                (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ??
+                  (input.config.targetMagnitude as Scale | undefined))),
+              toTimeScale: globalTime,
+              fx: input.fx,
+              explain: (input.config as any)?.explain ?? true,
+              fxSource: input.fxSource,
+              fxSourceId: input.fxSourceId,
+            });
+            batchOutputs.push(...(outAll as ParsedData[]));
+          } else if (
+            preferConfigDueToConflict && input.config.targetTimeScale
+          ) {
+            const outAll = await normalizeMonetaryBatch(items, {
+              isStock: input.isStock,
+              toCurrency: (globalCurrency ??
+                (tg?.currency ?? input.config.targetCurrency)),
+              toMagnitude:
+                (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ??
+                  (input.config.targetMagnitude as Scale | undefined))),
+              toTimeScale: input.config.targetTimeScale as TimeScale,
+              fx: input.fx,
+              explain: (input.config as any)?.explain ?? true,
+              fxSource: input.fxSource,
+              fxSourceId: input.fxSourceId,
+            });
+            batchOutputs.push(...(outAll as ParsedData[]));
+          } else {
+            // If we have a resolvedTime (from auto-target tie-breaker or config),
+            // unify ALL items to that time scale for flows as well.
+            if (resolvedTime) {
+              const outAll = await normalizeMonetaryBatch(items, {
+                isStock: input.isStock,
+                toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
+                toMagnitude:
+                  (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ?? (input.config.targetMagnitude as Scale | undefined))),
+                toTimeScale: resolvedTime,
+                fx: input.fx,
+                explain: (input.config as any)?.explain ?? true,
+                fxSource: input.fxSource,
+                fxSourceId: input.fxSourceId,
+              });
+              batchOutputs.push(...(outAll as ParsedData[]));
+            } else {
+              // Fallback: Partition by explicit unit time to enforce per-item precedence
+              const byItemTime = new Map<TimeScale, ParsedData[]>();
+              const noTimeItems: ParsedData[] = [];
+              for (const item of items) {
+                const u = String((item as any).unit || "").toLowerCase();
+                const t = extractUnitTime(u) as TimeScale | undefined;
+                if (t) {
+                  const arr = byItemTime.get(t) || [];
+                  arr.push(item);
+                  byItemTime.set(t, arr);
+                } else {
+                  noTimeItems.push(item);
+                }
+              }
+
+              // Items without explicit time: nothing resolved, pass preferred/config
+              if (noTimeItems.length > 0) {
+                const outNoTime = await normalizeMonetaryBatch(noTimeItems, {
+                  isStock: input.isStock,
+                  toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
+                  toMagnitude:
+                    (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ?? (input.config.targetMagnitude as Scale | undefined))),
+                  toTimeScale: resolvedTime,
+                  fx: input.fx,
+                  explain: (input.config as any)?.explain ?? true,
+                  fxSource: input.fxSource,
+                  fxSourceId: input.fxSourceId,
+                });
+                batchOutputs.push(...(outNoTime as ParsedData[]));
+              }
+
+              // Items with explicit unit time: preserve that time per group
+              for (const [itemTime, arr] of byItemTime.entries()) {
+                const outWithTime = await normalizeMonetaryBatch(arr, {
+                  isStock: input.isStock,
+                  toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
+                  toMagnitude:
+                    (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ?? (input.config.targetMagnitude as Scale | undefined))),
+                  // For stocks, do NOT preserve per-item time; normalize to resolvedTime.
+                  toTimeScale: input.isStock ? resolvedTime : itemTime,
+                  fx: input.fx,
+                  explain: (input.config as any)?.explain ?? true,
+                  fxSource: input.fxSource,
+                  fxSourceId: input.fxSourceId,
+                });
+                batchOutputs.push(...(outWithTime as ParsedData[]));
+              }
+            }
+          }
+
           // Stamp explicit domain bucket on each item when explain is enabled
           if ((input.config as any)?.explain) {
             const bucket = input.isStock ? "monetaryStock" : "monetaryFlow";
-            for (const it of out as ParsedData[]) {
+            for (const it of batchOutputs as ParsedData[]) {
               (it as any).explain ||= {};
               (it as any).explain.domain = { bucket };
             }
           }
-          results.push(...(out as ParsedData[]));
+          results.push(...batchOutputs);
         }
 
         return results;
@@ -228,12 +324,41 @@ export const monetaryMachine = setup({
         fxSource: input.fxSource,
         fxSourceId: input.fxSourceId,
       });
-      // Stamp explicit domain bucket on each item when explain is enabled
+      // Stamp explicit domain when explain is enabled
       if ((input.config as any)?.explain) {
         const bucket = input.isStock ? "monetaryStock" : "monetaryFlow";
+        const isWageLike = (name?: string) =>
+          /(\bwage\b|\bwages\b|\bminimum\s*wage\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b)/i
+            .test(name || "");
+        const isAggregateStock = (name?: string) => {
+          const n = name || "";
+          const isMoneySupply =
+            /(\bmoney\s+supply\b|\bmonetary\s+base\b|\bbroad\s+money\b|\bnarrow\s+money\b)/i
+              .test(n);
+          const isReserves =
+            /(\bgross\s+foreign\s+reserves\b|\bnet\s+foreign\s+reserves\b|\bgold\s+reserves\b|\breserves\b)/i
+              .test(n);
+          return isMoneySupply || isReserves;
+        };
+
         for (const it of out as ParsedData[]) {
           (it as any).explain ||= {};
-          (it as any).explain.domain = { bucket };
+          const current = (it as any).explain.domain;
+
+          // Preserve existing explicit string labels if present
+          if (typeof current === "string") continue;
+
+          const name = (it as any).name as string | undefined;
+          if (isWageLike(name)) {
+            // Label wages explicitly for analytics/UX
+            (it as any).explain.domain = "wages";
+          } else if (input.isStock && isAggregateStock(name)) {
+            // Label monetary aggregates explicitly (money supply, debt, reserves)
+            (it as any).explain.domain = "monetary_aggregate";
+          } else {
+            // Default to bucket object for other monetary items
+            (it as any).explain.domain = { bucket };
+          }
         }
       }
       return out as ParsedData[];
@@ -380,7 +505,8 @@ export const monetaryMachine = setup({
               magnitude:
                 (context.config.targetMagnitude as Scale | undefined) ??
                   "millions",
-              time: context.config.targetTimeScale ?? context.preferredTime,
+              // Time precedence: units (preferredTime) > config targetTimeScale
+              time: context.preferredTime ?? context.config.targetTimeScale,
             }),
           }),
           always: { target: "done" },

@@ -30,6 +30,11 @@ const matchers = {
     /(\bwage\b|\bwages\b|\bminimum\s*wage\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b)/i
       .test(name),
 
+  // Explicit Balance of Trade recognition (textbook semantics: flow)
+  // Note: We intentionally treat both "balance of trade" and "trade balance"
+  // as flow indicators consistent with standard macroeconomics.
+  // This can later be moved to a configurable dictionary if overrides are needed.
+  isBalanceOfTrade: (name: string) => /\b(balance\s+of\s+trade)\b/i.test(name),
   // Check if it's a monetary stock indicator (regardless of time scale)
   isMonetaryStock: (name: string) => {
     // First check for M0/M1/M2 money supply patterns (no word boundary before M[012])
@@ -236,6 +241,11 @@ export function bucketForItem(item: ParsedData): BucketKey {
       },
       () => "commodities",
     )
+    // Balance of Trade: treat as flow (textbook semantics) irrespective of unit time tokens
+    .when(
+      ({ name }) => matchers.isBalanceOfTrade(name),
+      () => "monetaryFlow",
+    )
     // Check for monetary flows first (currency with time component)
     .when(
       ({ parsed, unitLower }) => {
@@ -262,14 +272,8 @@ export function bucketForItem(item: ParsedData): BucketKey {
       ({ parsed, itemName }) => {
         // Wages are always flow
         if (matchers.isWageLike(itemName || "")) return "monetaryFlow";
-        // Trade flows, FDI, remittances etc are always flows
+        // Trade flows (exports/imports etc), FDI, remittances etc are flows
         if (matchers.isMonetaryFlow(itemName || "")) return "monetaryFlow";
-
-        // Special handling for GDP: treat as flow if it has periodicity (for auto-targeting)
-        // This allows GDP with periodicity to get time normalization
-        if (itemName && /gdp/i.test(itemName) && item.periodicity) {
-          return "monetaryFlow";
-        }
 
         // Money supply, debt, assets are always stock
         if (matchers.isMonetaryStock(itemName || "")) return "monetaryStock";

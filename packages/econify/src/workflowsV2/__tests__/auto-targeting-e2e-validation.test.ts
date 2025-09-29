@@ -383,15 +383,50 @@ Deno.test("E2E Auto-Targeting: Explain metadata validation", async () => {
   console.log("✅ Explain metadata validation test passed");
 });
 
-
 Deno.test("E2E Auto-Targeting: Global monthly dominance forces monthly (flows)", async () => {
   const data: ParsedData[] = [
-    { id: "c1", value: 100, unit: "USD millions per month", name: "Trade Balance", country_iso: "USA" },
-    { id: "c2", value: 120, unit: "USD millions per month", name: "Trade Balance", country_iso: "GBR" },
-    { id: "c3", value: 90, unit: "USD millions per month", name: "Trade Balance", country_iso: "DEU" },
-    { id: "c4", value: 80, unit: "USD millions per month", name: "Trade Balance", country_iso: "FRA" },
-    { id: "c5", value: 110, unit: "USD millions per month", name: "Trade Balance", country_iso: "JPN" },
-    { id: "c6", value: 300, unit: "USD millions per quarter", name: "Trade Balance", country_iso: "ARE" },
+    {
+      id: "c1",
+      value: 100,
+      unit: "USD millions per month",
+      name: "Trade Balance",
+      country_iso: "USA",
+    },
+    {
+      id: "c2",
+      value: 120,
+      unit: "USD millions per month",
+      name: "Trade Balance",
+      country_iso: "GBR",
+    },
+    {
+      id: "c3",
+      value: 90,
+      unit: "USD millions per month",
+      name: "Trade Balance",
+      country_iso: "DEU",
+    },
+    {
+      id: "c4",
+      value: 80,
+      unit: "USD millions per month",
+      name: "Trade Balance",
+      country_iso: "FRA",
+    },
+    {
+      id: "c5",
+      value: 110,
+      unit: "USD millions per month",
+      name: "Trade Balance",
+      country_iso: "JPN",
+    },
+    {
+      id: "c6",
+      value: 300,
+      unit: "USD millions per quarter",
+      name: "Trade Balance",
+      country_iso: "ARE",
+    },
   ];
 
   const result = await processEconomicData(data, {
@@ -411,12 +446,48 @@ Deno.test("E2E Auto-Targeting: Global monthly dominance forces monthly (flows)",
 
 Deno.test("E2E Auto-Targeting: Global quarterly dominance forces quarterly (flows)", async () => {
   const data: ParsedData[] = [
-    { id: "q1", value: 300, unit: "USD millions per quarter", name: "Trade Balance", country_iso: "USA" },
-    { id: "q2", value: 240, unit: "USD millions per quarter", name: "Trade Balance", country_iso: "GBR" },
-    { id: "q3", value: 210, unit: "USD millions per quarter", name: "Trade Balance", country_iso: "DEU" },
-    { id: "q4", value: 180, unit: "USD millions per quarter", name: "Trade Balance", country_iso: "FRA" },
-    { id: "q5", value: 260, unit: "USD millions per quarter", name: "Trade Balance", country_iso: "JPN" },
-    { id: "m1", value: 100, unit: "USD millions per month", name: "Trade Balance", country_iso: "ARE" },
+    {
+      id: "q1",
+      value: 300,
+      unit: "USD millions per quarter",
+      name: "Trade Balance",
+      country_iso: "USA",
+    },
+    {
+      id: "q2",
+      value: 240,
+      unit: "USD millions per quarter",
+      name: "Trade Balance",
+      country_iso: "GBR",
+    },
+    {
+      id: "q3",
+      value: 210,
+      unit: "USD millions per quarter",
+      name: "Trade Balance",
+      country_iso: "DEU",
+    },
+    {
+      id: "q4",
+      value: 180,
+      unit: "USD millions per quarter",
+      name: "Trade Balance",
+      country_iso: "FRA",
+    },
+    {
+      id: "q5",
+      value: 260,
+      unit: "USD millions per quarter",
+      name: "Trade Balance",
+      country_iso: "JPN",
+    },
+    {
+      id: "m1",
+      value: 100,
+      unit: "USD millions per month",
+      name: "Trade Balance",
+      country_iso: "ARE",
+    },
   ];
 
   const result = await processEconomicData(data, {

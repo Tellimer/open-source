@@ -108,14 +108,14 @@ Deno.test("Balance of Trade E2E - Complete Dataset Auto-Targeting", async () => 
   });
 
   assertEquals(
-    domainCounts.monetaryStock || 0,
+    domainCounts.monetaryFlow || 0,
     18,
-    "All Balance of Trade should classify as monetaryStock (balance/position)",
+    "All Balance of Trade should classify as monetaryFlow (exports-imports over a period)",
   );
   assertEquals(
-    domainCounts.monetaryFlow || 0,
+    domainCounts.monetaryStock || 0,
     0,
-    "Balance of Trade should not classify as flow (it's a position/balance)",
+    "Balance of Trade should not classify as stock (it's not a point-in-time level)",
   );
 
   // === AUTO-TARGETING VALIDATION ===
