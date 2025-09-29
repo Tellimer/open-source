@@ -19,15 +19,15 @@ All notable changes to the econify package will be documented in this file.
 
 ### 🧭 Classification
 
-- Balance of Trade classification clarified:
-  - "Balance of Trade" is treated as a monetaryStock (position) irrespective of
-    unit time tokens
-  - "Trade Balance" remains a monetaryFlow, preserving time-dominance tests
-- Implemented a minimal explicit matcher for the exact phrase "balance of trade"
-  and removed it from the generic flow matcher to avoid brittle overlaps
-- Mixed-periodicity Balance of Trade normalization now consistently targets the
-  resolved time basis (e.g., month) while keeping stock units clean (no "per
-  <time>")
+- Balance of Trade is a monetaryFlow (exports − imports over a period; textbook semantics)
+  - Explicit phrase matcher for “balance of trade”; “Trade Balance” also remains a monetaryFlow
+- Mixed‑periodicity flow normalization: when a time target resolves (majority or tie‑break), flows are unified to that time basis (e.g., month). Stocks remain time‑less (no "per <time>").
+
+### 🧹 Taxonomy low‑risk fixes
+
+- Fixed regex word boundaries in energy/agriculture/infrastructure matchers (removed stray control chars)
+- Moved agriculture checks before counts and guarded against count‑like units (e.g., unit “farms”, “cattle”, “heads”, “livestock”) so they route to counts, preserving normalization to ones
+- Removed redundant late “wages are always flow” fallback (already handled earlier in monetary flow logic)
 
 ### 🧪 Tests
 
