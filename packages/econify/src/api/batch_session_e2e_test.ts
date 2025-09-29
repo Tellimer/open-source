@@ -249,7 +249,7 @@ Deno.test("E2E: Verify monetary indicators still work with currency conversion",
         // The normalized value should be different from original due to FX conversion
         if (indicator.unit.includes("EUR")) {
           // EUR to USD should divide by 1.1
-          const expectedRange = testData[0].value / 1.1;
+          const _expectedRange = testData[0].value / 1.1;
           // Allow for some tolerance due to magnitude scaling
           console.log(
             `   Converted EUR value: ${firstItem.normalized} (original: ${
