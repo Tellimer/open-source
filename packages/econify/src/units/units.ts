@@ -402,6 +402,7 @@ export const COUNT_PATTERNS: UnitPattern[] = [
   },
   { pattern: /persons?/i, category: "population", normalized: "persons" },
   { pattern: /people/i, category: "population", normalized: "people" },
+  { pattern: /number/i, category: "count", normalized: "number" }, // World Bank uses "Number" for population
   { pattern: /doses?/i, category: "count", normalized: "doses" },
   { pattern: /units?(?!\s+of)/i, category: "count", normalized: "units" },
   { pattern: /dwellings?/i, category: "count", normalized: "dwellings" },

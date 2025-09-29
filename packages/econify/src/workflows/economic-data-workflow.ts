@@ -622,13 +622,20 @@ export const pipelineMachine = setup({
               const res = await processBatch(grpItems, {
                 ...batchOptions,
                 toCurrency: undefined, // Counts don't need currency conversion
-                toMagnitude: (sel?.magnitude as Scale | undefined) ?? "ones",
-                toTimeScale: sel?.time ?? batchOptions.toTimeScale,
+                // Explicit targets take precedence over auto-targeting
+                toMagnitude: batchOptions.toMagnitude ??
+                  (sel?.magnitude as Scale | undefined) ?? "ones",
+                toTimeScale: batchOptions.toTimeScale ?? sel?.time,
               });
               const merged = mergeByKey(group, res.successful);
               // Attach explain.targetSelection when requested
               if (config.explain && sel) {
                 merged.forEach((m, idx) => {
+                  // Use actual values (explicit takes precedence over auto-targeted)
+                  const actualMagnitude = batchOptions.toMagnitude ??
+                    (sel.magnitude as Scale | undefined) ?? "ones";
+                  const actualTime = batchOptions.toTimeScale ?? sel.time;
+
                   const ts: NonNullable<
                     ParsedData["explain"]
                   >["targetSelection"] = {
@@ -636,8 +643,8 @@ export const pipelineMachine = setup({
                     indicatorKey: key,
                     selected: {
                       currency: sel.currency,
-                      magnitude: sel.magnitude as Scale | undefined,
-                      time: sel.time,
+                      magnitude: actualMagnitude,
+                      time: actualTime,
                     },
                     reason: sel.reason ??
                       (sel.currency || sel.magnitude || sel.time
@@ -813,24 +820,32 @@ export const pipelineMachine = setup({
               const grpItems = group.map((g) => g.item);
               const res = await processBatch(grpItems, {
                 ...batchOptions,
-                toCurrency: sel?.currency ?? batchOptions.toCurrency,
-                toMagnitude: (sel?.magnitude as Scale | undefined) ??
-                  batchOptions.toMagnitude,
-                toTimeScale: sel?.time ?? batchOptions.toTimeScale,
+                // Explicit targets take precedence over auto-targeting
+                toCurrency: batchOptions.toCurrency ?? sel?.currency,
+                toMagnitude: batchOptions.toMagnitude ??
+                  (sel?.magnitude as Scale | undefined),
+                toTimeScale: batchOptions.toTimeScale ?? sel?.time,
               });
               const merged = mergeByKey(group, res.successful);
               // Attach explain.targetSelection when requested
               if (config.explain && sel) {
                 merged.forEach((m, idx) => {
+                  // Use actual values (explicit takes precedence over auto-targeted)
+                  const actualCurrency = batchOptions.toCurrency ??
+                    sel.currency;
+                  const actualMagnitude = batchOptions.toMagnitude ??
+                    (sel.magnitude as Scale | undefined);
+                  const actualTime = batchOptions.toTimeScale ?? sel.time;
+
                   const ts: NonNullable<
                     ParsedData["explain"]
                   >["targetSelection"] = {
                     mode: "auto-by-indicator",
                     indicatorKey: key,
                     selected: {
-                      currency: sel.currency,
-                      magnitude: sel.magnitude as Scale | undefined,
-                      time: sel.time,
+                      currency: actualCurrency,
+                      magnitude: actualMagnitude,
+                      time: actualTime,
                     },
                     reason: sel.reason ??
                       (sel.currency || sel.magnitude || sel.time

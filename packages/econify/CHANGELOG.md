@@ -2,6 +2,39 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.7] - 2025-09-29
+
+### Fixed
+
+- **Count indicators now return data**: Added "Number" to COUNT_PATTERNS so
+  World Bank population data is properly classified
+- **Explicit targets take precedence**: `targetMagnitude`, `targetCurrency`, and
+  `targetTimeScale` now override auto-targeting
+- **Index indicators properly labeled**: Added dedicated index handling to
+  preserve "index" in normalized units
+- **Time conversion warnings eliminated**: Added "Annual" support to
+  `normalizeTimeScale()` and `parseTimeScale()`
+- **Explain metadata accuracy**: Explain now shows actual values used (explicit
+  targets) instead of auto-targeted values
+
+### Added
+
+- **Comprehensive E2E tests**: 9 real-world test cases covering:
+  - Monetary flows (GDP, Current Account Balance)
+  - Stocks/counts (Population)
+  - Percentages (Unemployment, Inflation, Corporate Tax Rate)
+  - Indexes (CPI, Stock Market)
+  - Points (Business Confidence)
+- **E2E_TEST_FINDINGS.md**: Detailed documentation of issues found and fixed
+
+### Changed
+
+- Auto-targeting now respects explicit configuration:
+  `batchOptions.toMagnitude ?? auto.magnitude` instead of
+  `auto.magnitude ?? batchOptions.toMagnitude`
+- Explain metadata reflects actual processing decisions, not just auto-targeting
+  suggestions
+
 ## [1.1.6] - 2025-09-29
 
 ### Added

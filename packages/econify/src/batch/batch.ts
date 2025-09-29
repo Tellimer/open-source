@@ -40,6 +40,7 @@ function normalizeTimeScale(periodicity?: string | null): TimeScale | null {
   const normalized = periodicity.toLowerCase().trim();
   switch (normalized) {
     case "yearly":
+    case "annual":
       return "year";
     case "quarterly":
       return "quarter";
@@ -387,9 +388,13 @@ function processItem<T extends BatchItem>(
     // Build normalized unit string
     let normalizedUnit: string;
     const isPercentage = parsed.category === "percentage";
+    const isIndex = parsed.category === "index";
     if (isPercentage) {
       // Preserve percentage unit exactly; no currency, magnitude, or time scale applied
       normalizedUnit = "%";
+    } else if (isIndex) {
+      // Preserve index label - indexes are dimensionless but should be labeled as such
+      normalizedUnit = parsed.normalized || "index";
     } else if (isCountData) {
       const scale = targetMagnitude ?? "ones";
       normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
