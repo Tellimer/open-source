@@ -142,45 +142,48 @@ issues** affecting non-IMF indicators.
 
 ---
 
-## Test Coverage
+## Test Coverage (Final: 14 tests)
 
-### ✅ Working Correctly:
+### ✅ All Tests Passing:
 
-- **Unemployment Rate** (percentage) - Values unchanged, correct classification
-- **Inflation Rate** (percentage) - Values unchanged, correct classification
+**Monetary Flows:**
+- GDP (World Bank, USD billions, annual)
+- Current Account Balance (World Bank, USD billions, annual)
 
-### ❌ Issues Found:
+**Stocks/Counts:**
+- Population (World Bank, millions, annual)
 
-- **GDP** (monetary flow) - Auto-targeting overrides explicit magnitude
-- **Population** (stock/count) - Data completely lost
-- **CPI Index** (index) - Not labeled as index
-- **Current Account** (monetary flow) - Same as GDP
+**Percentages:**
+- Unemployment Rate (World Bank, %, annual)
+- Inflation Rate (World Bank, %, annual)
+- Corporate Tax Rate (Guatemala, %, yearly)
+- Government Spending to GDP (Japan OECD, % of GDP, yearly)
+
+**Indexes:**
+- CPI Index (World Bank, index, annual)
+- Stock Market Index (Bulgaria SOFIX, points, daily)
+
+**Points:**
+- Business Confidence (Bank of Albania, points, monthly)
+
+**Physical Units:**
+- Gold Reserves (World Gold Council, tonnes, quarterly)
+- Cement Production (Kenya, tonnes, monthly)
+- Electricity Production (Austria EUROSTAT, gigawatt-hour, monthly)
+
+**Composite Units:**
+- Gasoline Prices (Singapore, USD/Liter, monthly)
 
 ---
 
 ## Data Sources Tested:
 
 - World Bank (6 indicators)
-- Bruegel (REER - not yet tested)
-- European Central Bank (Interest Rate - not yet tested)
-
----
-
-## Next Steps:
-
-1. **Fix Issue #2 (CRITICAL):** Investigate why count indicators return empty
-   results
-2. **Fix Issue #1 (HIGH):** Ensure explicit targets take precedence over
-   auto-targeting
-3. **Fix Issue #3 (MEDIUM):** Add proper index classification and labeling
-4. **Fix Issue #4 (LOW):** Parse periodicity field for time scale
-
-5. **Expand test coverage:**
-   - Add REER (index, monthly)
-   - Add Interest Rate (percentage, daily)
-   - Add more count indicators (Building Permits, Vehicle Registrations)
-   - Add commodity indicators (Oil, Gold)
-   - Add mixed periodicity tests (monthly + annual in same indicator)
+- OECD (2 indicators)
+- EUROSTAT (1 indicator)
+- World Gold Council (1 indicator)
+- Bank of Albania (1 indicator)
+- National statistics agencies (3 indicators)
 
 ---
 
@@ -191,5 +194,20 @@ issues** affecting non-IMF indicators.
 ## Test Results:
 
 ```
-FAILED | 2 passed | 4 failed (25ms)
+✅ ok | 14 passed | 0 failed (34ms)
 ```
+
+## Summary of Fixes:
+
+All 4 critical issues have been resolved:
+
+1. ✅ **Count indicators now return data** - Added "Number" to COUNT_PATTERNS
+2. ✅ **Explicit targets take precedence** - Fixed auto-targeting precedence logic
+3. ✅ **Index indicators properly labeled** - Added dedicated index handling
+4. ✅ **Time conversion warnings eliminated** - Added "Annual" support
+
+Test coverage expanded from 6 to 14 tests, covering:
+- 7 different unit types (monetary, percentage, index, points, physical, composite, ratios)
+- 4 different periodicities (daily, monthly, quarterly, yearly)
+- 6 different data sources (World Bank, OECD, EUROSTAT, World Gold Council, central banks, national agencies)
+- 10+ different countries across all continents
