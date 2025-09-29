@@ -237,3 +237,69 @@ Deno.test("specialHandling: no match, no override applied", async () => {
   assertEquals(result.data[0].unit, "USD Million");
   assertEquals(result.data[0].value, 100);
 });
+
+Deno.test("specialHandling: with auto-targeting, overrides apply before auto-targeting", async () => {
+  const data: ParsedData[] = [
+    {
+      id: "ARG",
+      name: "Car Registrations",
+      value: 51766,
+      unit: "Thousand", // Will be overridden to Units
+      scale: "Thousands",
+      periodicity: "Monthly",
+    },
+    {
+      id: "AUS",
+      name: "Car Registrations",
+      value: 16245,
+      unit: "Units",
+      periodicity: "Monthly",
+    },
+    {
+      id: "AZE",
+      name: "Car Registrations",
+      value: 1501957,
+      unit: "Units",
+      periodicity: "Yearly",
+    },
+  ];
+
+  const result = await processEconomicData(data, {
+    specialHandling: {
+      unitOverrides: [
+        {
+          indicatorNames: ["Car Registrations"],
+          overrideUnit: "Units",
+          overrideScale: null,
+          reason: "Database stores 'Thousand' as label, not scale factor",
+        },
+      ],
+    },
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["magnitude", "time"],
+    indicatorKey: "name",
+    minMajorityShare: 0.5,
+    tieBreakers: {
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    explain: true,
+  });
+
+  // ARG should NOT be scaled (override prevents it)
+  assertEquals(result.data[0].normalized, 51766);
+
+  // AUS should remain unchanged
+  assertEquals(result.data[1].normalized, 16245);
+
+  // AZE should be converted from yearly to monthly (auto-targeting)
+  // 1,501,957 ÷ 12 = 125,163.08333...
+  assertEquals(Math.round(result.data[2].normalized!), 125163);
+
+  // Check that auto-targeting detected "ones" as majority (not "thousands")
+  const explain = result.data[0].explain;
+  if (explain?.targetSelection) {
+    assertEquals(explain.targetSelection.selected.magnitude, "ones");
+    assertEquals(explain.targetSelection.selected.time, "month");
+  }
+});
