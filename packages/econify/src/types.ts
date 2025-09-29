@@ -27,6 +27,7 @@ export type Scale =
   | "hundreds"
   | "thousands"
   | "millions"
+  | "hundred-millions" // 100 million (Chinese 亿, yi)
   | "billions"
   | "trillions";
 

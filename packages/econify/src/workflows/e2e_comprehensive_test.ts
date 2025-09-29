@@ -1696,3 +1696,516 @@ Deno.test("E2E: Wages with FX Rates - Currency & Time Conversion", async () => {
     assertEquals(item.explain?.periodicity?.target, "month");
   });
 });
+
+Deno.test("E2E: CPI Index Values - Extreme Values Processed as Counts", async () => {
+  // REAL ISSUE: CPI index values with extreme magnitudes (10k+, millions)
+  // These are index/points values that are currently processed as "counts"
+  // NOTE: excludeIndexValues only works for wages, not general pipeline
+  // RECOMMENDATION: Use exemptions to exclude CPI/index indicators
+  const data: ParsedData[] = [
+    // Bulgaria CPI - 10,076 points (not rebased to 100)
+    {
+      id: "BULGARIACONPRIINDCPI_BGR_2025_08",
+      name: "Consumer Price Index CPI",
+      value: 10076.2,
+      unit: "points",
+      scale: undefined,
+      periodicity: "Monthly",
+      date: "2025-08-31",
+      metadata: {
+        country_iso: "BGR",
+        source: "National Statistical Institute, Bulgaria",
+      },
+    },
+    // South Sudan CPI Transportation - 2.8 million points (hyperinflation, not rebased)
+    {
+      id: "SOUTHSUDACPITRA_SSD_2024_06",
+      name: "CPI Transportation",
+      value: 2810349.21,
+      unit: "points",
+      scale: undefined,
+      periodicity: "Monthly",
+      date: "2024-06-30",
+      metadata: {
+        country_iso: "SSD",
+        source: "National Bureau of Statistics, South Sudan",
+      },
+    },
+    // World Bank CPI (properly rebased to 100)
+    {
+      id: "FP.CPI.TOTL_BGR_2024",
+      name: "Consumer price index (2010 = 100)",
+      value: 155.381,
+      unit: "Index, 2010=100",
+      scale: undefined,
+      periodicity: "Annual",
+      date: "2024",
+      metadata: { country_iso: "BGR", source: "World Bank" },
+    },
+  ];
+
+  // Test 1: Without exemptions - index values are processed as counts
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    indicatorKey: "name",
+    explain: true,
+  });
+
+  // Currently, index/points values are processed (not excluded)
+  assertEquals(result.data.length, 3);
+
+  // Values remain unchanged (no currency conversion for counts)
+  assertEquals(result.data[0].normalized, 10076.2);
+  assertEquals(result.data[1].normalized, 2810349.21);
+  assertEquals(result.data[2].normalized, 155.381);
+
+  // Units are preserved
+  assertEquals(result.data[0].normalizedUnit, "points");
+  assertEquals(result.data[1].normalizedUnit, "points");
+  assert(result.data[2].normalizedUnit?.toLowerCase().includes("index"));
+
+  // Test 2: With exemptions - exclude CPI indicators
+  const resultExempted = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    indicatorKey: "name",
+    explain: true,
+    exemptions: {
+      indicatorNames: ["Consumer Price Index CPI", "CPI Transportation", "Consumer price index"],
+    },
+  });
+
+  // With exemptions, CPI indicators should be excluded from normalization
+  // but still returned in the results (as exempted items)
+  assertEquals(resultExempted.data.length, 3);
+
+  // Exempted items should have original values
+  assertEquals(resultExempted.data[0].normalized, undefined);
+  assertEquals(resultExempted.data[1].normalized, undefined);
+  assertEquals(resultExempted.data[2].normalized, undefined);
+});
+
+Deno.test("E2E: Government Debt - Currency Mislabeling (JMD labeled as USD)", async () => {
+  // REAL ISSUE: Jamaica Government Debt is 2,242,379 "USD Million"
+  // But this is actually JMD (Jamaican Dollar), not USD!
+  // Jamaica's GDP is ~$16B USD, so $2.2 trillion debt is impossible
+  // Actual debt is ~JMD 2.2 trillion = ~USD 14B (reasonable for 87% debt-to-GDP)
+
+  const data: ParsedData[] = [
+    // Jamaica - MISLABELED as USD Million (actually JMD Million)
+    {
+      id: "JAMAICAGOVDEB_JAM_2025_07",
+      name: "Government Debt",
+      value: 2242378.97,
+      unit: "USD Million", // ❌ WRONG - should be JMD Million
+      scale: "Millions",
+      periodicity: "Monthly",
+      date: "2025-07-31",
+      metadata: { country_iso: "JAM", source: "Bank of Jamaica" },
+    },
+  ];
+
+  // Test 1: With the mislabeled unit (USD Million)
+  const resultMislabeled = await processEconomicDataByIndicator(data, {
+    targetCurrency: "USD",
+    targetMagnitude: "billions",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+  });
+
+  // With mislabeled unit, it would convert to billions
+  // 2,242,378.97 million → 2,242.38 billion (WRONG - too high!)
+  assertEquals(Math.round(resultMislabeled.data[0].normalized!), 2242);
+  assertEquals(resultMislabeled.data[0].normalizedUnit, "USD billions");
+
+  // Test 2: With correct currency (JMD Million)
+  const dataCorrect: ParsedData[] = [
+    {
+      id: "JAMAICAGOVDEB_JAM_2025_07_CORRECTED",
+      name: "Government Debt",
+      value: 2242378.97,
+      unit: "JMD Million", // ✅ CORRECT
+      scale: "Millions",
+      periodicity: "Monthly",
+      date: "2025-07-31",
+      metadata: { country_iso: "JAM", source: "Bank of Jamaica" },
+    },
+  ];
+
+  const fxRates = {
+    base: "USD",
+    rates: {
+      JMD: 157.5, // Jamaican Dollar to USD rate
+    },
+  };
+
+  const resultCorrect = await processEconomicDataByIndicator(dataCorrect, {
+    targetCurrency: "USD",
+    targetMagnitude: "billions",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: fxRates,
+  });
+
+  // With correct currency: 2,242,378.97 JMD million ÷ 157.5 = 14,237 USD million = 14.24 USD billion
+  // This is reasonable for Jamaica (GDP ~$16B, debt-to-GDP ~87%)
+  assertEquals(Math.round(resultCorrect.data[0].normalized!), 14);
+  assertEquals(resultCorrect.data[0].normalizedUnit, "USD billions");
+
+  // Verify explain metadata shows the FX conversion
+  assertExists(resultCorrect.data[0].explain);
+  assertExists(resultCorrect.data[0].explain?.fx);
+  assertEquals(resultCorrect.data[0].explain?.fx?.currency, "JMD");
+  assertEquals(resultCorrect.data[0].explain?.fx?.rate, 157.5);
+});
+
+Deno.test("E2E: Consumer Spending - Currency Normalization (XOF, MXN)", async () => {
+  // REAL ISSUE: Consumer Spending values look like LCY millions needing currency conversion
+  // BFA: 6,297,940 XOF Billion (West African CFA Franc)
+  // MEX: 18,177,881 MXN Million (Mexican Peso)
+
+  const data: ParsedData[] = [
+    // Burkina Faso - XOF Billion
+    {
+      id: "BURKINAFACONSPE_BFA_2024",
+      name: "Consumer Spending",
+      value: 6297940,
+      unit: "XOF Billion",
+      scale: "Billions",
+      periodicity: "Yearly",
+      date: "2024-12-31",
+      metadata: {
+        country_iso: "BFA",
+        source: "Central Bank of West African States (BCEAO)",
+      },
+    },
+    // Mexico - MXN Million
+    {
+      id: "MEXICOCONSPE_MEX_2024_Q3",
+      name: "Consumer Spending",
+      value: 18177881.125,
+      unit: "MXN Million",
+      scale: "Millions",
+      periodicity: "Quarterly",
+      date: "2024-09-30",
+      metadata: {
+        country_iso: "MEX",
+        source: "Instituto Nacional de Estadística y Geografía (INEGI)",
+      },
+    },
+  ];
+
+  const fxRates = {
+    base: "USD",
+    rates: {
+      XOF: 600, // West African CFA Franc to USD
+      MXN: 20, // Mexican Peso to USD
+    },
+  };
+
+  const result = await processEconomicDataByIndicator(data, {
+    targetCurrency: "USD",
+    targetMagnitude: "billions",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: fxRates,
+  });
+
+  assertEquals(result.data.length, 2);
+
+  // BFA: 6,297,940 XOF billion ÷ 600 = 10,496.57 USD billion
+  const bfaResult = result.data.find((d) => d.metadata?.country_iso === "BFA");
+  assertExists(bfaResult);
+  assertEquals(Math.round(bfaResult.normalized!), 10497);
+  assertEquals(bfaResult.normalizedUnit, "USD billions");
+
+  // MEX: 18,177,881 MXN million ÷ 20 = 908,894 USD million = 908.89 USD billion
+  const mexResult = result.data.find((d) => d.metadata?.country_iso === "MEX");
+  assertExists(mexResult);
+  assertEquals(Math.round(mexResult.normalized!), 909);
+  assertEquals(mexResult.normalizedUnit, "USD billions");
+
+  // Verify explain metadata
+  assertExists(bfaResult.explain?.fx);
+  assertEquals(bfaResult.explain?.fx?.currency, "XOF");
+  assertEquals(bfaResult.explain?.fx?.rate, 600);
+
+  assertExists(mexResult.explain?.fx);
+  assertEquals(mexResult.explain?.fx?.currency, "MXN");
+  assertEquals(mexResult.explain?.fx?.rate, 20);
+});
+
+Deno.test("E2E: GDP Level Series - Magnitude and Unit Confusion", async () => {
+  // REAL ISSUE: GDP values with confusing magnitude labels
+  // CHN: "CNY Hundred Million" - is this millions or hundred millions?
+  // BRA: "BRL Million" for GDP components
+  // These need proper magnitude detection and normalization
+
+  const data: ParsedData[] = [
+    // China - CNY Hundred Million (confusing unit!)
+    {
+      id: "CHINAGDPCONPRI_CHN_2025_Q2",
+      name: "GDP Constant Prices",
+      value: 630101,
+      unit: "CNY Hundred Million",
+      scale: "Millions", // Database says "Millions" but unit says "Hundred Million"!
+      periodicity: "Quarterly",
+      date: "2025-06-30",
+      metadata: {
+        country_iso: "CHN",
+        source: "National Bureau of Statistics of China",
+      },
+    },
+    // Brazil - BRL Million (GDP component)
+    {
+      id: "BRAZILGDPFROSER_BRA_2022_Q1",
+      name: "GDP from Services",
+      value: 184515.235,
+      unit: "BRL Million",
+      scale: "Millions",
+      periodicity: "Quarterly",
+      date: "2022-03-31",
+      metadata: {
+        country_iso: "BRA",
+        source: "Instituto Brasileiro de Geografia e Estatística (IBGE)",
+      },
+    },
+    // India - INR Billion (for comparison)
+    {
+      id: "INDIAGDP_IND_2024",
+      name: "GDP",
+      value: 326057.5,
+      unit: "INR Billion",
+      scale: "Billions",
+      periodicity: "Yearly",
+      date: "2024-12-31",
+      metadata: {
+        country_iso: "IND",
+        source: "Ministry of Statistics",
+      },
+    },
+  ];
+
+  const fxRates = {
+    base: "USD",
+    rates: {
+      CNY: 7.2,
+      BRL: 5.0,
+      INR: 83.0,
+    },
+  };
+
+  // Test with auto-targeting (should detect dominant magnitude)
+  const resultAuto = await processEconomicDataByIndicator(data, {
+    targetCurrency: "USD",
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["magnitude"],
+    indicatorKey: "name",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: fxRates,
+  });
+
+  assertEquals(resultAuto.data.length, 3);
+
+  // Test with explicit target magnitude (billions)
+  const resultExplicit = await processEconomicDataByIndicator(data, {
+    targetCurrency: "USD",
+    targetMagnitude: "billions",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: fxRates,
+  });
+
+  assertEquals(resultExplicit.data.length, 3);
+
+  // CHN: 630,101 CNY hundred million = 63,010,100 CNY million ÷ 7.2 = 8,751,402 USD million = 8,751 USD billion
+  // FIXED: Parser now correctly recognizes "hundred million" and overrides database scale field
+  const chnResult = resultExplicit.data.find((d) => d.metadata?.country_iso === "CHN");
+  assertExists(chnResult);
+  assertEquals(Math.round(chnResult.normalized!), 8751); // ✅ Correct!
+  assertEquals(chnResult.normalizedUnit, "USD billions");
+
+  // BRA: 184,515 BRL million ÷ 5.0 = 36,903 USD million = 36.9 USD billion
+  const braResult = resultExplicit.data.find((d) => d.metadata?.country_iso === "BRA");
+  assertExists(braResult);
+  assertEquals(Math.round(braResult.normalized!), 37);
+  assertEquals(braResult.normalizedUnit, "USD billions");
+
+  // IND: 326,057.5 INR billion ÷ 83.0 = 3,928 USD billion
+  const indResult = resultExplicit.data.find((d) => d.metadata?.country_iso === "IND");
+  assertExists(indResult);
+  assertEquals(Math.round(indResult.normalized!), 3928);
+  assertEquals(indResult.normalizedUnit, "USD billions");
+
+  // Verify FX conversions in explain
+  assertExists(chnResult.explain?.fx);
+  assertExists(braResult.explain?.fx);
+  assertExists(indResult.explain?.fx);
+});
+
+Deno.test("E2E: Government Revenue - Extreme Magnitude Values (IRN)", async () => {
+  // REAL ISSUE: Iran Government Revenue with 10¹¹–10¹⁵ magnitude
+  // Value: 127,649,242.695 "National currency" "Billions"
+  // This is IRR (Iranian Rial) billions = 127.6 trillion IRR
+  // With IRR/USD ~600,000, this = ~$213 billion (reasonable for Iran)
+
+  const data: ParsedData[] = [
+    {
+      id: "GGR_IRN_2030",
+      name: "General government revenue",
+      value: 127649242.695,
+      unit: "National currency",
+      scale: "Billions",
+      periodicity: "Biannually",
+      date: "2030",
+      metadata: {
+        country_iso: "IRN",
+        source: "IMFWEO",
+      },
+    },
+  ];
+
+  // Test 1: Without currency specification (should detect as IRR)
+  const resultNoCurrency = await processEconomicDataByIndicator(data, {
+    targetMagnitude: "billions",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+  });
+
+  assertEquals(resultNoCurrency.data.length, 1);
+  // Without FX, value stays in billions: 127,649,242.695 billion
+  assertEquals(Math.round(resultNoCurrency.data[0].normalized!), 127649243);
+
+  // Test 2: With proper currency detection and FX rates
+  const dataWithCurrency: ParsedData[] = [
+    {
+      id: "GGR_IRN_2030_CORRECTED",
+      name: "General government revenue",
+      value: 127649242.695,
+      unit: "IRR Billion", // Explicit currency
+      scale: "Billions",
+      periodicity: "Biannually",
+      date: "2030",
+      metadata: {
+        country_iso: "IRN",
+        source: "IMFWEO",
+      },
+    },
+  ];
+
+  const fxRates = {
+    base: "USD",
+    rates: {
+      IRR: 600000, // Iranian Rial to USD (highly devalued)
+    },
+  };
+
+  const resultWithFX = await processEconomicDataByIndicator(dataWithCurrency, {
+    targetCurrency: "USD",
+    targetMagnitude: "billions",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: fxRates,
+  });
+
+  assertEquals(resultWithFX.data.length, 1);
+  // 127,649,242.695 IRR billion ÷ 600,000 = 212,749 USD billion = 212.7 trillion USD
+  // Wait, that's wrong! The value should be: 127,649,242.695 billion IRR ÷ 600,000 = 212.75 billion USD
+  assertEquals(Math.round(resultWithFX.data[0].normalized!), 213);
+  assertEquals(resultWithFX.data[0].normalizedUnit, "USD billions");
+
+  assertExists(resultWithFX.data[0].explain?.fx);
+  assertEquals(resultWithFX.data[0].explain?.fx?.currency, "IRR");
+  assertEquals(resultWithFX.data[0].explain?.fx?.rate, 600000);
+});
+
+Deno.test("E2E: GDP per Capita - Scale Factor Issues", async () => {
+  // ISSUE: Boss mentioned ISL 0.0048295 and QAT 0.0051824 (near-zero values)
+  // These values suggest missing ×1,000 or ×1,000,000 scale factors
+  // Simulating the issue with hypothetical data
+
+  const data: ParsedData[] = [
+    // Iceland - hypothetical near-zero value (should be ~$90k)
+    {
+      id: "GDPPC_ISL_WRONG",
+      name: "GDP per Capita",
+      value: 0.0048295,
+      unit: "USD", // Missing "Thousand" or "Million"
+      scale: undefined,
+      periodicity: "Annual",
+      date: "2024",
+      metadata: {
+        country_iso: "ISL",
+        source: "Hypothetical",
+      },
+    },
+    // Qatar - hypothetical near-zero value (should be ~$80k)
+    {
+      id: "GDPPC_QAT_WRONG",
+      name: "GDP per Capita",
+      value: 0.0051824,
+      unit: "USD",
+      scale: undefined,
+      periodicity: "Annual",
+      date: "2024",
+      metadata: {
+        country_iso: "QAT",
+        source: "Hypothetical",
+      },
+    },
+    // Correct values for comparison
+    {
+      id: "GDPPC_ISL_CORRECT",
+      name: "GDP per Capita",
+      value: 91269.298,
+      unit: "USD",
+      scale: "Units",
+      periodicity: "Annual",
+      date: "2024",
+      metadata: {
+        country_iso: "ISL",
+        source: "IMFWEO",
+      },
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    targetCurrency: "USD",
+    targetMagnitude: "ones",
+    autoTargetByIndicator: false,
+    indicatorKey: "name",
+    explain: true,
+  });
+
+  assertEquals(result.data.length, 3);
+
+  // Wrong values stay near-zero (no scale factor applied)
+  const islWrong = result.data.find((d) => d.id === "GDPPC_ISL_WRONG");
+  assertExists(islWrong);
+  assert(islWrong.normalized! < 1, "Near-zero value should stay near-zero without scale factor");
+
+  const qatWrong = result.data.find((d) => d.id === "GDPPC_QAT_WRONG");
+  assertExists(qatWrong);
+  assert(qatWrong.normalized! < 1, "Near-zero value should stay near-zero without scale factor");
+
+  // Correct value is properly scaled
+  const islCorrect = result.data.find((d) => d.id === "GDPPC_ISL_CORRECT");
+  assertExists(islCorrect);
+  assertEquals(Math.round(islCorrect.normalized!), 91269);
+  assertEquals(islCorrect.normalizedUnit, "USD");
+
+  // NOTE: The fix would require:
+  // 1. Database correction: Add proper scale ("Thousand" or "Million") to unit field
+  // 2. OR: Use specialHandling.unitOverrides to correct specific indicators
+  // 3. OR: Add validation rules to detect implausible GDP per capita values
+});

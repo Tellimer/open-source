@@ -132,6 +132,7 @@ export type Scale =
   | "hundreds"
   | "thousands"
   | "millions"
+  | "hundred-millions" // 100 million (Chinese 亿, yi)
   | "billions"
   | "trillions";
 
@@ -140,6 +141,7 @@ export const SCALE_MAP: Record<Scale, number> = {
   hundreds: 1e2,
   thousands: 1e3,
   millions: 1e6,
+  "hundred-millions": 1e8, // 100 million (Chinese 亿, yi)
   billions: 1e9,
   trillions: 1e12,
 };
@@ -147,6 +149,8 @@ export const SCALE_MAP: Record<Scale, number> = {
 export const SCALE_TOKENS: Array<[Scale, RegExp]> = [
   ["trillions", /\btrill?i?on?s?\b|\btn\b/i],
   ["billions", /\bbill?i?on?s?\b|\bbn\b/i],
+  // IMPORTANT: "hundred million" must come BEFORE "million" pattern
+  ["hundred-millions", /\bhundred\s+mill?i?on?s?\b/i],
   ["millions", /\bmill?i?on?s?\b|\bmn\b|\bmio\b/i],
   ["thousands", /\bthou?sand?s?\b|\bk\b|\b000s\b/i],
   ["hundreds", /\bhundreds?\b/i],

@@ -242,6 +242,13 @@ export const MAGNITUDE_PATTERNS: UnitPattern[] = [
     category: "currency",
     scale: "billions",
   },
+  // IMPORTANT: "hundred million" must come BEFORE "million" pattern
+  // This is the Chinese unit 亿 (yi) = 100 million
+  {
+    pattern: /\bhundred\s+mill?i?on?s?\b/i,
+    category: "currency",
+    scale: "hundred-millions",
+  },
   {
     pattern: /\bmill?i?on?s?\b|\bmn\b|\bmio\b/i,
     category: "currency",

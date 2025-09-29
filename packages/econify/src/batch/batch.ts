@@ -360,7 +360,13 @@ function processItem<T extends BatchItem>(
     // Normalize explicit metadata to match expected types
     const effectiveCurrency = normalizeCurrency(item.currency_code) ||
       parsed.currency;
-    const effectiveScale = normalizeScale(item.scale) || parsed.scale;
+
+    // SPECIAL CASE: If unit text contains "hundred million", prefer parsed scale over database scale
+    // This handles Chinese accounting units (亿, yi = 100 million) where database may incorrectly say "Millions"
+    const effectiveScale = parsed.scale === "hundred-millions"
+      ? parsed.scale
+      : (normalizeScale(item.scale) || parsed.scale);
+
     const effectiveTimeScale = normalizeTimeScale(item.periodicity) ||
       parsed.timeScale;
 
