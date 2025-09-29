@@ -379,6 +379,12 @@ export const pipelineMachine = setup({
             isCountIndicator(item.name, item.unit) ||
             isCountUnit(item.unit || "")
           ) {
+            console.log(
+              "DEBUG classified as counts:",
+              item.id,
+              item.name,
+              item.unit,
+            );
             counts.push(entry);
             continue;
           }
@@ -390,23 +396,36 @@ export const pipelineMachine = setup({
           }
 
           // Non-monetary units (temperature, distance, points, etc.)
+          // Use canonical parse to detect currency presence (CURRENCY_CODES-backed)
+          const hasCurrency = !!parsed.currency;
+
           const nonMonetaryPatterns = [
-            /(celsius|fahrenheit|kelvin|°[cfk])/i, // Temperature
-            /(mm|cm|m|km|millimeter|centimeter|meter|kilometer)/i, // Distance
-            /(points?|index)/i, // Index/Points
-            /^(thousand|million|billion|trillion)$/i, // Scale without currency
-            /(tons?|kg|kilogram|gram|lbs?|pounds?)/i, // Weight
-            /(liters?|gallons?)/i, // Volume
-            /(units?|items?|people|persons?)/i, // Generic units
+            /(celsius|fahrenheit|kelvin|°[cfk])/i, // Temperature
+            /(mm|cm|m|km|millimeter|centimeter|meter|kilometer)/i, // Distance
+            /(points?|index)/i, // Index/Points
+            /(tons?|kg|kilogram|gram|lbs?|pounds?)/i, // Weight
+            /(liters?|gallons?)/i, // Volume
+            /(units?|items?|people|persons?)/i, // Generic units
+            /(percent|%)/i, // Percentages (backup check)
           ];
 
-          const isNonMonetary = nonMonetaryPatterns.some((pattern) =>
-            pattern.test(unitLower)
-          ) &&
-            !/(usd|eur|gbp|jpy|cny|cad|aud|chf|dollar|euro|pound|yen|yuan)/i
-              .test(unitLower);
+          // If it contains scale words without currency, it's non-monetary
+          const hasScaleNoCurrency =
+            /(thousand|million|billion|trillion)/i.test(unitLower) &&
+            !hasCurrency;
+
+          const isNonMonetary = hasScaleNoCurrency ||
+            (nonMonetaryPatterns.some((pattern) => pattern.test(unitLower)) &&
+              !hasCurrency);
 
           if (isNonMonetary) {
+            console.log(
+              "DEBUG classified as non-monetary -> counts:",
+              item.id,
+              item.name,
+              item.unit,
+              { hasCurrency, unitLower },
+            );
             counts.push(entry); // Process as counts (no currency conversion)
             continue;
           }
@@ -477,6 +496,7 @@ export const pipelineMachine = setup({
             toCurrency: undefined, // Counts don't need currency conversion
             toMagnitude: "ones",
           });
+          console.log("DEBUG counts items:", res.successful.map((x) => x.id));
           const merged = mergeByKey(counts, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: counts[i].idx })
@@ -491,6 +511,10 @@ export const pipelineMachine = setup({
               toCurrency: undefined, // Percentages don't need currency conversion
             },
           );
+          console.log(
+            "DEBUG percentages items:",
+            res.successful.map((x) => x.id),
+          );
           const merged = mergeByKey(percentages, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: percentages[i].idx })
@@ -504,6 +528,10 @@ export const pipelineMachine = setup({
             toMagnitude: undefined,
             toTimeScale: undefined,
           });
+          console.log(
+            "DEBUG emissions items:",
+            res.successful.map((x) => x.id),
+          );
           const merged = mergeByKey(emissions, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: emissions[i].idx })
@@ -517,6 +545,7 @@ export const pipelineMachine = setup({
             toMagnitude: undefined,
             toTimeScale: undefined,
           });
+          console.log("DEBUG energy items:", res.successful.map((x) => x.id));
           const merged = mergeByKey(energy, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: energy[i].idx })
@@ -530,6 +559,10 @@ export const pipelineMachine = setup({
             toMagnitude: undefined,
             toTimeScale: undefined,
           });
+          console.log(
+            "DEBUG commodities items:",
+            res.successful.map((x) => x.id),
+          );
           const merged = mergeByKey(commodities, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: commodities[i].idx })
@@ -543,6 +576,10 @@ export const pipelineMachine = setup({
             toMagnitude: undefined,
             toTimeScale: undefined,
           });
+          console.log(
+            "DEBUG agriculture items:",
+            res.successful.map((x) => x.id),
+          );
           const merged = mergeByKey(agriculture, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: agriculture[i].idx })
@@ -556,6 +593,7 @@ export const pipelineMachine = setup({
             toMagnitude: undefined,
             toTimeScale: undefined,
           });
+          console.log("DEBUG metals items:", res.successful.map((x) => x.id));
           const merged = mergeByKey(metals, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: metals[i].idx })
@@ -643,7 +681,15 @@ export const pipelineMachine = setup({
           } else {
             const res = await processBatch(
               defaults.map((d) => d.item),
-              batchOptions,
+              { ...batchOptions, toCurrency: config.targetCurrency },
+            );
+            console.log(
+              "DEBUG defaults normalized:",
+              res.successful.map((x) => ({
+                id: x.id,
+                normalized: x.normalized,
+                unit: x.normalizedUnit,
+              })),
             );
             const merged = mergeByKey(defaults, res.successful);
             merged.forEach((it, i) =>

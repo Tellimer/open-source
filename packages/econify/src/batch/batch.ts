@@ -4,7 +4,7 @@
 
 import { normalizeValue } from "../normalization/normalization.ts";
 import { buildExplainMetadata } from "../normalization/explain.ts";
-import { parseUnit } from "../units/units.ts";
+import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import { getScale } from "../scale/scale.ts";
@@ -71,10 +71,12 @@ function normalizeTimeScale(periodicity?: string | null): TimeScale | null {
 
 /**
  * Normalize currency code from database
+ * - Only accept known ISO currency codes; otherwise treat as non-monetary (null)
  */
 function normalizeCurrency(currency?: string | null): string | null {
   if (!currency || currency.trim() === "") return null;
-  return currency.trim().toUpperCase();
+  const code = currency.trim().toUpperCase();
+  return CURRENCY_CODES.has(code) ? code : null;
 }
 
 export interface BatchItem {

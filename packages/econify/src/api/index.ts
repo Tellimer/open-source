@@ -28,3 +28,9 @@ export type {
   AutoTargetOptions,
   AutoTargets,
 } from "../normalization/auto_targets.ts";
+
+// Export monetary detection utilities
+export {
+  isMonetaryIndicator,
+  isMonetaryUnit,
+} from "../utils/monetary_detection.ts";

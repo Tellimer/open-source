@@ -10,7 +10,7 @@ import {
   rescaleMagnitude,
   rescaleTime,
 } from "../scale/scale.ts";
-import { parseUnit } from "../units/units.ts";
+import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 
 // ----------------------- Combined Normalization -----------------------
@@ -186,7 +186,11 @@ export function normalizeValue(
   let result = value;
 
   // Use explicit fields if provided, otherwise fall back to parsed values
-  const effectiveCurrency = options?.explicitCurrency || parsed.currency;
+  const effectiveCurrencyRaw = options?.explicitCurrency || parsed.currency;
+  const effectiveCurrency = effectiveCurrencyRaw &&
+      CURRENCY_CODES.has(effectiveCurrencyRaw.toUpperCase())
+    ? effectiveCurrencyRaw.toUpperCase()
+    : null;
   // Fallback to getScale when parsed.scale is missing so magnitude normalization always works
   const effectiveScale = options?.explicitScale || parsed.scale ||
     getScale(unitText);
