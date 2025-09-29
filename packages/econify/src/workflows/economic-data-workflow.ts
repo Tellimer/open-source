@@ -21,6 +21,7 @@ import { processWagesData } from "../services/wages-service.ts";
 import { processBatch } from "../batch/batch.ts";
 import { filterExemptions } from "../exemptions/exemptions.ts";
 import { computeAutoTargets } from "../normalization/auto_targets.ts";
+import type { IndicatorKeyResolver } from "../normalization/auto_targets.ts";
 
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 
@@ -90,8 +91,9 @@ export interface PipelineConfig {
 
   // Auto-target by indicator (additive, off by default)
   autoTargetByIndicator?: boolean;
-  /** Grouping key for indicator series (default: 'name') */
-  indicatorKey?: "name";
+  /** Grouping key for indicator series (default: 'name');
+   *  You can also supply a resolver function to derive the key from the row. */
+  indicatorKey?: IndicatorKeyResolver;
   /** Dimensions to auto-target (default: currency+magnitude+time) */
   autoTargetDimensions?: Array<"currency" | "magnitude" | "time">;
   /** Minimum share required to select a majority value (default: 0.5) */
@@ -552,7 +554,20 @@ export const pipelineMachine = setup({
               { item: ParsedData; idx: number }[]
             >();
             for (const entry of defaults) {
-              const key = String(entry.item.name ?? "");
+              const item = entry.item;
+              const key = (typeof config.indicatorKey === "function")
+                ? (config.indicatorKey as (d: ParsedData) => string)(item)
+                : String(
+                  item.name ??
+                    (item.metadata as Record<string, unknown> | undefined)
+                      ?.["indicator_name"] ??
+                    (item.metadata as Record<string, unknown> | undefined)
+                      ?.["indicatorId"] ??
+                    (item.metadata as Record<string, unknown> | undefined)
+                      ?.["indicator_id"] ??
+                    (item.id ?? ""),
+                );
+              if (!key) continue;
               const list = groups.get(key) ?? [];
               list.push(entry);
               groups.set(key, list);

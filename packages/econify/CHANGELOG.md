@@ -2,6 +2,30 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.0.8] - 2025-09-29
+
+### Fixed
+
+- Auto-targeting grouped rows too narrowly by `item.name`, leading to per-row
+  time selections (e.g., quarterly/yearly) instead of the indicator-wide
+  dominant time basis.
+  - Now resolves indicator keys with sensible fallbacks: `name` →
+    `metadata.indicator_name` → `metadata.indicator_id|indicatorId` → `id`.
+  - Ensures the dominant time scale is selected across the entire indicator and
+    applied consistently.
+
+### Changed
+
+- `PipelineConfig.indicatorKey` now accepts a resolver function to derive
+  grouping keys, enabling custom grouping while remaining backward compatible
+  (default still uses `name`).
+- Explain `targetSelection` continues to show per-indicator `shares`,
+  `selected`, and `reason` reflecting the true indicator-wide majority.
+
+### Tests
+
+- Full econify test suite passes (362 tests) after the fix.
+
 ## [1.0.7] - 2025-09-29
 
 ### Changed

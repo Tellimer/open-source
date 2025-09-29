@@ -45,8 +45,24 @@ function resolveKey(
   d: ParsedData,
   r: IndicatorKeyResolver | undefined,
 ): string {
-  if (!r || r === "name") return String(d.name ?? "");
-  return r(d);
+  // If a resolver function is provided, use it
+  if (r && r !== "name") return r(d);
+  // Default: try common indicator identifiers with sensible fallbacks
+  const nameVal = d.name != null && String(d.name).trim() !== ""
+    ? String(d.name)
+    : (typeof (d.metadata as Record<string, unknown> | undefined)
+        ?.["indicator_name"] === "string"
+      ? String((d.metadata as Record<string, unknown>)?.["indicator_name"])
+      : undefined);
+  if (nameVal) return nameVal;
+  const meta = d.metadata as Record<string, unknown> | undefined;
+  const idCandidate =
+    (typeof meta?.["indicator_id"] === "string"
+      ? (meta?.["indicator_id"] as string)
+      : (typeof meta?.["indicatorId"] === "string"
+        ? (meta?.["indicatorId"] as string)
+        : undefined)) ?? (d.id != null ? String(d.id) : undefined);
+  return idCandidate ?? "";
 }
 
 function isMonetary(d: ParsedData): boolean {
