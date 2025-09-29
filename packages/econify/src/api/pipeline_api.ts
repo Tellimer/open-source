@@ -25,6 +25,8 @@ export interface PipelineResult {
     recordsFailed: number;
     qualityScore?: number;
   };
+  // Optional per-indicator target selections and shares to avoid per-item duplication
+  targetSelectionsByIndicator?: Record<string, NonNullable<ParsedData["explain"]>["targetSelection"]>;
 }
 
 /**
