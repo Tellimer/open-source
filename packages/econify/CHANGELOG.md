@@ -2,6 +2,18 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.1] - 2025-09-29
+
+### Fixed
+
+- **Non-monetary indicator handling** - Fixed "No FX rate available" errors for
+  non-monetary units
+  - Added automatic detection of non-monetary indicators (percentages, points,
+    temperature, etc.)
+  - EconifyBatchSession now skips currency conversion for non-monetary data
+  - Prevents conversion attempts for units like %, POINTS, CELSIUS, MM, etc.
+  - Maintains backward compatibility for monetary data (USD, EUR, etc.)
+
 ## [1.1.0] - 2025-09-29
 
 ### Added

@@ -5,7 +5,11 @@
  * ensuring that all countries are normalized to the same time scale and magnitude.
  */
 
-import { EconifyBatchSession, type ParsedData } from "../src/main.ts";
+import {
+  EconifyBatchSession,
+  type ParsedData,
+  type PipelineOptions,
+} from "../src/main.ts";
 
 // Example function showing how the consuming app should be refactored
 interface TempIndicatorData {
@@ -13,6 +17,119 @@ interface TempIndicatorData {
   indicator_id: string;
   countries: Record<string, unknown[]>;
   rowData: Map<string, Record<string, unknown>>;
+}
+
+/**
+ * Determines if a unit string represents a monetary value that needs currency conversion
+ */
+function isMonetaryUnit(unitString: string): boolean {
+  if (!unitString) return false;
+
+  const upperUnit = unitString.toUpperCase();
+
+  // Check for non-monetary units that should NOT be converted
+  const nonMonetaryUnits = [
+    "%",
+    "PERCENT",
+    "PERCENTAGE",
+    "POINTS",
+    "POINT",
+    "INDEX",
+    "CELSIUS",
+    "FAHRENHEIT",
+    "KELVIN",
+    "MM",
+    "CM",
+    "M",
+    "KM",
+    "MILLIMETER",
+    "CENTIMETER",
+    "METER",
+    "KILOMETER",
+    "THOUSAND",
+    "MILLION",
+    "BILLION",
+    "TRILLION", // When used alone without currency
+    "TONS",
+    "TON",
+    "KG",
+    "KILOGRAM",
+    "GRAM",
+    "BARREL",
+    "BARRELS",
+    "BBL",
+    "UNITS",
+    "UNIT",
+  ];
+
+  // If unit contains any non-monetary indicator, don't convert
+  for (const nonMonetary of nonMonetaryUnits) {
+    if (upperUnit.includes(nonMonetary)) {
+      // Special case: Check if it's actually a currency amount (e.g., "USD MILLION")
+      const currencyCodes = [
+        "USD",
+        "EUR",
+        "GBP",
+        "JPY",
+        "CNY",
+        "CAD",
+        "AUD",
+        "CHF",
+      ];
+      const hasCurrency = currencyCodes.some((code) =>
+        upperUnit.includes(code)
+      );
+
+      // If it has scale words (thousand, million, etc.) but no currency, it's not monetary
+      if (
+        ["THOUSAND", "MILLION", "BILLION", "TRILLION"].includes(nonMonetary) &&
+        !hasCurrency
+      ) {
+        return false;
+      }
+
+      // For other non-monetary units, always return false
+      if (
+        !["THOUSAND", "MILLION", "BILLION", "TRILLION"].includes(nonMonetary)
+      ) {
+        return false;
+      }
+    }
+  }
+
+  // Check for currency codes
+  const commonCurrencies = [
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY",
+    "CNY",
+    "CAD",
+    "AUD",
+    "CHF",
+    "SEK",
+    "NOK",
+    "DKK",
+    "NZD",
+    "SGD",
+    "HKD",
+    "KRW",
+    "ZAR",
+    "INR",
+    "BRL",
+    "RUB",
+    "MXN",
+    "DOLLAR",
+    "EURO",
+    "POUND",
+    "YEN",
+    "YUAN",
+    "RUPEE",
+    "REAL",
+    "PESO",
+  ];
+
+  return commonCurrencies.some((currency) => upperUnit.includes(currency));
 }
 
 export async function normalizeGroupedIndicatorWithEconify(
@@ -32,9 +149,43 @@ export async function normalizeGroupedIndicatorWithEconify(
     return processed;
   }
 
+  // First, scan through data points to determine if this indicator is monetary
+  let isMonetaryIndicator = false;
+  for (const [countryISO, dataPoints] of Object.entries(indicator.countries)) {
+    if ((dataPoints as unknown[]).length === 0) continue;
+
+    const metaRow = indicator.rowData.get(countryISO);
+    const unitsRaw = (metaRow?.units || "").trim();
+    const scale = (metaRow?.scale || "").trim();
+    const periodicity = (metaRow?.periodicity || "").trim();
+    const extractedCurrency = unitsRaw.split("/")[0].split(" ")[0];
+    const currency = (metaRow?.currency_code || extractedCurrency || "").trim();
+
+    let unitString = unitsRaw;
+    if (
+      currency && !unitString.toUpperCase().startsWith(currency.toUpperCase())
+    ) {
+      unitString = unitString ? `${currency} ${unitString}` : currency;
+    }
+    if (scale && !unitString.toLowerCase().includes(scale.toLowerCase())) {
+      unitString = unitString ? `${unitString} ${scale}` : scale;
+    }
+    if (
+      periodicity &&
+      !unitString.toLowerCase().includes(periodicity.toLowerCase())
+    ) {
+      unitString = unitString ? `${unitString} ${periodicity}` : periodicity;
+    }
+    if (!unitString) unitString = "USD";
+
+    if (isMonetaryUnit(unitString)) {
+      isMonetaryIndicator = true;
+      break;
+    }
+  }
+
   // Create a batch session for this indicator
-  const session = new EconifyBatchSession({
-    targetCurrency: "USD",
+  const sessionOptions: PipelineOptions = {
     autoTargetByIndicator: true,
     autoTargetDimensions: ["magnitude", "time"],
     indicatorKey: "name",
@@ -49,7 +200,14 @@ export async function normalizeGroupedIndicatorWithEconify(
     useLiveFX: false,
     fxFallback: { base: "USD", rates: fxRates, dates: opts.fxDates || {} },
     explain: true,
-  });
+  };
+
+  // Only set targetCurrency for monetary indicators
+  if (isMonetaryIndicator) {
+    sessionOptions.targetCurrency = "USD";
+  }
+
+  const session = new EconifyBatchSession(sessionOptions);
 
   // Collect ALL countries' data points into the batch
   const countryMap = new Map<

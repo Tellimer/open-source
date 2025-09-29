@@ -1,10 +1,11 @@
-import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 import {
   type AutoTargets,
   computeAutoTargets,
 } from "../normalization/auto_targets.ts";
 import { processEconomicData } from "./pipeline_api.ts";
 import type { PipelineOptions, PipelineResult } from "./pipeline_api.ts";
+import type { ParsedData } from "../workflows/economic-data-workflow.ts";
+import { isMonetaryIndicator } from "../utils/monetary_detection.ts";
 
 /**
  * Batch processing session for accumulating data points and processing them together
@@ -55,8 +56,36 @@ export class EconifyBatchSession {
       throw new Error("No data points to process");
     }
 
+    // Detect if this is monetary data and adjust options accordingly
+    const processOptions = { ...this.options };
+
+    // Only apply targetCurrency if:
+    // 1. It was explicitly set in options, AND
+    // 2. The data is actually monetary
+    if (processOptions.targetCurrency) {
+      const isMonetary = isMonetaryIndicator(this.dataPoints);
+
+      if (!isMonetary) {
+        // Remove targetCurrency for non-monetary data to prevent conversion errors
+        console.warn(
+          `Removing targetCurrency "${processOptions.targetCurrency}" for non-monetary indicator "${
+            this.indicatorName || "unknown"
+          }"`,
+        );
+        delete processOptions.targetCurrency;
+
+        // Also exclude currency from auto-target dimensions if it was included
+        if (processOptions.autoTargetDimensions?.includes("currency")) {
+          processOptions.autoTargetDimensions = processOptions
+            .autoTargetDimensions.filter(
+              (d) => d !== "currency",
+            );
+        }
+      }
+    }
+
     // Process all data points together
-    const result = await processEconomicData(this.dataPoints, this.options);
+    const result = await processEconomicData(this.dataPoints, processOptions);
 
     // Clear the batch after processing
     this.dataPoints = [];
