@@ -2,6 +2,34 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.4] - 2025-09-29
+
+### Added
+
+- Group-level auto-target selections on API result:
+  `PipelineResult.targetSelectionsByIndicator`
+  - Contains per-indicator `selected`, `shares`, and `reason` so consumers can
+    read distributions once per indicator
+
+### Changed
+
+- Avoid per-item duplication of `targetSelection.shares` in indicator-batch
+  results
+  - Items still include `targetSelection.selected` and `reason`, but `shares`
+    are moved to the group-level map
+- Normalized currency keys in auto-target shares to canonical ISO 4217 uppercase
+  (e.g., `AWG`, `USD`, `EUR`)
+  - Filters out non-currency tokens to prevent malformed keys
+
+### Improved
+
+- Align FX rate display precision in explain metadata: `explain.fx.rate` rounded
+  to 6 decimals for consistency with conversion factors
+
+### QA
+
+- Lint clean and full test suite passing
+
 ## [1.1.3] - 2025-01-29
 
 ### Added

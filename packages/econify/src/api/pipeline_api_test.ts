@@ -1013,12 +1013,16 @@ Deno.test("auto-target explain: targetSelection details present", async () => {
     if (!reason.includes("time=tie-break(")) {
       throw new Error("expected reason to include time=tie-break(...)");
     }
-    // Shares sanity: we expect approximately > 0.5 for USD and millions; time may be selected via tie-breaker
-    const s = ts.shares;
-    if (!((s?.currency?.USD ?? 0) > 0.5)) {
+  }
+  // Shares sanity: they are available at least once per indicator group
+  const withShares = res.data.find((d) => d.explain?.targetSelection?.shares);
+  if (!withShares) throw new Error("expected at least one item with shares");
+  {
+    const s = withShares.explain!.targetSelection!.shares!;
+    if (!((s.currency?.USD ?? 0) > 0.5)) {
       throw new Error("expected USD share > 0.5");
     }
-    if (!((s?.magnitude?.millions ?? 0) > 0.5)) {
+    if (!((s.magnitude?.millions ?? 0) > 0.5)) {
       throw new Error("expected millions share > 0.5");
     }
   }
