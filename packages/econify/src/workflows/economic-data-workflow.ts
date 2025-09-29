@@ -389,6 +389,28 @@ export const pipelineMachine = setup({
             continue;
           }
 
+          // Non-monetary units (temperature, distance, points, etc.)
+          const nonMonetaryPatterns = [
+            /(celsius|fahrenheit|kelvin|°[cfk])/i, // Temperature
+            /(mm|cm|m|km|millimeter|centimeter|meter|kilometer)/i, // Distance
+            /(points?|index)/i, // Index/Points
+            /^(thousand|million|billion|trillion)$/i, // Scale without currency
+            /(tons?|kg|kilogram|gram|lbs?|pounds?)/i, // Weight
+            /(liters?|gallons?)/i, // Volume
+            /(units?|items?|people|persons?)/i, // Generic units
+          ];
+
+          const isNonMonetary = nonMonetaryPatterns.some((pattern) =>
+            pattern.test(unitLower)
+          ) &&
+            !/(usd|eur|gbp|jpy|cny|cad|aud|chf|dollar|euro|pound|yen|yuan)/i
+              .test(unitLower);
+
+          if (isNonMonetary) {
+            counts.push(entry); // Process as counts (no currency conversion)
+            continue;
+          }
+
           defaults.push(entry);
         }
 
@@ -452,6 +474,7 @@ export const pipelineMachine = setup({
         if (counts.length > 0) {
           const res = await processBatch(counts.map((c) => c.item), {
             ...batchOptions,
+            toCurrency: undefined, // Counts don't need currency conversion
             toMagnitude: "ones",
           });
           const merged = mergeByKey(counts, res.successful);
@@ -463,7 +486,10 @@ export const pipelineMachine = setup({
         if (percentages.length > 0) {
           const res = await processBatch(
             percentages.map((p) => p.item),
-            batchOptions,
+            {
+              ...batchOptions,
+              toCurrency: undefined, // Percentages don't need currency conversion
+            },
           );
           const merged = mergeByKey(percentages, res.successful);
           merged.forEach((it, i) =>
