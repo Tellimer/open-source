@@ -673,7 +673,8 @@ export const pipelineMachine = setup({
                         ? "majority/tie-break"
                         : "none"),
                   };
-                  // Include distribution shares only on the first item of the indicator group to avoid duplication
+                  // Include distribution shares only on the first item of the indicator group
+                  // (processEconomicDataByIndicator will collect and strip these for group-level access)
                   if (idx === 0) ts.shares = sel.shares;
                   (m.explain ||= {}).targetSelection = ts;
                 });

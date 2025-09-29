@@ -169,12 +169,15 @@ export async function processEconomicDataByIndicator(
       const result = await processEconomicData(items, options);
 
       // Derive per-indicator target selection (take from the first item that has it)
+      // We need to deep-copy it before stripping shares from items
       const firstWithSelection = result.data.find((d) =>
         d.explain?.targetSelection
       );
       if (firstWithSelection?.explain?.targetSelection) {
-        targetSelectionsByIndicator[indicator] =
-          firstWithSelection.explain.targetSelection;
+        // Deep copy to preserve shares at group level
+        targetSelectionsByIndicator[indicator] = JSON.parse(
+          JSON.stringify(firstWithSelection.explain.targetSelection),
+        );
       }
 
       // Strip shares from item-level explain to avoid duplication; they are available in targetSelectionsByIndicator

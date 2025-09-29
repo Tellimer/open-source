@@ -195,3 +195,57 @@ Deno.test("EconifyBatchSession - clear() removes all data", () => {
 
   assertEquals(session.size(), 0);
 });
+
+Deno.test("processEconomicDataByIndicator - shares stripped from items and available at group level", async () => {
+  const data: ParsedData[] = [
+    { id: "AUS", value: 11027, unit: "USD Million", name: "Balance of Trade" },
+    { id: "AUT", value: 365.1, unit: "EUR Million", name: "Balance of Trade" },
+    {
+      id: "AZE",
+      value: 2445459.7,
+      unit: "USD Thousand per quarter",
+      name: "Balance of Trade",
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    minMajorityShare: 0.5,
+    indicatorKey: "name",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+    targetCurrency: "USD",
+    explain: true,
+    useLiveFX: false,
+    fxFallback: { base: "USD", rates: { EUR: 0.8511 } },
+  });
+
+  // Verify shares are NOT on individual items
+  for (const d of result.data) {
+    const ts = d.explain?.targetSelection;
+    assertExists(ts, "targetSelection should exist");
+    assertEquals(ts.shares, undefined, "shares should NOT be on items");
+  }
+
+  // Verify shares ARE available at group level
+  assertExists(
+    result.targetSelectionsByIndicator,
+    "targetSelectionsByIndicator should exist",
+  );
+  const botSelection = result.targetSelectionsByIndicator["balance of trade"];
+  assertExists(botSelection, "Balance of Trade selection should exist");
+  assertExists(botSelection.shares, "shares should exist at group level");
+  assertExists(botSelection.shares.currency, "currency shares should exist");
+  assertExists(botSelection.shares.magnitude, "magnitude shares should exist");
+  assertExists(botSelection.shares.time, "time shares should exist");
+
+  // Verify share values are reasonable
+  const usdShare = botSelection.shares.currency.USD ?? 0;
+  assertEquals(usdShare > 0.5, true, "USD share should be > 0.5");
+  const millionsShare = botSelection.shares.magnitude.millions ?? 0;
+  assertEquals(millionsShare > 0.5, true, "millions share should be > 0.5");
+});
