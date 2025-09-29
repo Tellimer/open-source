@@ -237,6 +237,36 @@ export const monetaryMachine = setup({
               targets,
             );
 
+            // Decide time with unit precedence within this batch
+            // If any item has a time token in its unit, prefer the mode of unit time tokens
+            // BUT only if it is dominant (>= 0.8). Otherwise, fall back to global auto-target
+            // selection, then pipeline config, then inferred preferred time.
+            const unitTimes = (context.items || [])
+              .map((i) => (i.unit || "").toLowerCase())
+              .map((u) =>
+                /per\s+(month|quarter|year|week|day|hour)|\/(month|quarter|year|week|day|hour)/i
+                  .exec(u)?.[1] || (/\/(month|quarter|year|week|day|hour)/i.exec(u)?.[1])
+              )
+              .filter(Boolean) as string[];
+
+            const { bestUnitTime, bestUnitRatio } = (() => {
+              const counts = new Map<string, number>();
+              for (const t of unitTimes) counts.set(t, (counts.get(t) || 0) + 1);
+              let best: string | undefined;
+              let bestCount = 0;
+              for (const [k, c] of counts.entries()) {
+                if (c > bestCount) { best = k; bestCount = c; }
+              }
+              const totalItems = (context.items || []).length;
+              const ratio = totalItems > 0 ? bestCount / totalItems : 0;
+              return { bestUnitTime: best as TimeScale | undefined, bestUnitRatio: ratio };
+            })();
+
+            const threshold = (context.config as any)?.minMajorityShare ?? 0.8;
+            const resolvedTime: TimeScale | undefined = (bestUnitTime && bestUnitRatio >= threshold)
+              ? (bestUnitTime as TimeScale)
+              : ((targets?.time as TimeScale | undefined) || context.config.targetTimeScale || context.preferredTime);
+
             // Populate explain.targetSelection for all items when using global auto-targets
             if (context.config.explain && targets) {
               for (const item of context.items) {
@@ -246,7 +276,7 @@ export const monetaryMachine = setup({
                   selected: {
                     currency: targets.currency,
                     magnitude: targets.magnitude as Scale | undefined,
-                    time: targets.time as TimeScale | undefined,
+                    time: resolvedTime,
                   },
                   shares: targets.shares || {},
                   reason: targets.reason || "global-auto-target",
@@ -260,8 +290,7 @@ export const monetaryMachine = setup({
                 magnitude: (targets?.magnitude as Scale | undefined) ||
                   (context.config.targetMagnitude as Scale | undefined) ||
                   "millions",
-                time: targets?.time || context.config.targetTimeScale ||
-                  context.preferredTime,
+                time: resolvedTime,
               },
             };
           }),

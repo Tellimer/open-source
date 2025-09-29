@@ -268,21 +268,21 @@ export function computeAutoTargets(
     }
 
     if (dims.has("time")) {
-      // Precedence of sources: unit tokens > periodicity > tie-breaker/pipeline
-      // For time, use strict priority: if ANY unit tokens exist, use them; else check periodicity; else tie-break
-      const unitAgg = topWithShare(g.timeUnit, g.timeUnitSize);
-      if (unitAgg.key && g.timeUnitSize > 0) {
+      // Precedence with majority requirement: unit tokens > periodicity > tie-breaker/pipeline
+      const unitAgg = topWithShare(g.timeUnit, g.size);
+      if (unitAgg.key && unitAgg.share >= minShare) {
         sel.time = unitAgg.key as TimeScale;
-        reasonParts.push(`time=units-priority(${unitAgg.key},${unitAgg.share.toFixed(2)})`);
-        // Normalize shares.time to timeUnit size for transparency
+        reasonParts.push(`time=majority(${unitAgg.key},${unitAgg.share.toFixed(2)})`);
+        // For per-dimension shares, normalize time by timeUnitSize (items that have a time token)
         sel.shares.time = {};
         const denom = Math.max(g.timeUnitSize, 1);
         for (const [k, v] of Object.entries(g.timeUnit)) sel.shares.time[k] = v / denom;
       } else {
-        const perAgg = topWithShare(g.timePeriodicity, g.timePeriodicitySize);
-        if (perAgg.key && g.timePeriodicitySize > 0) {
+        const perAgg = topWithShare(g.timePeriodicity, g.size);
+        if (perAgg.key && perAgg.share >= minShare) {
           sel.time = perAgg.key as TimeScale;
-          reasonParts.push(`time=periodicity-priority(${perAgg.key},${perAgg.share.toFixed(2)})`);
+          reasonParts.push(`time=majority(${perAgg.key},${perAgg.share.toFixed(2)})`);
+          // For per-dimension shares, normalize periodicity by timePeriodicitySize
           sel.shares.time = {};
           const denom = Math.max(g.timePeriodicitySize, 1);
           for (const [k, v] of Object.entries(g.timePeriodicity)) sel.shares.time[k] = v / denom;
@@ -294,6 +294,12 @@ export function computeAutoTargets(
             reasonParts.push(`time=tie-break(${pref})`);
           } else {
             reasonParts.push("time=none");
+          }
+          // Still expose the raw unit-based shares if present, normalized to timeUnitSize
+          sel.shares.time = {};
+          if (g.timeUnitSize > 0) {
+            const denom = Math.max(g.timeUnitSize, 1);
+            for (const [k, v] of Object.entries(g.timeUnit)) sel.shares.time[k] = v / denom;
           }
         }
       }
