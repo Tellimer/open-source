@@ -159,21 +159,29 @@ export async function processEconomicDataByIndicator(
   let groupCount = 0;
 
   // Collect per-indicator selections to avoid duplicating shares on items
-  const targetSelectionsByIndicator: Record<string, NonNullable<ParsedData["explain"]>["targetSelection"]> = {};
+  const targetSelectionsByIndicator: Record<
+    string,
+    NonNullable<ParsedData["explain"]>["targetSelection"]
+  > = {};
 
   for (const [indicator, items] of groups) {
     try {
       const result = await processEconomicData(items, options);
 
       // Derive per-indicator target selection (take from the first item that has it)
-      const firstWithSelection = result.data.find((d) => d.explain?.targetSelection);
+      const firstWithSelection = result.data.find((d) =>
+        d.explain?.targetSelection
+      );
       if (firstWithSelection?.explain?.targetSelection) {
-        targetSelectionsByIndicator[indicator] = firstWithSelection.explain.targetSelection;
+        targetSelectionsByIndicator[indicator] =
+          firstWithSelection.explain.targetSelection;
       }
 
       // Strip shares from item-level explain to avoid duplication; they are available in targetSelectionsByIndicator
       for (const d of result.data) {
-        const ts = d.explain?.targetSelection as NonNullable<ParsedData["explain"]>["targetSelection"] | undefined;
+        const ts = d.explain?.targetSelection as
+          | NonNullable<ParsedData["explain"]>["targetSelection"]
+          | undefined;
         if (ts && ts.shares) {
           // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
           delete ts.shares;

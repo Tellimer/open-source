@@ -658,7 +658,9 @@ export const pipelineMachine = setup({
               // Attach explain.targetSelection when requested
               if (config.explain && sel) {
                 merged.forEach((m, idx) => {
-                  const ts: NonNullable<ParsedData["explain"]>["targetSelection"] = {
+                  const ts: NonNullable<
+                    ParsedData["explain"]
+                  >["targetSelection"] = {
                     mode: "auto-by-indicator",
                     indicatorKey: key,
                     selected: {
@@ -667,7 +669,9 @@ export const pipelineMachine = setup({
                       time: sel.time,
                     },
                     reason: sel.reason ??
-                      (sel.currency || sel.magnitude || sel.time ? "majority/tie-break" : "none"),
+                      (sel.currency || sel.magnitude || sel.time
+                        ? "majority/tie-break"
+                        : "none"),
                   };
                   // Include distribution shares only on the first item of the indicator group to avoid duplication
                   if (idx === 0) ts.shares = sel.shares;

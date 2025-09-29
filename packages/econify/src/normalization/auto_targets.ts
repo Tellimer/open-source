@@ -177,7 +177,8 @@ export function computeAutoTargets(
       { currency: {}, magnitude: {}, time: {}, size: 0 };
 
     // Prefer explicit metadata
-    let currency = item.currency_code?.toUpperCase() ?? parseUnit(item.unit).currency;
+    let currency = item.currency_code?.toUpperCase() ??
+      parseUnit(item.unit).currency;
     if (currency) currency = currency.toUpperCase();
     // Filter out non-ISO currency tokens
     if (currency && !/^[A-Z]{3}$/.test(currency)) {
