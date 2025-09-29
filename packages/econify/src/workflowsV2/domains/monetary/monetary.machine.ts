@@ -233,9 +233,11 @@ export const monetaryMachine = setup({
             if (resolvedTime) {
               const outAll = await normalizeMonetaryBatch(items, {
                 isStock: input.isStock,
-                toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
-                toMagnitude:
-                  (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ?? (input.config.targetMagnitude as Scale | undefined))),
+                toCurrency: (globalCurrency ??
+                  (tg?.currency ?? input.config.targetCurrency)),
+                toMagnitude: (globalMagnitude ??
+                  ((tg?.magnitude as Scale | undefined) ??
+                    (input.config.targetMagnitude as Scale | undefined))),
                 toTimeScale: resolvedTime,
                 fx: input.fx,
                 explain: (input.config as any)?.explain ?? true,
@@ -263,9 +265,11 @@ export const monetaryMachine = setup({
               if (noTimeItems.length > 0) {
                 const outNoTime = await normalizeMonetaryBatch(noTimeItems, {
                   isStock: input.isStock,
-                  toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
-                  toMagnitude:
-                    (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ?? (input.config.targetMagnitude as Scale | undefined))),
+                  toCurrency: (globalCurrency ??
+                    (tg?.currency ?? input.config.targetCurrency)),
+                  toMagnitude: (globalMagnitude ??
+                    ((tg?.magnitude as Scale | undefined) ??
+                      (input.config.targetMagnitude as Scale | undefined))),
                   toTimeScale: resolvedTime,
                   fx: input.fx,
                   explain: (input.config as any)?.explain ?? true,
@@ -279,9 +283,11 @@ export const monetaryMachine = setup({
               for (const [itemTime, arr] of byItemTime.entries()) {
                 const outWithTime = await normalizeMonetaryBatch(arr, {
                   isStock: input.isStock,
-                  toCurrency: (globalCurrency ?? (tg?.currency ?? input.config.targetCurrency)),
-                  toMagnitude:
-                    (globalMagnitude ?? ((tg?.magnitude as Scale | undefined) ?? (input.config.targetMagnitude as Scale | undefined))),
+                  toCurrency: (globalCurrency ??
+                    (tg?.currency ?? input.config.targetCurrency)),
+                  toMagnitude: (globalMagnitude ??
+                    ((tg?.magnitude as Scale | undefined) ??
+                      (input.config.targetMagnitude as Scale | undefined))),
                   // For stocks, do NOT preserve per-item time; normalize to resolvedTime.
                   toTimeScale: input.isStock ? resolvedTime : itemTime,
                   fx: input.fx,

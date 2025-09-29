@@ -114,8 +114,11 @@ const matchers = {
     if (/\b(farms?|cattle|sheep|heads|animals?|livestock)\b/i.test(unitLower)) {
       return false;
     }
-    const nameMatch = /\b(wheat|rice|corn|soybeans?|coffee|cocoa|cotton|palm.*?oil|tea|sugar|grain)\b/i.test(name);
-    const unitMatch = /\b(bushels?|short.*?tons?|metric.*?tonnes?|hectares?)\b/i.test(unitLower);
+    const nameMatch =
+      /\b(wheat|rice|corn|soybeans?|coffee|cocoa|cotton|palm.*?oil|tea|sugar|grain)\b/i
+        .test(name);
+    const unitMatch = /\b(bushels?|short.*?tons?|metric.*?tonnes?|hectares?)\b/i
+      .test(unitLower);
     return nameMatch || unitMatch;
   },
 
@@ -327,7 +330,6 @@ export function bucketForItem(item: ParsedData): BucketKey {
       ({ name, unitLower }) => matchers.hasAgriculturePattern(name, unitLower),
       () => "commodities",
     )
-
     // Check for physical commodity units (tonnes, barrels, etc.) before counts
     .when(
       ({ unit }) => {
