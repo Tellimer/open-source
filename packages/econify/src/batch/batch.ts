@@ -8,6 +8,7 @@ import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
 import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import { getScale } from "../scale/scale.ts";
+import { parseWithCustomUnits } from "../custom/custom_units.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 
 /**
@@ -351,7 +352,10 @@ function processItem<T extends BatchItem>(
     const indicatorName = (item as unknown as { name?: string }).name;
     const isCountData = isCountIndicator(indicatorName, item.unit) ||
       isCountUnit(item.unit);
-    if (parsed.category === "unknown") {
+
+    // Check custom units if standard parsing returns unknown
+    const custom = parseWithCustomUnits(item.unit);
+    if (parsed.category === "unknown" && !custom) {
       // Skip unknown units instead of throwing error
       return null;
     }
@@ -391,29 +395,7 @@ function processItem<T extends BatchItem>(
       isCumulative,
     });
 
-    // Build normalized unit string
-    let normalizedUnit: string;
-    const isPercentage = parsed.category === "percentage";
-    const isIndex = parsed.category === "index";
-    if (isPercentage) {
-      // Preserve percentage unit exactly; no currency, magnitude, or time scale applied
-      normalizedUnit = "%";
-    } else if (isIndex) {
-      // Preserve index label - indexes are dimensionless but should be labeled as such
-      normalizedUnit = parsed.normalized || "index";
-    } else if (isCountData) {
-      const scale = targetMagnitude ?? "ones";
-      normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
-    } else {
-      normalizedUnit = buildNormalizedUnit(
-        item.unit,
-        options.toCurrency,
-        targetMagnitude,
-        options.toTimeScale,
-      );
-    }
-
-    // Build explain metadata if requested
+    // Build explain metadata first if requested (to get accurate normalized unit from custom domains)
     let explain: Explain | undefined;
     if (options.explain) {
       explain = buildExplainMetadata(item.value, item.unit, normalized, {
@@ -432,6 +414,35 @@ function processItem<T extends BatchItem>(
       if (explain.fx && options.fxSource) {
         explain.fx.source = options.fxSource;
         explain.fx.sourceId = options.fxSourceId;
+      }
+    }
+
+    // Build normalized unit string
+    // If explain metadata is available, use its normalized unit (which respects custom domains)
+    let normalizedUnit: string;
+    if (explain?.units?.normalizedUnit) {
+      normalizedUnit = explain.units.normalizedUnit;
+    } else {
+      const isPercentage = parsed.category === "percentage" ||
+        custom?.category === "percentage";
+      const isIndex = parsed.category === "index" ||
+        custom?.category === "index";
+      if (isPercentage) {
+        // Preserve percentage unit exactly; no currency, magnitude, or time scale applied
+        normalizedUnit = "%";
+      } else if (isIndex) {
+        // Preserve index label - indexes are dimensionless but should be labeled as such
+        normalizedUnit = parsed.normalized || custom?.normalized || "index";
+      } else if (isCountData) {
+        const scale = targetMagnitude ?? "ones";
+        normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
+      } else {
+        normalizedUnit = buildNormalizedUnit(
+          item.unit,
+          options.toCurrency,
+          targetMagnitude,
+          options.toTimeScale,
+        );
       }
     }
 

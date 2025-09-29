@@ -142,7 +142,7 @@ export const DOMAIN_UNITS = {
       normalized: "troy oz",
     },
     crude_barrel: {
-      pattern: /crude\s+barrel|WTI|Brent/i,
+      pattern: /\bbarrels?\b|crude\s+barrel|WTI|Brent/i,
       category: "commodity",
       normalized: "barrel",
     },
@@ -160,9 +160,9 @@ export const DOMAIN_UNITS = {
       normalized: "short ton",
     },
     metric_tonne: {
-      pattern: /\bmetric\s+tonnes?\b|\btonnes?\b/i,
+      pattern: /\bmetric\s+tonnes?\b/i,
       category: "agriculture",
-      normalized: "tonnes",
+      normalized: "metric tonnes",
     },
   },
 
@@ -175,12 +175,12 @@ export const DOMAIN_UNITS = {
     copper_tonne: {
       pattern: /copper\s+tonnes?/i,
       category: "metals",
-      normalized: "tonnes",
+      normalized: "copper tonnes",
     },
     steel_tonne: {
       pattern: /steel\s+tonnes?/i,
       category: "metals",
-      normalized: "tonnes",
+      normalized: "steel tonnes",
     },
   },
 };

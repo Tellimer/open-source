@@ -342,9 +342,9 @@ export const PHYSICAL_PATTERNS: UnitPattern[] = [
   { pattern: /kg|kilogram/i, category: "physical", normalized: "kg" },
   { pattern: /kt\b/i, category: "physical", normalized: "KT" },
   { pattern: /mm\b|millimeters?/i, category: "physical", normalized: "mm" },
-  { pattern: /celsius|°C/i, category: "physical", normalized: "celsius" },
+  { pattern: /celsius|°C/i, category: "temperature", normalized: "celsius" },
   {
-    pattern: /liters?|litres?|liter\b|l\b/i,
+    pattern: /\bliters?\b|\blitres?\b/i,
     category: "physical",
     normalized: "liters",
   },
@@ -496,14 +496,23 @@ export function parseUnit(unitText: string): ParsedUnit {
     components: {},
   };
 
+  // Check for generic currency placeholders (National currency, Local currency)
+  if (/\b(national|local)\s+currency\b/i.test(normalized)) {
+    result.category = "currency";
+    result.currency = "UNKNOWN"; // Placeholder - should be inferred from country metadata
+    result.components.currency = "UNKNOWN";
+  }
+
   // Check for currency codes
-  for (const code of CURRENCY_CODES) {
-    const regex = new RegExp(`\\b${code}\\b`, "i");
-    if (regex.test(normalized)) {
-      result.currency = code.toUpperCase();
-      result.category = "currency";
-      result.components.currency = code;
-      break;
+  if (!result.currency) {
+    for (const code of CURRENCY_CODES) {
+      const regex = new RegExp(`\\b${code}\\b`, "i");
+      if (regex.test(normalized)) {
+        result.currency = code.toUpperCase();
+        result.category = "currency";
+        result.components.currency = code;
+        break;
+      }
     }
   }
 

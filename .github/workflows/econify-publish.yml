@@ -30,8 +30,10 @@ jobs:
 
       # v2 supports built-in cache; external cache step not needed
 
-      - name: Run tests with coverage
-        run: deno test -A --coverage=coverage
+      - name: Run tests with coverage (parallel)
+        run: deno test -A --coverage=coverage --parallel
+        env:
+          DENO_JOBS: 4 # Optimize for GitHub Actions runners (2-4 cores)
 
       - name: Generate LCOV (exclude non-critical modules)
         run: deno coverage coverage --lcov --exclude="src/io/|src/historical/|src/fx/live_fx.ts|src/inflation/inflation.ts|src/inference/inference.ts" > coverage/lcov.info

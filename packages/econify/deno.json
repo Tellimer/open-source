@@ -1,10 +1,11 @@
 {
   "name": "@tellimer/econify",
-  "version": "1.1.6",
+  "version": "1.1.8",
   "tasks": {
     "dev": "deno run --watch src/helpers/sample_usage.ts",
-    "test": "deno test",
-    "test:cov": "deno test --allow-read --coverage=coverage",
+    "test": "deno test --parallel",
+    "test:watch": "deno test --parallel --watch",
+    "test:cov": "deno test --allow-read --coverage=coverage --parallel",
     "cov:lcov": "deno coverage coverage --lcov --exclude=\"src/io/|src/historical/|src/fx/live_fx.ts|src/inflation/inflation.ts|src/inference/inference.ts\" > coverage/lcov.info",
     "cov:check": "deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80",
     "lint": "deno lint",

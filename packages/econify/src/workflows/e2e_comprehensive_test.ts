@@ -1770,7 +1770,11 @@ Deno.test("E2E: CPI Index Values - Extreme Values Processed as Counts", async ()
     indicatorKey: "name",
     explain: true,
     exemptions: {
-      indicatorNames: ["Consumer Price Index CPI", "CPI Transportation", "Consumer price index"],
+      indicatorNames: [
+        "Consumer Price Index CPI",
+        "CPI Transportation",
+        "Consumer price index",
+      ],
     },
   });
 
@@ -2027,19 +2031,25 @@ Deno.test("E2E: GDP Level Series - Magnitude and Unit Confusion", async () => {
 
   // CHN: 630,101 CNY hundred million = 63,010,100 CNY million ÷ 7.2 = 8,751,402 USD million = 8,751 USD billion
   // FIXED: Parser now correctly recognizes "hundred million" and overrides database scale field
-  const chnResult = resultExplicit.data.find((d) => d.metadata?.country_iso === "CHN");
+  const chnResult = resultExplicit.data.find((d) =>
+    d.metadata?.country_iso === "CHN"
+  );
   assertExists(chnResult);
   assertEquals(Math.round(chnResult.normalized!), 8751); // ✅ Correct!
   assertEquals(chnResult.normalizedUnit, "USD billions");
 
   // BRA: 184,515 BRL million ÷ 5.0 = 36,903 USD million = 36.9 USD billion
-  const braResult = resultExplicit.data.find((d) => d.metadata?.country_iso === "BRA");
+  const braResult = resultExplicit.data.find((d) =>
+    d.metadata?.country_iso === "BRA"
+  );
   assertExists(braResult);
   assertEquals(Math.round(braResult.normalized!), 37);
   assertEquals(braResult.normalizedUnit, "USD billions");
 
   // IND: 326,057.5 INR billion ÷ 83.0 = 3,928 USD billion
-  const indResult = resultExplicit.data.find((d) => d.metadata?.country_iso === "IND");
+  const indResult = resultExplicit.data.find((d) =>
+    d.metadata?.country_iso === "IND"
+  );
   assertExists(indResult);
   assertEquals(Math.round(indResult.normalized!), 3928);
   assertEquals(indResult.normalizedUnit, "USD billions");
@@ -2192,11 +2202,17 @@ Deno.test("E2E: GDP per Capita - Scale Factor Issues", async () => {
   // Wrong values stay near-zero (no scale factor applied)
   const islWrong = result.data.find((d) => d.id === "GDPPC_ISL_WRONG");
   assertExists(islWrong);
-  assert(islWrong.normalized! < 1, "Near-zero value should stay near-zero without scale factor");
+  assert(
+    islWrong.normalized! < 1,
+    "Near-zero value should stay near-zero without scale factor",
+  );
 
   const qatWrong = result.data.find((d) => d.id === "GDPPC_QAT_WRONG");
   assertExists(qatWrong);
-  assert(qatWrong.normalized! < 1, "Near-zero value should stay near-zero without scale factor");
+  assert(
+    qatWrong.normalized! < 1,
+    "Near-zero value should stay near-zero without scale factor",
+  );
 
   // Correct value is properly scaled
   const islCorrect = result.data.find((d) => d.id === "GDPPC_ISL_CORRECT");

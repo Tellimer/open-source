@@ -203,10 +203,17 @@ export function normalizeValue(
   const isCountData = isCountIndicator(options?.indicatorName, unitText) ||
     isCountUnit(unitText);
 
-  // Handle magnitude scaling (skip for percentage)
+  // Handle magnitude scaling (skip for percentage and physical units)
   const isPercentage = parsed.category === "percentage";
+  // Physical units (tonnes, barrels, celsius, etc.) should not have magnitude scaling
+  // Only monetary, count, and composite units should be scaled
+  const isPhysicalUnit = parsed.category === "physical" ||
+    parsed.category === "energy" ||
+    parsed.category === "temperature" ||
+    parsed.category === "index";
   if (
     !isPercentage &&
+    !isPhysicalUnit &&
     effectiveScale &&
     options?.toMagnitude &&
     effectiveScale !== options.toMagnitude

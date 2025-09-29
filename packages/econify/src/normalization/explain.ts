@@ -161,24 +161,46 @@ export function buildExplainMetadata(
     // Special-case stock-like counts (e.g., Population) to avoid per-time and force base to 'units'
     const nameLower2 = (options.indicatorName ?? "").toLowerCase();
     const isStockLikeNonCurrency =
-      /\breserve(s)?\b|\bstock(s)?\b|\bpopulation\b|\bpop\b|\bpeople\b|\binhabitants\b|\bresidents\b/
+      /\breserve(s)?\b|\bpopulation\b|\bpop\b|\bpeople\b|\binhabitants\b|\bresidents\b/
         .test(
           nameLower2,
-        );
+        ) ||
+      // Only match "stock" when it's clearly about inventory/levels, not "stock market"
+      (/\bstock(s)?\b/.test(nameLower2) &&
+        !/market|exchange|index/i.test(nameLower2));
     const base = isStockLikeNonCurrency
       ? "units"
       : (parsed.normalized || "units");
 
-    originalUnitString = base;
-    normalizedUnitString = options.toTimeScale && !isStockLikeNonCurrency
-      ? `${base} per ${options.toTimeScale}`
-      : base;
-    originalFullUnit = originalTimeScale && !isStockLikeNonCurrency
-      ? `${base} per ${originalTimeScale}`
-      : base;
-    normalizedFullUnit = options.toTimeScale && !isStockLikeNonCurrency
-      ? `${base} per ${options.toTimeScale}`
-      : base;
+    // Index values (points) should not have time scale added
+    const isIndexCategory = parsed.category === "index";
+    // Time category units (hours/days/etc) should show ONLY the periodicity, not the unit + periodicity
+    const isTimeCategory = parsed.category === "time";
+
+    if (isTimeCategory && !isStockLikeNonCurrency) {
+      // For time units (non-stock), show only the periodicity (e.g., "per month" not "hours per month")
+      originalUnitString = originalTimeScale
+        ? `per ${originalTimeScale}`
+        : base;
+      normalizedUnitString = options.toTimeScale
+        ? `per ${options.toTimeScale}`
+        : (originalTimeScale ? `per ${originalTimeScale}` : base);
+      originalFullUnit = originalUnitString;
+      normalizedFullUnit = normalizedUnitString;
+    } else {
+      // For other non-currency categories, add time scale unless it's stock-like or index
+      const shouldAddTimeScale = !isStockLikeNonCurrency && !isIndexCategory;
+      originalUnitString = base;
+      normalizedUnitString = options.toTimeScale && shouldAddTimeScale
+        ? `${base} per ${options.toTimeScale}`
+        : base;
+      originalFullUnit = originalTimeScale && shouldAddTimeScale
+        ? `${base} per ${originalTimeScale}`
+        : base;
+      normalizedFullUnit = options.toTimeScale && shouldAddTimeScale
+        ? `${base} per ${options.toTimeScale}`
+        : base;
+    }
 
     // For stock-like non-currency indicators (e.g., Population), reflect monthly basis without math
     if (isStockLikeNonCurrency && options.toTimeScale) {
@@ -199,10 +221,16 @@ export function buildExplainMetadata(
       effectiveCurrency,
       originalScale,
     );
+    // For monetary units, only preserve original time scale if it was explicitly in the unit string
+    // (not just in metadata periodicity). This prevents adding "per month" to stock indicators.
+    const hasTimeInUnit = !!parsed.timeScale;
+    const effectiveTargetTime: TimeScale | undefined = options.toTimeScale ||
+      (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined);
+
     normalizedUnitString = buildNormalizedUnitString(
       options.toCurrency || effectiveCurrency,
       targetScale,
-      options.toTimeScale,
+      effectiveTargetTime,
     );
 
     // Build full unit strings with time periods
@@ -214,7 +242,7 @@ export function buildExplainMetadata(
     normalizedFullUnit = buildFullUnitString(
       options.toCurrency || effectiveCurrency,
       targetScale,
-      options.toTimeScale,
+      effectiveTargetTime,
     ) || normalizedUnitString;
 
     // Per-capita: avoid adding scale label like 'millions' to currency units
@@ -376,7 +404,8 @@ export function buildExplainMetadata(
   ].includes(detectedDomain));
 
   if (isNonCurrencyDomain) {
-    const base = parsed.normalized || "units";
+    // Prefer custom domain normalized unit over parsed.normalized for better specificity
+    const base = customDomain?.normalized || parsed.normalized || "units";
     const nameLower2 = (options.indicatorName ?? "").toLowerCase();
     const isStockLike =
       /\breserve(s)?\b|\bstock(s)?\b|\bpopulation\b|\bpop\b|\bpeople\b|\binhabitants\b|\bresidents\b/
@@ -387,33 +416,59 @@ export function buildExplainMetadata(
 
     if (isCountDomain) {
       // For count domain, reflect scale label (thousands/millions/ones) instead of a physical base unit
+      // Capitalize scale labels for consistency (Thousands, Millions, etc.)
+      const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
       const origLabel = (originalScale && originalScale !== "ones")
-        ? originalScale
-        : "units";
+        ? titleCase(originalScale)
+        : "ones";
       const normLabel = (targetScale && targetScale !== "ones")
-        ? targetScale
-        : "units";
+        ? titleCase(targetScale)
+        : "ones";
 
-      originalUnitString = isStockLike || !originalTimeScale
+      // Only add time scale if original unit STRING had one (use parsed.timeScale, not originalTimeScale which includes metadata)
+      // This prevents adding "per month" to units like "Thousands" that don't have time in the unit string
+      const unitHadTimeScale = !!parsed.timeScale;
+      originalUnitString = isStockLike || !unitHadTimeScale
         ? origLabel
-        : `${origLabel} per ${originalTimeScale}`;
-      normalizedUnitString = isStockLike || !options.toTimeScale
+        : `${origLabel} per ${parsed.timeScale}`;
+      normalizedUnitString = isStockLike || !unitHadTimeScale
         ? normLabel
-        : `${normLabel} per ${options.toTimeScale}`;
+        : `${normLabel} per ${options.toTimeScale || parsed.timeScale}`;
       originalFullUnit = originalUnitString;
       normalizedFullUnit = normalizedUnitString;
     } else {
       // Non-currency physical domains (energy/commodities/agriculture/metals/emissions): keep base unit; no magnitude label
-      originalUnitString = base;
-      normalizedUnitString = options.toTimeScale && !isStockLike
-        ? `${base} per ${options.toTimeScale}`
-        : base;
-      originalFullUnit = originalTimeScale && !isStockLike
-        ? `${base} per ${originalTimeScale}`
-        : base;
-      normalizedFullUnit = options.toTimeScale && !isStockLike
-        ? `${base} per ${options.toTimeScale}`
-        : base;
+      // Percentages, counts, and index values should not have time scale added
+      // Time category units (hours/days/etc) should show ONLY the periodicity, not the unit + periodicity
+      const isTimeCategory = parsed.category === "time";
+      const isIndexCategory = parsed.category === "index";
+      const shouldAddTimeScale = !isStockLike &&
+        detectedDomain !== "percentage" &&
+        detectedDomain !== "count" &&
+        !isIndexCategory;
+
+      // For time category units, show only the periodicity (e.g., "per month" not "hours per month")
+      if (isTimeCategory) {
+        originalUnitString = originalTimeScale
+          ? `per ${originalTimeScale}`
+          : base;
+        normalizedUnitString = options.toTimeScale
+          ? `per ${options.toTimeScale}`
+          : (originalTimeScale ? `per ${originalTimeScale}` : base);
+        originalFullUnit = originalUnitString;
+        normalizedFullUnit = normalizedUnitString;
+      } else {
+        originalUnitString = base;
+        normalizedUnitString = options.toTimeScale && shouldAddTimeScale
+          ? `${base} per ${options.toTimeScale}`
+          : base;
+        originalFullUnit = originalTimeScale && shouldAddTimeScale
+          ? `${base} per ${originalTimeScale}`
+          : base;
+        normalizedFullUnit = options.toTimeScale && shouldAddTimeScale
+          ? `${base} per ${options.toTimeScale}`
+          : base;
+      }
     }
 
     explain.units = {

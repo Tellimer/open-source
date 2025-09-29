@@ -486,9 +486,8 @@ export const pipelineMachine = setup({
             /(celsius|fahrenheit|kelvin|°[cfk])/i, // Temperature
             /(mm|cm|m|km|millimeter|centimeter|meter|kilometer)/i, // Distance
             /(points?|index)/i, // Index/Points
-            /(tons?|kg|kilogram|gram|lbs?|pounds?)/i, // Weight
-            /(liters?|gallons?)/i, // Volume
-            /(units?|items?|people|persons?)/i, // Generic units
+            /\b(kg|kilogram|gram|lbs?|pounds?)\b/i, // Weight (excluding tonnes which are domain-specific)
+            /\b(units?|items?|people|persons?)\b/i, // Generic units
             /(percent|%)/i, // Percentages (backup check)
           ];
 
@@ -730,10 +729,6 @@ export const pipelineMachine = setup({
             toMagnitude: undefined,
             toTimeScale: undefined,
           });
-          console.log(
-            "DEBUG commodities items:",
-            res.successful.map((x) => x.id),
-          );
           const merged = mergeByKey(commodities, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: commodities[i].idx })

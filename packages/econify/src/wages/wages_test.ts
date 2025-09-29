@@ -290,7 +290,8 @@ Deno.test("Index Exclusion - Costa Rica points handling", async () => {
   const criResult = resultIncluded.data[0];
   assertExists(criResult.normalized);
   assertEquals(criResult.normalized, 6225.77);
-  assertEquals(criResult.normalizedUnit, "USD");
+  // Index values should remain as "points", not be converted to currency
+  assertEquals(criResult.normalizedUnit, "points");
 });
 
 Deno.test("Index Exclusion - Mixed currency and index processing", async () => {

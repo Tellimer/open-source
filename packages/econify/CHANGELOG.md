@@ -2,50 +2,128 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.8] - 2025-01-XX
+
+### Fixed
+
+- **Stock Market Index Unit Handling**: Fixed "Stock Market" indicators being
+  incorrectly classified as stock-like (inventory) indicators
+  - Modified stock-like pattern to exclude "stock market", "stock exchange", and
+    "stock index"
+  - Ensures index values (points) are preserved correctly with their proper unit
+    labels
+  - Fixes: Stock Market Index (Bulgaria SOFIX) now correctly shows "points"
+    instead of "units"
+
+- **Physical Unit Magnitude Scaling**: Physical units no longer incorrectly
+  scaled by magnitude
+  - Skip magnitude scaling for physical, energy, temperature, and index
+    categories
+  - Physical units (tonnes, barrels, celsius, etc.) are absolute units, not
+    relative magnitudes
+  - Fixes: Cement Production (805,234 tonnes) no longer scaled to 805.234
+
+- **Count Domain Scale Label Capitalization**: Normalized units now use
+  consistent capitalization
+  - Scale labels for count domain are now capitalized (Thousands, Millions,
+    etc.)
+  - Fixes: Steel Production now shows "Thousands" instead of "thousands"
+
+- **Wages Time Dimension Preservation**: Wage units now preserve time dimension
+  when no target time scale specified
+  - Monetary units preserve original time scale from unit string (not just
+    metadata)
+  - Only applies when time scale is explicitly in the unit string (e.g.,
+    "EUR/Month")
+  - Prevents adding "per month" to stock indicators while preserving it for flow
+    indicators
+  - Fixes: Wages in Manufacturing (EUR/Month) now correctly shows "EUR per
+    month"
+
+- **National Currency Recognition**: Added support for "National currency" and
+  "Local currency" placeholders
+  - These generic currency labels are now recognized as currency category
+  - Marked with "UNKNOWN" placeholder for currency inference from country
+    metadata
+  - Fixes: Government Revenue (Iran, "National currency") no longer skipped
+
+### Changed
+
+- **CI/CD Performance**: Updated GitHub Actions workflows to use parallel test
+  execution
+  - Added `--parallel` flag to all test commands
+  - Set `DENO_JOBS=4` for optimal performance on GitHub Actions runners
+  - Expected 2-3x faster test execution in CI (407 tests complete in ~3-5
+    seconds)
+  - Updated workflows: `econify-coverage.yml` and `econify-publish.yml`
+
+- **Test Configuration**: Enhanced test tasks in `deno.json`
+  - Added explicit `--parallel` flag to test commands
+  - Added `test:watch` task for parallel watch mode
+  - All test tasks now use parallel execution by default
+
 ## [Unreleased]
 
 ### Added
+
 - **New Scale Type: "hundred-millions"** (Chinese 亿, yi = 100 million)
   - Added `"hundred-millions"` to Scale type with value `1e8`
   - Added pattern recognition: `/\bhundred\s+mill?i?on?s?\b/i`
   - Fixes 100x underreporting of Chinese GDP data
 - **E2E Tests for Boss-Flagged Data Issues** (31 total tests, +6 new)
-  - **CPI Index Values**: Extreme index values (BGR 10k+, SSD 2.8M) processed as counts
-  - **Government Debt Currency Mislabeling**: JMD vs USD currency detection (JAM 2.2T debt)
-  - **Consumer Spending Currency Normalization**: XOF/MXN to USD conversion (BFA, MEX)
-  - **GDP Level Series Magnitude Issues**: CNY "Hundred Million" unit confusion (CHN, BRA, IND) - **FIXED!**
-  - **Government Revenue Extreme Values**: IRN 127M billion (10¹¹–10¹⁵ magnitude)
-  - **GDP per Capita Scale Factors**: Near-zero values missing ×1,000 scale (ISL, QAT)
-  - Tests demonstrate proper use of exemptions for excluding index/CPI indicators
+  - **CPI Index Values**: Extreme index values (BGR 10k+, SSD 2.8M) processed as
+    counts
+  - **Government Debt Currency Mislabeling**: JMD vs USD currency detection (JAM
+    2.2T debt)
+  - **Consumer Spending Currency Normalization**: XOF/MXN to USD conversion
+    (BFA, MEX)
+  - **GDP Level Series Magnitude Issues**: CNY "Hundred Million" unit confusion
+    (CHN, BRA, IND) - **FIXED!**
+  - **Government Revenue Extreme Values**: IRN 127M billion (10¹¹–10¹⁵
+    magnitude)
+  - **GDP per Capita Scale Factors**: Near-zero values missing ×1,000 scale
+    (ISL, QAT)
+  - Tests demonstrate proper use of exemptions for excluding index/CPI
+    indicators
   - Tests validate currency conversion with FX rates across multiple currencies
 - **Comprehensive Wage E2E Tests** (3 wage-specific tests)
   - Wages Mixed Periodicities: Validates explicit time scale targeting
   - Wages Auto-Targeting: Validates auto-detection with diverse time scales
   - Wages with FX Rates: Validates currency + time conversion together
-- **KNOWN_DATA_ISSUES.md**: Comprehensive documentation of real-world data quality issues
+- **KNOWN_DATA_ISSUES.md**: Comprehensive documentation of real-world data
+  quality issues
   - Catalogs 6 major data quality issues discovered in production data
   - Provides root cause analysis, current behavior, and recommended fixes
-  - Includes validation against real-world data (Trading Economics, National Bureau of Statistics)
+  - Includes validation against real-world data (Trading Economics, National
+    Bureau of Statistics)
 
 ### Fixed
+
 - **CRITICAL: "CNY Hundred Million" Parsing Bug** (100x underreporting!)
   - Chinese GDP was being reported as 87.5B USD instead of 8.75T USD
   - Parser now correctly recognizes "hundred million" as distinct scale (1e8)
   - Parsed scale overrides database scale field when "hundred-millions" detected
-  - Validated against China Q2 2025 GDP: 630,101 hundred million CNY = $8.75T USD ✅
-- **Wages Service Time Scale Conversion**: Added `toTimeScale` parameter to `processBatch` call when FX rates unavailable
+  - Validated against China Q2 2025 GDP: 630,101 hundred million CNY = $8.75T
+    USD ✅
+- **Wages Service Time Scale Conversion**: Added `toTimeScale` parameter to
+  `processBatch` call when FX rates unavailable
   - Enables time scale conversion (hour/week/month/year) even without FX rates
   - Fixes issue where quarterly/yearly wages weren't converting to monthly
 
 ### Documentation
+
 - **Comprehensive test coverage for all boss-flagged data issues:**
   1. ✅ CPI extreme values (10k-2.8M points) - not rebased to 100
-  2. ✅ Consumer Spending (BFA 6.3M XOF bn, MEX 18M MXN mn) - currency normalization
-  3. ✅ **GDP level series (CHN "Hundred Million") - FIXED! Was 100x wrong, now correct**
+  2. ✅ Consumer Spending (BFA 6.3M XOF bn, MEX 18M MXN mn) - currency
+     normalization
+  3. ✅ **GDP level series (CHN "Hundred Million") - FIXED! Was 100x wrong, now
+     correct**
   4. ✅ GDP per Capita (ISL/QAT near-zero values) - missing scale factors
   5. ✅ Government Revenue (IRN 127M billion) - extreme magnitude handling
-  6. ✅ Government Debt (JAM 2.2M "USD Million" actually JMD) - currency mislabeling
-- Documented that `excludeIndexValues` only works for wages, not general pipeline
+  6. ✅ Government Debt (JAM 2.2M "USD Million" actually JMD) - currency
+     mislabeling
+- Documented that `excludeIndexValues` only works for wages, not general
+  pipeline
 - Recommended using `exemptions.indicatorNames` to exclude CPI/index indicators
 - Created KNOWN_DATA_ISSUES.md with detailed analysis of all data quality issues
 - Recommended using `exemptions.indicatorNames` to exclude CPI/index indicators
