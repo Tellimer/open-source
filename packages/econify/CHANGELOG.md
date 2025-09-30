@@ -2,6 +2,51 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.1.9] - 2025-01-XX
+
+### Fixed
+
+- **Time Scale vs Periodicity Distinction**: Fixed critical issue where periodicity
+  (release cadence) was incorrectly used as measurement time scale
+  - **Time scale** (from unit string like "EUR/Month") represents the measurement
+    period
+  - **Periodicity** (from metadata like "Yearly") represents the release/reporting
+    frequency
+  - Now uses indicator classification (stock/flow/rate) to determine if periodicity
+    should be used as fallback time scale
+  - **Flow indicators** (GDP, exports, sales, revenue): Use periodicity as time
+    scale when unit has no time dimension
+  - **Stock/Rate indicators** (debt, reserves, corruption index, CPI): Do NOT use
+    periodicity for time scale
+  - Fixes: Corruption Index (Points, Yearly) now shows "points" not "points per
+    year"
+  - Fixes: Balance of Trade (USD Million, Quarterly) correctly uses "USD Million
+    per quarter"
+
+- **Enhanced Indicator Classification**: Significantly improved stock/flow/rate
+  classification
+  - Added 100+ new pattern keywords for better classification accuracy
+  - Added special patterns for index values, growth rates, monetary aggregates
+  - Priority-based classification: currency → rate → flow → stock
+  - Higher confidence scores for explicit patterns (90-95% vs 75-80%)
+  - Monetary aggregates (M0, M1, M2, M3) now correctly classified as stock
+  - Index values (corruption index, ease of doing business) classified as rate
+  - Growth rates (YoY, MoM, QoQ) classified as rate
+  - Comprehensive flow patterns: GDP, GNP, GNI, production, trade, income,
+    expenditure, etc.
+  - Comprehensive stock patterns: debt, reserves, population, money supply, assets,
+    liabilities, etc.
+
+### Changed
+
+- **Explain Metadata Periodicity**: Periodicity object no longer created when no
+  source time scale
+  - Previously created periodicity object with `original: undefined` when unit had
+    no time
+  - Now only creates periodicity object when both original and target time scales
+    exist
+  - Cleaner metadata for stock indicators that don't have time dimensions
+
 ## [1.1.8] - 2025-01-XX
 
 ### Fixed

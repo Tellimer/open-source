@@ -681,8 +681,13 @@ Deno.test("processEconomicData - configuration matrix (targets/combinations)", a
   assertExists(r4.data[0].normalizedUnit?.includes("USD"));
 });
 
-Deno.test("processEconomicData - explain surfaces missing time basis case", async () => {
-  const data = [{ value: 100, unit: "USD Million", name: "Revenue" }];
+Deno.test("processEconomicData - flow indicator uses periodicity when unit has no time", async () => {
+  const data: ParsedData[] = [{
+    value: 100,
+    unit: "USD Million",
+    name: "Revenue", // Flow indicator
+    periodicity: "Yearly", // Explicit periodicity used as time scale for flows
+  }];
 
   const result = await processEconomicData(data, {
     targetTimeScale: "year",
@@ -691,9 +696,11 @@ Deno.test("processEconomicData - explain surfaces missing time basis case", asyn
 
   const ex = result.data[0].explain;
   assertExists(ex);
+  assertEquals(ex?.periodicity?.original, "year");
   assertEquals(ex?.periodicity?.target, "year");
   assertEquals(ex?.periodicity?.adjusted, false);
-  assertEquals(ex?.periodicity?.description, "No source time scale available");
+  assertEquals(ex?.periodicity?.description, "No conversion needed (year)");
+  assertEquals(ex?.reportingFrequency, "year");
 });
 
 Deno.test("processEconomicData - prefer unit time over explicit periodicity (API)", async () => {

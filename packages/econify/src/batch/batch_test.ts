@@ -6,6 +6,7 @@ import type { BatchItem } from "./batch.ts";
 const testData: BatchItem[] = [
   {
     id: "BEN_TRADE",
+    name: "Balance of Trade", // Flow indicator
     value: -482.58,
     unit: "XOF Billion",
     periodicity: "Quarterly", // 🆕 Explicit periodicity
@@ -14,6 +15,7 @@ const testData: BatchItem[] = [
   },
   {
     id: "BGD_TRADE",
+    name: "Balance of Trade", // Flow indicator
     value: -181.83,
     unit: "BDT Billion",
     periodicity: "Monthly", // 🆕 Explicit periodicity
@@ -22,6 +24,7 @@ const testData: BatchItem[] = [
   },
   {
     id: "BHR_TRADE",
+    name: "Balance of Trade", // Flow indicator
     value: -119.22,
     unit: "BHD Million",
     periodicity: "Yearly", // 🆕 Explicit periodicity

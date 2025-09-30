@@ -3,51 +3,205 @@
  */
 
 // ----------------------- Pattern Definitions -----------------------
+
+/**
+ * STOCK PATTERNS - Indicators that represent levels/snapshots at a point in time
+ * These are NOT flows - they don't have a "per time" dimension
+ * Examples: Debt levels, reserves, population, money supply
+ */
 export const STOCK_PATTERNS = [
+  // Financial stocks
   "debt",
   "reserves",
   "balance sheet",
   "outstanding",
-  "population",
-  "position",
-  "stock",
   "assets",
   "liabilities",
-  "inventory",
   "holdings",
   "portfolio",
+  "capital",
+  "equity",
+  "net worth",
+
+  // Monetary aggregates
+  "money supply",
+  "m0",
+  "m1",
+  "m2",
+  "m3",
+  "monetary base",
+  "broad money",
+  "narrow money",
+
+  // Population & demographics
+  "population",
+  "inhabitants",
+  "residents",
+  "people",
+  "workforce",
+  "labor force",
+
+  // Inventory & physical stocks
+  "inventory",
+  "stock",
+  "stockpile",
+  "storage",
+
+  // Positions & balances
+  "position",
+  "balance",
+  "level",
+
+  // Index values (these are levels, not flows)
+  "corruption index",
+  "ease of doing business",
+  "competitiveness index",
+  "human development index",
+  "gini coefficient",
+  "gini index",
 ] as const;
 
+/**
+ * FLOW PATTERNS - Indicators that measure activity over a period
+ * These NEED a time dimension (per year, per month, etc.)
+ * Examples: GDP, exports, production, sales
+ */
 export const FLOW_PATTERNS = [
+  // Economic output & activity
+  "gdp",
+  "gross domestic product",
+  "gnp",
+  "gross national product",
+  "gni",
+  "gross national income",
   "production",
+  "output",
+  "manufacturing",
+
+  // Trade
   "exports",
   "imports",
+  "trade",
+  "balance of trade",
+  "current account",
+  "capital account",
+
+  // Income & expenditure
   "revenue",
-  "spending",
-  "investment",
-  "sales",
-  "gdp",
-  "consumption",
-  "arrivals",
   "income",
+  "earnings",
+  "wages",
+  "salary",
+  "compensation",
+  "spending",
   "expenditure",
+  "consumption",
+  "investment",
+  "capex",
+  "capital expenditure",
+
+  // Sales & transactions
+  "sales",
+  "turnover",
   "receipts",
   "payments",
-  "turnover",
+  "remittances",
+  "transfers",
+
+  // Movement & flow
+  "arrivals",
+  "departures",
+  "visitors",
+  "tourists",
+  "migration",
   "registrations",
+  "births",
+  "deaths",
+
+  // Government finance
+  "tax revenue",
+  "government revenue",
+  "government spending",
+  "fiscal deficit",
+  "budget deficit",
+  "surplus",
+
+  // Corporate
+  "profit",
+  "loss",
+  "ebitda",
+  "cash flow",
+  "free cash flow",
+  "dividends",
 ] as const;
 
+/**
+ * RATE PATTERNS - Indicators that are ratios, percentages, or indices
+ * These are dimensionless or have special units (%, bps, index points)
+ * Examples: Interest rates, inflation, unemployment rate, CPI
+ */
 export const RATE_PATTERNS = [
+  // Interest rates
   "rate",
-  "ratio",
+  "interest rate",
+  "policy rate",
+  "repo rate",
+  "discount rate",
+  "prime rate",
+  "libor",
+  "sofr",
+
+  // Yields & returns
   "yield",
+  "return",
+  "coupon",
+
+  // Economic indicators
   "inflation",
+  "deflation",
+  "cpi",
+  "consumer price index",
+  "ppi",
+  "producer price index",
   "unemployment",
-  "index",
+  "unemployment rate",
+
+  // Ratios
+  "ratio",
+  "debt to gdp",
+  "debt-to-gdp",
+  "loan to value",
+  "ltv",
+  "price to earnings",
+  "p/e",
+  "price to book",
+  "p/b",
+
+  // Percentages & indices
   "percent",
+  "percentage",
+  "index",
+  "indicator",
+  "score",
+  "rating",
+
+  // Financial metrics
   "margin",
   "spread",
   "premium",
+  "discount",
+  "volatility",
+  "beta",
+
+  // Growth rates
+  "growth",
+  "change",
+  "yoy",
+  "year-over-year",
+  "mom",
+  "month-over-month",
+  "qoq",
+  "quarter-over-quarter",
 ] as const;
 
 export const CURRENCY_WORDS = [

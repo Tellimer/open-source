@@ -103,7 +103,7 @@ Deno.test("buildExplainMetadata - periodicity adjustment", () => {
   assertEquals(explain.periodicity.adjusted, true);
 });
 
-Deno.test("buildExplainMetadata - no periodicity adjustment", () => {
+Deno.test("buildExplainMetadata - no periodicity when no time scale in unit", () => {
   const explain = buildExplainMetadata(
     100,
     "USD Million",
@@ -115,10 +115,8 @@ Deno.test("buildExplainMetadata - no periodicity adjustment", () => {
     },
   );
 
-  assertExists(explain.periodicity);
-  assertEquals(explain.periodicity.original, undefined);
-  assertEquals(explain.periodicity.target, "month");
-  assertEquals(explain.periodicity.adjusted, false);
+  // No periodicity object when unit has no time scale (stock-like behavior)
+  assertEquals(explain.periodicity, undefined);
 });
 
 Deno.test("buildExplainMetadata - complex conversion", () => {
@@ -311,7 +309,7 @@ Deno.test("buildExplainMetadata - enhanced periodicity downsampling", () => {
   assertEquals(explain.periodicity.description, "month → year (×12)");
 });
 
-Deno.test("buildExplainMetadata - enhanced periodicity no conversion", () => {
+Deno.test("buildExplainMetadata - no periodicity object when no source time scale", () => {
   const explain = buildExplainMetadata(
     100,
     "USD Million",
@@ -323,16 +321,9 @@ Deno.test("buildExplainMetadata - enhanced periodicity no conversion", () => {
     },
   );
 
-  assertExists(explain.periodicity);
-  assertEquals(explain.periodicity.original, undefined);
-  assertEquals(explain.periodicity.target, "month");
-  assertEquals(explain.periodicity.adjusted, false);
-  assertEquals(explain.periodicity.factor, 1);
-  assertEquals(explain.periodicity.direction, "none");
-  assertEquals(
-    explain.periodicity.description,
-    "No source time scale available",
-  );
+  // No periodicity object when there's no source time scale
+  // (stock-like indicator or insufficient information to classify)
+  assertEquals(explain.periodicity, undefined);
 });
 
 Deno.test("buildExplainMetadata - enhanced units with full unit strings", () => {
@@ -782,16 +773,29 @@ Deno.test("reportingFrequency is set when explicit periodicity is provided (unit
   assertEquals(ex.periodicity?.original, "week");
 });
 
-Deno.test("reportingFrequency is set when unit has no time (fallback to dataset periodicity)", () => {
+Deno.test("reportingFrequency is set when unit has no time (fallback to dataset periodicity for FLOW indicators)", () => {
   const ex = buildExplainMetadata(300, "USD Million", 0, {
     toCurrency: "USD",
     toTimeScale: "month",
     explicitTimeScale: "quarter",
+    indicatorName: "Quarterly Sales", // Flow indicator - should use periodicity
   });
-  // Here unit has no time; conversion uses dataset periodicity and reportingFrequency matches it
+  // For flow indicators, periodicity is used as time scale when unit has no time
   assertEquals(ex.reportingFrequency, "quarter");
   assertEquals(ex.periodicity?.original, "quarter");
   assertEquals(ex.periodicity?.target, "month");
+});
+
+Deno.test("reportingFrequency is set but NOT used for time conversion for STOCK indicators", () => {
+  const ex = buildExplainMetadata(300, "USD Million", 300, {
+    toCurrency: "USD",
+    toTimeScale: "month",
+    explicitTimeScale: "quarter",
+    indicatorName: "Government Debt", // Stock indicator - should NOT use periodicity for time
+  });
+  // For stock indicators, periodicity is just release cadence, not measurement time
+  assertEquals(ex.reportingFrequency, "quarter");
+  assertEquals(ex.periodicity, undefined); // No time conversion for stocks
 });
 
 Deno.test("reportingFrequency is undefined when not provided", () => {
