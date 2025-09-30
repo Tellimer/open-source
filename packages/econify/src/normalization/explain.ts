@@ -170,10 +170,13 @@ export function buildExplainMetadata(
   // Detect per-capita indicators for special handling (keep scale as ones; no millions label)
   const isPerCapita = /\bper\s*capita\b/i.test(options.indicatorName ?? "");
 
-  // Detect stock-like indicators (levels), e.g. reserves, money supply, M0/M1/M2, monetary base
-  const isStockLikeGlobal =
-    /(reserve(s)?|stock(s)?|money\s*supply|\bM0\b|\bM1\b|\bM2\b|monetary\s*base|broad\s*money|narrow\s*money)/i
-      .test(options.indicatorName ?? "");
+  // Detect stock-like indicators using classification
+  // Stock indicators (debt, reserves, population, etc.) should NOT have time dimension in units
+  // Use indicator name only (not unit) to avoid circular logic where "/Month" in unit makes it flow
+  const classification = classifyIndicator({
+    name: options.indicatorName || "",
+  });
+  const isStockLikeGlobal = classification.type === "stock" || classification.type === "rate";
 
   if (isNonCurrencyCategory) {
     // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency

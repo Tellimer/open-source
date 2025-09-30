@@ -2514,3 +2514,159 @@ Deno.test("E2E: GDP Deflator (RATE indicator - should NOT get time conversion)",
     "Magnitude should be 'ones' for points",
   );
 });
+
+Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per quarter/month')", async () => {
+  const data: ParsedData[] = [
+    {
+      id: "ALBANIAGOVDEB",
+      name: "Government Debt",
+      value: 1384321,
+      unit: "ALL Million",
+      periodicity: "Quarterly",
+      date: "2025-06-30",
+      metadata: { country_iso: "ALB", source: "Ministry of Finance" },
+    },
+    {
+      id: "ARMENIAGOVDEB",
+      name: "Government Debt",
+      value: 5128.2,
+      unit: "AMD Billion",
+      periodicity: "Quarterly",
+      date: "2025-06-30",
+      metadata: { country_iso: "ARM", source: "Ministry of Finance" },
+    },
+    {
+      id: "AUSTRALIAGOVDEB",
+      name: "Government Debt",
+      value: 530941,
+      unit: "AUD Million",
+      periodicity: "Monthly",
+      date: "2023-12-31",
+      metadata: { country_iso: "AUS", source: "Department of Finance" },
+    },
+  ];
+
+  const fx = {
+    base: "USD",
+    rates: {
+      "ALL": 82.53,
+      "AMD": 382.71,
+      "AUD": 1.5235,
+    },
+  };
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["currency", "magnitude", "time"],
+    targetCurrency: "USD",
+    indicatorKey: "name",
+    fx,
+    explain: true,
+  });
+
+  assertEquals(result.data.length, 3, "Should have 3 results");
+
+  const alb = result.data.find((d) => d.metadata?.country_iso === "ALB");
+  const arm = result.data.find((d) => d.metadata?.country_iso === "ARM");
+  const aus = result.data.find((d) => d.metadata?.country_iso === "AUS");
+
+  assertExists(alb, "Albania data should exist");
+  assertExists(arm, "Armenia data should exist");
+  assertExists(aus, "Australia data should exist");
+
+  // CRITICAL: Units should NOT include "per quarter" or "per month" for stock indicators
+  assertEquals(
+    alb.normalizedUnit,
+    "USD millions",
+    "Albania: Unit should be 'USD millions', NOT 'USD millions per quarter'",
+  );
+  assertEquals(
+    arm.normalizedUnit,
+    "USD millions",
+    "Armenia: Unit should be 'USD millions', NOT 'USD millions per quarter'",
+  );
+  assertEquals(
+    aus.normalizedUnit,
+    "USD millions",
+    "Australia: Unit should be 'USD millions', NOT 'USD millions per month'",
+  );
+
+  // Check explain metadata units
+  const albExplain = alb.explain;
+  const armExplain = arm.explain;
+  const ausExplain = aus.explain;
+
+  assertExists(albExplain, "Albania explain should exist");
+  assertExists(armExplain, "Armenia explain should exist");
+  assertExists(ausExplain, "Australia explain should exist");
+
+  // CRITICAL: Full units should also NOT include time dimension
+  assertEquals(
+    albExplain.units?.normalizedFullUnit,
+    "USD millions",
+    "Albania: Full unit should be 'USD millions', NOT 'USD millions per quarter'",
+  );
+  assertEquals(
+    armExplain.units?.normalizedFullUnit,
+    "USD millions",
+    "Armenia: Full unit should be 'USD millions', NOT 'USD millions per quarter'",
+  );
+  assertEquals(
+    ausExplain.units?.normalizedFullUnit,
+    "USD millions",
+    "Australia: Full unit should be 'USD millions', NOT 'USD millions per month'",
+  );
+
+  // Verify NO periodicity conversion for stock indicators
+  assertEquals(
+    albExplain.periodicity,
+    undefined,
+    "Stock indicators should NOT have periodicity conversion",
+  );
+  assertEquals(
+    armExplain.periodicity,
+    undefined,
+    "Stock indicators should NOT have periodicity conversion",
+  );
+  assertEquals(
+    ausExplain.periodicity,
+    undefined,
+    "Stock indicators should NOT have periodicity conversion",
+  );
+
+  // Time should be automatically skipped
+  assertEquals(
+    albExplain.targetSelection?.selected?.time,
+    undefined,
+    "Stock indicators should automatically skip time dimension",
+  );
+  assertEquals(
+    armExplain.targetSelection?.selected?.time,
+    undefined,
+    "Stock indicators should automatically skip time dimension",
+  );
+  assertEquals(
+    ausExplain.targetSelection?.selected?.time,
+    undefined,
+    "Stock indicators should automatically skip time dimension",
+  );
+
+  // Verify the reason explains why time was skipped
+  assertExists(albExplain.targetSelection?.reason);
+  assert(
+    albExplain.targetSelection.reason.includes("time=skipped"),
+    "Reason should explain time was skipped for stock indicator",
+  );
+  assert(
+    albExplain.targetSelection.reason.includes("stock indicator"),
+    "Reason should mention it's a stock indicator",
+  );
+
+  // Verify values exist (currency conversion is tested in other tests)
+  assertExists(alb.normalized, "Albania normalized value should exist");
+  assertExists(arm.normalized, "Armenia normalized value should exist");
+  assertExists(aus.normalized, "Australia normalized value should exist");
+
+  // The key test: verify units don't have time dimension for stock indicators
+  // This is the main purpose of this test - ensuring stock indicators don't show "per quarter/month"
+});
