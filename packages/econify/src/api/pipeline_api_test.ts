@@ -1222,7 +1222,12 @@ Deno.test("auto-target extensive: GDP/Debt/Imports distributions with share asse
     { id: "E7", value: 206, unit: "EUR Million per quarter", name: "Exports" },
     { id: "E8", value: 207, unit: "USD Thousand per quarter", name: "Exports" },
     { id: "E9", value: 208, unit: "USD Thousand per quarter", name: "Exports" },
-    { id: "E10", value: 209, unit: "USD Thousand per quarter", name: "Exports" },
+    {
+      id: "E10",
+      value: 209,
+      unit: "USD Thousand per quarter",
+      name: "Exports",
+    },
 
     // Imports (10): no majority in any dimension with minShare 0.6 -> tie-breaks across all
     { id: "I1", value: 300, unit: "USD Million per quarter", name: "Imports" },

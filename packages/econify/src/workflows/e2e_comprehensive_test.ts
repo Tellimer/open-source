@@ -2239,7 +2239,10 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
       scale: "Thousands",
       periodicity: "Quarterly",
       date: "2025-03-31",
-      metadata: { country_iso: "AGO", source: "Instituto Nacional de Estatística" },
+      metadata: {
+        country_iso: "AGO",
+        source: "Instituto Nacional de Estatística",
+      },
     },
     {
       id: "ALBANIAEMPPER",

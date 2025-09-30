@@ -180,9 +180,17 @@ Deno.test("computeAutoTargets: include non-monetary flow indicators for magnitud
   // CPI is a rate indicator - should skip time dimension
   const cpi = targets.get("cpi");
   assertExists(cpi);
-  assertEquals(cpi.currency, undefined, "Non-monetary should not have currency");
+  assertEquals(
+    cpi.currency,
+    undefined,
+    "Non-monetary should not have currency",
+  );
   assertEquals(cpi.magnitude, "ones", "Should have magnitude target");
-  assertEquals(cpi.time, undefined, "Rate indicators should skip time dimension");
+  assertEquals(
+    cpi.time,
+    undefined,
+    "Rate indicators should skip time dimension",
+  );
   assert(cpi.reason?.includes("time=skipped"));
 
   // Car Registrations is a flow - should have time dimension

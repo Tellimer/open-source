@@ -36,6 +36,10 @@ assessment, error handling, and interactive control flow._
 
 - 🔍 **Smart Classification** — Automatically detect whether an indicator is a
   stock, flow, rate, or currency
+- 🎯 **Smart Auto-Targeting** — Intelligently skip time dimension for stock/rate
+  indicators (e.g., Population, Debt, CPI) while applying it to flows (GDP,
+  Exports) — prevents incorrect conversions like "12,814 employed persons" ÷ 3 →
+  "4,271 per month"
 - 🌍 **150+ Currency Support** — Convert values between currencies using FX
   tables (USD, EUR, GBP, JPY, NGN, KES, and more)
 - 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions,
