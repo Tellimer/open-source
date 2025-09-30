@@ -2,6 +2,77 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.2.0] - 2025-01-XX
+
+### Added
+
+- **Smart Auto-Targeting**: Auto-targeting now intelligently determines which
+  dimensions to apply based on indicator classification
+  - **Stock indicators** (Population, Debt, Reserves, Employed Persons, Labor
+    Force) automatically skip time dimension even when included in
+    `autoTargetDimensions`
+  - **Flow indicators** (GDP, Exports, Sales, Revenue, Wages) include time
+    dimension for normalization
+  - **Rate indicators** (CPI, Inflation, Unemployment Rate, Interest Rates)
+    automatically skip time dimension
+  - **Non-monetary indicators** can now participate in magnitude/time targeting
+    when currency is not in `autoTargetDimensions`
+  - Prevents incorrect conversions like "12,814 employed persons" ÷ 3 → "4,271
+    per month"
+  - Explain metadata shows clear reasoning:
+    `time=skipped(stock indicator, no
+    time dimension)`
+
+### Fixed
+
+- **Critical: Stock Indicator Time Conversion Bug**: Fixed issue where stock
+  indicators were incorrectly time-converted
+  - **Before**: "Employed Persons: 12,814 thousand (Quarterly)" → normalized to
+    4,271 thousand per month ❌
+  - **After**: "Employed Persons: 12,814 thousand (Quarterly)" → stays 12,814
+    thousand ✅
+  - Stock indicators represent snapshots at a point in time, not rates over time
+  - Periodicity field now correctly represents only the reporting frequency, not
+    a time dimension
+  - Affects: Population, Debt, Reserves, Money Supply, Assets, Liabilities,
+    Inventory, Employed Persons, Labor Force, and all other stock indicators
+
+### Changed
+
+- **Auto-Targeting Filtering**: Modified `computeAutoTargets()` to only filter
+  by `isMonetary` when currency is in `autoTargetDimensions`
+  - Allows non-monetary indicators (Car Registrations, Population) to
+    participate in magnitude/time targeting
+  - More flexible auto-targeting for mixed datasets
+
+### Documentation
+
+- Added comprehensive "Smart Auto-Targeting" section to
+  `docs/guides/per-indicator-normalization.md`
+  - Detailed explanation of Stock, Flow, and Rate indicator types
+  - Real-world examples showing correct vs incorrect behavior
+  - Before/after comparisons demonstrating the fix
+  - Configuration guidance for global `autoTargetDimensions`
+- Updated README.md Core Capabilities to highlight Smart Auto-Targeting feature
+
+### Tests
+
+- Added comprehensive E2E test for Employed Persons (stock indicator)
+- Added test for stock indicators automatically skipping time dimension
+- Updated auto-targeting tests to distinguish between flow and stock indicators
+- All 410 tests passing ✅
+
+### Breaking Changes
+
+- **Auto-targeting behavior change**: Stock and rate indicators now
+  automatically skip time dimension normalization
+  - If you were relying on stock indicators being time-converted (which was
+    incorrect), you'll need to update your expectations
+  - This is a **correctness fix** - the previous behavior was mathematically
+    wrong
+  - Example: If you expected "Debt: 500 billion (Quarterly)" to become "166.67
+    billion per month", it will now correctly stay "500 billion"
+
 ## [1.1.9] - 2025-01-XX
 
 ### Fixed
