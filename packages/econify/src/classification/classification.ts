@@ -105,13 +105,14 @@ export function classifyIndicator(input: IndicatorInput): Classification {
 
   // Special patterns for better classification
   const isIndexValue = /\b(index|score|rating|points)\b/i.test(name) &&
-                       !/\b(stock market|stock exchange)\b/i.test(name);
+    !/\b(stock market|stock exchange)\b/i.test(name);
   if (isIndexValue) signals.push("pattern:index_value");
 
   const isGrowthRate = /\b(growth|change|yoy|mom|qoq)\b/i.test(name);
   if (isGrowthRate) signals.push("pattern:growth_rate");
 
-  const isMonetaryAggregate = /\b(m0|m1|m2|m3|money supply|monetary base)\b/i.test(name);
+  const isMonetaryAggregate = /\b(m0|m1|m2|m3|money supply|monetary base)\b/i
+    .test(name);
   if (isMonetaryAggregate) signals.push("pattern:monetary_aggregate");
 
   // Classification decision tree with priority order
@@ -120,44 +121,36 @@ export function classifyIndicator(input: IndicatorInput): Classification {
 
   // Priority 1: Currency series (FX rates, exchange rates)
   const currencySeries = (currWordHit ||
-    /\b(fx|exchange rate|spot|cross|usd\/[a-z]{3}|[a-z]{3}\/usd)\b/i.test(all)) &&
+    /\b(fx|exchange rate|spot|cross|usd\/[a-z]{3}|[a-z]{3}\/usd)\b/i.test(
+      all,
+    )) &&
     rateHit;
   if (currencySeries) {
     type = "currency";
     confidence = 0.95;
     signals.push("classified:currency");
-  }
-
-  // Priority 2: Rate indicators (%, ratios, indices, growth rates)
+  } // Priority 2: Rate indicators (%, ratios, indices, growth rates)
   else if (hasRateUnit || isIndexValue || isGrowthRate) {
     type = "rate";
     confidence = hasRateUnit ? 0.95 : (isIndexValue ? 0.90 : 0.85);
     signals.push("classified:rate");
-  }
-
-  // Priority 3: Explicit rate keywords (inflation, unemployment rate, etc.)
+  } // Priority 3: Explicit rate keywords (inflation, unemployment rate, etc.)
   else if (rateHit && !flowHit && !stockHit) {
     type = "rate";
     confidence = 0.85;
     signals.push("classified:rate_keyword");
-  }
-
-  // Priority 4: Flow indicators (has time dimension OR flow keywords)
+  } // Priority 4: Flow indicators (has time dimension OR flow keywords)
   else if (hasTime || flowHit) {
     type = "flow";
     // Higher confidence if both time dimension AND flow keyword
     confidence = (hasTime && flowHit) ? 0.95 : (hasTime ? 0.90 : 0.80);
     signals.push("classified:flow");
-  }
-
-  // Priority 5: Stock indicators (stock keywords WITHOUT time dimension)
+  } // Priority 5: Stock indicators (stock keywords WITHOUT time dimension)
   else if (stockHit || isMonetaryAggregate) {
     type = "stock";
     confidence = isMonetaryAggregate ? 0.90 : 0.80;
     signals.push("classified:stock");
-  }
-
-  // Priority 6: Fallback - if has currency but no other strong signals
+  } // Priority 6: Fallback - if has currency but no other strong signals
   else if (currencyDetected && !hasTime) {
     // Currency amount without time dimension is likely a stock (debt, reserves, etc.)
     type = "stock";

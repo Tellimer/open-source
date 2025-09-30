@@ -2,9 +2,11 @@
 
 ## 🎯 Problem Solved
 
-Econify's unified pipeline automatically handles wages data normalization issues:
+Econify's unified pipeline automatically handles wages data normalization
+issues:
 
 **Before:**
+
 - Value range: 29.68 to 7,473,636 (meaningless comparison)
 - Mixed units: ALL/Month, ARS/Month, CAD/Hour, CNY/Year, points
 - Mixed time scales: Hourly, Monthly, Yearly
@@ -12,6 +14,7 @@ Econify's unified pipeline automatically handles wages data normalization issues
 - Incomparable data across countries
 
 **After:**
+
 - Value range: $1,427 - $82,209 USD/month (meaningful comparison)
 - Consistent units: All in USD/month
 - Comparable wage data across countries
@@ -21,7 +24,8 @@ Econify's unified pipeline automatically handles wages data normalization issues
 
 ### Unified Pipeline (Recommended)
 
-The econify pipeline **automatically detects and processes wages data** - no special handling needed!
+The econify pipeline **automatically detects and processes wages data** - no
+special handling needed!
 
 ```typescript
 import { processEconomicDataByIndicator } from "@tellimer/econify";
@@ -65,9 +69,12 @@ const result = await processEconomicDataByIndicator(wagesData, {
 The wages service automatically:
 
 1. **Detects Wages Data**: Identifies wage indicators by name patterns
-2. **Separates Data Types**: Distinguishes currency-based wages from index values
-3. **Normalizes Currency Values**: Converts all to target currency and time scale
-4. **Handles Index Values**: Keeps them separate (can't be meaningfully converted)
+2. **Separates Data Types**: Distinguishes currency-based wages from index
+   values
+3. **Normalizes Currency Values**: Converts all to target currency and time
+   scale
+4. **Handles Index Values**: Keeps them separate (can't be meaningfully
+   converted)
 5. **Provides Statistics**: Summary of normalization results
 
 ## Solution Details
@@ -75,12 +82,14 @@ The wages service automatically:
 ### 1. Data Type Separation
 
 The system distinguishes between:
+
 - **Currency-based wages**: AMD/Month, AUD/Week, CAD/Hour, CNY/Year
 - **Index values**: Points, index numbers (excluded from currency normalization)
 
 ### 2. Currency Normalization
 
 When FX rates are provided:
+
 - Converts all currency values to target currency (e.g., USD)
 - Applies appropriate exchange rates
 - Maintains time scale information
@@ -88,6 +97,7 @@ When FX rates are provided:
 ### 3. Time Scale Conversion
 
 Handles different reporting periods:
+
 - **Hourly** → Monthly (×160 hours/month)
 - **Weekly** → Monthly (×4.33 weeks/month)
 - **Monthly** → No conversion needed
@@ -96,6 +106,7 @@ Handles different reporting periods:
 ### 4. Statistics & Explain Metadata
 
 Provides detailed information about the normalization:
+
 ```typescript
 {
   explain: {
@@ -181,6 +192,7 @@ const result = await processEconomicDataByIndicator(data, {
 ### Issue: Wages not being normalized
 
 **Solution**: Ensure your indicator names match the wages patterns:
+
 - "Wages in Manufacturing"
 - "Average Wage"
 - "Minimum Wage"
@@ -190,6 +202,7 @@ const result = await processEconomicDataByIndicator(data, {
 ### Issue: Currency conversion not working
 
 **Solution**: Provide FX rates in the options:
+
 ```typescript
 {
   fxRates: {
@@ -203,16 +216,17 @@ const result = await processEconomicDataByIndicator(data, {
 ### Issue: Time scale conversion incorrect
 
 **Solution**: Ensure your data has proper time scale information:
+
 - In the unit string: "EUR/Month", "USD/Hour"
 - Or in metadata: `periodicity: "Monthly"`
 
 ## Examples
 
-See the [wages processing example](../../examples/wages_processing_example.ts) for a complete working example.
+See the [wages processing example](../../examples/wages_processing_example.ts)
+for a complete working example.
 
 ## Related Documentation
 
 - [Batch Processing Guide](./batch-processing.md)
 - [Time Sampling Guide](./time-sampling.md)
 - [Explain Metadata Reference](../reference/explain-metadata.md)
-

@@ -1,6 +1,7 @@
 # Econify Documentation
 
-Welcome to the Econify documentation! This guide will help you navigate all available documentation resources.
+Welcome to the Econify documentation! This guide will help you navigate all
+available documentation resources.
 
 ## 📚 Documentation Structure
 
@@ -8,74 +9,98 @@ Welcome to the Econify documentation! This guide will help you navigate all avai
 
 Start here if you're new to Econify:
 
-- **[Main README](../README.md)** - Package overview, installation, and quick start
-- **[Examples](../examples/README.md)** - Comprehensive code examples for all features
+- **[Main README](../README.md)** - Package overview, installation, and quick
+  start
+- **[Examples](../examples/README.md)** - Comprehensive code examples for all
+  features
 
 ### 📖 Guides
 
 Step-by-step guides for common use cases:
 
-- **[Batch Processing](./guides/batch-processing.md)** - Process multiple indicators with consistent normalization
-- **[Per-Indicator Normalization](./guides/per-indicator-normalization.md)** - Understanding per-indicator vs global normalization
-- **[Special Handling](./guides/special-handling.md)** - Override units and scales for data quality issues
-- **[Time Sampling](./guides/time-sampling.md)** - Advanced time resampling and conversion
-- **[Wages Processing](./guides/wages-processing.md)** - Specialized handling for wage data normalization
+- **[Batch Processing](./guides/batch-processing.md)** - Process multiple
+  indicators with consistent normalization
+- **[Per-Indicator Normalization](./guides/per-indicator-normalization.md)** -
+  Understanding per-indicator vs global normalization
+- **[Special Handling](./guides/special-handling.md)** - Override units and
+  scales for data quality issues
+- **[Time Sampling](./guides/time-sampling.md)** - Advanced time resampling and
+  conversion
+- **[Wages Processing](./guides/wages-processing.md)** - Specialized handling
+  for wage data normalization
 
 ### 📘 Reference
 
 Detailed technical reference documentation:
 
-- **[Explain Metadata](./reference/explain-metadata.md)** - Complete guide to explain metadata structure
-- **[Integration Brief](./reference/integration-brief.md)** - Integration overview and FX dates
-- **[Implementation Instructions](./reference/implementation-instructions.md)** - Batch processing API implementation details
+- **[Explain Metadata](./reference/explain-metadata.md)** - Complete guide to
+  explain metadata structure
+- **[Integration Brief](./reference/integration-brief.md)** - Integration
+  overview and FX dates
+- **[Implementation Instructions](./reference/implementation-instructions.md)** -
+  Batch processing API implementation details
 
 ### 🔧 Development
 
 Documentation for contributors and maintainers:
 
-- **[Test Coverage](./development/test-coverage.md)** - Comprehensive test coverage overview
-- **[E2E Test Findings](./development/e2e-test-findings.md)** - End-to-end test results and findings
-- **[Known Data Issues](./development/known-data-issues.md)** - Catalog of real-world data quality issues
+- **[Test Coverage](./development/test-coverage.md)** - Comprehensive test
+  coverage overview
+- **[E2E Test Findings](./development/e2e-test-findings.md)** - End-to-end test
+  results and findings
+- **[Known Data Issues](./development/known-data-issues.md)** - Catalog of
+  real-world data quality issues
 
 ### 📊 Diagrams
 
 Visual documentation and architecture diagrams:
 
-- **[Diagrams Folder](./diagrams/)** - State machines, workflows, and architecture diagrams
+- **[Diagrams Folder](./diagrams/)** - State machines, workflows, and
+  architecture diagrams
 
 ## 🎯 Quick Navigation by Use Case
 
 ### I want to...
 
 #### Process economic data with normalization
+
 → Start with [Main README](../README.md) and [Examples](../examples/README.md)
 
 #### Handle multiple indicators consistently
+
 → Read [Batch Processing Guide](./guides/batch-processing.md)
 
 #### Fix data quality issues in my source data
+
 → See [Special Handling Guide](./guides/special-handling.md)
 
 #### Process wage data across countries
+
 → Check [Wages Processing Guide](./guides/wages-processing.md)
 
 #### Convert time scales (hourly → monthly, etc.)
+
 → Review [Time Sampling Guide](./guides/time-sampling.md)
 
 #### Understand the explain metadata structure
+
 → Read [Explain Metadata Reference](./reference/explain-metadata.md)
 
 #### Integrate Econify into my application
+
 → Follow [Integration Brief](./reference/integration-brief.md)
 
 #### Contribute to the project
-→ See [Test Coverage](./development/test-coverage.md) and [Known Data Issues](./development/known-data-issues.md)
+
+→ See [Test Coverage](./development/test-coverage.md) and
+[Known Data Issues](./development/known-data-issues.md)
 
 ## 📦 Package Information
 
 - **Version**: See [CHANGELOG](../CHANGELOG.md) for version history
 - **License**: MIT
-- **Repository**: [GitHub](https://github.com/Tellimer/open-source/tree/main/packages/econify)
+- **Repository**:
+  [GitHub](https://github.com/Tellimer/open-source/tree/main/packages/econify)
 - **JSR Package**: [@tellimer/econify](https://jsr.io/@tellimer/econify)
 
 ## 🤝 Contributing
@@ -83,8 +108,10 @@ Visual documentation and architecture diagrams:
 We welcome contributions! Please:
 
 1. Read the [development documentation](./development/)
-2. Check [known data issues](./development/known-data-issues.md) for areas needing improvement
-3. Review [test coverage](./development/test-coverage.md) to understand testing requirements
+2. Check [known data issues](./development/known-data-issues.md) for areas
+   needing improvement
+3. Review [test coverage](./development/test-coverage.md) to understand testing
+   requirements
 4. Submit pull requests with tests and documentation
 
 ## 📝 Documentation Standards
@@ -109,10 +136,11 @@ When contributing documentation:
 For questions or issues:
 
 - Open an issue on [GitHub](https://github.com/Tellimer/open-source/issues)
-- Check existing [E2E test findings](./development/e2e-test-findings.md) for known issues
-- Review [known data issues](./development/known-data-issues.md) for data quality problems
+- Check existing [E2E test findings](./development/e2e-test-findings.md) for
+  known issues
+- Review [known data issues](./development/known-data-issues.md) for data
+  quality problems
 
 ---
 
 **Last Updated**: 2025-01-XX (v1.1.8)
-

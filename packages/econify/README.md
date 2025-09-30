@@ -1585,25 +1585,40 @@ deno test --coverage=coverage
 Comprehensive documentation is available in the [`docs/`](./docs/) directory:
 
 ### 🚀 Getting Started
-- **[Documentation Index](./docs/README.md)** - Complete documentation navigation
+
+- **[Documentation Index](./docs/README.md)** - Complete documentation
+  navigation
 - **[Examples](./examples/README.md)** - Code examples for all features
 
 ### 📖 Guides
-- **[Batch Processing](./docs/guides/batch-processing.md)** - Process multiple indicators consistently
-- **[Per-Indicator Normalization](./docs/guides/per-indicator-normalization.md)** - Understanding normalization strategies
-- **[Special Handling](./docs/guides/special-handling.md)** - Override units for data quality issues
+
+- **[Batch Processing](./docs/guides/batch-processing.md)** - Process multiple
+  indicators consistently
+- **[Per-Indicator Normalization](./docs/guides/per-indicator-normalization.md)** -
+  Understanding normalization strategies
+- **[Special Handling](./docs/guides/special-handling.md)** - Override units for
+  data quality issues
 - **[Time Sampling](./docs/guides/time-sampling.md)** - Advanced time resampling
-- **[Wages Processing](./docs/guides/wages-processing.md)** - Specialized wage data handling
+- **[Wages Processing](./docs/guides/wages-processing.md)** - Specialized wage
+  data handling
 
 ### 📘 Reference
-- **[Explain Metadata](./docs/reference/explain-metadata.md)** - Metadata structure reference
-- **[Integration Brief](./docs/reference/integration-brief.md)** - Integration overview
-- **[Implementation Instructions](./docs/reference/implementation-instructions.md)** - API implementation details
+
+- **[Explain Metadata](./docs/reference/explain-metadata.md)** - Metadata
+  structure reference
+- **[Integration Brief](./docs/reference/integration-brief.md)** - Integration
+  overview
+- **[Implementation Instructions](./docs/reference/implementation-instructions.md)** -
+  API implementation details
 
 ### 🔧 Development
-- **[Test Coverage](./docs/development/test-coverage.md)** - Test coverage overview
-- **[E2E Test Findings](./docs/development/e2e-test-findings.md)** - Test results and findings
-- **[Known Data Issues](./docs/development/known-data-issues.md)** - Real-world data quality issues
+
+- **[Test Coverage](./docs/development/test-coverage.md)** - Test coverage
+  overview
+- **[E2E Test Findings](./docs/development/e2e-test-findings.md)** - Test
+  results and findings
+- **[Known Data Issues](./docs/development/known-data-issues.md)** - Real-world
+  data quality issues
 
 ## 📈 Roadmap
 
