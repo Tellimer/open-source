@@ -40,6 +40,11 @@ export const STOCK_PATTERNS = [
   "people",
   "workforce",
   "labor force",
+  "labour force",
+  "employed persons",
+  "employed",
+  "employment level",
+  "total employment",
 
   // Inventory & physical stocks
   "inventory",

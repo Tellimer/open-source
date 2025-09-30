@@ -2225,3 +2225,135 @@ Deno.test("E2E: GDP per Capita - Scale Factor Issues", async () => {
   // 2. OR: Use specialHandling.unitOverrides to correct specific indicators
   // 3. OR: Add validation rules to detect implausible GDP per capita values
 });
+
+Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversion)", async () => {
+  // Real-world scenario from user's data
+  // Employed Persons is a STOCK (snapshot/level), not a FLOW
+  // The periodicity is just the release cadence, NOT a measurement period
+  const data: ParsedData[] = [
+    {
+      id: "ANGOLAEMPPER",
+      name: "Employed Persons",
+      value: 12814.558,
+      unit: "Thousand",
+      scale: "Thousands",
+      periodicity: "Quarterly",
+      date: "2025-03-31",
+      metadata: { country_iso: "AGO", source: "Instituto Nacional de Estatística" },
+    },
+    {
+      id: "ALBANIAEMPPER",
+      name: "Employed Persons",
+      value: 1168,
+      unit: "Thousand",
+      scale: "Thousands",
+      periodicity: "Quarterly",
+      date: "2025-03-31",
+      metadata: { country_iso: "ALB", source: "INSTAT" },
+    },
+    {
+      id: "ARMENIAEMPPER",
+      name: "Employed Persons",
+      value: 827,
+      unit: "Thousand",
+      scale: "Thousands",
+      periodicity: "Monthly",
+      date: "2025-07-31",
+      metadata: { country_iso: "ARM", source: "National Statistical Service" },
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["magnitude"], // Only auto-target magnitude, NOT time (stock indicator)
+    indicatorKey: "name",
+    explain: true,
+  });
+
+  console.log(
+    "Employed Persons Results:",
+    result.data.map((d) => ({
+      id: d.id,
+      original: d.value,
+      normalized: d.normalized,
+      unit: d.unit,
+      normalizedUnit: d.normalizedUnit,
+      periodicity: d.explain?.periodicity,
+      reportingFrequency: d.explain?.reportingFrequency,
+    })),
+  );
+
+  // CRITICAL: Values should NOT be divided by time period!
+  // Stock indicators are snapshots, not flows
+  const ago = result.data.find((d) => d.id === "ANGOLAEMPPER");
+  assertExists(ago);
+  assertEquals(
+    Math.round(ago.normalized!),
+    12815,
+    "Angola: 12,814.558 thousand should stay ~12,815 (NOT divided by 3!)",
+  );
+
+  const alb = result.data.find((d) => d.id === "ALBANIAEMPPER");
+  assertExists(alb);
+  assertEquals(
+    Math.round(alb.normalized!),
+    1168,
+    "Albania: 1,168 thousand should stay 1,168 (NOT divided by 3!)",
+  );
+
+  const arm = result.data.find((d) => d.id === "ARMENIAEMPPER");
+  assertExists(arm);
+  assertEquals(
+    Math.round(arm.normalized!),
+    827,
+    "Armenia: 827 thousand should stay 827 (no conversion)",
+  );
+
+  // Check normalized units - should be just "Thousands", NOT "thousands per month"
+  assertExists(ago.normalizedUnit);
+  assertEquals(
+    ago.normalizedUnit,
+    "Thousands",
+    "Unit should be 'Thousands', NOT 'thousands per month'",
+  );
+
+  // Check explain metadata
+  const agoExplain = ago.explain;
+  assertExists(agoExplain);
+
+  // CRITICAL: No periodicity conversion for stock indicators
+  assertEquals(
+    agoExplain.periodicity,
+    undefined,
+    "Stock indicators should NOT have periodicity conversion",
+  );
+
+  // Reporting frequency should still be set (it's just release cadence)
+  assertEquals(
+    agoExplain.reportingFrequency,
+    "quarter",
+    "Reporting frequency should be set (release cadence)",
+  );
+
+  // Check units metadata
+  assertExists(agoExplain.units);
+  assertEquals(
+    agoExplain.units.normalizedFullUnit,
+    "Thousands",
+    "Full unit should be 'Thousands', NOT 'thousands per quarter'",
+  );
+
+  // Check target selection
+  assertExists(agoExplain.targetSelection);
+  assertEquals(agoExplain.targetSelection.selected.magnitude, "thousands");
+  // Time should NOT be auto-targeted for stock indicators
+  // (we disabled time auto-targeting in the options above)
+  assertEquals(
+    agoExplain.targetSelection.selected.time,
+    undefined,
+    "Stock indicators should NOT have time target when autoTargetDimensions excludes 'time'",
+  );
+
+  // NOTE: Future enhancement - auto-targeting should automatically detect stock indicators
+  // and skip time dimension auto-targeting even when "time" is in autoTargetDimensions
+});
