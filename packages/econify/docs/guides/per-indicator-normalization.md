@@ -105,26 +105,33 @@ Each indicator keeps appropriate units:
 
 ## Smart Auto-Targeting: Indicator Classification
 
-**NEW in v1.1.10+**: Auto-targeting now intelligently determines which dimensions to apply based on indicator type.
+**NEW in v1.1.10+**: Auto-targeting now intelligently determines which
+dimensions to apply based on indicator type.
 
 ### Indicator Types
 
 Econify automatically classifies indicators into three types:
 
 #### 1. **Stock Indicators** (Snapshots/Levels)
-Stock indicators represent a **snapshot at a point in time**, not a rate over time.
+
+Stock indicators represent a **snapshot at a point in time**, not a rate over
+time.
 
 **Examples:**
+
 - Population, Employed Persons, Labor Force, Workforce
 - Debt, Reserves, Money Supply, Assets
 - Inventory, Housing Stock
 
 **Behavior:**
-- ✅ Time dimension is **automatically skipped** even when included in `autoTargetDimensions`
+
+- ✅ Time dimension is **automatically skipped** even when included in
+  `autoTargetDimensions`
 - ✅ Values represent "how many/how much exists at this moment"
 - ✅ No time conversion applied (e.g., quarterly → monthly)
 
 **Example:**
+
 ```typescript
 // Input: Employed Persons
 {
@@ -148,19 +155,23 @@ Stock indicators represent a **snapshot at a point in time**, not a rate over ti
 ```
 
 #### 2. **Flow Indicators** (Rates/Activity)
+
 Flow indicators represent **activity over a period of time**.
 
 **Examples:**
+
 - GDP, Exports, Imports, Sales, Revenue
 - Production, Manufacturing Output
 - Wages, Income, Spending
 
 **Behavior:**
+
 - ✅ Time dimension is **included** in auto-targeting
 - ✅ Values represent "how much per time period"
 - ✅ Time conversion applied when needed (e.g., quarterly → monthly)
 
 **Example:**
+
 ```typescript
 // Input: GDP
 {
@@ -183,19 +194,23 @@ Flow indicators represent **activity over a period of time**.
 ```
 
 #### 3. **Rate Indicators** (Ratios/Indices)
+
 Rate indicators are **dimensionless ratios, percentages, or indices**.
 
 **Examples:**
+
 - CPI, Inflation Rate, Unemployment Rate
 - Interest Rates, Exchange Rates
 - Indices (PMI, Consumer Confidence)
 
 **Behavior:**
+
 - ✅ Time dimension is **automatically skipped**
 - ✅ Values are ratios or indices, not quantities
 - ✅ No time conversion applied
 
 **Example:**
+
 ```typescript
 // Input: CPI
 {
@@ -220,6 +235,7 @@ Rate indicators are **dimensionless ratios, percentages, or indices**.
 ### Why This Matters
 
 **Before Smart Auto-Targeting:**
+
 ```typescript
 // ❌ WRONG: Stock indicators were incorrectly converted
 {
@@ -233,6 +249,7 @@ Rate indicators are **dimensionless ratios, percentages, or indices**.
 ```
 
 **After Smart Auto-Targeting:**
+
 ```typescript
 // ✅ CORRECT: Stock indicators skip time dimension
 {
@@ -247,7 +264,8 @@ Rate indicators are **dimensionless ratios, percentages, or indices**.
 
 ### Global Configuration with Smart Targeting
 
-You can now set `autoTargetDimensions` globally and let econify intelligently apply them:
+You can now set `autoTargetDimensions` globally and let econify intelligently
+apply them:
 
 ```typescript
 {
@@ -267,9 +285,12 @@ You can now set `autoTargetDimensions` globally and let econify intelligently ap
 ```
 
 **Result:**
+
 - **Flow indicators** (GDP, Exports) → Both magnitude AND time normalized
-- **Stock indicators** (Population, Debt) → Only magnitude normalized, time skipped
-- **Rate indicators** (CPI, Inflation) → Time skipped, magnitude may be skipped too
+- **Stock indicators** (Population, Debt) → Only magnitude normalized, time
+  skipped
+- **Rate indicators** (CPI, Inflation) → Time skipped, magnitude may be skipped
+  too
 
 ## Key Configuration
 
@@ -295,7 +316,8 @@ You can now set `autoTargetDimensions` globally and let econify intelligently ap
 2. **Majority calculations happen within each indicator**
 3. **Different indicators can have different target units**
 4. **Balance of Trade might use millions/month while GDP uses trillions/year**
-5. **Smart auto-targeting automatically determines which dimensions to apply based on indicator type**
+5. **Smart auto-targeting automatically determines which dimensions to apply
+   based on indicator type**
 
 This ensures that:
 
