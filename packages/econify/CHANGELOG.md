@@ -2,6 +2,15 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.2.1] - 2025-01-30
+
+### Fixed
+
+- **TypeScript Type Error**: Fixed incorrect property name in E2E test
+  - Changed `fx` to `fxFallback` in `processEconomicDataByIndicator` options
+  - Added `useLiveFX: false` to properly configure fallback FX rates
+  - Resolves TS2353 error: "Object literal may only specify known properties"
+
 ## [1.2.0] - 2025-01-XX
 
 ### Added

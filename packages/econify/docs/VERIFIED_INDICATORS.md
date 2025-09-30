@@ -1,33 +1,36 @@
 # Verified Indicators
 
-This document lists all economic indicators that have been verified to work correctly with econify's smart auto-targeting and classification system.
+This document lists all economic indicators that have been verified to work
+correctly with econify's smart auto-targeting and classification system.
 
-**Last Updated:** 2025-09-30  
+**Last Updated:** 2025-09-30\
 **Econify Version:** 1.2.0+
 
 ---
 
 ## ✅ Stock Indicators
 
-Stock indicators represent **snapshots at a point in time**. They should **NOT** have time dimension conversion.
+Stock indicators represent **snapshots at a point in time**. They should **NOT**
+have time dimension conversion.
 
 ### Verified Working
 
-| Indicator | Periodicity Tested | Expected Behavior | Status |
-|-----------|-------------------|-------------------|--------|
-| **Population** | Yearly, Monthly | No time conversion, units show "millions" (not "per month") | ✅ |
-| **Employed Persons** | Monthly | No time conversion, units show "thousands" (not "per month") | ✅ |
-| **Government Debt** | Quarterly, Monthly | No time conversion, units show "USD millions" (not "per quarter/month") | ✅ |
-| **Foreign Reserves** | Monthly | No time conversion, units show "USD millions" (not "per month") | ✅ |
-| **Money Supply M0** | Monthly | No time conversion, units show "USD millions" (not "per month") | ✅ |
-| **Money Supply M1** | Monthly | No time conversion, units show "USD millions" (not "per month") | ✅ |
-| **Money Supply M2** | Quarterly | No time conversion, units show "EUR millions" (not "per quarter") | ✅ |
+| Indicator            | Periodicity Tested | Expected Behavior                                                       | Status |
+| -------------------- | ------------------ | ----------------------------------------------------------------------- | ------ |
+| **Population**       | Yearly, Monthly    | No time conversion, units show "millions" (not "per month")             | ✅     |
+| **Employed Persons** | Monthly            | No time conversion, units show "thousands" (not "per month")            | ✅     |
+| **Government Debt**  | Quarterly, Monthly | No time conversion, units show "USD millions" (not "per quarter/month") | ✅     |
+| **Foreign Reserves** | Monthly            | No time conversion, units show "USD millions" (not "per month")         | ✅     |
+| **Money Supply M0**  | Monthly            | No time conversion, units show "USD millions" (not "per month")         | ✅     |
+| **Money Supply M1**  | Monthly            | No time conversion, units show "USD millions" (not "per month")         | ✅     |
+| **Money Supply M2**  | Quarterly          | No time conversion, units show "EUR millions" (not "per quarter")       | ✅     |
 
 ### Key Characteristics
 
 - **No time dimension** in normalized units
 - **No periodicity conversion** in explain metadata
-- **Auto-targeting skips time dimension**: `time=skipped(stock indicator, no time dimension)`
+- **Auto-targeting skips time dimension**:
+  `time=skipped(stock indicator, no time dimension)`
 - **Only currency and scale conversions** applied
 
 ### Example Export
@@ -55,20 +58,22 @@ Stock indicators represent **snapshots at a point in time**. They should **NOT**
 
 ## ✅ Flow Indicators
 
-Flow indicators represent **activity over a time period**. They **SHOULD** have time dimension conversion.
+Flow indicators represent **activity over a time period**. They **SHOULD** have
+time dimension conversion.
 
 ### Verified Working
 
-| Indicator | Periodicity Tested | Expected Behavior | Status |
-|-----------|-------------------|-------------------|--------|
-| **GDP (Nominal)** | Yearly | Auto-targets to billions/year (100% majority), no conversion needed | ✅ |
-| **GDP Constant Prices** | Yearly, Quarterly | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅ |
-| **GDP from Agriculture** | Yearly, Quarterly | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅ |
-| **GDP from Construction** | Yearly, Quarterly | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅ |
-| **GDP from Manufacturing** | Yearly, Quarterly | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅ |
-| **GDP from Services** | Yearly, Quarterly | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅ |
-| **Government Revenues** | Yearly, Quarterly, Monthly | Time conversion applied, units show "USD millions per [period]" | ✅ |
-| **Exports** | Monthly, Quarterly | Time conversion applied, units show "USD millions per quarter" | ✅ |
+| Indicator                  | Periodicity Tested         | Expected Behavior                                                          | Status |
+| -------------------------- | -------------------------- | -------------------------------------------------------------------------- | ------ |
+| **GDP (Nominal)**          | Yearly                     | Auto-targets to billions/year (100% majority), no conversion needed        | ✅     |
+| **GDP Constant Prices**    | Yearly, Quarterly          | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅     |
+| **GDP from Agriculture**   | Yearly, Quarterly          | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅     |
+| **GDP from Construction**  | Yearly, Quarterly          | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅     |
+| **GDP from Manufacturing** | Yearly, Quarterly          | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅     |
+| **GDP from Services**      | Yearly, Quarterly          | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅     |
+| **Government Revenues**    | Yearly, Quarterly, Monthly | Time conversion applied, units show "USD millions per [period]"            | ✅     |
+| **Government Spending**    | Yearly, Quarterly          | Time conversion (year → quarter ÷4), units show "USD millions per quarter" | ✅     |
+| **Exports**                | Monthly, Quarterly         | Time conversion applied, units show "USD millions per quarter"             | ✅     |
 
 ### Key Characteristics
 
@@ -82,9 +87,9 @@ Flow indicators represent **activity over a time period**. They **SHOULD** have 
 ```json
 {
   "indicator_name": "GDP Constant Prices",
-  "original_value": 1060708,  // AFN millions per year
-  "normalized_value": 3932.68,  // USD millions per quarter
-  "normalized_unit": "USD millions per quarter",  // ✅ Includes time
+  "original_value": 1060708, // AFN millions per year
+  "normalized_value": 3932.68, // USD millions per quarter
+  "normalized_unit": "USD millions per quarter", // ✅ Includes time
   "explain": {
     "periodicity": {
       "original": "year",
@@ -98,7 +103,7 @@ Flow indicators represent **activity over a time period**. They **SHOULD** have 
       "selected": {
         "currency": "USD",
         "magnitude": "millions",
-        "time": "quarter"  // ✅ Time dimension included
+        "time": "quarter" // ✅ Time dimension included
       },
       "reason": "magnitude=majority(millions,0.74); time=majority(quarter,0.81)"
     }
@@ -110,23 +115,25 @@ Flow indicators represent **activity over a time period**. They **SHOULD** have 
 
 ## ✅ Rate Indicators
 
-Rate indicators represent **ratios, percentages, or indices**. They should **NOT** have time dimension conversion.
+Rate indicators represent **ratios, percentages, or indices**. They should
+**NOT** have time dimension conversion.
 
 ### Verified Working
 
-| Indicator | Periodicity Tested | Expected Behavior | Status |
-|-----------|-------------------|-------------------|--------|
-| **GDP Deflator** | Monthly, Quarterly | No time conversion, units show "points" (not "per quarter/month") | ✅ |
-| **GDP Annual Growth Rate** | Yearly, Quarterly | No time conversion, units show "%" | ✅ |
-| **Inflation Rate** | Monthly | No time conversion, units show "%" | ✅ |
-| **Unemployment Rate** | Quarterly, Monthly | No time conversion, units show "%" | ✅ |
-| **CPI** | Monthly | No time conversion, units show "index" or "points" | ✅ |
+| Indicator                  | Periodicity Tested | Expected Behavior                                                 | Status |
+| -------------------------- | ------------------ | ----------------------------------------------------------------- | ------ |
+| **GDP Deflator**           | Monthly, Quarterly | No time conversion, units show "points" (not "per quarter/month") | ✅     |
+| **GDP Annual Growth Rate** | Yearly, Quarterly  | No time conversion, units show "%"                                | ✅     |
+| **Inflation Rate**         | Monthly            | No time conversion, units show "%"                                | ✅     |
+| **Unemployment Rate**      | Quarterly, Monthly | No time conversion, units show "%"                                | ✅     |
+| **CPI**                    | Monthly            | No time conversion, units show "index" or "points"                | ✅     |
 
 ### Key Characteristics
 
 - **No time dimension** in normalized units
 - **No periodicity conversion** in explain metadata
-- **Auto-targeting skips time dimension**: `time=skipped(rate indicator, no time dimension)`
+- **Auto-targeting skips time dimension**:
+  `time=skipped(rate indicator, no time dimension)`
 - **Only currency and scale conversions** applied (if applicable)
 
 ### Example Export
@@ -154,14 +161,15 @@ Rate indicators represent **ratios, percentages, or indices**. They should **NOT
 
 ## ✅ Per Capita Indicators
 
-Per capita indicators are **ratios** (GDP ÷ Population). Current behavior treats them as flow, but since 100% of data is annual, no conversion occurs.
+Per capita indicators are **ratios** (GDP ÷ Population). Current behavior treats
+them as flow, but since 100% of data is annual, no conversion occurs.
 
 ### Verified Working
 
-| Indicator | Periodicity Tested | Expected Behavior | Status |
-|-----------|-------------------|-------------------|--------|
-| **GDP per Capita** | Yearly | Auto-targets to year (100% majority), no conversion needed | ✅ |
-| **GDP per Capita PPP** | Yearly | Auto-targets to year (100% majority), no conversion needed | ✅ |
+| Indicator              | Periodicity Tested | Expected Behavior                                          | Status |
+| ---------------------- | ------------------ | ---------------------------------------------------------- | ------ |
+| **GDP per Capita**     | Yearly             | Auto-targets to year (100% majority), no conversion needed | ✅     |
+| **GDP per Capita PPP** | Yearly             | Auto-targets to year (100% majority), no conversion needed | ✅     |
 
 ### Key Characteristics
 
@@ -176,7 +184,7 @@ Per capita indicators are **ratios** (GDP ÷ Population). Current behavior treat
 {
   "indicator_name": "GDP per Capita PPP",
   "original_value": 1983.81,
-  "normalized_value": 1983.81,  // ✅ Unchanged
+  "normalized_value": 1983.81, // ✅ Unchanged
   "normalized_unit": "USD per year",
   "explain": {
     "periodicity": {
@@ -190,7 +198,7 @@ Per capita indicators are **ratios** (GDP ÷ Population). Current behavior treat
       "selected": {
         "currency": "USD",
         "magnitude": "ones",
-        "time": "year"  // ✅ 100% majority
+        "time": "year" // ✅ 100% majority
       },
       "reason": "magnitude=majority(ones,1.00); time=majority(year,1.00)"
     }
@@ -204,20 +212,24 @@ Per capita indicators are **ratios** (GDP ÷ Population). Current behavior treat
 
 ### 1. GDP Deflator Misclassification (Fixed: 2025-09-30)
 
-**Issue:** GDP Deflator was classified as FLOW (80%) because it contains "GDP"  
-**Fix:** Added "deflator" and "gdp deflator" to RATE_PATTERNS with priority detection  
+**Issue:** GDP Deflator was classified as FLOW (80%) because it contains "GDP"\
+**Fix:** Added "deflator" and "gdp deflator" to RATE_PATTERNS with priority
+detection\
 **Result:** GDP Deflator now correctly classified as RATE (90%)
 
 ### 2. Stock/Rate Indicator Unit Labeling (Fixed: 2025-09-30)
 
-**Issue:** Stock indicators showing "USD millions per quarter" instead of "USD millions"  
-**Fix:** Use classification system to detect stock/rate indicators and omit time dimension from units  
+**Issue:** Stock indicators showing "USD millions per quarter" instead of "USD
+millions"\
+**Fix:** Use classification system to detect stock/rate indicators and omit time
+dimension from units\
 **Result:** Stock/rate indicators now show clean units without time dimension
 
 ### 3. Government Revenues Misclassification (Fixed: 2025-09-30)
 
-**Issue:** "Government Revenues" (plural) classified as STOCK instead of FLOW  
-**Fix:** Added plural forms ("government revenues", "tax revenues") to FLOW_PATTERNS  
+**Issue:** "Government Revenues" (plural) classified as STOCK instead of FLOW\
+**Fix:** Added plural forms ("government revenues", "tax revenues") to
+FLOW_PATTERNS\
 **Result:** Government Revenues now correctly classified as FLOW (80%)
 
 ---
@@ -226,14 +238,14 @@ Per capita indicators are **ratios** (GDP ÷ Population). Current behavior treat
 
 Based on verified exports:
 
-| Indicator Type | Typical Magnitude Target | Typical Time Target | Notes |
-|----------------|-------------------------|---------------------|-------|
-| GDP (Nominal) | billions (100%) | year (100%) | World Bank data |
-| GDP Constant Prices | millions (74%) | quarter (81%) | National sources |
-| GDP Sectoral | millions (76-78%) | quarter (84-85%) | National sources |
-| Government Debt | millions (84%) | N/A (skipped) | Stock indicator |
-| Government Revenues | millions (78%) | varies by source | Flow indicator |
-| Population | millions/ones | N/A (skipped) | Stock indicator |
+| Indicator Type      | Typical Magnitude Target | Typical Time Target | Notes            |
+| ------------------- | ------------------------ | ------------------- | ---------------- |
+| GDP (Nominal)       | billions (100%)          | year (100%)         | World Bank data  |
+| GDP Constant Prices | millions (74%)           | quarter (81%)       | National sources |
+| GDP Sectoral        | millions (76-78%)        | quarter (84-85%)    | National sources |
+| Government Debt     | millions (84%)           | N/A (skipped)       | Stock indicator  |
+| Government Revenues | millions (78%)           | varies by source    | Flow indicator   |
+| Population          | millions/ones            | N/A (skipped)       | Stock indicator  |
 
 ---
 
@@ -261,10 +273,13 @@ When adding new indicators, verify:
 
 ## 📝 Notes
 
-- **Smart Auto-Targeting** (v1.2.0+) automatically detects indicator type and skips time dimension for stock/rate indicators
-- **Per-indicator normalization** allows different indicators to have different target dimensions
+- **Smart Auto-Targeting** (v1.2.0+) automatically detects indicator type and
+  skips time dimension for stock/rate indicators
+- **Per-indicator normalization** allows different indicators to have different
+  target dimensions
 - **Classification confidence** typically 80-90% for well-defined indicators
-- **Fallback classification** defaults to stock for currency-based indicators without specific patterns
+- **Fallback classification** defaults to stock for currency-based indicators
+  without specific patterns
 
 ---
 
@@ -274,4 +289,3 @@ When adding new indicators, verify:
 - [Classification System](../src/classification/classification.ts)
 - [Pattern Definitions](../src/patterns.ts)
 - [CHANGELOG](../CHANGELOG.md)
-

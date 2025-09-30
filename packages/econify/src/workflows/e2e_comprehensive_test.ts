@@ -2398,7 +2398,10 @@ Deno.test("E2E: GDP Deflator (RATE indicator - should NOT get time conversion)",
       unit: "points",
       periodicity: "Quarterly",
       date: "2023-12-31",
-      metadata: { country_iso: "AUS", source: "Australian Bureau of Statistics" },
+      metadata: {
+        country_iso: "AUS",
+        source: "Australian Bureau of Statistics",
+      },
     },
   ];
 
@@ -2560,7 +2563,8 @@ Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per qu
     autoTargetDimensions: ["currency", "magnitude", "time"],
     targetCurrency: "USD",
     indicatorKey: "name",
-    fx,
+    useLiveFX: false,
+    fxFallback: fx,
     explain: true,
   });
 

@@ -176,7 +176,8 @@ export function buildExplainMetadata(
   const classification = classifyIndicator({
     name: options.indicatorName || "",
   });
-  const isStockLikeGlobal = classification.type === "stock" || classification.type === "rate";
+  const isStockLikeGlobal = classification.type === "stock" ||
+    classification.type === "rate";
 
   if (isNonCurrencyCategory) {
     // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency
