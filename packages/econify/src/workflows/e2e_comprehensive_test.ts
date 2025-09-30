@@ -2370,3 +2370,147 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
     "Reason should mention it's a stock indicator",
   );
 });
+
+Deno.test("E2E: GDP Deflator (RATE indicator - should NOT get time conversion)", async () => {
+  const data: ParsedData[] = [
+    {
+      id: "ARGENTINAGDPDEF",
+      name: "GDP Deflator",
+      value: 106947.1,
+      unit: "points",
+      periodicity: "Quarterly",
+      date: "2025-03-31",
+      metadata: { country_iso: "ARG", source: "INDEC" },
+    },
+    {
+      id: "AZERBAIJANGDPDEF",
+      name: "GDP Deflator",
+      value: 101.8,
+      unit: "points",
+      periodicity: "Monthly",
+      date: "2025-07-31",
+      metadata: { country_iso: "AZE", source: "Central Bank of Azerbaijan" },
+    },
+    {
+      id: "AUSTRALIAGDPDEF",
+      name: "GDP Deflator",
+      value: 109.13,
+      unit: "points",
+      periodicity: "Quarterly",
+      date: "2023-12-31",
+      metadata: { country_iso: "AUS", source: "Australian Bureau of Statistics" },
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    autoTargetDimensions: ["magnitude", "time"], // Include time - should be auto-skipped for rate
+    indicatorKey: "name",
+    explain: true,
+  });
+
+  assertEquals(result.data.length, 3, "Should have 3 results");
+
+  const arg = result.data.find((d) => d.metadata?.country_iso === "ARG");
+  const aze = result.data.find((d) => d.metadata?.country_iso === "AZE");
+  const aus = result.data.find((d) => d.metadata?.country_iso === "AUS");
+
+  assertExists(arg, "Argentina data should exist");
+  assertExists(aze, "Azerbaijan data should exist");
+  assertExists(aus, "Australia data should exist");
+
+  // CRITICAL: Values should NOT be time-converted!
+  assertEquals(
+    Math.round(arg.normalized!),
+    106947,
+    "Argentina: 106,947.1 points should stay ~106,947 (NOT converted!)",
+  );
+  assertEquals(
+    Math.round(aze.normalized!),
+    102,
+    "Azerbaijan: 101.8 points should stay ~102 (NOT multiplied by 3!)",
+  );
+  assertEquals(
+    Math.round(aus.normalized!),
+    109,
+    "Australia: 109.13 points should stay ~109 (NOT converted!)",
+  );
+
+  // Check normalized units - should be just "points", NOT "points per quarter/month"
+  assertEquals(
+    arg.normalizedUnit,
+    "points",
+    "Unit should be 'points', NOT 'points per quarter'",
+  );
+  assertEquals(
+    aze.normalizedUnit,
+    "points",
+    "Unit should be 'points', NOT 'points per month'",
+  );
+  assertEquals(
+    aus.normalizedUnit,
+    "points",
+    "Unit should be 'points', NOT 'points per quarter'",
+  );
+
+  // Check explain metadata
+  const argExplain = arg.explain;
+  const azeExplain = aze.explain;
+  const ausExplain = aus.explain;
+
+  assertExists(argExplain, "Argentina explain should exist");
+  assertExists(azeExplain, "Azerbaijan explain should exist");
+  assertExists(ausExplain, "Australia explain should exist");
+
+  // CRITICAL: No periodicity conversion for rate indicators
+  assertEquals(
+    azeExplain.periodicity,
+    undefined,
+    "Rate indicators should NOT have periodicity conversion",
+  );
+
+  // Time should be automatically skipped
+  assertEquals(
+    argExplain.targetSelection?.selected?.time,
+    undefined,
+    "Rate indicators should automatically skip time dimension",
+  );
+  assertEquals(
+    azeExplain.targetSelection?.selected?.time,
+    undefined,
+    "Rate indicators should automatically skip time dimension",
+  );
+  assertEquals(
+    ausExplain.targetSelection?.selected?.time,
+    undefined,
+    "Rate indicators should automatically skip time dimension",
+  );
+
+  // Verify the reason explains why time was skipped
+  assertExists(azeExplain.targetSelection?.reason);
+  assert(
+    azeExplain.targetSelection.reason.includes("time=skipped"),
+    "Reason should explain time was skipped for rate indicator",
+  );
+  assert(
+    azeExplain.targetSelection.reason.includes("rate indicator"),
+    "Reason should mention it's a rate indicator",
+  );
+
+  // Verify magnitude is "ones" (points have no scale)
+  assertEquals(
+    argExplain.targetSelection?.selected?.magnitude,
+    "ones",
+    "Magnitude should be 'ones' for points",
+  );
+  assertEquals(
+    azeExplain.targetSelection?.selected?.magnitude,
+    "ones",
+    "Magnitude should be 'ones' for points",
+  );
+  assertEquals(
+    ausExplain.targetSelection?.selected?.magnitude,
+    "ones",
+    "Magnitude should be 'ones' for points",
+  );
+});

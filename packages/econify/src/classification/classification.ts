@@ -114,6 +114,10 @@ export function classifyIndicator(input: IndicatorInput): Classification {
     .test(name);
   if (isMonetaryAggregate) signals.push("pattern:monetary_aggregate");
 
+  // GDP Deflator is a price index (rate), not a flow like GDP
+  const isDeflator = /\b(deflator|gdp deflator)\b/i.test(name);
+  if (isDeflator) signals.push("pattern:deflator");
+
   // Classification decision tree with priority order
   let type: IndicatorType = "unknown";
   let confidence = 0.25;
@@ -128,10 +132,12 @@ export function classifyIndicator(input: IndicatorInput): Classification {
     type = "currency";
     confidence = 0.95;
     signals.push("classified:currency");
-  } // Priority 2: Rate indicators (%, ratios, indices, growth rates)
-  else if (hasRateUnit || isIndexValue || isGrowthRate) {
+  } // Priority 2: Rate indicators (%, ratios, indices, growth rates, deflators)
+  else if (hasRateUnit || isIndexValue || isGrowthRate || isDeflator) {
     type = "rate";
-    confidence = hasRateUnit ? 0.95 : (isIndexValue ? 0.90 : 0.85);
+    confidence = hasRateUnit
+      ? 0.95
+      : (isIndexValue ? 0.90 : (isDeflator ? 0.90 : 0.85));
     signals.push("classified:rate");
   } // Priority 3: Explicit rate keywords (inflation, unemployment rate, etc.)
   else if (rateHit && !flowHit && !stockHit) {

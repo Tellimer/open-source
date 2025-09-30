@@ -164,6 +164,8 @@ export const RATE_PATTERNS = [
   // Economic indicators
   "inflation",
   "deflation",
+  "deflator",
+  "gdp deflator",
   "cpi",
   "consumer price index",
   "ppi",
