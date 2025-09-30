@@ -125,7 +125,9 @@ export const FLOW_PATTERNS = [
 
   // Government finance
   "tax revenue",
+  "tax revenues",
   "government revenue",
+  "government revenues",
   "government spending",
   "fiscal deficit",
   "budget deficit",
