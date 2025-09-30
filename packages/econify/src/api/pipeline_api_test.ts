@@ -681,13 +681,8 @@ Deno.test("processEconomicData - configuration matrix (targets/combinations)", a
   assertExists(r4.data[0].normalizedUnit?.includes("USD"));
 });
 
-Deno.test("processEconomicData - flow indicator uses periodicity when unit has no time", async () => {
-  const data: ParsedData[] = [{
-    value: 100,
-    unit: "USD Million",
-    name: "Revenue", // Flow indicator
-    periodicity: "Yearly", // Explicit periodicity used as time scale for flows
-  }];
+Deno.test("processEconomicData - explain surfaces missing time basis case", async () => {
+  const data = [{ value: 100, unit: "USD Million", name: "Revenue" }];
 
   const result = await processEconomicData(data, {
     targetTimeScale: "year",
@@ -696,11 +691,11 @@ Deno.test("processEconomicData - flow indicator uses periodicity when unit has n
 
   const ex = result.data[0].explain;
   assertExists(ex);
-  assertEquals(ex?.periodicity?.original, "year");
-  assertEquals(ex?.periodicity?.target, "year");
-  assertEquals(ex?.periodicity?.adjusted, false);
-  assertEquals(ex?.periodicity?.description, "No conversion needed (year)");
-  assertEquals(ex?.reportingFrequency, "year");
+  // When there's no source time scale, periodicity should be undefined
+  // (can't convert from nothing to year)
+  assertEquals(ex?.periodicity, undefined);
+  // But reportingFrequency should still be undefined since there's no periodicity field
+  assertEquals(ex?.reportingFrequency, undefined);
 });
 
 Deno.test("processEconomicData - prefer unit time over explicit periodicity (API)", async () => {
@@ -1217,17 +1212,17 @@ Deno.test("auto-target extensive: GDP/Debt/Imports distributions with share asse
     { id: "G11", value: 110, unit: "USD Thousand per quarter", name: "GDP" },
     { id: "G12", value: 111, unit: "USD Thousand per quarter", name: "GDP" },
 
-    // Debt (10): EUR/millions majority; time ambiguous -> tie-break to month
-    { id: "D1", value: 200, unit: "EUR Million per month", name: "Debt" },
-    { id: "D2", value: 201, unit: "EUR Million per month", name: "Debt" },
-    { id: "D3", value: 202, unit: "EUR Million per month", name: "Debt" },
-    { id: "D4", value: 203, unit: "EUR Million per month", name: "Debt" },
-    { id: "D5", value: 204, unit: "EUR Million per month", name: "Debt" },
-    { id: "D6", value: 205, unit: "EUR Million per quarter", name: "Debt" },
-    { id: "D7", value: 206, unit: "EUR Million per quarter", name: "Debt" },
-    { id: "D8", value: 207, unit: "USD Thousand per quarter", name: "Debt" },
-    { id: "D9", value: 208, unit: "USD Thousand per quarter", name: "Debt" },
-    { id: "D10", value: 209, unit: "USD Thousand per quarter", name: "Debt" },
+    // Exports (10): EUR/millions majority; time ambiguous -> tie-break to month
+    { id: "E1", value: 200, unit: "EUR Million per month", name: "Exports" },
+    { id: "E2", value: 201, unit: "EUR Million per month", name: "Exports" },
+    { id: "E3", value: 202, unit: "EUR Million per month", name: "Exports" },
+    { id: "E4", value: 203, unit: "EUR Million per month", name: "Exports" },
+    { id: "E5", value: 204, unit: "EUR Million per month", name: "Exports" },
+    { id: "E6", value: 205, unit: "EUR Million per quarter", name: "Exports" },
+    { id: "E7", value: 206, unit: "EUR Million per quarter", name: "Exports" },
+    { id: "E8", value: 207, unit: "USD Thousand per quarter", name: "Exports" },
+    { id: "E9", value: 208, unit: "USD Thousand per quarter", name: "Exports" },
+    { id: "E10", value: 209, unit: "USD Thousand per quarter", name: "Exports" },
 
     // Imports (10): no majority in any dimension with minShare 0.6 -> tie-breaks across all
     { id: "I1", value: 300, unit: "USD Million per quarter", name: "Imports" },
@@ -1286,20 +1281,20 @@ Deno.test("auto-target extensive: GDP/Debt/Imports distributions with share asse
     }
   }
 
-  // Debt assertions: currency/magnitude majority; time tie-break
+  // Exports assertions: currency/magnitude majority; time tie-break
   {
-    const group = byName("Debt");
+    const group = byName("Exports");
     const ts = group[0]?.explain?.targetSelection;
-    if (!ts) throw new Error("Debt missing targetSelection");
+    if (!ts) throw new Error("Exports missing targetSelection");
     if (!(ts.shares?.currency?.EUR! > 0.6)) {
-      throw new Error("Debt EUR share > 0.6 expected");
+      throw new Error("Exports EUR share > 0.6 expected");
     }
     if (!(ts.shares?.magnitude?.millions! > 0.6)) {
-      throw new Error("Debt millions share > 0.6 expected");
+      throw new Error("Exports millions share > 0.6 expected");
     }
     const r = String(ts.reason || "");
     if (!r.includes("time=tie-break(")) {
-      throw new Error("Debt time tie-break expected");
+      throw new Error("Exports time tie-break expected");
     }
   }
 

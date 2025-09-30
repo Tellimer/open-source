@@ -2265,7 +2265,7 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
 
   const result = await processEconomicDataByIndicator(data, {
     autoTargetByIndicator: true,
-    autoTargetDimensions: ["magnitude"], // Only auto-target magnitude, NOT time (stock indicator)
+    autoTargetDimensions: ["magnitude", "time"], // Include time - should be auto-skipped for stock
     indicatorKey: "name",
     explain: true,
   });
@@ -2346,14 +2346,24 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
   // Check target selection
   assertExists(agoExplain.targetSelection);
   assertEquals(agoExplain.targetSelection.selected.magnitude, "thousands");
-  // Time should NOT be auto-targeted for stock indicators
-  // (we disabled time auto-targeting in the options above)
+
+  // ✅ CRITICAL: Time should be automatically skipped for stock indicators
+  // Even though "time" is in autoTargetDimensions, the system should detect
+  // that "Employed Persons" is a stock indicator and skip time auto-targeting
   assertEquals(
     agoExplain.targetSelection.selected.time,
     undefined,
-    "Stock indicators should NOT have time target when autoTargetDimensions excludes 'time'",
+    "Stock indicators should automatically skip time dimension (even when 'time' in autoTargetDimensions)",
   );
 
-  // NOTE: Future enhancement - auto-targeting should automatically detect stock indicators
-  // and skip time dimension auto-targeting even when "time" is in autoTargetDimensions
+  // Verify the reason explains why time was skipped
+  assertExists(agoExplain.targetSelection.reason);
+  assert(
+    agoExplain.targetSelection.reason.includes("time=skipped"),
+    "Reason should explain time was skipped for stock indicator",
+  );
+  assert(
+    agoExplain.targetSelection.reason.includes("stock indicator"),
+    "Reason should mention it's a stock indicator",
+  );
 });

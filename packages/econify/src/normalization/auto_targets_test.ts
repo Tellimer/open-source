@@ -1,4 +1,5 @@
 import {
+  assert,
   assertEquals,
   assertExists,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
@@ -28,10 +29,12 @@ Deno.test("computeAutoTargets: majority selection per dimension", () => {
   assertExists(gdp?.shares.time["quarter"]);
 });
 
-Deno.test("computeAutoTargets: tie-breakers when no majority", () => {
+Deno.test("computeAutoTargets: tie-breakers when no majority (flow indicator)", () => {
+  // Use a FLOW indicator (Exports) instead of STOCK (Debt)
+  // Flow indicators should get time auto-targeting
   const data: ParsedData[] = [
-    { name: "Debt", value: 1, unit: "USD Billion per quarter" },
-    { name: "Debt", value: 2, unit: "EUR Million per month" },
+    { name: "Exports", value: 1, unit: "USD Billion per quarter" },
+    { name: "Exports", value: 2, unit: "EUR Million per month" },
   ];
 
   const targets = computeAutoTargets(data, {
@@ -45,12 +48,42 @@ Deno.test("computeAutoTargets: tie-breakers when no majority", () => {
     },
   });
 
-  const debt = targets.get("debt"); // Key is normalized to lowercase
-  assertExists(debt);
+  const exports = targets.get("exports"); // Key is normalized to lowercase
+  assertExists(exports);
   // prefer targetCurrency (EUR), prefer millions, prefer month
+  assertEquals(exports?.currency, "EUR");
+  assertEquals(exports?.magnitude as Scale, "millions");
+  assertEquals(exports?.time as TimeScale, "month");
+});
+
+Deno.test("computeAutoTargets: stock indicators skip time dimension", () => {
+  // Debt is a STOCK indicator - should NOT get time auto-targeting
+  const data: ParsedData[] = [
+    { name: "Debt", value: 1, unit: "USD Billion" },
+    { name: "Debt", value: 2, unit: "EUR Million" },
+  ];
+
+  const targets = computeAutoTargets(data, {
+    indicatorKey: "name",
+    minMajorityShare: 0.6,
+    targetCurrency: "EUR",
+    tieBreakers: {
+      currency: "prefer-targetCurrency",
+      magnitude: "prefer-millions",
+      time: "prefer-month",
+    },
+  });
+
+  const debt = targets.get("debt");
+  assertExists(debt);
+  // Currency and magnitude should be set
   assertEquals(debt?.currency, "EUR");
   assertEquals(debt?.magnitude as Scale, "millions");
-  assertEquals(debt?.time as TimeScale, "month");
+  // Time should be skipped for stock indicators
+  assertEquals(debt?.time, undefined);
+  // Reason should explain why time was skipped
+  assert(debt?.reason?.includes("time=skipped"));
+  assert(debt?.reason?.includes("stock indicator"));
 });
 
 Deno.test("computeAutoTargets: explicit metadata beats unit parsing", () => {
@@ -121,15 +154,18 @@ Deno.test("computeAutoTargets: allowList / denyList", () => {
   assertEquals(targets.get("credit rating"), undefined);
 });
 
-Deno.test("computeAutoTargets: include non-monetary indicators for magnitude/time targeting", () => {
+Deno.test("computeAutoTargets: include non-monetary flow indicators for magnitude/time targeting", () => {
   const data: ParsedData[] = [
+    // CPI is a RATE indicator - should skip time dimension
     { name: "CPI", value: 3.5, unit: "percent" },
+    // Car Registrations is a FLOW indicator - should get time dimension
     {
       name: "Car Registrations",
       value: 1000,
       unit: "Units",
       periodicity: "Monthly",
     },
+    // Oil Production is a FLOW indicator - should get time dimension
     { name: "Oil Production", value: 10, unit: "BBL/D/1K" },
   ];
 
@@ -141,7 +177,15 @@ Deno.test("computeAutoTargets: include non-monetary indicators for magnitude/tim
   // Non-monetary indicators should now be included for magnitude/time targeting
   assertEquals(targets.size, 3, "Should include all non-monetary indicators");
 
-  // Car Registrations should have magnitude and time targets but no currency
+  // CPI is a rate indicator - should skip time dimension
+  const cpi = targets.get("cpi");
+  assertExists(cpi);
+  assertEquals(cpi.currency, undefined, "Non-monetary should not have currency");
+  assertEquals(cpi.magnitude, "ones", "Should have magnitude target");
+  assertEquals(cpi.time, undefined, "Rate indicators should skip time dimension");
+  assert(cpi.reason?.includes("time=skipped"));
+
+  // Car Registrations is a flow - should have time dimension
   const carReg = targets.get("car registrations");
   assertExists(carReg);
   assertEquals(
@@ -150,7 +194,7 @@ Deno.test("computeAutoTargets: include non-monetary indicators for magnitude/tim
     "Non-monetary should not have currency",
   );
   assertEquals(carReg.magnitude, "ones", "Should have magnitude target");
-  assertEquals(carReg.time, "month", "Should have time target");
+  assertEquals(carReg.time, "month", "Flow indicators should have time target");
 });
 
 Deno.test("computeAutoTargets: count indicators (non-monetary) participate in magnitude and time targeting", () => {

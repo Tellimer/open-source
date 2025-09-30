@@ -6,6 +6,7 @@ import type { Scale, TimeScale } from "../types.ts";
 import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 import { parseUnit } from "../units/units.ts";
 import { getScale, parseTimeScale } from "../scale/scale.ts";
+import { classifyIndicator } from "../classification/classification.ts";
 
 export type IndicatorKeyResolver =
   | "name"
@@ -149,10 +150,9 @@ export function computeAutoTargets(
   }>();
 
   for (const item of data) {
-    // Allow both monetary and non-monetary indicators for auto-targeting
-    // Non-monetary indicators (counts) will participate in magnitude and time targeting
-    const monetary = isMonetary(item);
-
+    // Only filter by isMonetary if currency is in auto-target dimensions
+    // Non-monetary indicators can still participate in magnitude/time targeting
+    if (dims.has("currency") && !isMonetary(item)) continue;
     const key = resolveKey(item, options.indicatorKey);
     if (!key) continue;
     // denyList filtering - normalize list items for comparison if not using custom resolver
@@ -194,10 +194,7 @@ export function computeAutoTargets(
     const time = parseUnit(item.unit).timeScale ||
       (item.periodicity ? parseTimeScale(item.periodicity) : undefined);
 
-    // Only track currency for monetary indicators
-    if (monetary) {
-      inc(g.currency, currency ?? undefined);
-    }
+    inc(g.currency, currency ?? undefined);
     inc(g.magnitude, magnitude ?? undefined);
     inc(g.time, time ?? undefined);
     g.size += 1;
@@ -212,6 +209,12 @@ export function computeAutoTargets(
       magnitude: {} as Record<string, number>,
       time: {} as Record<string, number>,
     };
+
+    // Classify the indicator to determine if time dimension should be auto-targeted
+    // Stock/Rate indicators should NOT have time dimension auto-targeted
+    const classification = classifyIndicator({ name: key });
+    const shouldSkipTimeDimension = classification.type === "stock" ||
+      classification.type === "rate";
 
     const dimsList: ("currency" | "magnitude" | "time")[] = [
       "currency",
@@ -273,18 +276,28 @@ export function computeAutoTargets(
     }
 
     if (dims.has("time")) {
-      const { key: topKey, share } = topWithShare(g.time, g.size);
-      const chosen = (topKey && share >= minShare)
-        ? (topKey as TimeScale)
-        : (applyTieBreaker("time", options) as TimeScale | undefined);
-      sel.time = chosen;
-      if (topKey && share >= minShare && chosen === topKey) {
-        reasonParts.push(`time=majority(${topKey},${share.toFixed(2)})`);
-      } else if (chosen) {
-        const pref = options.tieBreakers?.time ?? "prefer-month";
-        reasonParts.push(`time=tie-break(${pref})`);
+      // Skip time dimension auto-targeting for stock/rate indicators
+      // Stock indicators (population, debt, reserves) are snapshots, not flows
+      // Rate indicators (CPI, unemployment rate) are dimensionless ratios
+      if (shouldSkipTimeDimension) {
+        sel.time = undefined;
+        reasonParts.push(
+          `time=skipped(${classification.type} indicator, no time dimension)`,
+        );
       } else {
-        reasonParts.push("time=none");
+        const { key: topKey, share } = topWithShare(g.time, g.size);
+        const chosen = (topKey && share >= minShare)
+          ? (topKey as TimeScale)
+          : (applyTieBreaker("time", options) as TimeScale | undefined);
+        sel.time = chosen;
+        if (topKey && share >= minShare && chosen === topKey) {
+          reasonParts.push(`time=majority(${topKey},${share.toFixed(2)})`);
+        } else if (chosen) {
+          const pref = options.tieBreakers?.time ?? "prefer-month";
+          reasonParts.push(`time=tie-break(${pref})`);
+        } else {
+          reasonParts.push("time=none");
+        }
       }
     }
 
