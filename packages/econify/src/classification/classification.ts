@@ -77,7 +77,6 @@ export function classifyIndicator(input: IndicatorInput): Classification {
     .filter((x) => x.length > 0);
   const all = parts.join(" | ");
   const name = normalizeText(raw?.name || "");
-  const unit = normalizeText(raw?.unit || "");
   const signals: string[] = [];
 
   // Detect unit characteristics
