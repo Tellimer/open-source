@@ -83,6 +83,7 @@ function normalizeCurrency(currency?: string | null): string | null {
 
 export interface BatchItem {
   id?: string | number;
+  name?: string; // Indicator name for classification (e.g., "GDP", "Balance of Trade")
   value: number;
   unit: string;
 
