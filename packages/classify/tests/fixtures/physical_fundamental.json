@@ -605,6 +605,320 @@
         "heat_map_orientation": "neutral"
       },
       "notes": "Real data from World Bank for Pakistan (PAK). Population stock with consistent growth trend"
+    },
+    {
+      "indicator": {
+        "id": "NY.GNS.ICTR.ZS",
+        "name": "Gross savings (% of GDP)",
+        "units": "% of GDP",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Gross savings are calculated as gross national income less total consumption, plus net transfers",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 43.607
+          },
+          {
+            "date": "2022",
+            "value": 45.814
+          },
+          {
+            "date": "2021",
+            "value": 45.471
+          },
+          {
+            "date": "2020",
+            "value": 43.926
+          },
+          {
+            "date": "2019",
+            "value": 43.773
+          },
+          {
+            "date": "2018",
+            "value": 44.486
+          },
+          {
+            "date": "2017",
+            "value": 44.905
+          },
+          {
+            "date": "2016",
+            "value": 44.381
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "flow",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for China (CHN). Savings is a flow indicator representing income not consumed during a period. Very high savings rate typical of China"
+    },
+    {
+      "indicator": {
+        "id": "GC.TAX.TOTL.CN_TUR",
+        "name": "Tax revenue (current LCU)",
+        "units": "Current Turkish Lira",
+        "currency_code": "TRY",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Tax revenue refers to compulsory transfers to the central government for public purposes. Certain compulsory transfers such as fines, penalties, and most social security contributions are excluded",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 4920357541215.0
+          },
+          {
+            "date": "2022",
+            "value": 2415705722278.58
+          },
+          {
+            "date": "2021",
+            "value": 1296210846689.73
+          },
+          {
+            "date": "2020",
+            "value": 891765058564.89
+          },
+          {
+            "date": "2019",
+            "value": 713491555043.62
+          },
+          {
+            "date": "2018",
+            "value": 649556098477.04
+          },
+          {
+            "date": "2017",
+            "value": 555234665288.47
+          },
+          {
+            "date": "2016",
+            "value": 479756554788.49
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "flow",
+        "temporal_aggregation": "period-total",
+        "is_monetary": true,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for Turkey (TUR). Tax revenue is a flow indicator showing government receipts over a period. Dramatic increases due to high inflation in Turkey"
+    },
+    {
+      "indicator": {
+        "id": "DT.DOD.DECT.CD",
+        "name": "Total External debt stocks",
+        "units": "Current USD",
+        "currency_code": "USD",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Total external debt is debt owed to nonresidents repayable in currency, goods, or services. Total external debt is the sum of public, publicly guaranteed, and private nonguaranteed long-term debt, use of IMF credit, and short-term debt",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 499842484724.0
+          },
+          {
+            "date": "2022",
+            "value": 457917129054.5
+          },
+          {
+            "date": "2021",
+            "value": 436370123073.1
+          },
+          {
+            "date": "2020",
+            "value": 429769826587.1
+          },
+          {
+            "date": "2019",
+            "value": 414870032426.6
+          },
+          {
+            "date": "2018",
+            "value": 426808135352.0
+          },
+          {
+            "date": "2017",
+            "value": 447424576718.5
+          },
+          {
+            "date": "2016",
+            "value": 399311907395.3
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "stock",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Real data from World Bank for Turkey (TUR). External debt is a stock indicator representing total outstanding obligations at a point in time. Lower debt generally positive"
+    },
+    {
+      "indicator": {
+        "id": "GC.NLD.TOTL.GD.ZS",
+        "name": "Net lending (+) / net borrowing (-) (% of GDP)",
+        "units": "% of GDP",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Net lending (+) / net borrowing (–) equals government revenue minus expense, minus net investment in nonfinancial assets. It is also equal to the net result of transactions in financial assets and liabilities",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": -6.924
+          },
+          {
+            "date": "2022",
+            "value": -4.280
+          },
+          {
+            "date": "2021",
+            "value": -4.141
+          },
+          {
+            "date": "2020",
+            "value": -12.501
+          },
+          {
+            "date": "2019",
+            "value": -5.366
+          },
+          {
+            "date": "2018",
+            "value": -6.699
+          },
+          {
+            "date": "2017",
+            "value": -8.139
+          },
+          {
+            "date": "2016",
+            "value": -6.650
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "balance",
+        "temporal_aggregation": "period-total",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for Brazil (BRA). Fiscal balance is a balance indicator that can be positive (surplus) or negative (deficit). Shows Brazil's persistent deficits, especially during COVID-19 (2020)"
+    },
+    {
+      "indicator": {
+        "id": "GC.REV.XGRT.GD.ZS",
+        "name": "Revenue, excluding grants (% of GDP)",
+        "units": "% of GDP",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Revenue is cash receipts from taxes, social contributions, and other revenues such as fines, fees, rent, and income from property or sales. Grants are excluded",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 29.350
+          },
+          {
+            "date": "2022",
+            "value": 25.759
+          },
+          {
+            "date": "2021",
+            "value": 29.872
+          },
+          {
+            "date": "2020",
+            "value": 29.635
+          },
+          {
+            "date": "2019",
+            "value": 29.173
+          },
+          {
+            "date": "2018",
+            "value": 30.292
+          },
+          {
+            "date": "2017",
+            "value": 29.481
+          },
+          {
+            "date": "2016",
+            "value": 30.791
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "flow",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for Turkey (TUR). Government revenue is a flow indicator showing receipts as share of GDP over a period. Higher revenue generally positive for fiscal sustainability"
+    },
+    {
+      "indicator": {
+        "id": "GC.XPN.TOTL.GD.ZS",
+        "name": "Expense (% of GDP)",
+        "units": "% of GDP",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Expense is cash payments for operating activities of the government in providing goods and services. It includes compensation of employees, interest and subsidies, grants, social benefits, and other expenses",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 32.692
+          },
+          {
+            "date": "2022",
+            "value": 34.134
+          },
+          {
+            "date": "2021",
+            "value": 31.794
+          },
+          {
+            "date": "2020",
+            "value": 38.481
+          },
+          {
+            "date": "2019",
+            "value": 34.787
+          },
+          {
+            "date": "2018",
+            "value": 35.454
+          },
+          {
+            "date": "2017",
+            "value": 36.248
+          },
+          {
+            "date": "2016",
+            "value": 36.492
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "flow",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Brazil (BRA). Government expense is a flow indicator showing spending as share of GDP over a period. Neutral orientation as optimal level depends on context. Spike in 2020 due to COVID-19 response"
     }
   ]
 }

@@ -337,6 +337,278 @@
         "heat_map_orientation": "neutral"
       },
       "notes": "Real data from World Bank for Nigeria (NGA). CPI demonstrates significant price increases over time"
+    },
+    {
+      "indicator": {
+        "id": "crude_oil_brent",
+        "name": "Crude Oil Price - Brent",
+        "units": "USD per barrel",
+        "periodicity": "monthly",
+        "source": "ICE Futures Europe",
+        "description": "Brent crude oil spot price, the global benchmark for oil prices",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 82.15
+          },
+          {
+            "date": "2024-02",
+            "value": 83.55
+          },
+          {
+            "date": "2024-03",
+            "value": 85.42
+          },
+          {
+            "date": "2024-04",
+            "value": 89.18
+          },
+          {
+            "date": "2024-05",
+            "value": 82.76
+          },
+          {
+            "date": "2024-06",
+            "value": 85.33
+          },
+          {
+            "date": "2024-07",
+            "value": 84.85
+          },
+          {
+            "date": "2024-08",
+            "value": 79.66
+          },
+          {
+            "date": "2024-09",
+            "value": 75.17
+          },
+          {
+            "date": "2024-10",
+            "value": 74.38
+          },
+          {
+            "date": "2024-11",
+            "value": 72.81
+          },
+          {
+            "date": "2024-12",
+            "value": 73.52
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Commodity price - oil. Neutral orientation as impact depends on whether country is importer or exporter. Highly volatile with geopolitical sensitivity"
+    },
+    {
+      "indicator": {
+        "id": "gold_price_spot",
+        "name": "Gold Spot Price",
+        "units": "USD per troy ounce",
+        "periodicity": "monthly",
+        "source": "London Bullion Market",
+        "description": "Spot price of gold in US dollars per troy ounce",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 2039.15
+          },
+          {
+            "date": "2024-02",
+            "value": 2042.33
+          },
+          {
+            "date": "2024-03",
+            "value": 2160.52
+          },
+          {
+            "date": "2024-04",
+            "value": 2329.87
+          },
+          {
+            "date": "2024-05",
+            "value": 2352.14
+          },
+          {
+            "date": "2024-06",
+            "value": 2326.75
+          },
+          {
+            "date": "2024-07",
+            "value": 2401.28
+          },
+          {
+            "date": "2024-08",
+            "value": 2506.92
+          },
+          {
+            "date": "2024-09",
+            "value": 2619.45
+          },
+          {
+            "date": "2024-10",
+            "value": 2734.18
+          },
+          {
+            "date": "2024-11",
+            "value": 2651.33
+          },
+          {
+            "date": "2024-12",
+            "value": 2638.72
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Precious metal commodity price. Safe-haven asset, tends to rise during uncertainty. Neutral as impact varies by stakeholder"
+    },
+    {
+      "indicator": {
+        "id": "copper_price_lme",
+        "name": "Copper Price - LME",
+        "units": "USD per metric ton",
+        "periodicity": "monthly",
+        "source": "London Metal Exchange",
+        "description": "London Metal Exchange copper spot price, key industrial metal",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 8456.50
+          },
+          {
+            "date": "2024-02",
+            "value": 8523.75
+          },
+          {
+            "date": "2024-03",
+            "value": 8912.30
+          },
+          {
+            "date": "2024-04",
+            "value": 9345.80
+          },
+          {
+            "date": "2024-05",
+            "value": 10127.45
+          },
+          {
+            "date": "2024-06",
+            "value": 9876.20
+          },
+          {
+            "date": "2024-07",
+            "value": 9654.35
+          },
+          {
+            "date": "2024-08",
+            "value": 9234.60
+          },
+          {
+            "date": "2024-09",
+            "value": 9567.85
+          },
+          {
+            "date": "2024-10",
+            "value": 9823.40
+          },
+          {
+            "date": "2024-11",
+            "value": 9456.75
+          },
+          {
+            "date": "2024-12",
+            "value": 9102.30
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Industrial metal commodity price. Often seen as economic indicator due to widespread use in construction and manufacturing. Neutral orientation"
+    },
+    {
+      "indicator": {
+        "id": "wheat_price_cbot",
+        "name": "Wheat Price - CBOT",
+        "units": "USD per bushel",
+        "periodicity": "monthly",
+        "source": "Chicago Board of Trade",
+        "description": "Chicago Board of Trade wheat futures price, key agricultural commodity",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 6.12
+          },
+          {
+            "date": "2024-02",
+            "value": 5.98
+          },
+          {
+            "date": "2024-03",
+            "value": 5.67
+          },
+          {
+            "date": "2024-04",
+            "value": 5.89
+          },
+          {
+            "date": "2024-05",
+            "value": 6.45
+          },
+          {
+            "date": "2024-06",
+            "value": 6.23
+          },
+          {
+            "date": "2024-07",
+            "value": 5.87
+          },
+          {
+            "date": "2024-08",
+            "value": 5.54
+          },
+          {
+            "date": "2024-09",
+            "value": 5.76
+          },
+          {
+            "date": "2024-10",
+            "value": 5.92
+          },
+          {
+            "date": "2024-11",
+            "value": 5.68
+          },
+          {
+            "date": "2024-12",
+            "value": 5.51
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Agricultural commodity price. Critical for food security. Neutral as higher prices benefit producers but hurt consumers. Weather and geopolitical sensitive"
     }
   ]
 }
