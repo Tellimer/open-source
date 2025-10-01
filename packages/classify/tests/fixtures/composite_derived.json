@@ -1,0 +1,290 @@
+{
+  "category": "Composite/Derived",
+  "description": "Indicators representing composite and derived measures: index, correlation, elasticity, multiplier",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "sp500_index",
+        "name": "S&P 500 Index",
+        "units": "index",
+        "periodicity": "daily",
+        "source": "S&P Dow Jones Indices",
+        "description": "Market-capitalization-weighted index of 500 leading US companies",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": 4567
+          },
+          {
+            "date": "2024-12-02",
+            "value": 4589
+          },
+          {
+            "date": "2024-12-03",
+            "value": 4543
+          },
+          {
+            "date": "2024-12-04",
+            "value": 4612
+          },
+          {
+            "date": "2024-12-05",
+            "value": 4598
+          },
+          {
+            "date": "2024-12-06",
+            "value": 4576
+          },
+          {
+            "date": "2024-12-09",
+            "value": 4591
+          },
+          {
+            "date": "2024-12-10",
+            "value": 4634
+          },
+          {
+            "date": "2024-12-11",
+            "value": 4621
+          },
+          {
+            "date": "2024-12-12",
+            "value": 4608
+          },
+          {
+            "date": "2024-12-13",
+            "value": 4595
+          },
+          {
+            "date": "2024-12-16",
+            "value": 4619
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "index",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Index indicator - composite measure"
+    },
+    {
+      "indicator": {
+        "id": "ppi_index",
+        "name": "Producer Price Index",
+        "units": "index",
+        "periodicity": "monthly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Average change over time in selling prices received by domestic producers",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 203.5
+          },
+          {
+            "date": "2024-02",
+            "value": 204.2
+          },
+          {
+            "date": "2024-03",
+            "value": 205.0
+          },
+          {
+            "date": "2024-04",
+            "value": 205.6
+          },
+          {
+            "date": "2024-05",
+            "value": 206.1
+          },
+          {
+            "date": "2024-06",
+            "value": 206.0
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "index",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "PPI level treated as neutral"
+    },
+    {
+      "indicator": {
+        "id": "stock_bond_correlation",
+        "name": "Stock-Bond Correlation (60-day)",
+        "units": "correlation coefficient",
+        "periodicity": "daily",
+        "source": "Bloomberg",
+        "description": "Rolling 60-day correlation between S&P 500 and 10-year Treasury",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": -0.35
+          },
+          {
+            "date": "2024-12-02",
+            "value": -0.32
+          },
+          {
+            "date": "2024-12-03",
+            "value": -0.38
+          },
+          {
+            "date": "2024-12-04",
+            "value": -0.30
+          },
+          {
+            "date": "2024-12-05",
+            "value": -0.33
+          },
+          {
+            "date": "2024-12-06",
+            "value": -0.36
+          },
+          {
+            "date": "2024-12-09",
+            "value": -0.34
+          },
+          {
+            "date": "2024-12-10",
+            "value": -0.28
+          },
+          {
+            "date": "2024-12-11",
+            "value": -0.31
+          },
+          {
+            "date": "2024-12-12",
+            "value": -0.35
+          },
+          {
+            "date": "2024-12-13",
+            "value": -0.37
+          },
+          {
+            "date": "2024-12-16",
+            "value": -0.33
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "correlation",
+        "temporal_aggregation": "period-average",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Correlation indicator - statistical relationship"
+    },
+    {
+      "indicator": {
+        "id": "price_elasticity_demand",
+        "name": "Price Elasticity of Demand (Gasoline)",
+        "units": "elasticity coefficient",
+        "periodicity": "quarterly",
+        "source": "Energy Information Administration",
+        "description": "Percentage change in quantity demanded per 1% price change",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": -0.25
+          },
+          {
+            "date": "2023-Q2",
+            "value": -0.28
+          },
+          {
+            "date": "2023-Q3",
+            "value": -0.22
+          },
+          {
+            "date": "2023-Q4",
+            "value": -0.30
+          },
+          {
+            "date": "2024-Q1",
+            "value": -0.27
+          },
+          {
+            "date": "2024-Q2",
+            "value": -0.24
+          },
+          {
+            "date": "2024-Q3",
+            "value": -0.26
+          },
+          {
+            "date": "2024-Q4",
+            "value": -0.29
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "elasticity",
+        "temporal_aggregation": "period-average",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Elasticity indicator - responsiveness measure calculated over the period"
+    },
+    {
+      "indicator": {
+        "id": "fiscal_multiplier",
+        "name": "Fiscal Multiplier",
+        "units": "multiplier",
+        "periodicity": "annual",
+        "source": "Congressional Budget Office",
+        "description": "Change in GDP per dollar of government spending",
+        "sample_values": [
+          {
+            "date": "2017",
+            "value": 1.5
+          },
+          {
+            "date": "2018",
+            "value": 1.4
+          },
+          {
+            "date": "2019",
+            "value": 1.6
+          },
+          {
+            "date": "2020",
+            "value": 1.8
+          },
+          {
+            "date": "2021",
+            "value": 1.7
+          },
+          {
+            "date": "2022",
+            "value": 1.5
+          },
+          {
+            "date": "2023",
+            "value": 1.6
+          },
+          {
+            "date": "2024",
+            "value": 1.5
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "multiplier",
+        "temporal_aggregation": "period-average",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Multiplier indicator - amplification effect estimated over the period"
+    }
+  ]
+}

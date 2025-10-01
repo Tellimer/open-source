@@ -3,6 +3,7 @@
   "specifiers": {
     "jsr:@std/assert@*": "1.0.6",
     "jsr:@std/assert@1": "1.0.6",
+    "jsr:@std/cli@^1.0.22": "1.0.22",
     "jsr:@std/internal@^1.0.4": "1.0.4",
     "npm:@types/node@*": "22.5.4",
     "npm:xstate@*": "5.20.2",
@@ -14,6 +15,9 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/cli@1.0.22": {
+      "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"
     },
     "@std/internal@1.0.4": {
       "integrity": "62e8e4911527e5e4f307741a795c0b0a9e6958d0b3790716ae71ce085f755422"
@@ -255,6 +259,12 @@
       "jsr:@std/assert@1"
     ],
     "members": {
+      "packages/classify": {
+        "dependencies": [
+          "jsr:@std/assert@1",
+          "jsr:@std/cli@^1.0.22"
+        ]
+      },
       "packages/countrify": {
         "dependencies": [
           "jsr:@std/assert@1"

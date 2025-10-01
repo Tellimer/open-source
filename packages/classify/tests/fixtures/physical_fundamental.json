@@ -1,0 +1,610 @@
+{
+  "category": "Physical/Fundamental",
+  "description": "Indicators representing physical and fundamental economic measures: stock, flow, balance, capacity, volume",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "gov_debt_usa",
+        "name": "Government Debt",
+        "units": "USD billions",
+        "currency_code": "USD",
+        "periodicity": "quarterly",
+        "source": "US Treasury",
+        "description": "Total outstanding federal government debt",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 31400
+          },
+          {
+            "date": "2023-Q2",
+            "value": 31800
+          },
+          {
+            "date": "2023-Q3",
+            "value": 32200
+          },
+          {
+            "date": "2023-Q4",
+            "value": 32600
+          },
+          {
+            "date": "2024-Q1",
+            "value": 33000
+          },
+          {
+            "date": "2024-Q2",
+            "value": 33400
+          },
+          {
+            "date": "2024-Q3",
+            "value": 33800
+          },
+          {
+            "date": "2024-Q4",
+            "value": 34200
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "stock",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Stock indicator - absolute level at a point in time"
+    },
+    {
+      "indicator": {
+        "id": "fx_reserves_usa",
+        "name": "Foreign Exchange Reserves",
+        "units": "USD billions",
+        "currency_code": "USD",
+        "periodicity": "monthly",
+        "source": "Federal Reserve",
+        "description": "Total foreign currency reserves held by the central bank",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 132.4
+          },
+          {
+            "date": "2024-02",
+            "value": 133.1
+          },
+          {
+            "date": "2024-03",
+            "value": 131.8
+          },
+          {
+            "date": "2024-04",
+            "value": 134.0
+          },
+          {
+            "date": "2024-05",
+            "value": 135.2
+          },
+          {
+            "date": "2024-06",
+            "value": 134.7
+          },
+          {
+            "date": "2024-07",
+            "value": 136.0
+          },
+          {
+            "date": "2024-08",
+            "value": 136.5
+          },
+          {
+            "date": "2024-09",
+            "value": 137.1
+          },
+          {
+            "date": "2024-10",
+            "value": 137.9
+          },
+          {
+            "date": "2024-11",
+            "value": 138.3
+          },
+          {
+            "date": "2024-12",
+            "value": 139.0
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "stock",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Monetary stock with currency units; higher reserves generally positive"
+    },
+    {
+      "indicator": {
+        "id": "gdp_usa",
+        "name": "Gross Domestic Product",
+        "units": "USD billions",
+        "currency_code": "USD",
+        "periodicity": "quarterly",
+        "source": "Bureau of Economic Analysis",
+        "description": "Total value of goods and services produced in the economy",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 26500
+          },
+          {
+            "date": "2023-Q2",
+            "value": 27000
+          },
+          {
+            "date": "2023-Q3",
+            "value": 27200
+          },
+          {
+            "date": "2023-Q4",
+            "value": 27500
+          },
+          {
+            "date": "2024-Q1",
+            "value": 27800
+          },
+          {
+            "date": "2024-Q2",
+            "value": 28100
+          },
+          {
+            "date": "2024-Q3",
+            "value": 28400
+          },
+          {
+            "date": "2024-Q4",
+            "value": 28700
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "flow",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": true,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Flow indicator - throughput over a period"
+    },
+    {
+      "indicator": {
+        "id": "trade_balance_usa",
+        "name": "Trade Balance",
+        "units": "USD millions",
+        "currency_code": "USD",
+        "periodicity": "monthly",
+        "source": "US Census Bureau",
+        "description": "Difference between exports and imports (can be negative)",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": -68000
+          },
+          {
+            "date": "2024-02",
+            "value": -70000
+          },
+          {
+            "date": "2024-03",
+            "value": -65000
+          },
+          {
+            "date": "2024-04",
+            "value": -72000
+          },
+          {
+            "date": "2024-05",
+            "value": -69000
+          },
+          {
+            "date": "2024-06",
+            "value": -71000
+          },
+          {
+            "date": "2024-07",
+            "value": -67000
+          },
+          {
+            "date": "2024-08",
+            "value": -73000
+          },
+          {
+            "date": "2024-09",
+            "value": -70000
+          },
+          {
+            "date": "2024-10",
+            "value": -68000
+          },
+          {
+            "date": "2024-11",
+            "value": -71000
+          },
+          {
+            "date": "2024-12",
+            "value": -69000
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "balance",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": true,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Balance indicator - net position that can be negative"
+    },
+    {
+      "indicator": {
+        "id": "labor_force_usa",
+        "name": "Labor Force",
+        "units": "thousands of persons",
+        "periodicity": "monthly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Total number of people employed or actively seeking employment",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 167500
+          },
+          {
+            "date": "2024-02",
+            "value": 167600
+          },
+          {
+            "date": "2024-03",
+            "value": 167700
+          },
+          {
+            "date": "2024-04",
+            "value": 167800
+          },
+          {
+            "date": "2024-05",
+            "value": 167900
+          },
+          {
+            "date": "2024-06",
+            "value": 168000
+          },
+          {
+            "date": "2024-07",
+            "value": 168100
+          },
+          {
+            "date": "2024-08",
+            "value": 168200
+          },
+          {
+            "date": "2024-09",
+            "value": 168300
+          },
+          {
+            "date": "2024-10",
+            "value": 168400
+          },
+          {
+            "date": "2024-11",
+            "value": 168500
+          },
+          {
+            "date": "2024-12",
+            "value": 168600
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "capacity",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Capacity indicator - maximum potential labor available (employed + seeking)"
+    },
+    {
+      "indicator": {
+        "id": "oil_production_ytd",
+        "name": "Crude Oil Production (Year-to-Date)",
+        "units": "million barrels",
+        "periodicity": "monthly",
+        "source": "Energy Information Administration",
+        "description": "Cumulative crude oil production from January to current month",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 414
+          },
+          {
+            "date": "2024-02",
+            "value": 828
+          },
+          {
+            "date": "2024-03",
+            "value": 1242
+          },
+          {
+            "date": "2024-04",
+            "value": 1656
+          },
+          {
+            "date": "2024-05",
+            "value": 2070
+          },
+          {
+            "date": "2024-06",
+            "value": 2484
+          },
+          {
+            "date": "2024-07",
+            "value": 2898
+          },
+          {
+            "date": "2024-08",
+            "value": 3312
+          },
+          {
+            "date": "2024-09",
+            "value": 3726
+          },
+          {
+            "date": "2024-10",
+            "value": 4140
+          },
+          {
+            "date": "2024-11",
+            "value": 4554
+          },
+          {
+            "date": "2024-12",
+            "value": 4968
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "flow",
+        "temporal_aggregation": "period-cumulative",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Period-cumulative indicator - running total over period (YTD)"
+    },
+    {
+      "indicator": {
+        "id": "stock_trading_volume",
+        "name": "Stock Market Trading Volume",
+        "units": "millions of shares",
+        "periodicity": "daily",
+        "source": "NYSE",
+        "description": "Total number of shares traded on the exchange",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": 3500
+          },
+          {
+            "date": "2024-12-02",
+            "value": 3800
+          },
+          {
+            "date": "2024-12-03",
+            "value": 3200
+          },
+          {
+            "date": "2024-12-04",
+            "value": 4100
+          },
+          {
+            "date": "2024-12-05",
+            "value": 3900
+          },
+          {
+            "date": "2024-12-06",
+            "value": 3600
+          },
+          {
+            "date": "2024-12-09",
+            "value": 3700
+          },
+          {
+            "date": "2024-12-10",
+            "value": 4200
+          },
+          {
+            "date": "2024-12-11",
+            "value": 3800
+          },
+          {
+            "date": "2024-12-12",
+            "value": 3500
+          },
+          {
+            "date": "2024-12-13",
+            "value": 3900
+          },
+          {
+            "date": "2024-12-16",
+            "value": 4000
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "volume",
+        "temporal_aggregation": "period-total",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Volume indicator - transaction quantities"
+    },
+    {
+      "indicator": {
+        "id": "SP.POP.TOTL",
+        "name": "Population, total (Bangladesh)",
+        "units": "Number",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Total population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 171466990
+          },
+          {
+            "date": "2022",
+            "value": 169384897
+          },
+          {
+            "date": "2021",
+            "value": 167658854
+          },
+          {
+            "date": "2020",
+            "value": 166298024
+          },
+          {
+            "date": "2019",
+            "value": 164913055
+          },
+          {
+            "date": "2018",
+            "value": 163523103
+          },
+          {
+            "date": "2017",
+            "value": 162186147
+          },
+          {
+            "date": "2016",
+            "value": 160811932
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "stock",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Bangladesh (BGD). Population is a stock indicator representing total count at a point in time"
+    },
+    {
+      "indicator": {
+        "id": "SP.POP.TOTL_IDN",
+        "name": "Population, total (Indonesia)",
+        "units": "Number",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Total population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 281190067
+          },
+          {
+            "date": "2022",
+            "value": 278830529
+          },
+          {
+            "date": "2021",
+            "value": 276758053
+          },
+          {
+            "date": "2020",
+            "value": 274814866
+          },
+          {
+            "date": "2019",
+            "value": 272489381
+          },
+          {
+            "date": "2018",
+            "value": 269951846
+          },
+          {
+            "date": "2017",
+            "value": 267346658
+          },
+          {
+            "date": "2016",
+            "value": 264627418
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "stock",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Indonesia (IDN). Large population showing steady growth"
+    },
+    {
+      "indicator": {
+        "id": "SP.POP.TOTL_PAK",
+        "name": "Population, total (Pakistan)",
+        "units": "Number",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Total population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 247504495
+          },
+          {
+            "date": "2022",
+            "value": 243700667
+          },
+          {
+            "date": "2021",
+            "value": 239477801
+          },
+          {
+            "date": "2020",
+            "value": 235001746
+          },
+          {
+            "date": "2019",
+            "value": 230800899
+          },
+          {
+            "date": "2018",
+            "value": 226928892
+          },
+          {
+            "date": "2017",
+            "value": 223273967
+          },
+          {
+            "date": "2016",
+            "value": 220138869
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "physical-fundamental",
+        "indicator_type": "stock",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Pakistan (PAK). Population stock with consistent growth trend"
+    }
+  ]
+}

@@ -1,0 +1,418 @@
+{
+  "category": "Numeric/Measurement",
+  "description": "Indicators representing numeric measurements and ratios: count, percentage, ratio, spread, share",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "housing_starts_usa",
+        "name": "Housing Starts",
+        "units": "thousands of units",
+        "periodicity": "monthly",
+        "source": "US Census Bureau",
+        "description": "Number of new residential construction projects started",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 1331
+          },
+          {
+            "date": "2024-02",
+            "value": 1521
+          },
+          {
+            "date": "2024-03",
+            "value": 1321
+          },
+          {
+            "date": "2024-04",
+            "value": 1360
+          },
+          {
+            "date": "2024-05",
+            "value": 1277
+          },
+          {
+            "date": "2024-06",
+            "value": 1353
+          },
+          {
+            "date": "2024-07",
+            "value": 1238
+          },
+          {
+            "date": "2024-08",
+            "value": 1356
+          },
+          {
+            "date": "2024-09",
+            "value": 1354
+          },
+          {
+            "date": "2024-10",
+            "value": 1311
+          },
+          {
+            "date": "2024-11",
+            "value": 1289
+          },
+          {
+            "date": "2024-12",
+            "value": 1499
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "count",
+        "temporal_aggregation": "period-total",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Count indicator - discrete units"
+    },
+    {
+      "indicator": {
+        "id": "unemployment_rate_usa",
+        "name": "Unemployment Rate",
+        "units": "%",
+        "periodicity": "monthly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Percentage of labor force that is unemployed",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 3.7
+          },
+          {
+            "date": "2024-02",
+            "value": 3.9
+          },
+          {
+            "date": "2024-03",
+            "value": 3.8
+          },
+          {
+            "date": "2024-04",
+            "value": 3.9
+          },
+          {
+            "date": "2024-05",
+            "value": 4.0
+          },
+          {
+            "date": "2024-06",
+            "value": 4.1
+          },
+          {
+            "date": "2024-07",
+            "value": 4.3
+          },
+          {
+            "date": "2024-08",
+            "value": 4.2
+          },
+          {
+            "date": "2024-09",
+            "value": 4.1
+          },
+          {
+            "date": "2024-10",
+            "value": 4.1
+          },
+          {
+            "date": "2024-11",
+            "value": 4.2
+          },
+          {
+            "date": "2024-12",
+            "value": 4.0
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "percentage",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Percentage indicator - calculated ratio, no temporal aggregation"
+    },
+    {
+      "indicator": {
+        "id": "debt_to_gdp_usa",
+        "name": "Debt-to-GDP Ratio",
+        "units": "ratio",
+        "periodicity": "quarterly",
+        "source": "Federal Reserve",
+        "description": "Total government debt as a multiple of GDP",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 1.18
+          },
+          {
+            "date": "2023-Q2",
+            "value": 1.18
+          },
+          {
+            "date": "2023-Q3",
+            "value": 1.19
+          },
+          {
+            "date": "2023-Q4",
+            "value": 1.19
+          },
+          {
+            "date": "2024-Q1",
+            "value": 1.19
+          },
+          {
+            "date": "2024-Q2",
+            "value": 1.20
+          },
+          {
+            "date": "2024-Q3",
+            "value": 1.19
+          },
+          {
+            "date": "2024-Q4",
+            "value": 1.20
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "ratio",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Ratio indicator - relative multiple"
+    },
+    {
+      "indicator": {
+        "id": "yield_spread_10y_2y",
+        "name": "10-Year minus 2-Year Treasury Yield Spread",
+        "units": "percentage points",
+        "periodicity": "daily",
+        "source": "Federal Reserve",
+        "description": "Difference between 10-year and 2-year Treasury yields",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": 0.25
+          },
+          {
+            "date": "2024-12-02",
+            "value": 0.28
+          },
+          {
+            "date": "2024-12-03",
+            "value": 0.22
+          },
+          {
+            "date": "2024-12-04",
+            "value": 0.30
+          },
+          {
+            "date": "2024-12-05",
+            "value": 0.27
+          },
+          {
+            "date": "2024-12-06",
+            "value": 0.24
+          },
+          {
+            "date": "2024-12-09",
+            "value": 0.26
+          },
+          {
+            "date": "2024-12-10",
+            "value": 0.29
+          },
+          {
+            "date": "2024-12-11",
+            "value": 0.31
+          },
+          {
+            "date": "2024-12-12",
+            "value": 0.28
+          },
+          {
+            "date": "2024-12-13",
+            "value": 0.25
+          },
+          {
+            "date": "2024-12-16",
+            "value": 0.27
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "spread",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Spread indicator - absolute difference between two values"
+    },
+    {
+      "indicator": {
+        "id": "consumption_share_gdp",
+        "name": "Personal Consumption as Share of GDP",
+        "units": "%",
+        "periodicity": "quarterly",
+        "source": "Bureau of Economic Analysis",
+        "description": "Personal consumption expenditures as percentage of GDP",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 68.2
+          },
+          {
+            "date": "2023-Q2",
+            "value": 68.5
+          },
+          {
+            "date": "2023-Q3",
+            "value": 68.3
+          },
+          {
+            "date": "2023-Q4",
+            "value": 68.7
+          },
+          {
+            "date": "2024-Q1",
+            "value": 68.4
+          },
+          {
+            "date": "2024-Q2",
+            "value": 68.6
+          },
+          {
+            "date": "2024-Q3",
+            "value": 68.8
+          },
+          {
+            "date": "2024-Q4",
+            "value": 68.5
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "share",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Share indicator - compositional breakdown"
+    },
+    {
+      "indicator": {
+        "id": "SL.UEM.TOTL.ZS",
+        "name": "Unemployment, total (% of total labor force) (modeled ILO estimate)",
+        "units": "% of total labor force",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Unemployment refers to the share of the labor force that is without work but available for and seeking employment",
+        "sample_values": [
+          {
+            "date": "2024",
+            "value": 33.168
+          },
+          {
+            "date": "2023",
+            "value": 32.098
+          },
+          {
+            "date": "2022",
+            "value": 33.268
+          },
+          {
+            "date": "2021",
+            "value": 34.007
+          },
+          {
+            "date": "2020",
+            "value": 29.217
+          },
+          {
+            "date": "2019",
+            "value": 28.468
+          },
+          {
+            "date": "2018",
+            "value": 26.906
+          },
+          {
+            "date": "2017",
+            "value": 27.035
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "percentage",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Real data from World Bank for South Africa (ZAF). High unemployment rate showing structural challenges"
+    },
+    {
+      "indicator": {
+        "id": "NY.GDP.PCAP.CD",
+        "name": "GDP per capita (current US$)",
+        "units": "Current USD",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "GDP per capita is gross domestic product divided by midyear population. GDP is the sum of gross value added by all resident producers in the economy plus any product taxes and minus any subsidies",
+        "sample_values": [
+          {
+            "date": "2022",
+            "value": 126426.09
+          },
+          {
+            "date": "2021",
+            "value": 133590.147
+          },
+          {
+            "date": "2020",
+            "value": 117370.497
+          },
+          {
+            "date": "2019",
+            "value": 112621.821
+          },
+          {
+            "date": "2018",
+            "value": 116786.512
+          },
+          {
+            "date": "2017",
+            "value": 110193.214
+          },
+          {
+            "date": "2016",
+            "value": 106899.294
+          },
+          {
+            "date": "2015",
+            "value": 105462.013
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "ratio",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": true,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for Luxembourg (LUX). GDP per capita is a ratio indicator showing economic output per person"
+    }
+  ]
+}

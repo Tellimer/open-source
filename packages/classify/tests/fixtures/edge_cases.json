@@ -1,0 +1,454 @@
+{
+  "category": "Edge Cases",
+  "description": "Ambiguous indicators and edge cases for testing classification robustness",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "happiness_index",
+        "name": "World Happiness Index Score",
+        "units": "score (0-10)",
+        "periodicity": "annual",
+        "source": "UN Sustainable Development Solutions Network",
+        "description": "Composite score based on surveys measuring life satisfaction",
+        "sample_values": [
+          {
+            "date": "2017",
+            "value": 7.537
+          },
+          {
+            "date": "2018",
+            "value": 7.594
+          },
+          {
+            "date": "2019",
+            "value": 7.769
+          },
+          {
+            "date": "2020",
+            "value": 7.809
+          },
+          {
+            "date": "2021",
+            "value": 7.842
+          },
+          {
+            "date": "2022",
+            "value": 7.821
+          },
+          {
+            "date": "2023",
+            "value": 7.804
+          },
+          {
+            "date": "2024",
+            "value": 7.888
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "index",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Index indicator - composite index of subjective well-being survey responses"
+    },
+    {
+      "indicator": {
+        "id": "capacity_utilization_pct",
+        "name": "Manufacturing Capacity Utilization Rate",
+        "units": "%",
+        "periodicity": "monthly",
+        "source": "Federal Reserve",
+        "description": "Percentage of total manufacturing capacity being used",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 78.3
+          },
+          {
+            "date": "2024-02",
+            "value": 78.7
+          },
+          {
+            "date": "2024-03",
+            "value": 78.5
+          },
+          {
+            "date": "2024-04",
+            "value": 78.9
+          },
+          {
+            "date": "2024-05",
+            "value": 79.1
+          },
+          {
+            "date": "2024-06",
+            "value": 78.8
+          },
+          {
+            "date": "2024-07",
+            "value": 78.6
+          },
+          {
+            "date": "2024-08",
+            "value": 79.0
+          },
+          {
+            "date": "2024-09",
+            "value": 79.2
+          },
+          {
+            "date": "2024-10",
+            "value": 78.9
+          },
+          {
+            "date": "2024-11",
+            "value": 79.1
+          },
+          {
+            "date": "2024-12",
+            "value": 79.4
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "percentage",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Edge case: Percentage ratio (actual/potential capacity), no temporal aggregation"
+    },
+    {
+      "indicator": {
+        "id": "labor_income_share",
+        "name": "Labor Share of Income",
+        "units": "%",
+        "periodicity": "quarterly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Compensation of employees as percentage of national income",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 61.2
+          },
+          {
+            "date": "2023-Q2",
+            "value": 61.5
+          },
+          {
+            "date": "2023-Q3",
+            "value": 61.3
+          },
+          {
+            "date": "2023-Q4",
+            "value": 61.7
+          },
+          {
+            "date": "2024-Q1",
+            "value": 61.4
+          },
+          {
+            "date": "2024-Q2",
+            "value": 61.6
+          },
+          {
+            "date": "2024-Q3",
+            "value": 61.8
+          },
+          {
+            "date": "2024-Q4",
+            "value": 61.5
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "share",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Edge case: Share vs percentage - compositional breakdown of income, not a bounded 0-100% rate"
+    },
+    {
+      "indicator": {
+        "id": "pe_ratio_sp500",
+        "name": "S&P 500 Price-to-Earnings Ratio",
+        "units": "ratio",
+        "periodicity": "daily",
+        "source": "S&P Dow Jones Indices",
+        "description": "Market price relative to trailing 12-month earnings",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": 24.5
+          },
+          {
+            "date": "2024-12-02",
+            "value": 24.8
+          },
+          {
+            "date": "2024-12-03",
+            "value": 24.3
+          },
+          {
+            "date": "2024-12-04",
+            "value": 25.1
+          },
+          {
+            "date": "2024-12-05",
+            "value": 24.9
+          },
+          {
+            "date": "2024-12-06",
+            "value": 24.6
+          },
+          {
+            "date": "2024-12-09",
+            "value": 24.7
+          },
+          {
+            "date": "2024-12-10",
+            "value": 25.2
+          },
+          {
+            "date": "2024-12-11",
+            "value": 25.0
+          },
+          {
+            "date": "2024-12-12",
+            "value": 24.8
+          },
+          {
+            "date": "2024-12-13",
+            "value": 24.5
+          },
+          {
+            "date": "2024-12-16",
+            "value": 24.9
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "ratio",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Edge case: Ratio vs percentage vs price - relative multiple that could be confused with price"
+    },
+    {
+      "indicator": {
+        "id": "gdp_growth_rate_qoq",
+        "name": "GDP Growth Rate (Quarter-over-Quarter, Annualized)",
+        "units": "%",
+        "periodicity": "quarterly",
+        "source": "Bureau of Economic Analysis",
+        "description": "Annualized percentage change in GDP from previous quarter",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 2.2
+          },
+          {
+            "date": "2023-Q2",
+            "value": 2.1
+          },
+          {
+            "date": "2023-Q3",
+            "value": 4.9
+          },
+          {
+            "date": "2023-Q4",
+            "value": 3.4
+          },
+          {
+            "date": "2024-Q1",
+            "value": 1.6
+          },
+          {
+            "date": "2024-Q2",
+            "value": 3.0
+          },
+          {
+            "date": "2024-Q3",
+            "value": 2.8
+          },
+          {
+            "date": "2024-Q4",
+            "value": 3.1
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "rate",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Edge case: Rate of change vs percentage - tests rate classification for growth metrics"
+    },
+    {
+      "indicator": {
+        "id": "tax_rate_corporate",
+        "name": "Statutory Corporate Tax Rate",
+        "units": "%",
+        "periodicity": "annual",
+        "source": "Internal Revenue Service",
+        "description": "Federal statutory corporate income tax rate",
+        "sample_values": [
+          {
+            "date": "2017",
+            "value": 35.0
+          },
+          {
+            "date": "2018",
+            "value": 21.0
+          },
+          {
+            "date": "2019",
+            "value": 21.0
+          },
+          {
+            "date": "2020",
+            "value": 21.0
+          },
+          {
+            "date": "2021",
+            "value": 21.0
+          },
+          {
+            "date": "2022",
+            "value": 21.0
+          },
+          {
+            "date": "2023",
+            "value": 21.0
+          },
+          {
+            "date": "2024",
+            "value": 21.0
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "percentage",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Edge case: Threshold vs percentage - policy parameter that acts as a threshold/cutoff rather than a measurement"
+    },
+    {
+      "indicator": {
+        "id": "climate_risk_score",
+        "name": "Physical Climate Risk Score",
+        "units": "risk score (0-100)",
+        "periodicity": "annual",
+        "source": "Climate Risk Analytics",
+        "description": "Composite measure of physical climate risks including flooding, heat, drought",
+        "sample_values": [
+          {
+            "date": "2017",
+            "value": 42
+          },
+          {
+            "date": "2018",
+            "value": 45
+          },
+          {
+            "date": "2019",
+            "value": 47
+          },
+          {
+            "date": "2020",
+            "value": 51
+          },
+          {
+            "date": "2021",
+            "value": 53
+          },
+          {
+            "date": "2022",
+            "value": 56
+          },
+          {
+            "date": "2023",
+            "value": 58
+          },
+          {
+            "date": "2024",
+            "value": 61
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "index",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Index indicator - composite risk index (0-100 scale), lower risk is better"
+    },
+    {
+      "indicator": {
+        "id": "forex_reserve_adequacy",
+        "name": "Foreign Exchange Reserve Adequacy Ratio",
+        "units": "months of imports",
+        "periodicity": "quarterly",
+        "source": "International Monetary Fund",
+        "description": "Foreign reserves expressed as months of import coverage",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": 8.2
+          },
+          {
+            "date": "2023-Q2",
+            "value": 8.5
+          },
+          {
+            "date": "2023-Q3",
+            "value": 8.3
+          },
+          {
+            "date": "2023-Q4",
+            "value": 8.7
+          },
+          {
+            "date": "2024-Q1",
+            "value": 8.4
+          },
+          {
+            "date": "2024-Q2",
+            "value": 8.6
+          },
+          {
+            "date": "2024-Q3",
+            "value": 8.8
+          },
+          {
+            "date": "2024-Q4",
+            "value": 8.5
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "numeric-measurement",
+        "indicator_type": "ratio",
+        "temporal_aggregation": "not-applicable",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Edge case: Ratio with unusual units (months) - tests ratio classification with non-standard denominators"
+    }
+  ]
+}

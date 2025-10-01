@@ -1,0 +1,342 @@
+{
+  "category": "Price/Value",
+  "description": "Indicators representing prices and yields: price, yield",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "cpi_usa",
+        "name": "Consumer Price Index",
+        "units": "Index (2015=100)",
+        "periodicity": "monthly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Measure of average change in prices paid by consumers",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 308.4
+          },
+          {
+            "date": "2024-02",
+            "value": 310.3
+          },
+          {
+            "date": "2024-03",
+            "value": 312.2
+          },
+          {
+            "date": "2024-04",
+            "value": 313.5
+          },
+          {
+            "date": "2024-05",
+            "value": 314.1
+          },
+          {
+            "date": "2024-06",
+            "value": 314.0
+          },
+          {
+            "date": "2024-07",
+            "value": 313.5
+          },
+          {
+            "date": "2024-08",
+            "value": 315.0
+          },
+          {
+            "date": "2024-09",
+            "value": 315.7
+          },
+          {
+            "date": "2024-10",
+            "value": 316.2
+          },
+          {
+            "date": "2024-11",
+            "value": 316.9
+          },
+          {
+            "date": "2024-12",
+            "value": 317.5
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "composite-derived",
+        "indicator_type": "index",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Index indicator - composite snapshot, CPI level itself is neutral (context-dependent)"
+    },
+    {
+      "indicator": {
+        "id": "policy_rate",
+        "name": "Policy Interest Rate",
+        "units": "%",
+        "periodicity": "monthly",
+        "source": "Central Bank",
+        "description": "Central bank policy interest rate",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 5.25
+          },
+          {
+            "date": "2024-02",
+            "value": 5.25
+          },
+          {
+            "date": "2024-03",
+            "value": 5.00
+          },
+          {
+            "date": "2024-04",
+            "value": 4.75
+          },
+          {
+            "date": "2024-05",
+            "value": 4.75
+          },
+          {
+            "date": "2024-06",
+            "value": 4.50
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Interest rate as a price-level; neutral orientation by default"
+    },
+    {
+      "indicator": {
+        "id": "treasury_10y_yield",
+        "name": "10-Year Treasury Yield",
+        "units": "%",
+        "periodicity": "daily",
+        "source": "Federal Reserve",
+        "description": "Yield on 10-year US Treasury bonds",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": 4.18
+          },
+          {
+            "date": "2024-12-02",
+            "value": 4.22
+          },
+          {
+            "date": "2024-12-03",
+            "value": 4.15
+          },
+          {
+            "date": "2024-12-04",
+            "value": 4.28
+          },
+          {
+            "date": "2024-12-05",
+            "value": 4.25
+          },
+          {
+            "date": "2024-12-06",
+            "value": 4.20
+          },
+          {
+            "date": "2024-12-09",
+            "value": 4.23
+          },
+          {
+            "date": "2024-12-10",
+            "value": 4.30
+          },
+          {
+            "date": "2024-12-11",
+            "value": 4.35
+          },
+          {
+            "date": "2024-12-12",
+            "value": 4.32
+          },
+          {
+            "date": "2024-12-13",
+            "value": 4.28
+          },
+          {
+            "date": "2024-12-16",
+            "value": 4.31
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "yield",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Yield indicator - return rate"
+    },
+    {
+      "indicator": {
+        "id": "FP.CPI.TOTL",
+        "name": "Consumer price index (2010 = 100)",
+        "units": "Index, 2010=100",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Consumer price index reflects changes in the cost to the average consumer of acquiring a basket of goods and services that may be fixed or changed at specified intervals",
+        "sample_values": [
+          {
+            "date": "2024",
+            "value": 749.341
+          },
+          {
+            "date": "2023",
+            "value": 609.973
+          },
+          {
+            "date": "2022",
+            "value": 441.667
+          },
+          {
+            "date": "2021",
+            "value": 336.493
+          },
+          {
+            "date": "2020",
+            "value": 305.983
+          },
+          {
+            "date": "2019",
+            "value": 278.452
+          },
+          {
+            "date": "2018",
+            "value": 259.886
+          },
+          {
+            "date": "2017",
+            "value": 241.062
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Ghana (GHA). CPI is a price index measuring cost of living"
+    },
+    {
+      "indicator": {
+        "id": "FP.CPI.TOTL_KEN",
+        "name": "Consumer price index (2010 = 100)",
+        "units": "Index, 2010=100",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Consumer price index reflects changes in the cost to the average consumer of acquiring a basket of goods and services that may be fixed or changed at specified intervals",
+        "sample_values": [
+          {
+            "date": "2024",
+            "value": 257.353
+          },
+          {
+            "date": "2023",
+            "value": 246.295
+          },
+          {
+            "date": "2022",
+            "value": 228.747
+          },
+          {
+            "date": "2021",
+            "value": 212.472
+          },
+          {
+            "date": "2020",
+            "value": 200.241
+          },
+          {
+            "date": "2019",
+            "value": 189.973
+          },
+          {
+            "date": "2018",
+            "value": 180.515
+          },
+          {
+            "date": "2017",
+            "value": 172.428
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Kenya (KEN). CPI shows price level evolution over time"
+    },
+    {
+      "indicator": {
+        "id": "FP.CPI.TOTL_NGA",
+        "name": "Consumer price index (2010 = 100)",
+        "units": "Index, 2010=100",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Consumer price index reflects changes in the cost to the average consumer of acquiring a basket of goods and services that may be fixed or changed at specified intervals",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 524.905
+          },
+          {
+            "date": "2022",
+            "value": 421.071
+          },
+          {
+            "date": "2021",
+            "value": 354.296
+          },
+          {
+            "date": "2020",
+            "value": 302.939
+          },
+          {
+            "date": "2019",
+            "value": 267.506
+          },
+          {
+            "date": "2018",
+            "value": 240.138
+          },
+          {
+            "date": "2017",
+            "value": 214.227
+          },
+          {
+            "date": "2016",
+            "value": 183.883
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "price-value",
+        "indicator_type": "price",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Nigeria (NGA). CPI demonstrates significant price increases over time"
+    }
+  ]
+}

@@ -5,8 +5,10 @@
   "tasks": {
     "dev:countrify": "cd packages/countrify && deno task dev",
     "dev:econify": "cd packages/econify && deno task dev",
+    "dev:classify": "cd packages/classify && deno task dev",
     "test:countrify": "cd packages/countrify && deno task test",
-    "test:econify": "cd packages/econify && deno task test"
+    "test:econify": "cd packages/econify && deno task test",
+    "test:classify": "cd packages/classify && deno task test"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"

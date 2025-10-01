@@ -1,0 +1,67 @@
+{
+  "category": "Qualitative",
+  "description": "Indicators representing qualitative measures: sentiment, allocation",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "consumer_sentiment",
+        "name": "Consumer Sentiment Index",
+        "units": "index",
+        "periodicity": "monthly",
+        "source": "University of Michigan",
+        "description": "Survey-based measure of consumer confidence and expectations",
+        "sample_values": [
+          {"date": "2024-01", "value": 79.0},
+          {"date": "2024-02", "value": 76.9},
+          {"date": "2024-03", "value": 79.4},
+          {"date": "2024-04", "value": 77.2},
+          {"date": "2024-05", "value": 69.1},
+          {"date": "2024-06", "value": 68.2},
+          {"date": "2024-07", "value": 66.4},
+          {"date": "2024-08", "value": 67.9},
+          {"date": "2024-09", "value": 70.1},
+          {"date": "2024-10", "value": 70.5},
+          {"date": "2024-11", "value": 71.8},
+          {"date": "2024-12", "value": 74.0}
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "qualitative",
+        "indicator_type": "sentiment",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Sentiment indicator - survey-based opinion"
+    },
+    {
+      "indicator": {
+        "id": "equity_allocation",
+        "name": "Equity Allocation (Institutional Investors)",
+        "units": "% of portfolio",
+        "periodicity": "quarterly",
+        "source": "Bank of America",
+        "description": "Percentage of institutional portfolios allocated to equities",
+        "sample_values": [
+          {"date": "2023-Q1", "value": 42.5},
+          {"date": "2023-Q2", "value": 44.2},
+          {"date": "2023-Q3", "value": 43.8},
+          {"date": "2023-Q4", "value": 45.1},
+          {"date": "2024-Q1", "value": 44.6},
+          {"date": "2024-Q2", "value": 46.3},
+          {"date": "2024-Q3", "value": 45.9},
+          {"date": "2024-Q4", "value": 47.2}
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "qualitative",
+        "indicator_type": "allocation",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Allocation indicator - portfolio positioning"
+    }
+  ]
+}
+

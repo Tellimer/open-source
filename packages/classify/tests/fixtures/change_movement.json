@@ -1,0 +1,454 @@
+{
+  "category": "Change/Movement",
+  "description": "Indicators representing changes and movements: rate, volatility, gap",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "inflation_rate_usa",
+        "name": "Inflation Rate (YoY)",
+        "units": "%",
+        "periodicity": "monthly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Year-over-year percentage change in Consumer Price Index",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 3.1
+          },
+          {
+            "date": "2024-02",
+            "value": 3.2
+          },
+          {
+            "date": "2024-03",
+            "value": 3.5
+          },
+          {
+            "date": "2024-04",
+            "value": 3.4
+          },
+          {
+            "date": "2024-05",
+            "value": 3.3
+          },
+          {
+            "date": "2024-06",
+            "value": 3.0
+          },
+          {
+            "date": "2024-07",
+            "value": 2.9
+          },
+          {
+            "date": "2024-08",
+            "value": 2.5
+          },
+          {
+            "date": "2024-09",
+            "value": 2.4
+          },
+          {
+            "date": "2024-10",
+            "value": 2.6
+          },
+          {
+            "date": "2024-11",
+            "value": 2.7
+          },
+          {
+            "date": "2024-12",
+            "value": 2.9
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "rate",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Rate indicator - percentage change over a period (year-over-year)"
+    },
+    {
+      "indicator": {
+        "id": "vix_index",
+        "name": "VIX Volatility Index",
+        "units": "index",
+        "periodicity": "daily",
+        "source": "CBOE",
+        "description": "Measure of expected stock market volatility",
+        "sample_values": [
+          {
+            "date": "2024-12-01",
+            "value": 14.2
+          },
+          {
+            "date": "2024-12-02",
+            "value": 15.8
+          },
+          {
+            "date": "2024-12-03",
+            "value": 13.5
+          },
+          {
+            "date": "2024-12-04",
+            "value": 16.3
+          },
+          {
+            "date": "2024-12-05",
+            "value": 15.1
+          },
+          {
+            "date": "2024-12-06",
+            "value": 14.7
+          },
+          {
+            "date": "2024-12-09",
+            "value": 15.4
+          },
+          {
+            "date": "2024-12-10",
+            "value": 17.2
+          },
+          {
+            "date": "2024-12-11",
+            "value": 16.8
+          },
+          {
+            "date": "2024-12-12",
+            "value": 15.9
+          },
+          {
+            "date": "2024-12-13",
+            "value": 14.6
+          },
+          {
+            "date": "2024-12-16",
+            "value": 15.3
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "volatility",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Volatility indicator - measures expected market volatility (statistical dispersion)"
+    },
+    {
+      "indicator": {
+        "id": "output_gap_usa",
+        "name": "Output Gap",
+        "units": "% of potential GDP",
+        "periodicity": "quarterly",
+        "source": "Congressional Budget Office",
+        "description": "Difference between actual and potential GDP",
+        "sample_values": [
+          {
+            "date": "2023-Q1",
+            "value": -0.5
+          },
+          {
+            "date": "2023-Q2",
+            "value": -0.3
+          },
+          {
+            "date": "2023-Q3",
+            "value": -0.1
+          },
+          {
+            "date": "2023-Q4",
+            "value": 0.2
+          },
+          {
+            "date": "2024-Q1",
+            "value": 0.4
+          },
+          {
+            "date": "2024-Q2",
+            "value": 0.6
+          },
+          {
+            "date": "2024-Q3",
+            "value": 0.5
+          },
+          {
+            "date": "2024-Q4",
+            "value": 0.3
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "gap",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Gap indicator - deviation from reference"
+    },
+    {
+      "indicator": {
+        "id": "FP.CPI.TOTL.ZG",
+        "name": "Inflation, consumer prices (annual %)",
+        "units": "Annual %",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Inflation as measured by the consumer price index reflects the annual percentage change in the cost to the average consumer of acquiring a basket of goods and services",
+        "sample_values": [
+          {
+            "date": "2024",
+            "value": 4.367
+          },
+          {
+            "date": "2023",
+            "value": 4.594
+          },
+          {
+            "date": "2022",
+            "value": 9.280
+          },
+          {
+            "date": "2021",
+            "value": 8.302
+          },
+          {
+            "date": "2020",
+            "value": 3.212
+          },
+          {
+            "date": "2019",
+            "value": 3.733
+          },
+          {
+            "date": "2018",
+            "value": 3.665
+          },
+          {
+            "date": "2017",
+            "value": 3.446
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "rate",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Real data from World Bank for Brazil (BRA). Inflation rate is a key economic indicator showing price changes"
+    },
+    {
+      "indicator": {
+        "id": "NY.GDP.MKTP.KD.ZG",
+        "name": "GDP growth (annual %)",
+        "units": "%",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Annual percentage growth rate of GDP at market prices based on constant local currency. Aggregates are based on constant 2015 prices, expressed in U.S. dollars",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 3.759
+          },
+          {
+            "date": "2022",
+            "value": 6.588
+          },
+          {
+            "date": "2021",
+            "value": 3.291
+          },
+          {
+            "date": "2020",
+            "value": 3.550
+          },
+          {
+            "date": "2019",
+            "value": 5.552
+          },
+          {
+            "date": "2018",
+            "value": 5.331
+          },
+          {
+            "date": "2017",
+            "value": 4.181
+          },
+          {
+            "date": "2016",
+            "value": 4.347
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "rate",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for Egypt (EGY). GDP growth rate is a fundamental economic indicator"
+    },
+    {
+      "indicator": {
+        "id": "BN.CAB.XOKA.GD.ZS",
+        "name": "Current account balance (% of GDP)",
+        "units": "% of GDP",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Current account balance is the sum of net exports of goods and services, net primary income, and net secondary income",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": -3.244
+          },
+          {
+            "date": "2022",
+            "value": -0.641
+          },
+          {
+            "date": "2021",
+            "value": 1.362
+          },
+          {
+            "date": "2020",
+            "value": 0.697
+          },
+          {
+            "date": "2019",
+            "value": -0.780
+          },
+          {
+            "date": "2018",
+            "value": -5.161
+          },
+          {
+            "date": "2017",
+            "value": -4.840
+          },
+          {
+            "date": "2016",
+            "value": -2.709
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "gap",
+        "temporal_aggregation": "period-total",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Argentina (ARG). Current account balance can be positive or negative, representing external balance"
+    },
+    {
+      "indicator": {
+        "id": "NE.EXP.GNFS.KD.ZG",
+        "name": "Exports of goods and services (annual % growth)",
+        "units": "Annual % growth",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Annual growth rate of exports of goods and services based on constant local currency. Aggregates are based on constant 2015 prices, expressed in U.S. dollars",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": -1.311
+          },
+          {
+            "date": "2022",
+            "value": 4.016
+          },
+          {
+            "date": "2021",
+            "value": 14.806
+          },
+          {
+            "date": "2020",
+            "value": 4.063
+          },
+          {
+            "date": "2019",
+            "value": 6.236
+          },
+          {
+            "date": "2018",
+            "value": 12.253
+          },
+          {
+            "date": "2017",
+            "value": 17.254
+          },
+          {
+            "date": "2016",
+            "value": 11.004
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "rate",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "higher-is-positive"
+      },
+      "notes": "Real data from World Bank for Vietnam (VNM). Export growth shows trade dynamics and can be negative during downturns"
+    },
+    {
+      "indicator": {
+        "id": "NE.IMP.GNFS.KD.ZG",
+        "name": "Imports of goods and services (annual % growth)",
+        "units": "Annual % growth",
+        "periodicity": "annual",
+        "source": "World Bank",
+        "description": "Annual growth rate of imports of goods and services based on constant local currency. Aggregates are based on constant 2015 prices, expressed in U.S. dollars",
+        "sample_values": [
+          {
+            "date": "2023",
+            "value": 1.439
+          },
+          {
+            "date": "2022",
+            "value": 10.959
+          },
+          {
+            "date": "2021",
+            "value": 8.001
+          },
+          {
+            "date": "2020",
+            "value": -16.143
+          },
+          {
+            "date": "2019",
+            "value": 2.636
+          },
+          {
+            "date": "2018",
+            "value": 11.816
+          },
+          {
+            "date": "2017",
+            "value": 17.402
+          },
+          {
+            "date": "2016",
+            "value": 9.206
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "change-movement",
+        "indicator_type": "rate",
+        "temporal_aggregation": "period-rate",
+        "is_monetary": false,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Real data from World Bank for Philippines (PHL). Import growth reflects domestic demand and can be sharply negative during crises (2020 COVID-19)"
+    }
+  ]
+}

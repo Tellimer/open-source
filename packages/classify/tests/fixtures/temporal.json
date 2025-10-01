@@ -1,0 +1,239 @@
+{
+  "category": "Temporal",
+  "description": "Indicators representing time-based measures: duration, probability, threshold",
+  "indicators": [
+    {
+      "indicator": {
+        "id": "unemployment_duration",
+        "name": "Average Duration of Unemployment",
+        "units": "weeks",
+        "periodicity": "monthly",
+        "source": "Bureau of Labor Statistics",
+        "description": "Average number of weeks people have been unemployed",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 19.2
+          },
+          {
+            "date": "2024-02",
+            "value": 19.5
+          },
+          {
+            "date": "2024-03",
+            "value": 19.8
+          },
+          {
+            "date": "2024-04",
+            "value": 20.1
+          },
+          {
+            "date": "2024-05",
+            "value": 20.3
+          },
+          {
+            "date": "2024-06",
+            "value": 20.5
+          },
+          {
+            "date": "2024-07",
+            "value": 20.8
+          },
+          {
+            "date": "2024-08",
+            "value": 20.6
+          },
+          {
+            "date": "2024-09",
+            "value": 20.4
+          },
+          {
+            "date": "2024-10",
+            "value": 20.2
+          },
+          {
+            "date": "2024-11",
+            "value": 20.0
+          },
+          {
+            "date": "2024-12",
+            "value": 19.7
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "temporal",
+        "indicator_type": "duration",
+        "temporal_aggregation": "period-average",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Duration indicator - time period length"
+    },
+    {
+      "indicator": {
+        "id": "corp_default_probability",
+        "name": "Corporate Default Probability (12-month)",
+        "units": "%",
+        "periodicity": "monthly",
+        "source": "Moody's Analytics",
+        "description": "Estimated probability of default for corporate borrowers over next 12 months",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 2.1
+          },
+          {
+            "date": "2024-02",
+            "value": 2.3
+          },
+          {
+            "date": "2024-03",
+            "value": 2.0
+          },
+          {
+            "date": "2024-04",
+            "value": 2.4
+          },
+          {
+            "date": "2024-05",
+            "value": 2.2
+          },
+          {
+            "date": "2024-06",
+            "value": 2.1
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "temporal",
+        "indicator_type": "probability",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Default probability; lower is better"
+    },
+    {
+      "indicator": {
+        "id": "recession_probability",
+        "name": "Recession Probability (12-month)",
+        "units": "%",
+        "periodicity": "monthly",
+        "source": "Federal Reserve Bank of New York",
+        "description": "Probability of recession in next 12 months based on yield curve",
+        "sample_values": [
+          {
+            "date": "2024-01",
+            "value": 35.2
+          },
+          {
+            "date": "2024-02",
+            "value": 38.5
+          },
+          {
+            "date": "2024-03",
+            "value": 32.1
+          },
+          {
+            "date": "2024-04",
+            "value": 41.3
+          },
+          {
+            "date": "2024-05",
+            "value": 37.8
+          },
+          {
+            "date": "2024-06",
+            "value": 34.6
+          },
+          {
+            "date": "2024-07",
+            "value": 36.9
+          },
+          {
+            "date": "2024-08",
+            "value": 42.5
+          },
+          {
+            "date": "2024-09",
+            "value": 39.7
+          },
+          {
+            "date": "2024-10",
+            "value": 35.4
+          },
+          {
+            "date": "2024-11",
+            "value": 33.2
+          },
+          {
+            "date": "2024-12",
+            "value": 31.8
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "temporal",
+        "indicator_type": "probability",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": false,
+        "heat_map_orientation": "lower-is-positive"
+      },
+      "notes": "Probability indicator - likelihood measure"
+    },
+    {
+      "indicator": {
+        "id": "poverty_threshold",
+        "name": "Poverty Threshold (Family of 4)",
+        "units": "USD per year",
+        "currency_code": "USD",
+        "periodicity": "annual",
+        "source": "US Census Bureau",
+        "description": "Income level below which a family is considered in poverty",
+        "sample_values": [
+          {
+            "date": "2017",
+            "value": 24858
+          },
+          {
+            "date": "2018",
+            "value": 25465
+          },
+          {
+            "date": "2019",
+            "value": 25926
+          },
+          {
+            "date": "2020",
+            "value": 26246
+          },
+          {
+            "date": "2021",
+            "value": 26500
+          },
+          {
+            "date": "2022",
+            "value": 27750
+          },
+          {
+            "date": "2023",
+            "value": 29678
+          },
+          {
+            "date": "2024",
+            "value": 31200
+          }
+        ]
+      },
+      "expected_classification": {
+        "indicator_category": "temporal",
+        "indicator_type": "threshold",
+        "temporal_aggregation": "point-in-time",
+        "is_monetary": true,
+        "heat_map_orientation": "neutral"
+      },
+      "notes": "Threshold indicator - cutoff level"
+    }
+  ]
+}
