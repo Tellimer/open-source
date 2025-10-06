@@ -7,12 +7,8 @@ import type {
   ClassificationOptions,
   ClassificationResult,
   ClassifiedMetadata,
-  EnrichedIndicator,
-  FailedIndicator,
-  Indicator,
   IndicatorCategory,
   IndicatorType,
-  LLMConfig,
   LLMProvider,
   TemporalAggregation,
   HeatMapOrientation,
@@ -174,7 +170,7 @@ export interface SpecialistResult {
   indicator_type: IndicatorType;
   indicator_category: IndicatorCategory;
   temporal_aggregation: TemporalAggregation;
-  is_monetary: boolean;
+  is_currency_denominated: boolean;
   confidence_cls: number;
   reasoning?: string;
 }
@@ -271,7 +267,7 @@ export interface ClassificationData {
   confidence_family: number;
   indicator_type: IndicatorType;
   temporal_aggregation: TemporalAggregation;
-  is_monetary?: boolean;
+  is_currency_denominated?: boolean;
   confidence_cls: number;
   heat_map_orientation: HeatMapOrientation;
   confidence_orient: number;
@@ -292,7 +288,7 @@ export interface V2Classification {
   reasoning_router?: string;
   indicator_type: IndicatorType;
   temporal_aggregation: TemporalAggregation;
-  is_monetary: boolean;
+  is_currency_denominated: boolean;
   confidence_cls: number;
   reasoning_specialist?: string;
   heat_map_orientation: HeatMapOrientation;

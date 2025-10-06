@@ -91,7 +91,7 @@ describe('V2 Pipeline', () => {
         assertExists(classification.indicator_type);
         assertExists(classification.temporal_aggregation);
         assertExists(classification.heat_map_orientation);
-        assertEquals(typeof classification.is_monetary, 'boolean');
+        assertEquals(typeof classification.is_currency_denominated, 'boolean');
       }
 
       // Verify stage metrics

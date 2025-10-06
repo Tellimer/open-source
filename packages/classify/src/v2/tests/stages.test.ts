@@ -139,7 +139,7 @@ describe('V2 Individual Stages', () => {
         assertExists(specialistResult.indicator_id);
         assertExists(specialistResult.indicator_type);
         assertExists(specialistResult.temporal_aggregation);
-        assertEquals(typeof specialistResult.is_monetary, 'boolean');
+        assertEquals(typeof specialistResult.is_currency_denominated, 'boolean');
         assertExists(specialistResult.confidence_cls);
       }
 
@@ -355,7 +355,7 @@ describe('V2 Individual Stages', () => {
 
       // Also need classifications table entry
       db.prepare(`
-        INSERT INTO classifications (indicator_id, name, family, indicator_type, temporal_aggregation, is_monetary, heat_map_orientation)
+        INSERT INTO classifications (indicator_id, name, family, indicator_type, temporal_aggregation, is_currency_denominated, heat_map_orientation)
         VALUES ('test-1', 'Consumer Price Index', 'composite-derived', 'index', 'period-rate', 0, 'neutral')
       `).run();
 

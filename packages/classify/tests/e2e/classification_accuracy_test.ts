@@ -5,7 +5,7 @@
  * - indicator_category matches expected
  * - indicator_type matches expected
  * - temporal_aggregation matches expected
- * - is_monetary matches expected
+ * - is_currency_denominated matches expected
  * - heat_map_orientation matches expected
  */
 

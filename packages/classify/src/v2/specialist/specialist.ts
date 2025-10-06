@@ -82,7 +82,7 @@ function mapBatchToSpecialistResults(
     indicator_id: string;
     indicator_type: string;
     temporal_aggregation: string;
-    is_monetary: boolean;
+    is_currency_denominated: boolean;
     confidence: number;
     reasoning?: string;
   }>
@@ -94,7 +94,7 @@ function mapBatchToSpecialistResults(
       result.indicator_type as keyof typeof INDICATOR_TYPE_TO_CATEGORY
     ] || 'qualitative') as any,
     temporal_aggregation: result.temporal_aggregation as any,
-    is_monetary: result.is_monetary,
+    is_currency_denominated: result.is_currency_denominated,
     confidence_cls: result.confidence,
     reasoning: result.reasoning,
   }));

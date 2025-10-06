@@ -91,7 +91,7 @@ export function assertValidSchema(classification: ClassifiedMetadata): void {
     classification.temporal_aggregation,
     'temporal_aggregation is required'
   );
-  assertExists(classification.is_monetary, 'is_monetary is required');
+  assertExists(classification.is_currency_denominated, 'is_currency_denominated is required');
   assertExists(
     classification.heat_map_orientation,
     'heat_map_orientation is required'
@@ -120,9 +120,9 @@ export function assertValidSchema(classification: ClassifiedMetadata): void {
     'temporal_aggregation must be string'
   );
   assertEquals(
-    typeof classification.is_monetary,
+    typeof classification.is_currency_denominated,
     'boolean',
-    'is_monetary must be boolean'
+    'is_currency_denominated must be boolean'
   );
   assertEquals(
     typeof classification.heat_map_orientation,
@@ -218,7 +218,7 @@ export function compareClassification(
     'indicator_category',
     'indicator_type',
     'temporal_aggregation',
-    'is_monetary',
+    'is_currency_denominated',
     'heat_map_orientation',
   ];
 
@@ -272,7 +272,7 @@ export function calculateAccuracy(
       'indicator_category',
       'indicator_type',
       'temporal_aggregation',
-      'is_monetary',
+      'is_currency_denominated',
       'heat_map_orientation',
     ];
 

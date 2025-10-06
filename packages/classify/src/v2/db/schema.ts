@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS classifications (
   -- Stage 2: Specialist
   indicator_type TEXT,
   temporal_aggregation TEXT,
-  is_monetary INTEGER,
+  is_currency_denominated INTEGER,
   confidence_cls REAL,
   reasoning_specialist TEXT,
 
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS specialist_results (
   indicator_type TEXT NOT NULL,
   indicator_category TEXT NOT NULL,
   temporal_aggregation TEXT NOT NULL,
-  is_monetary INTEGER NOT NULL,
+  is_currency_denominated INTEGER NOT NULL,
   confidence_cls REAL NOT NULL,
   family TEXT NOT NULL,
   reasoning TEXT,

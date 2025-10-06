@@ -180,7 +180,7 @@ export async function classifyIndicatorsV2(
         router_reasoning: router?.reasoning,
         indicator_type: specialist?.indicator_type,
         temporal_aggregation: specialist?.temporal_aggregation,
-        is_monetary: specialist?.is_monetary,
+        is_currency_denominated: specialist?.is_currency_denominated,
         specialist_reasoning: specialist?.reasoning,
       };
     });
@@ -245,7 +245,7 @@ export async function classifyIndicatorsV2(
           indicator_type: specialist?.indicator_type || 'other',
           temporal_aggregation:
             specialist?.temporal_aggregation || 'not-applicable',
-          is_monetary: specialist?.is_monetary,
+          is_currency_denominated: specialist?.is_currency_denominated,
           confidence_cls: specialist?.confidence_cls || 0,
           heat_map_orientation: orientation?.heat_map_orientation || 'neutral',
           confidence_orient: orientation?.confidence_orient || 0,

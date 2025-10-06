@@ -21,14 +21,14 @@ escalate: Needs human review
  • Consider reasoning when determining if fix is needed
 
  DIFF FORMAT (fix only):
- {"family"?: "...", "indicator_type"?: "...", "temporal_aggregation"?: "...", "is_monetary"?: true|false, "heat_map_orientation"?: "..."}
+ {"family"?: "...", "indicator_type"?: "...", "temporal_aggregation"?: "...", "is_currency_denominated"?: true|false, "heat_map_orientation"?: "..."}
 
  KNOWN CORRECT PATTERNS (do NOT flag these as errors):
  • Business Confidence indices with numeric "points" units → composite-derived/index with period-average (NOT point-in-time)
- • Exchange rates (FX) → is_monetary: false (dimensionless ratios, not currency amounts)
- • Price indices (CPI, PPI, PCE, Export/Import Prices) → is_monetary: false (dimensionless index points)
- • Interest rates, bond yields, SOFR → is_monetary: false (percentages, not currency amounts)
- • All growth/change rates (YoY, MoM, QoQ) → is_monetary: false (percentages/ratios)
+ • Exchange rates (FX) → is_currency_denominated: false (dimensionless ratios, not currency amounts)
+ • Price indices (CPI, PPI, PCE, Export/Import Prices) → is_currency_denominated: false (dimensionless index points)
+ • Interest rates, bond yields, SOFR → is_currency_denominated: false (percentages, not currency amounts)
+ • All growth/change rates (YoY, MoM, QoQ) → is_currency_denominated: false (percentages/ratios)
  • Claimant Count Change, Employment Change → balance (can be negative), NOT count
  • PMI, ISM, diffusion indices → composite-derived/index with period-average
  • Inventory Costs → lower-is-positive (higher costs are negative)

@@ -23,7 +23,7 @@ export interface TestIndicatorFixture {
     indicator_type: string;
     indicator_category: string;
     temporal_aggregation: string;
-    is_monetary: boolean;
+    is_currency_denominated: boolean;
     heat_map_orientation: string;
   };
 }
@@ -45,7 +45,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -107,7 +107,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -169,7 +169,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -231,7 +231,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -293,7 +293,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'percentage',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -355,7 +355,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -417,7 +417,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -479,7 +479,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -541,7 +541,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -603,7 +603,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -665,7 +665,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -727,7 +727,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -789,7 +789,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -851,7 +851,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'volume',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -913,7 +913,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -975,7 +975,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1037,7 +1037,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -1099,7 +1099,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'balance',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'period-total',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1162,7 +1162,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1224,7 +1224,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1286,7 +1286,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'percentage',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -1348,7 +1348,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1410,7 +1410,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1472,7 +1472,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -1534,7 +1534,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1596,7 +1596,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -1658,7 +1658,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1720,7 +1720,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1782,7 +1782,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -1844,7 +1844,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -1906,7 +1906,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -1968,7 +1968,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -2030,7 +2030,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2092,7 +2092,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'sentiment',
       indicator_category: 'qualitative',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2154,7 +2154,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -2216,7 +2216,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -2278,7 +2278,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'flow',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2340,7 +2340,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -2402,7 +2402,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2464,7 +2464,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'flow',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2526,7 +2526,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2588,7 +2588,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2650,7 +2650,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2712,7 +2712,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2774,7 +2774,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2836,7 +2836,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'flow',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2898,7 +2898,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -2960,7 +2960,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -3022,7 +3022,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3084,7 +3084,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -3146,7 +3146,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3208,7 +3208,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -3270,7 +3270,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -3332,7 +3332,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'flow',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3394,7 +3394,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3456,7 +3456,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3518,7 +3518,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3580,7 +3580,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -3642,7 +3642,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'not-applicable',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3704,7 +3704,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3766,7 +3766,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3828,7 +3828,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3890,7 +3890,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -3952,7 +3952,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -4014,7 +4014,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4076,7 +4076,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4138,7 +4138,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -4200,7 +4200,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4262,7 +4262,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -4324,7 +4324,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -4386,7 +4386,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'balance',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'period-total',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4448,7 +4448,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -4510,7 +4510,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -4572,7 +4572,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4634,7 +4634,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -4696,7 +4696,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4758,7 +4758,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -4820,7 +4820,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -4882,7 +4882,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -4944,7 +4944,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -5006,7 +5006,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5068,7 +5068,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'balance',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'period-total',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5130,7 +5130,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'balance',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -5192,7 +5192,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5254,7 +5254,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'sentiment',
       indicator_category: 'qualitative',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5316,7 +5316,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'sentiment',
       indicator_category: 'qualitative',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5378,7 +5378,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'index',
       indicator_category: 'composite-derived',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5440,7 +5440,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'flow',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -5502,7 +5502,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'balance',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -5564,7 +5564,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -5626,7 +5626,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: true,
+      is_currency_denominated: true,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -5688,7 +5688,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'count',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'period-average',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -5750,7 +5750,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5812,7 +5812,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'ratio',
       indicator_category: 'numeric-measurement',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5874,7 +5874,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'volume',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5936,7 +5936,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'volume',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'period-total',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'higher-is-positive',
     },
     sample_values: [
@@ -5998,7 +5998,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [
@@ -6060,7 +6060,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'price',
       indicator_category: 'price-value',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -6122,7 +6122,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'stock',
       indicator_category: 'physical-fundamental',
       temporal_aggregation: 'point-in-time',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'neutral',
     },
     sample_values: [
@@ -6184,7 +6184,7 @@ export const TEST_INDICATORS: TestIndicatorFixture[] = [
       indicator_type: 'rate',
       indicator_category: 'change-movement',
       temporal_aggregation: 'period-rate',
-      is_monetary: false,
+      is_currency_denominated: false,
       heat_map_orientation: 'lower-is-positive',
     },
     sample_values: [

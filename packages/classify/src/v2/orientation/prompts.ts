@@ -179,8 +179,8 @@ export function generateOrientationUserPrompt(indicators: Indicator[]): string {
         parts.push(`- Specialist Type: ${extInd.indicator_type}`);
       if (extInd.temporal_aggregation)
         parts.push(`- Specialist Temporal: ${extInd.temporal_aggregation}`);
-      if (extInd.is_monetary !== undefined)
-        parts.push(`- Specialist Monetary: ${extInd.is_monetary}`);
+      if (extInd.is_currency_denominated !== undefined)
+        parts.push(`- Specialist Monetary: ${extInd.is_currency_denominated}`);
       if (extInd.specialist_reasoning)
         parts.push(`- Specialist Reasoning: ${extInd.specialist_reasoning}`);
 

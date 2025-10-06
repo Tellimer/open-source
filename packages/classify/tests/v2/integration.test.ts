@@ -82,14 +82,14 @@ interface ComparisonResult {
     indicator_type: string;
     temporal_aggregation: string;
     heat_map_orientation: string;
-    is_monetary?: boolean;
+    is_currency_denominated?: boolean;
   };
   expected: {
     indicator_family: string;
     indicator_type: string;
     temporal_aggregation: string;
     heat_map_orientation: string;
-    is_monetary: boolean;
+    is_currency_denominated: boolean;
   };
 }
 
@@ -100,14 +100,14 @@ function compareClassification(
     indicator_type: string;
     temporal_aggregation: string;
     heat_map_orientation: string;
-    is_monetary?: boolean;
+    is_currency_denominated?: boolean;
   },
   expected: {
     indicator_family: string;
     indicator_type: string;
     temporal_aggregation: string;
     heat_map_orientation: string;
-    is_monetary: boolean;
+    is_currency_denominated: boolean;
   }
 ): ComparisonResult {
   const differences: string[] = [];
@@ -134,10 +134,10 @@ function compareClassification(
     );
   }
 
-  const actualMonetary = actual.is_monetary ?? false;
-  if (actualMonetary !== expected.is_monetary) {
+  const actualMonetary = actual.is_currency_denominated ?? false;
+  if (actualMonetary !== expected.is_currency_denominated) {
     differences.push(
-      `is_monetary: ${actualMonetary} ≠ ${expected.is_monetary}`
+      `is_currency_denominated: ${actualMonetary} ≠ ${expected.is_currency_denominated}`
     );
   }
 
@@ -294,7 +294,7 @@ async function testV2IntegrationForProvider(
           indicator_type: classification.indicator_type,
           temporal_aggregation: classification.temporal_aggregation,
           heat_map_orientation: classification.heat_map_orientation,
-          is_monetary: classification.is_monetary,
+          is_currency_denominated: classification.is_currency_denominated,
         },
         fixture.expectation
       );
@@ -329,7 +329,7 @@ async function testV2IntegrationForProvider(
       (c) => c.actual.heat_map_orientation === c.expected.heat_map_orientation
     ).length;
     const monetaryCorrect = comparisons.filter(
-      (c) => (c.actual.is_monetary ?? false) === c.expected.is_monetary
+      (c) => (c.actual.is_currency_denominated ?? false) === c.expected.is_currency_denominated
     ).length;
 
     console.log(`\n${'='.repeat(60)}`);

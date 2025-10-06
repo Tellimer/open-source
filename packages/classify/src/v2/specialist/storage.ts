@@ -28,7 +28,7 @@ export function writeSpecialistResults(
         indicator_type,
         indicator_category,
         temporal_aggregation,
-        is_monetary,
+        is_currency_denominated,
         confidence_cls,
         family,
         reasoning
@@ -37,7 +37,7 @@ export function writeSpecialistResults(
         indicator_type = excluded.indicator_type,
         indicator_category = excluded.indicator_category,
         temporal_aggregation = excluded.temporal_aggregation,
-        is_monetary = excluded.is_monetary,
+        is_currency_denominated = excluded.is_currency_denominated,
         confidence_cls = excluded.confidence_cls,
         family = excluded.family,
         reasoning = excluded.reasoning,
@@ -54,7 +54,7 @@ export function writeSpecialistResults(
         result.indicator_type,
         category,
         result.temporal_aggregation,
-        result.is_monetary ? 1 : 0,
+        result.is_currency_denominated ? 1 : 0,
         result.confidence_cls,
         family,
         result.reasoning || null
@@ -67,7 +67,7 @@ export function writeSpecialistResults(
       SET
         indicator_type = ?,
         temporal_aggregation = ?,
-        is_monetary = ?,
+        is_currency_denominated = ?,
         confidence_cls = ?,
         reasoning_specialist = ?,
         updated_at = CURRENT_TIMESTAMP
@@ -78,7 +78,7 @@ export function writeSpecialistResults(
       updateClassifications.run(
         result.indicator_type,
         result.temporal_aggregation,
-        result.is_monetary ? 1 : 0,
+        result.is_currency_denominated ? 1 : 0,
         result.confidence_cls,
         result.reasoning || null,
         result.indicator_id
@@ -100,7 +100,7 @@ export function readSpecialistResults(
       indicator_type,
       indicator_category,
       temporal_aggregation,
-      is_monetary,
+      is_currency_denominated,
       confidence_cls,
       reasoning
     FROM specialist_results
@@ -123,7 +123,7 @@ export function readSpecialistResults(
     indicator_type: row.indicator_type,
     indicator_category: row.indicator_category,
     temporal_aggregation: row.temporal_aggregation,
-    is_monetary: row.is_monetary === 1,
+    is_currency_denominated: row.is_currency_denominated === 1,
     confidence_cls: row.confidence_cls,
     reasoning: row.reasoning,
   }));

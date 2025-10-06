@@ -290,8 +290,8 @@ export interface ClassifiedMetadata {
   indicator_type: IndicatorType;
   /** How values aggregate over time (point-in-time, period-cumulative, etc.) */
   temporal_aggregation: TemporalAggregation;
-  /** Whether the indicator represents monetary values */
-  is_monetary: boolean;
+  /** Whether the indicator is denominated in currency units (for normalization/conversion) */
+  is_currency_denominated: boolean;
   /** Heat map orientation - whether higher or lower values are positive */
   heat_map_orientation: HeatMapOrientation;
   /** Confidence score for the classification (0-1) */

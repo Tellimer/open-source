@@ -71,7 +71,7 @@ export async function reviewAllAndFlag(
       indicator_type: c.indicator_type,
       temporal_aggregation: c.temporal_aggregation,
       heat_map_orientation: c.heat_map_orientation,
-      is_monetary: c.is_monetary,
+      is_currency_denominated: c.is_currency_denominated,
       reasoning_router: c.reasoning_router,
       reasoning_specialist: c.reasoning_specialist,
     }),

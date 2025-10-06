@@ -42,25 +42,25 @@ TEMPORAL AGGREGATION (CHECK CAREFULLY):
 • volume → period-total (total quantity: imports, exports, sales)
 • YTD/cumulative → period-cumulative
 
-IS_MONETARY (true only if currency-denominated):
+IS_CURRENCY_DENOMINATED (true only if currency-denominated):
 • USD/EUR/currency amount → TRUE (including GDP per capita if in currency)
 • Physical units (Terajoule, barrels, units, tonnes) → FALSE
 • Percent/ratio → FALSE (dimensionless)
 • "% of GDP" → FALSE (it's a ratio)
 
 EXAMPLES:
-Natural Gas Imports (Terajoule) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_monetary":false}
-GDP current prices (USD) → {"indicator_type":"flow","temporal_aggregation":"period-total","is_monetary":true}
-GDP from Manufacturing → {"indicator_type":"flow","temporal_aggregation":"period-total","is_monetary":true}
-Trade Balance (USD) → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":true}
-Changes in Inventories → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":true}
-Foreign Reserves (USD) → {"indicator_type":"stock","temporal_aggregation":"point-in-time","is_monetary":true}
-Motorbike Sales (Units) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_monetary":false}
-Exports (Units) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_monetary":false}
-Principal repayments (USD) → {"indicator_type":"flow","temporal_aggregation":"period-total","is_monetary":true}
-Net TIC Flows → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":true}
+Natural Gas Imports (Terajoule) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_currency_denominated":false}
+GDP current prices (USD) → {"indicator_type":"flow","temporal_aggregation":"period-total","is_currency_denominated":true}
+GDP from Manufacturing → {"indicator_type":"flow","temporal_aggregation":"period-total","is_currency_denominated":true}
+Trade Balance (USD) → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":true}
+Changes in Inventories → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":true}
+Foreign Reserves (USD) → {"indicator_type":"stock","temporal_aggregation":"point-in-time","is_currency_denominated":true}
+Motorbike Sales (Units) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_currency_denominated":false}
+Exports (Units) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_currency_denominated":false}
+Principal repayments (USD) → {"indicator_type":"flow","temporal_aggregation":"period-total","is_currency_denominated":true}
+Net TIC Flows → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":true}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 const NUMERIC_MEASUREMENT_PROMPT = `You are classifying NUMERIC-MEASUREMENT indicators (dimensionless ratios, percentages, counts).
 
@@ -79,8 +79,8 @@ CRITICAL DISTINCTIONS:
 • "Jobless Claims" → COUNT (discrete events), period-total
 • "Jobless Claims 4-week Average" → COUNT with period-average temporal (averaged count over 4 weeks)
 • "Unemployment Rate %" → PERCENTAGE (0-100% bounded), not-applicable
-• "Government Spending to GDP" → RATIO (X-to-Y), not-applicable, is_monetary FALSE
-• "GDP per capita" → RATIO, not-applicable, is_monetary TRUE (if in currency)
+• "Government Spending to GDP" → RATIO (X-to-Y), not-applicable, is_currency_denominated FALSE
+• "GDP per capita" → RATIO, not-applicable, is_currency_denominated TRUE (if in currency)
 • "Nurses per 1000 population" → RATIO, point-in-time (observed at specific time)
 • "Medical Doctors per 1000 population" → RATIO, point-in-time (observed at specific time)
 
@@ -93,24 +93,24 @@ TEMPORAL AGGREGATION:
 • spread → not-applicable (dimensionless difference)
 • share → not-applicable (compositional ratio)
 
-IS_MONETARY:
+IS_CURRENCY_DENOMINATED:
 • Counts of people/events → FALSE (never monetary)
 • Ratios/percentages → FALSE (dimensionless, even if derived from money)
 • GDP per capita in USD → TRUE (currency amount per person)
 • "X to GDP" ratio → FALSE (dimensionless ratio)
 
 EXAMPLES:
-Employment Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":false}
-Claimant Count Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":false}
-Jobless Claims → {"indicator_type":"count","temporal_aggregation":"period-total","is_monetary":false}
-Jobless Claims 4-week Average → {"indicator_type":"count","temporal_aggregation":"period-average","is_monetary":false}
-Unemployment Rate % → {"indicator_type":"percentage","temporal_aggregation":"not-applicable","is_monetary":false}
-Government Spending to GDP → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_monetary":false}
-GDP per capita (USD) → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_monetary":true}
-Nurses per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_monetary":false}
-Medical Doctors per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_monetary":false}
+Employment Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":false}
+Claimant Count Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":false}
+Jobless Claims → {"indicator_type":"count","temporal_aggregation":"period-total","is_currency_denominated":false}
+Jobless Claims 4-week Average → {"indicator_type":"count","temporal_aggregation":"period-average","is_currency_denominated":false}
+Unemployment Rate % → {"indicator_type":"percentage","temporal_aggregation":"not-applicable","is_currency_denominated":false}
+Government Spending to GDP → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_currency_denominated":false}
+GDP per capita (USD) → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_currency_denominated":true}
+Nurses per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Medical Doctors per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 const PRICE_VALUE_PROMPT = `You are classifying PRICE-VALUE indicators (market-determined prices and rates).
 
@@ -118,7 +118,7 @@ TYPES (choose exact match):
 • price: Interest rates, exchange rates, commodity prices, asset prices, stock prices, electricity prices
 • yield: Bond yields, returns, dividend yields
 
-CRITICAL RULES - IS_MONETARY:
+CRITICAL RULES - IS_CURRENCY_DENOMINATED:
 • Exchange rates (FX) → FALSE (they are dimensionless ratios: USD/EUR = 1.08 euros per dollar, NOT a currency amount)
 • Interest rates → FALSE (they are the price of money, expressed as %)
 • Commodity prices (oil, gold, electricity) → TRUE (if in currency: USD/barrel, EUR/MWh)
@@ -132,15 +132,15 @@ TEMPORAL AGGREGATION:
 • Interest/FX rates → point-in-time (even if daily/weekly)
 
 EXAMPLES:
-Exchange Rate USD/EUR → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
-Exchange Rate PKR/USD → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
-Interbank Rate % → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
-Electricity Price EUR/MWh → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":true}
-Oil Price USD/barrel → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":true}
-10-Year Bond Yield % → {"indicator_type":"yield","temporal_aggregation":"point-in-time","is_monetary":false}
-SOFR (%) → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
+Exchange Rate USD/EUR → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Exchange Rate PKR/USD → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Interbank Rate % → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Electricity Price EUR/MWh → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_currency_denominated":true}
+Oil Price USD/barrel → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_currency_denominated":true}
+10-Year Bond Yield % → {"indicator_type":"yield","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+SOFR (%) → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 const CHANGE_MOVEMENT_PROMPT = `You are classifying CHANGE-MOVEMENT indicators (rates of change, volatility, gaps).
 
@@ -163,28 +163,28 @@ TEMPORAL AGGREGATION:
 • gap → point-in-time (snapshot of deviation at moment)
 • velocity → period-rate
 
-IS_MONETARY (CRITICAL - RATE CHANGES ARE PERCENTAGES, NOT CURRENCY):
+IS_CURRENCY_DENOMINATED (CRITICAL - RATE CHANGES ARE PERCENTAGES, NOT CURRENCY):
 • ALL growth/change rates (YoY, MoM, QoQ, % changes) → FALSE (they are percentages/ratios, NOT currency amounts)
 • This includes: CPI inflation, PPI change, Import/Export price changes, Property price changes, GDP growth, Retail sales growth, Credit growth, Wage growth
 • Percentages are dimensionless, even when derived from monetary values
 • Gaps, spreads, volatility → FALSE (dimensionless measures)
 
 EXAMPLES:
-GDP Growth YoY % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-CPI Trimmed-Mean % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Core Inflation Rate % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Mid-month Inflation Rate MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Producer Prices Change % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Import Prices MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Residential Property Prices % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Retail Sales YoY % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Private Sector Credit % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Wage Growth % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-M1/M2 Growth % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Output Gap → {"indicator_type":"gap","temporal_aggregation":"point-in-time","is_monetary":false}
-VIX Volatility → {"indicator_type":"volatility","temporal_aggregation":"period-rate","is_monetary":false}
+GDP Growth YoY % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+CPI Trimmed-Mean % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Core Inflation Rate % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Mid-month Inflation Rate MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Producer Prices Change % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Import Prices MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Residential Property Prices % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Retail Sales YoY % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Private Sector Credit % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Wage Growth % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+M1/M2 Growth % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_currency_denominated":false}
+Output Gap → {"indicator_type":"gap","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+VIX Volatility → {"indicator_type":"volatility","temporal_aggregation":"period-rate","is_currency_denominated":false}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 const COMPOSITE_DERIVED_PROMPT = `You are classifying COMPOSITE-DERIVED indicators (indices, statistical relationships).
 
@@ -200,11 +200,11 @@ CRITICAL DISTINCTIONS:
 • "Economic Optimism INDEX" → INDEX (composite measure), NOT sentiment
 • "Industry INDEX" → INDEX (composite measure), NOT sentiment
 • PMI/ISM → INDEX (composite survey index)
-• "Prices Paid/Received INDEX" → INDEX (tracks price levels), is_monetary TRUE if price-related; FALSE if survey diffusion without currency meaning
-• "PCE/CPI Price INDEX" → INDEX (composite price level), is_monetary TRUE
-• "Terms of Trade" → INDEX (export/import price ratio index), is_monetary FALSE
+• "Prices Paid/Received INDEX" → INDEX (tracks price levels), is_currency_denominated TRUE if price-related; FALSE if survey diffusion without currency meaning
+• "PCE/CPI Price INDEX" → INDEX (composite price level), is_currency_denominated TRUE
+• "Terms of Trade" → INDEX (export/import price ratio index), is_currency_denominated FALSE
 • "CFNAI" → INDEX (composite activity index)
-• "Global Dairy Trade Price Index" / "GDT" → INDEX (commodity price index), is_monetary TRUE
+• "Global Dairy Trade Price Index" / "GDT" → INDEX (commodity price index), is_currency_denominated TRUE
 • If the name uses "Index" but is clearly a pure sentiment label (e.g., "Services Sentiment Index"), still classify as INDEX here (composite-derived), not qualitative
 • Pure "sentiment/confidence" without "index" → qualitative (different family)
 
@@ -225,7 +225,7 @@ TEMPORAL AGGREGATION (CRITICAL - CHECK UNITS):
 • correlation/elasticity/multiplier → period-average (estimated over window)
 • Terms of Trade → point-in-time (ratio at point in time)
 
-IS_MONETARY (CRITICAL - PRICE INDICES ARE DIMENSIONLESS):
+IS_CURRENCY_DENOMINATED (CRITICAL - PRICE INDICES ARE DIMENSIONLESS):
 • Price indices (CPI, PCE, PPI, Export/Import/Residential Property price indices, GDT, Nationwide Housing Prices) → FALSE (dimensionless index points, NOT currency)
 • Diffusion indices (PMI, ISM, Fed Prices Paid/Received, LMI Inventory Costs) → FALSE (survey index points, NOT currency)
 • Survey indices (confidence, business climate, optimism) → FALSE (dimensionless index scores)
@@ -233,35 +233,35 @@ IS_MONETARY (CRITICAL - PRICE INDICES ARE DIMENSIONLESS):
 • Statistical measures (correlation, elasticity, Terms of Trade) → FALSE (dimensionless ratios)
 
 EXAMPLES:
-Manufacturing PMI → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Services PMI → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Business Climate Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Business Conditions Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Economic Optimism Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Industry Index Manufacturing → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Industry Index Business Services → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Kansas Fed Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-ISM Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-ISM Non Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Philly Fed Prices Paid → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-LMI Inventory Costs → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Dallas Fed Manufacturing Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Dallas Fed Services Revenues Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Kansas Fed Employment Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-CFNAI Production Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Ifo Expectations → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-PCE Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-CPI (level) → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Core Consumer Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Export Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Residential Property Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Nationwide Housing Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Terms of Trade → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Global Dairy Trade Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-S&P 500 → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":true}
-Fiscal Multiplier → {"indicator_type":"multiplier","temporal_aggregation":"period-average","is_monetary":false}
+Manufacturing PMI → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Services PMI → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+Business Climate Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+Business Conditions Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Economic Optimism Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Industry Index Manufacturing → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Industry Index Business Services → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+Kansas Fed Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+ISM Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+ISM Non Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+Philly Fed Prices Paid → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+LMI Inventory Costs → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+Dallas Fed Manufacturing Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+Dallas Fed Services Revenues Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Kansas Fed Employment Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+CFNAI Production Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Ifo Expectations → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+PCE Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+CPI (level) → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Core Consumer Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Export Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Residential Property Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Nationwide Housing Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Terms of Trade → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Global Dairy Trade Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+S&P 500 → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":true}
+Fiscal Multiplier → {"indicator_type":"multiplier","temporal_aggregation":"period-average","is_currency_denominated":false}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 const TEMPORAL_PROMPT = `You are classifying TEMPORAL indicators (time-based measurements).
 
@@ -273,14 +273,14 @@ TYPES (choose exact match):
 TEMPORAL AGGREGATION:
 • All temporal indicators → not-applicable (they measure time itself)
 
-IS_MONETARY:
+IS_CURRENCY_DENOMINATED:
 • All temporal indicators → FALSE (measure time, not money)
 
 EXAMPLES:
-Average Maturity → {"indicator_type":"duration","temporal_aggregation":"not-applicable","is_monetary":false}
-Recession Probability → {"indicator_type":"probability","temporal_aggregation":"not-applicable","is_monetary":false}
+Average Maturity → {"indicator_type":"duration","temporal_aggregation":"not-applicable","is_currency_denominated":false}
+Recession Probability → {"indicator_type":"probability","temporal_aggregation":"not-applicable","is_currency_denominated":false}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 const QUALITATIVE_PROMPT = `You are classifying QUALITATIVE indicators (surveys, sentiment, allocations).
 
@@ -298,14 +298,14 @@ TEMPORAL AGGREGATION:
 • sentiment → point-in-time (snapshot of sentiment at moment)
 • allocation → point-in-time (current distribution)
 
-IS_MONETARY:
+IS_CURRENCY_DENOMINATED:
 • All qualitative indicators → FALSE (categorical/survey data)
 
 EXAMPLES:
-Consumer Sentiment → {"indicator_type":"sentiment","temporal_aggregation":"point-in-time","is_monetary":false}
-Asset Allocation Survey → {"indicator_type":"allocation","temporal_aggregation":"point-in-time","is_monetary":false}
+Consumer Sentiment → {"indicator_type":"sentiment","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Asset Allocation Survey → {"indicator_type":"allocation","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 
-OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
+OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
 /**
  * Family-specific prompts mapping
@@ -361,7 +361,7 @@ ${family.toUpperCase()} SPECIALIST CLASSIFICATION
 The Router stage classified these ${indicators.length} indicator${
     indicators.length === 1 ? '' : 's'
   } as ${family} family.
-Your task: Determine the specific TYPE, TEMPORAL AGGREGATION, and IS_MONETARY for each.
+Your task: Determine the specific TYPE, TEMPORAL AGGREGATION, and IS_CURRENCY_DENOMINATED for each.
 
 ${indicatorList}
 
@@ -379,7 +379,7 @@ Each classification MUST contain:
 • indicator_id (exact match to input ID)
 • indicator_type (from family-specific type taxonomy)
 • temporal_aggregation (from: point-in-time, period-rate, period-total, period-cumulative, period-average, not-applicable)
-• is_monetary (true if currency-denominated, false otherwise)
+• is_currency_denominated (true if currency-denominated, false otherwise)
 • confidence (0-1 number)
 • reasoning (1 sentence explaining classification choice)`;
 }

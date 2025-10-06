@@ -362,11 +362,11 @@ function checkDomainRuleViolations(
 
   // 2) FX or Exchange Rate should be monetary=true
   if (/exchange rate|fx|parallel fx/.test(name) && specialist) {
-    if (specialist.is_monetary === false) {
+    if (specialist.is_currency_denominated === false) {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',
-        flag_reason: 'FX/Exchange rate should be is_monetary=true',
+        flag_reason: 'FX/Exchange rate should be is_currency_denominated=true',
         current_value: 'false',
         expected_value: 'true',
         flagged_at: new Date().toISOString(),
@@ -379,7 +379,7 @@ function checkDomainRuleViolations(
     router &&
     router.family === 'change-movement' &&
     specialist &&
-    specialist.is_monetary === true
+    specialist.is_currency_denominated === true
   ) {
     flags.push({
       indicator_id: id,
@@ -445,7 +445,7 @@ function checkDomainRuleViolations(
 
   // 7) Price indices (containing "price" + "index") should be non-monetary (dimensionless)
   if (/price.*index|dairy.*trade.*index/.test(name) && specialist) {
-    if (specialist.is_monetary === true) {
+    if (specialist.is_currency_denominated === true) {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',
@@ -459,7 +459,7 @@ function checkDomainRuleViolations(
 
   // 8) Price change rates (producer prices change, import prices mom, etc.) should be non-monetary
   if (/(producer.*prices.*change|import.*prices.*mom|export.*prices.*change)/.test(name) && specialist) {
-    if (specialist.is_monetary === true) {
+    if (specialist.is_currency_denominated === true) {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',

@@ -37,7 +37,7 @@ const ReviewDiffSchema = v.object({
   family: v.optional(FamilySchema),
   indicator_type: v.optional(v.string()),
   temporal_aggregation: v.optional(TemporalAggregationSchema),
-  is_monetary: v.optional(v.boolean()),
+  is_currency_denominated: v.optional(v.boolean()),
   heat_map_orientation: v.optional(OrientationSchema),
 });
 

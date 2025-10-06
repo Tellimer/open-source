@@ -76,11 +76,11 @@ export function validateSpecialistResult(
     });
   }
 
-  if (typeof result.is_monetary !== 'boolean') {
+  if (typeof result.is_currency_denominated !== 'boolean') {
     errors.push({
       indicator_id: result.indicator_id,
-      field: 'is_monetary',
-      value: result.is_monetary,
+      field: 'is_currency_denominated',
+      value: result.is_currency_denominated,
       expected: 'boolean (true or false)',
       errorType: 'invalid_type',
     });
@@ -157,11 +157,11 @@ export function applyMechanicalFixes(
   }
 
   // 2. Normalize boolean values (if LLM returned string)
-  if (typeof fixed.is_monetary === 'string') {
-    fixed.is_monetary = (fixed.is_monetary as string).toLowerCase() === 'true';
-  } else if (typeof fixed.is_monetary !== 'boolean') {
+  if (typeof fixed.is_currency_denominated === 'string') {
+    fixed.is_currency_denominated = (fixed.is_currency_denominated as string).toLowerCase() === 'true';
+  } else if (typeof fixed.is_currency_denominated !== 'boolean') {
     // Default to false if invalid
-    fixed.is_monetary = false;
+    fixed.is_currency_denominated = false;
   }
 
   // 3. Lowercase and trim enum values

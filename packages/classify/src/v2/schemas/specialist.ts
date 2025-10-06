@@ -39,7 +39,7 @@ export const SpecialistResultSchema = v.object({
   ),
   indicator_type: v.string(), // Validated per family in business logic
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(
     v.number(),
     v.minValue(0, 'Confidence must be >= 0'),
@@ -68,7 +68,7 @@ export const PhysicalFundamentalSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(PHYSICAL_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
@@ -76,7 +76,7 @@ export const NumericMeasurementSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(NUMERIC_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
@@ -84,7 +84,7 @@ export const PriceValueSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(PRICE_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
@@ -92,7 +92,7 @@ export const ChangeMovementSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(CHANGE_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
@@ -100,7 +100,7 @@ export const CompositeDerivedSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(COMPOSITE_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
@@ -108,7 +108,7 @@ export const TemporalSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(TEMPORAL_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
@@ -116,7 +116,7 @@ export const QualitativeSchema = v.object({
   indicator_id: v.string(),
   indicator_type: v.union(QUALITATIVE_TYPES.map(t => v.literal(t)) as any),
   temporal_aggregation: TemporalAggregationSchema,
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
 });
 
