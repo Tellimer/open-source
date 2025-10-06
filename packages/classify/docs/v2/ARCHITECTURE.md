@@ -113,6 +113,28 @@ interface RouterResult {
 
 **Purpose:** Use family-specific prompts for accurate type classification.
 
+### Context Enrichment
+
+The Specialist stage receives **full router context** including:
+- Router family assignment
+- Router confidence score
+- **Router reasoning** - Why the family was chosen
+
+This allows the Specialist LLM to:
+- Build on prior analysis rather than starting fresh
+- Make decisions aware of router's reasoning
+- Provide better classification within family context
+
+```typescript
+// Indicators are enriched with router context
+const enrichedIndicator = {
+  ...indicator,
+  router_family: 'physical-fundamental',
+  router_confidence: 0.95,
+  router_reasoning: 'GDP is measured over a period with real substance (economic output)'
+};
+```
+
 ### Family-Specific Prompts
 
 Each family has a tailored prompt:
@@ -185,6 +207,42 @@ interface SpecialistResult {
 ## Stage 3: Orientation
 
 **Purpose:** Determine heat map orientation (higher/lower/neutral is positive).
+
+### Context Enrichment
+
+The Orientation stage receives **full context from both prior stages**:
+
+**Router Context:**
+- Family assignment
+- Router confidence
+- Router reasoning
+
+**Specialist Context:**
+- Indicator type
+- Temporal aggregation
+- Monetary flag
+- Specialist reasoning
+
+This rich context enables the Orientation LLM to make better-informed decisions about heat map direction by understanding:
+- The indicator's family and classification journey
+- The reasoning behind family and type assignments
+- Both stages' confidence levels and thought processes
+
+```typescript
+// Fully enriched indicator with all prior context
+const enrichedIndicator = {
+  ...indicator,
+  // Router context
+  router_family: 'change-movement',
+  router_confidence: 0.93,
+  router_reasoning: 'CPI YoY measures price change rate',
+  // Specialist context
+  indicator_type: 'rate',
+  temporal_aggregation: 'period-rate',
+  is_monetary: false,
+  specialist_reasoning: 'Inflation rate measures price growth over period'
+};
+```
 
 ### Welfare-Focused Approach
 

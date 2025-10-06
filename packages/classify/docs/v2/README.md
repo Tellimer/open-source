@@ -17,6 +17,7 @@ V2 introduces a 6-stage pipeline for higher accuracy and better quality control:
 
 - **Multi-stage pipeline** - 6 specialized stages for accuracy
 - **Family-based routing** - 7 indicator families with specialized prompts
+- **Context passing with reasoning** - Each stage receives full context and reasoning from prior stages
 - **Persistent SQLite database** - Local or remote (Railway) storage
 - **Quality control** - Automatic flagging and LLM review
 - **Resume capability** - Restart from any stage using DB state
@@ -99,6 +100,80 @@ Output: V2PipelineResult
 ```
 
 See [Architecture](./ARCHITECTURE.md) for detailed stage documentation.
+
+## Context Passing & Reasoning Chain
+
+One of V2's key innovations is **context enrichment** - each stage receives full context and reasoning from all prior stages. This creates a reasoning chain where LLMs build on previous analysis rather than starting fresh.
+
+### How It Works
+
+**Stage 1: Router**
+```typescript
+{
+  family: 'change-movement',
+  confidence: 0.93,
+  reasoning: 'CPI YoY measures price change rate over time'
+}
+```
+
+**Stage 2: Specialist** (receives router context)
+```typescript
+// Specialist prompt includes:
+// - Router Family: change-movement
+// - Router Confidence: 0.93
+// - Router Reasoning: "CPI YoY measures price change rate over time"
+
+{
+  indicator_type: 'rate',
+  temporal_aggregation: 'period-rate',
+  is_monetary: false,
+  confidence: 0.95,
+  reasoning: 'Inflation measures price growth percentage over period'
+}
+```
+
+**Stage 3: Orientation** (receives router + specialist context)
+```typescript
+// Orientation prompt includes ALL prior context:
+// Router: family, confidence, reasoning
+// Specialist: type, temporal, monetary, reasoning
+
+{
+  heat_map_orientation: 'lower-is-positive',
+  confidence: 0.98,
+  reasoning: 'Lower inflation improves purchasing power and welfare'
+}
+```
+
+### Benefits
+
+1. **Better Decisions** - LLMs make informed choices based on prior analysis
+2. **Consistent Reasoning** - Each stage builds on previous stages' logic
+3. **Debugging** - Full reasoning chain stored in database
+4. **Transparency** - See exactly why each decision was made
+
+### Database Storage
+
+All reasoning is persisted:
+
+```sql
+-- Router reasoning
+SELECT family, confidence_family, reasoning_router
+FROM classifications WHERE indicator_id = 'CPI_YOY';
+
+-- Specialist reasoning
+SELECT indicator_type, confidence_cls, reasoning_specialist
+FROM classifications WHERE indicator_id = 'CPI_YOY';
+
+-- Full context chain
+SELECT
+  family, reasoning_router,
+  indicator_type, reasoning_specialist,
+  heat_map_orientation
+FROM classifications WHERE indicator_id = 'CPI_YOY';
+```
+
+This creates a complete audit trail of the classification reasoning chain.
 
 ## Database Setup
 

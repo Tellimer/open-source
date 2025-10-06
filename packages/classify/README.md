@@ -262,13 +262,14 @@ Complete documentation is organized in the `/docs` directory:
 - [Testing Guide](./docs/TESTING_GUIDE.md) - Running and adding tests
 - [Cost Tracking](./docs/COST_TRACKING.md) - Detailed cost estimation
 - [Quick Cost Guide](./docs/QUICK_COST_GUIDE.md) - Fast cost lookup
-- [Performance](./docs/PERFORMANCE_SUMMARY.md) - Performance benchmarks
+- [Performance Benchmarks](./docs/BENCHMARKING.md) - Performance analysis
 
 ### V2 Pipeline Docs
 
-- [V2 Architecture](./docs/v2/ARCHITECTURE.md) - 6-stage pipeline details
+- [V2 Architecture](./docs/v2/ARCHITECTURE.md) - 6-stage pipeline with context passing
 - [Database Setup](./docs/v2/DATABASE.md) - SQLite configuration
 - [AI SDK Integration](./docs/v2/AI_SDK.md) - Type-safe structured output
+- [Context Passing](./docs/v2/README.md#context-passing--reasoning-chain) - Reasoning chain between stages
 
 ## API Reference
 

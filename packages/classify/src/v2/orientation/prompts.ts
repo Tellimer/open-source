@@ -167,12 +167,24 @@ export function generateOrientationUserPrompt(indicators: Indicator[]): string {
 
       // Include previous stage classifications if available (passed via extended Indicator type)
       const extInd = ind as any;
-      if (extInd.family) parts.push(`- Family: ${extInd.family}`);
-      if (extInd.indicator_type) parts.push(`- Type: ${extInd.indicator_type}`);
+      
+      // Router stage context
+      if (extInd.router_family || extInd.family) 
+        parts.push(`- Router Family: ${extInd.router_family || extInd.family}`);
+      if (typeof (extInd.router_confidence || extInd.confidence_family) === 'number')
+        parts.push(`- Router Confidence: ${extInd.router_confidence || extInd.confidence_family}`);
+      if (extInd.router_reasoning)
+        parts.push(`- Router Reasoning: ${extInd.router_reasoning}`);
+      
+      // Specialist stage context
+      if (extInd.indicator_type) 
+        parts.push(`- Specialist Type: ${extInd.indicator_type}`);
       if (extInd.temporal_aggregation)
-        parts.push(`- Temporal: ${extInd.temporal_aggregation}`);
+        parts.push(`- Specialist Temporal: ${extInd.temporal_aggregation}`);
       if (extInd.is_monetary !== undefined)
-        parts.push(`- Monetary: ${extInd.is_monetary}`);
+        parts.push(`- Specialist Monetary: ${extInd.is_monetary}`);
+      if (extInd.specialist_reasoning)
+        parts.push(`- Specialist Reasoning: ${extInd.specialist_reasoning}`);
 
       return parts.join('\n');
     })

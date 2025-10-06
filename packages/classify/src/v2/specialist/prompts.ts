@@ -72,20 +72,24 @@ TYPES (choose exact match):
 • share: Compositional % of GDP (consumption as % of GDP, labor share)
 
 CRITICAL DISTINCTIONS:
-• "Employment Change" → COUNT (discrete change in number), period-total
+• "Employment Change" → COUNT, but should be BALANCE (can be negative)
 • "Jobless Claims" → COUNT (discrete events), period-total
+• "Jobless Claims 4-week Average" → COUNT with period-average temporal (averaged count over 4 weeks)
 • "Claimant Count Change" → COUNT (change in count), period-total
 • "Unemployment Rate %" → PERCENTAGE (0-100% bounded), not-applicable
 • "Government Spending to GDP" → RATIO (X-to-Y), not-applicable, is_monetary FALSE
 • "GDP per capita" → RATIO, not-applicable, is_monetary TRUE (if in currency)
+• "Nurses per 1000 population" → RATIO, point-in-time (observed at specific time)
+• "Medical Doctors per 1000 population" → RATIO, point-in-time (observed at specific time)
 
 TEMPORAL AGGREGATION:
 • count → period-total (sum of discrete events over period)
+• count (when "X-week average" or "X-month average") → period-average (averaged over period)
 • percentage → not-applicable (dimensionless ratio)
-• ratio → not-applicable (dimensionless ratio)
+• ratio (per-capita, per-population) → point-in-time (observed at specific time)
+• ratio (X-to-Y, debt-to-GDP) → not-applicable (dimensionless ratio)
 • spread → not-applicable (dimensionless difference)
 • share → not-applicable (compositional ratio)
-• Count series remain period-total even when labeled as an average (e.g., 4-week, 12-month) unless the source explicitly defines a different aggregation
 
 IS_MONETARY:
 • Counts of people/events → FALSE (never monetary)
@@ -94,11 +98,14 @@ IS_MONETARY:
 • "X to GDP" ratio → FALSE (dimensionless ratio)
 
 EXAMPLES:
-Employment Change → {"indicator_type":"count","temporal_aggregation":"period-total","is_monetary":false}
+Employment Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":false}
+Jobless Claims → {"indicator_type":"count","temporal_aggregation":"period-total","is_monetary":false}
+Jobless Claims 4-week Average → {"indicator_type":"count","temporal_aggregation":"period-average","is_monetary":false}
 Unemployment Rate % → {"indicator_type":"percentage","temporal_aggregation":"not-applicable","is_monetary":false}
 Government Spending to GDP → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_monetary":false}
 GDP per capita (USD) → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_monetary":true}
-Jobless Claims 4-week Avg → {"indicator_type":"count","temporal_aggregation":"period-total","is_monetary":false}
+Nurses per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_monetary":false}
+Medical Doctors per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_monetary":false}
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
@@ -147,34 +154,32 @@ CRITICAL RULES:
 • "Import Prices MoM %" → RATE
 • "Property Prices %" → RATE (if measuring change)
 
-IS_MONETARY DECISIONS (nuanced, align with fixtures):
-• Inflation rates (CPI/PCE inflation rate, Core Inflation Rate, mid-month inflation rates) → is_monetary FALSE
-• Producer Prices Change (PPI change), Import/Export Prices changes, Residential Property Prices changes → is_monetary TRUE
-• Monetary aggregates growth (M1/M2 growth %, bank credit growth) → is_monetary TRUE
-• Non-price macro rates (retail sales YoY %, private sector credit %, private investment %, building capex %, wage growth %) → is_monetary FALSE
-
 TEMPORAL AGGREGATION:
 • rate → period-rate (measured over the period: YoY, MoM, QoQ)
 • volatility → period-rate (measured over period)
 • gap → point-in-time (snapshot of deviation at moment)
 • velocity → period-rate
 
-IS_MONETARY:
-• TRUE for price-index or price-based change rates (PPI change, import/export price change, property price change), and monetary aggregate growth
-• FALSE for inflation rates (CPI/PCE, core inflation, mid‑month inflation), non-price macro rates (retail sales YoY %, private sector credit %, private investment %, capex %, wage growth %), ratios, spreads, and gaps
+IS_MONETARY (CRITICAL - RATE CHANGES ARE PERCENTAGES, NOT CURRENCY):
+• ALL growth/change rates (YoY, MoM, QoQ, % changes) → FALSE (they are percentages/ratios, NOT currency amounts)
+• This includes: CPI inflation, PPI change, Import/Export price changes, Property price changes, GDP growth, Retail sales growth, Credit growth, Wage growth
+• Percentages are dimensionless, even when derived from monetary values
+• Gaps, spreads, volatility → FALSE (dimensionless measures)
 
 EXAMPLES:
 GDP Growth YoY % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 CPI Trimmed-Mean % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 Core Inflation Rate % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 Mid-month Inflation Rate MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
-Producer Prices Change % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":true}
-Import Prices MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":true}
-Residential Property Prices % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":true}
+Producer Prices Change % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
+Import Prices MoM % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
+Residential Property Prices % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 Retail Sales YoY % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 Private Sector Credit % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 Wage Growth % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
+M1/M2 Growth % → {"indicator_type":"rate","temporal_aggregation":"period-rate","is_monetary":false}
 Output Gap → {"indicator_type":"gap","temporal_aggregation":"point-in-time","is_monetary":false}
+VIX Volatility → {"indicator_type":"volatility","temporal_aggregation":"period-rate","is_monetary":false}
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
@@ -217,11 +222,12 @@ TEMPORAL AGGREGATION (CRITICAL - CHECK UNITS):
 • correlation/elasticity/multiplier → period-average (estimated over window)
 • Terms of Trade → point-in-time (ratio at point in time)
 
-IS_MONETARY:
-• Price-based indices (CPI, PCE, Export/Import/Terms of Trade price indices, GDT, Prices Paid/Received) → TRUE
-• Survey indices (PMI, confidence, business climate) → FALSE (dimensionless index scores)
-• Equity indices (S&P 500) → TRUE (aggregate price level)
-• Statistical measures (correlation, elasticity) → FALSE (dimensionless)
+IS_MONETARY (CRITICAL - PRICE INDICES ARE DIMENSIONLESS):
+• Price indices (CPI, PCE, PPI, Export/Import/Residential Property price indices, GDT, Nationwide Housing Prices) → FALSE (dimensionless index points, NOT currency)
+• Diffusion indices (PMI, ISM, Fed Prices Paid/Received, LMI Inventory Costs) → FALSE (survey index points, NOT currency)
+• Survey indices (confidence, business climate, optimism) → FALSE (dimensionless index scores)
+• Equity indices (S&P 500, stock indices) → TRUE (aggregate price level in currency)
+• Statistical measures (correlation, elasticity, Terms of Trade) → FALSE (dimensionless ratios)
 
 EXAMPLES:
 Manufacturing PMI → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
@@ -231,18 +237,25 @@ Business Conditions Index → {"indicator_type":"index","temporal_aggregation":"
 Economic Optimism Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
 Industry Index Manufacturing → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
 Industry Index Business Services → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-Kansas Fed Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":true}
-ISM Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":true}
-Philly Fed Prices Paid → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":true}
-LMI Inventory Costs → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":true}
+Kansas Fed Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
+ISM Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
+ISM Non Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
+Philly Fed Prices Paid → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
+LMI Inventory Costs → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
+Dallas Fed Manufacturing Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
 Dallas Fed Services Revenues Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
 Kansas Fed Employment Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
 CFNAI Production Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
 Ifo Expectations → {"indicator_type":"index","temporal_aggregation":"period-average","is_monetary":false}
-PCE Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":true}
-CPI (level) → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":true}
+PCE Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
+CPI (level) → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
+Core Consumer Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
+Export Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
+Residential Property Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
+Nationwide Housing Prices → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
 Terms of Trade → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
-Global Dairy Trade Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":true}
+Global Dairy Trade Price Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":false}
+S&P 500 → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_monetary":true}
 Fiscal Multiplier → {"indicator_type":"multiplier","temporal_aggregation":"period-average","is_monetary":false}
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_monetary":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
@@ -326,13 +339,13 @@ export function generateSpecialistUserPrompt(
       if (ind.description) parts.push(`- Description: ${ind.description}`);
 
       // Include router decision (family classification from previous stage)
-      const extInd = ind as Partial<
-        Indicator & { family?: string; confidence_family?: number }
-      >;
-      if (extInd.family)
-        parts.push(`- Router Family Decision: ${extInd.family}`);
-      if (typeof extInd.confidence_family === 'number')
-        parts.push(`- Router Confidence: ${extInd.confidence_family}`);
+      const extInd = ind as any;
+      if (extInd.router_family || extInd.family)
+        parts.push(`- Router Family Decision: ${extInd.router_family || extInd.family}`);
+      if (typeof (extInd.router_confidence || extInd.confidence_family) === 'number')
+        parts.push(`- Router Confidence: ${extInd.router_confidence || extInd.confidence_family}`);
+      if (extInd.router_reasoning)
+        parts.push(`- Router Reasoning: ${extInd.router_reasoning}`);
 
       return parts.join('\n');
     })

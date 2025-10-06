@@ -443,6 +443,90 @@ function checkDomainRuleViolations(
     }
   }
 
+  // 7) Price indices (containing "price" + "index") should be non-monetary (dimensionless)
+  if (/price.*index|dairy.*trade.*index/.test(name) && specialist) {
+    if (specialist.is_monetary === true) {
+      flags.push({
+        indicator_id: id,
+        flag_type: 'rule_violation',
+        flag_reason: 'Price indices are dimensionless ratios (non-monetary)',
+        current_value: 'true',
+        expected_value: 'false',
+        flagged_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  // 8) Price change rates (producer prices change, import prices mom, etc.) should be non-monetary
+  if (/(producer.*prices.*change|import.*prices.*mom|export.*prices.*change)/.test(name) && specialist) {
+    if (specialist.is_monetary === true) {
+      flags.push({
+        indicator_id: id,
+        flag_type: 'rule_violation',
+        flag_reason: 'Price change rates are percentages (non-monetary)',
+        current_value: 'true',
+        expected_value: 'false',
+        flagged_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  // 9) ISM/Fed diffusion indices (prices paid/received, manufacturing/non-manufacturing prices) should use period-average
+  if (/(ism|fed).*prices|inventory costs/.test(name) && specialist) {
+    if (specialist.indicator_type === 'index' && specialist.temporal_aggregation !== 'period-average') {
+      flags.push({
+        indicator_id: id,
+        flag_type: 'rule_violation',
+        flag_reason: 'ISM/Fed price diffusion indices should use period-average temporal aggregation',
+        current_value: specialist.temporal_aggregation,
+        expected_value: 'period-average',
+        flagged_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  // 10) Debt indicators (debt, credit, borrowing) should be lower-is-positive
+  if (/(debt|borrowing|imf credit)/.test(name) && orientation) {
+    if (orientation.heat_map_orientation === 'higher-is-positive') {
+      flags.push({
+        indicator_id: id,
+        flag_type: 'rule_violation',
+        flag_reason: 'Debt/borrowing should have lower-is-positive orientation',
+        current_value: orientation.heat_map_orientation,
+        expected_value: 'lower-is-positive',
+        flagged_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  // 11) Employment Change (can be negative) should be balance, not count
+  if (/employment change/.test(name) && specialist) {
+    if (specialist.indicator_type === 'count') {
+      flags.push({
+        indicator_id: id,
+        flag_type: 'rule_violation',
+        flag_reason: 'Employment Change can be negative, should be balance not count',
+        current_value: specialist.indicator_type,
+        expected_value: 'balance',
+        flagged_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  // 12) X-week/X-month averages should use period-average temporal aggregation
+  if (/(4-week|4 week|12-month|12 month|moving average).*average|average.*(4-week|4 week|12-month|12 month)/.test(name) && specialist) {
+    if (specialist.temporal_aggregation !== 'period-average') {
+      flags.push({
+        indicator_id: id,
+        flag_type: 'rule_violation',
+        flag_reason: 'X-week/X-month averages should use period-average temporal aggregation',
+        current_value: specialist.temporal_aggregation,
+        expected_value: 'period-average',
+        flagged_at: new Date().toISOString(),
+      });
+    }
+  }
+
   return flags;
 }
 

@@ -164,12 +164,33 @@ export async function classifyIndicatorsV2(
     // ═══════════════════════════════════════════════════════════════════════
     if (!quiet) console.log('\n🧭 Stage 3: Orientation (Heat Map Direction)');
 
+    // Use in-memory stage outputs for enrichment
+    const dbRouterResults = routerResult.successful;
+    const dbSpecialistResults = specialistResult.successful;
+
+    // Enrich indicators with router and specialist context for orientation stage
+    const enrichedIndicatorsForOrientation = indicators.map((ind) => {
+      const router = dbRouterResults.find((r) => r.indicator_id === ind.id);
+      const specialist = dbSpecialistResults.find((s) => s.indicator_id === ind.id);
+      
+      return {
+        ...ind,
+        router_family: router?.family,
+        router_confidence: router?.confidence_family,
+        router_reasoning: router?.reasoning,
+        indicator_type: specialist?.indicator_type,
+        temporal_aggregation: specialist?.temporal_aggregation,
+        is_monetary: specialist?.is_monetary,
+        specialist_reasoning: specialist?.reasoning,
+      };
+    });
+
     // Use orientation-specific model if provided, otherwise use default
     const orientationLlmConfig = config.models?.orientation
       ? { ...llmConfig, model: config.models.orientation }
       : llmConfig;
 
-    const orientationResult = await classifyOrientations(indicators, {
+    const orientationResult = await classifyOrientations(enrichedIndicatorsForOrientation as any, {
       llmConfig: orientationLlmConfig,
       batchSize: config.batch!.orientationBatchSize!,
       concurrency: config.concurrency!.orientation!,
@@ -202,8 +223,6 @@ export async function classifyIndicatorsV2(
     if (!quiet) console.log('\n🚩 Stage 4: Flagging (Quality Control)');
 
     // Use in-memory stage outputs instead of re-reading DB
-    const dbRouterResults = routerResult.successful;
-    const dbSpecialistResults = specialistResult.successful;
     const dbOrientationResults = orientationResult.successful;
 
     const allClassificationData: ClassificationData[] = indicators.map(

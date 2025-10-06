@@ -12,6 +12,7 @@ import type { IndicatorFamily, RouterResult } from '../types.ts';
 export interface IndicatorWithFamily extends Indicator {
   router_family: IndicatorFamily;
   router_confidence: number;
+  router_reasoning?: string;
 }
 
 /**
@@ -46,6 +47,7 @@ export function groupIndicatorsByFamily(
       ...indicator,
       router_family: family,
       router_confidence: routerResult.confidence_family,
+      router_reasoning: routerResult.reasoning,
     });
   }
 
