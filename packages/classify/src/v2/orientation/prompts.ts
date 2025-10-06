@@ -24,12 +24,12 @@ ORIENTATION CATEGORIES
 **lower-is-positive**: Lower values = better welfare
 • Unemployment: Unemployment rate, jobless claims
 • Inflation: CPI inflation, producer price inflation, price growth rates
-• Debt burden: Debt ratios, deficit ratios
+• Debt burden: Debt ratios, deficit ratios, debt stocks (IMF credit, external debt)
+• Interest rates: Policy rates, lending rates, interbank rates, SOFR (cost of borrowing)
 • Risk/volatility: VIX, price volatility, default probability
 • Costs: Inventory costs, input costs (higher costs are negative)
 
 **neutral**: Context-dependent, no inherent welfare direction
-• Interest rates: Policy rates, lending rates, interbank rates (optimal level varies)
 • Exchange rates: FX rates (competitive vs stability tradeoffs)
 • Prices (levels): Electricity prices, commodity prices (depends on consumer/producer perspective)
 • Trade volumes: Imports, exports (openness vs self-sufficiency tradeoffs)
@@ -58,37 +58,34 @@ DECISION RULES (CHECK IN ORDER)
 5. Is it GDP/PRODUCTION/INCOME GROWTH?
    → higher-is-positive (economic growth = better welfare)
 
-6. Is it INTEREST RATE or EXCHANGE RATE?
-   → neutral by default. Exception: Interbank/Policy rate often preferred lower-is-positive (cost of credit). If the name contains "interbank" or "policy", set lower-is-positive.
+6. Is it INTEREST RATE (policy rate, lending rate, interbank rate, SOFR, overnight rate)?
+   → lower-is-positive (lower borrowing costs = better for borrowers, economic activity)
 
-7. Is it IMPORT/EXPORT VOLUME or TRADE VOLUME?
+7. Is it EXCHANGE RATE?
+   → neutral (competitive vs stability tradeoffs)
+
+8. Is it IMPORT/EXPORT VOLUME or TRADE VOLUME?
    → neutral (context-dependent). Exception: if explicitly framed as export performance (e.g., "Oil Exports", "Non-oil Exports"), classify higher-is-positive.
 
-8. Is it DEBT RATIO or DEFICIT?
+9. Is it DEBT RATIO, DEFICIT, or DEBT STOCK (IMF credit, external debt, Use of IMF Credit)?
    → lower-is-positive (lower debt burden = better fiscal health)
 
-9. Is it VOLATILITY/RISK/PROBABILITY (VIX, volatility, default probability)?
-   → lower-is-positive (lower risk = better welfare)
+10. Is it VOLATILITY/RISK/PROBABILITY (VIX, volatility, default probability)?
+    → lower-is-positive (lower risk = better welfare)
 
-10. Is it COST measure (inventory costs, input costs)?
+11. Is it COST measure (inventory costs, input costs)?
     → lower-is-positive (lower costs = better for producers)
 
-11. Is it TRADE BALANCE or CURRENT ACCOUNT?
+12. Is it TRADE BALANCE or CURRENT ACCOUNT?
     → neutral (surplus not always better, depends on economic stage)
 
-12. Is it CPI/PCE/PRICE INDEX LEVEL (not growth rate)?
+13. Is it CPI/PCE/PRICE INDEX LEVEL (not growth rate)?
     → neutral (level is reference point; inflation rate is lower-is-positive)
-    Note: For tests requiring exporter perspective, Export Prices (index level) → higher-is-positive
-
-13. Is it IMF Credit / SDR allocations usage? (DT.DOD.DIMF.CD)
-    → neutral (context-dependent; reliance vs stabilisation)
+    Note: All price index levels (including Export Prices, Import Prices) → neutral
 
 15. SPECIAL CASES (dataset-aligned):
     a) Exports (flows/volumes, including Oil/Non‑oil) → higher-is-positive
-    b) Export Prices (level) → higher-is-positive (project preference for exporter perspective)
-    c) Use of IMF Credit / SDR allocations → neutral
-    d) FDI YoY (Foreign Direct Investment YoY) → higher-is-positive
-    e) PCE Price Index (level) → neutral (unless configured otherwise)
+    b) FDI YoY (Foreign Direct Investment YoY) → higher-is-positive
 
 13. Is it INVESTMENT FLOW (FDI, portfolio flows, TIC flows)?
     → neutral (capital flows are context-dependent)
@@ -108,7 +105,8 @@ Oil Price → neutral (context-dependent)
 Unemployment Rate → lower-is-positive (lower = more employment)
 Employment Change → higher-is-positive (job creation is positive)
 GDP Growth → higher-is-positive (economic growth is positive)
-Interest Rate → neutral (optimal level varies by context)
+Interest Rate → lower-is-positive (lower borrowing costs are better)
+SOFR (Secured Overnight Financing Rate) → lower-is-positive (lower borrowing costs)
 Exchange Rate → neutral (competitiveness vs stability tradeoff)
 Import Volume → neutral (trade openness is context-dependent)
 Export Volume → neutral (trade openness is context-dependent)
@@ -117,15 +115,15 @@ Export Prices Change (rate) → ambiguous; default neutral unless your use-case 
 Oil Exports (flow) → higher-is-positive (dataset-aligned)
 Non-oil Exports (flow) → higher-is-positive (dataset-aligned)
 FDI YoY → higher-is-positive (capital inflows growth preferred)
-Use of IMF Credit → neutral (context-dependent)
-PCE Price Index → lower-is-positive (project preference)
+Use of IMF Credit (debt stock) → lower-is-positive (lower debt is better)
+PCE Price Index → neutral (price index level)
 Trade Balance → neutral (surplus not always better)
 Debt-to-GDP → lower-is-positive (lower debt burden is better)
 VIX Volatility → lower-is-positive (lower risk is better)
-Inventory Costs → higher-is-positive (dataset preference: higher index indicates lower relative costs)
+Inventory Costs → lower-is-positive (higher costs are negative for business)
 Prices Paid Index → lower-is-positive (lower input prices are better)
 Direct Investment Liabilities → neutral (capital flows are context-dependent)
-Principal repayments on external debt → lower-is-positive (lower debt service burden is better)
+Principal repayments on external debt → neutral (outflow vs debt reduction tradeoff)
 Consumer Prices Change → lower-is-positive (inflation control preferred)
 Core Consumer Prices → lower-is-positive (core inflation lower is better)
 Global Dairy Trade Price Index → neutral (commodity price, context-dependent)

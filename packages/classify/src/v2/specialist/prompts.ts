@@ -65,17 +65,19 @@ OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggre
 const NUMERIC_MEASUREMENT_PROMPT = `You are classifying NUMERIC-MEASUREMENT indicators (dimensionless ratios, percentages, counts).
 
 TYPES (choose exact match):
-• count: Discrete events/changes (housing starts, jobless claims, employment change, claimant count change)
+• count: Discrete positive events (housing starts, jobless claims)
+• balance: Can be positive or negative (employment change, claimant count change, net changes)
 • percentage: 0-100% bounded (unemployment rate, participation rate, capacity utilization)
 • ratio: X-to-Y or per-X (debt-to-GDP, GDP per capita, price-to-earnings)
 • spread: X minus Y (yield spread, interest rate differential)
 • share: Compositional % of GDP (consumption as % of GDP, labor share)
 
 CRITICAL DISTINCTIONS:
-• "Employment Change" → COUNT, but should be BALANCE (can be negative)
+• "Employment Change" → BALANCE (can be negative), period-total
+• "ADP Employment Change" → BALANCE (can be negative), period-total
+• "Claimant Count Change" → BALANCE (can be negative), period-total
 • "Jobless Claims" → COUNT (discrete events), period-total
 • "Jobless Claims 4-week Average" → COUNT with period-average temporal (averaged count over 4 weeks)
-• "Claimant Count Change" → COUNT (change in count), period-total
 • "Unemployment Rate %" → PERCENTAGE (0-100% bounded), not-applicable
 • "Government Spending to GDP" → RATIO (X-to-Y), not-applicable, is_monetary FALSE
 • "GDP per capita" → RATIO, not-applicable, is_monetary TRUE (if in currency)
@@ -99,6 +101,7 @@ IS_MONETARY:
 
 EXAMPLES:
 Employment Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":false}
+Claimant Count Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_monetary":false}
 Jobless Claims → {"indicator_type":"count","temporal_aggregation":"period-total","is_monetary":false}
 Jobless Claims 4-week Average → {"indicator_type":"count","temporal_aggregation":"period-average","is_monetary":false}
 Unemployment Rate % → {"indicator_type":"percentage","temporal_aggregation":"not-applicable","is_monetary":false}
@@ -116,7 +119,7 @@ TYPES (choose exact match):
 • yield: Bond yields, returns, dividend yields
 
 CRITICAL RULES - IS_MONETARY:
-• Exchange rates (FX) → TRUE (they ARE monetary values: USD/EUR, PKR/USD)
+• Exchange rates (FX) → FALSE (they are dimensionless ratios: USD/EUR = 1.08 euros per dollar, NOT a currency amount)
 • Interest rates → FALSE (they are the price of money, expressed as %)
 • Commodity prices (oil, gold, electricity) → TRUE (if in currency: USD/barrel, EUR/MWh)
 • Stock prices → TRUE (in currency)
@@ -129,8 +132,8 @@ TEMPORAL AGGREGATION:
 • Interest/FX rates → point-in-time (even if daily/weekly)
 
 EXAMPLES:
-Exchange Rate USD/EUR → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":true}
-Exchange Rate PKR/USD → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":true}
+Exchange Rate USD/EUR → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
+Exchange Rate PKR/USD → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
 Interbank Rate % → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":false}
 Electricity Price EUR/MWh → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":true}
 Oil Price USD/barrel → {"indicator_type":"price","temporal_aggregation":"point-in-time","is_monetary":true}

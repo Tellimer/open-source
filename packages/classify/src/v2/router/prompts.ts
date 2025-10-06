@@ -143,8 +143,9 @@ FAMILY CLASSIFICATION (CHECK INDICATOR NAME ONLY):
 • "Terms of Trade" → composite-derived (index of export/import price ratio), NOT numeric-measurement
 • "Economy Watchers Outlook/Survey" or "Tankan Outlook" → qualitative (sentiment), NOT composite
 • "Business Conditions" → composite-derived (index)
-• Consumer/Business Sentiment (WITHOUT the word "Index") → qualitative (sentiment)
-• Business Confidence (WITHOUT the word "Index") → qualitative (sentiment)
+• Consumer/Business Sentiment (WITHOUT the word "Index" AND no numeric units) → qualitative (sentiment)
+• Business Confidence with units="points" or numeric scale → composite-derived (index)
+• Business Confidence (WITHOUT numeric units) → qualitative (sentiment)
 • Ifo Expectations → composite-derived (index)
 • Confidence/Climate/Optimism/PMI/ISM WITH "Index" in the name → composite-derived (index)
 • Happiness/Well-being/Life Satisfaction Index → composite-derived (composite index), NOT qualitative
