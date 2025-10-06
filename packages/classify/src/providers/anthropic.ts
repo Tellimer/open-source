@@ -99,9 +99,12 @@ export class AnthropicProvider implements LLMProviderInterface {
 
             if (!res.ok) {
               const errorText = await res.text();
-              throw new Error(
+              const httpErr = new Error(
                 `Anthropic API error (${res.status}): ${errorText}`
-              );
+              ) as Error & { status?: number; headers?: Headers };
+              httpErr.status = res.status;
+              httpErr.headers = res.headers;
+              throw httpErr;
             }
 
             return (await res.json()) as AnthropicResponse;

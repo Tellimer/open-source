@@ -29,3 +29,10 @@ test-results/
 *.test.js
 *.test.ts.js
 
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+data/classify_v2.db*
+data/
+

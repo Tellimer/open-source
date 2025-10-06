@@ -243,7 +243,32 @@ const customIndicators = [
 - ✅ Batch processing with fallback to individual retries
 - ✅ Detailed error tracking per indicator
 
-See [PAIRING_AND_RETRY.md](./PAIRING_AND_RETRY.md) for complete documentation.
+See [Pairing and Retry Logic](./docs/PAIRING_AND_RETRY.md) for complete documentation.
+
+## Documentation
+
+Complete documentation is organized in the `/docs` directory:
+
+- **[Documentation Index](./docs/README.md)** - Complete documentation guide
+- **[Quick Start](./docs/QUICK_START.md)** - Get started in 5 minutes
+- **[V1 Pipeline](./docs/v1/README.md)** - Default single-pass pipeline
+- **[V2 Pipeline](./docs/v2/README.md)** - Advanced multi-stage pipeline
+- **[V1 to V2 Migration](./docs/MIGRATION.md)** - Upgrade guide
+
+### Key Documentation
+
+- [Type Validation](./docs/TYPE_VALIDATION.md) - Understanding indicator types
+- [Prompt Engineering](./docs/PROMPT_ENGINEERING.md) - How LLM prompts work
+- [Testing Guide](./docs/TESTING_GUIDE.md) - Running and adding tests
+- [Cost Tracking](./docs/COST_TRACKING.md) - Detailed cost estimation
+- [Quick Cost Guide](./docs/QUICK_COST_GUIDE.md) - Fast cost lookup
+- [Performance](./docs/PERFORMANCE_SUMMARY.md) - Performance benchmarks
+
+### V2 Pipeline Docs
+
+- [V2 Architecture](./docs/v2/ARCHITECTURE.md) - 6-stage pipeline details
+- [Database Setup](./docs/v2/DATABASE.md) - SQLite configuration
+- [AI SDK Integration](./docs/v2/AI_SDK.md) - Type-safe structured output
 
 ## API Reference
 

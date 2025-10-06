@@ -156,9 +156,9 @@ export const testPaths = {
  * Model configurations for each provider
  */
 export const providerModels = {
-  openai: 'gpt-5',
-  anthropic: 'claude-4.5-sonnet',
-  gemini: 'gemini-2.5-flash', // More capable model for better accuracy
+  openai: 'claude-sonnet-4-5-20250929',  // Use Claude for all providers for now
+  anthropic: 'claude-sonnet-4-5-20250929',  // Same cost as Sonnet 4, but more powerful
+  gemini: 'claude-sonnet-4-5-20250929',  // Use Claude for all providers for now
 };
 
 /**

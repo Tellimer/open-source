@@ -254,10 +254,15 @@ export async function classifyIndicatorsWithOptions(
   const totalBatches = allBatches.length;
 
   // Concurrent batch limit - respect API rate limits
-  const maxConcurrentBatches = config.provider === 'gemini' ? 2 : 5;
+  const maxConcurrentBatches =
+    config.provider === 'gemini' ? 2 : config.provider === 'anthropic' ? 2 : 5;
 
   // Helper function to process a single batch
-  const processBatch = async (batch: Indicator[], batchIndex: number, spinnerRef?: Spinner) => {
+  const processBatch = async (
+    batch: Indicator[],
+    batchIndex: number,
+    spinnerRef?: Spinner
+  ) => {
     const batchNumber = batchIndex + 1;
 
     if (debug && !dryRun && !quiet) {
@@ -357,7 +362,9 @@ export async function classifyIndicatorsWithOptions(
         if (!quiet && spinnerRef) {
           spinnerRef.stop();
           console.error(`
-⚠️  Batch ${batchNumber}/${totalBatches} error (attempt ${attempt + 1}/${maxRetries + 1}): ${lastError.substring(0, 200)}`);
+⚠️  Batch ${batchNumber}/${totalBatches} error (attempt ${attempt + 1}/${
+            maxRetries + 1
+          }): ${lastError.substring(0, 200)}`);
           if (attempt < maxRetries) {
             console.log(`   Retrying in ${attempt + 1}s...`);
           }
