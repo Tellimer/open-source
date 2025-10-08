@@ -6,32 +6,53 @@
 
 # @tellimer/classify
 
-LLM-powered economic indicator classification and metadata enrichment for TypeScript/Deno. Automatically classify indicators as stock/flow/count/percentage/index/ratio and enrich with currency denomination, temporal aggregation, and heat map orientation using OpenAI, Anthropic, or Google Gemini.
+LLM-powered economic indicator classification and metadata enrichment for
+TypeScript/Deno. Automatically classify indicators as
+stock/flow/count/percentage/index/ratio and enrich with currency denomination,
+temporal aggregation, and heat map orientation using OpenAI, Anthropic, or
+Google Gemini.
 
 [![JSR Scope](https://jsr.io/badges/@tellimer)](https://jsr.io/@tellimer)
 
 ## Features
 
 ### Core Classification
-- 🤖 **Multi-Provider LLM Support** — Use OpenAI, Anthropic Claude, or Google Gemini
-- 📊 **Economic Indicator Classification** — 26 types across 7 categories (stock, flow, index, percentage, ratio, etc.)
-- 🏷️ **Rich Metadata Enrichment** — Category, temporal aggregation, currency denomination, heat map orientation, confidence
-- 🎯 **Time Series Validation** — Statistical analysis detects cumulative (YTD) patterns from actual data
-- 🔄 **Batch Processing** — Efficiently process multiple indicators with automatic batching
+
+- 🤖 **Multi-Provider LLM Support** — Use OpenAI, Anthropic Claude, or Google
+  Gemini
+- 📊 **Economic Indicator Classification** — 26 types across 7 categories
+  (stock, flow, index, percentage, ratio, etc.)
+- 🏷️ **Rich Metadata Enrichment** — Category, temporal aggregation, currency
+  denomination, heat map orientation, confidence
+- 🎯 **Time Series Validation** — Statistical analysis detects cumulative (YTD)
+  patterns from actual data
+- 🔄 **Batch Processing** — Efficiently process multiple indicators with
+  automatic batching
 
 ### V2 Pipeline (Advanced)
-- 🔁 **6-Stage Pipeline** — Router → Specialist → Validation → Orientation → Flagging → Review
-- 🧠 **Context Passing** — Full reasoning chain passed between stages for improved accuracy
-- 📈 **Statistical Time Series Analysis** — Detects Dec/Jan ratios, monotonic increase, year-boundary resets
-- 🎯 **Type-Aware Filtering** — Only validates indicator types that can be cumulative (94% reduction in analysis)
-- 🗄️ **SQLite Database** — Structured storage with queryable results and validation evidence
+
+- 🔁 **6-Stage Pipeline** — Router → Specialist → Validation → Orientation →
+  Flagging → Review
+- 🧠 **Context Passing** — Full reasoning chain passed between stages for
+  improved accuracy
+- 📈 **Statistical Time Series Analysis** — Detects Dec/Jan ratios, monotonic
+  increase, year-boundary resets
+- 🎯 **Type-Aware Filtering** — Only validates indicator types that can be
+  cumulative (94% reduction in analysis)
+- 🗄️ **SQLite Database** — Structured storage with queryable results and
+  validation evidence
 - ✅ **100% Test Accuracy** — Validated on 100 real economic indicators
 
 ### Reliability & Performance
-- 🔗 **ID-Based Pairing** — Automatic indicator ID generation and response pairing
-- 🔁 **Individual Retry Logic** — Failed indicators retried up to 3 times with exponential backoff
-- 📊 **Comprehensive Statistics** — Detailed tracking with retry counts and processing time
-- 🛡️ **Robust Error Handling** — Graceful degradation with detailed error messages
+
+- 🔗 **ID-Based Pairing** — Automatic indicator ID generation and response
+  pairing
+- 🔁 **Individual Retry Logic** — Failed indicators retried up to 3 times with
+  exponential backoff
+- 📊 **Comprehensive Statistics** — Detailed tracking with retry counts and
+  processing time
+- 🛡️ **Robust Error Handling** — Graceful degradation with detailed error
+  messages
 - 💪 **Full TypeScript Support** — Complete type definitions for all APIs
 - ⚡ **Modern Runtime Support** — Deno, Node.js, Bun, and Cloudflare Workers
 
@@ -180,7 +201,7 @@ console.log(`Retries performed: ${result.retries}`);
 // Handle failures with retry information
 for (const failure of result.failed) {
   console.error(
-    `Failed to classify ${failure.indicator.name}: ${failure.error} (after ${failure.retries} retries)`
+    `Failed to classify ${failure.indicator.name}: ${failure.error} (after ${failure.retries} retries)`,
   );
 }
 ```
@@ -220,7 +241,8 @@ console.log(enriched[0].classification.reasoning);
 
 ### ID-Based Pairing and Retry Logic
 
-The package automatically ensures reliable pairing between requests and responses:
+The package automatically ensures reliable pairing between requests and
+responses:
 
 ```typescript
 // Indicators automatically get unique IDs
@@ -232,7 +254,7 @@ const indicators = [
 const result = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: { provider: "openai", apiKey: "..." },
   maxRetries: 3, // Each failed indicator retried up to 3 times
-  debug: true,   // See detailed progress
+  debug: true, // See detailed progress
 });
 
 // Each enriched indicator has matching ID
@@ -247,6 +269,7 @@ const customIndicators = [
 ```
 
 **Key Features:**
+
 - ✅ Automatic unique ID generation (or use your own)
 - ✅ LLM responses validated to include matching IDs
 - ✅ Order-independent pairing (responses can be in any order)
@@ -254,11 +277,13 @@ const customIndicators = [
 - ✅ Batch processing with fallback to individual retries
 - ✅ Detailed error tracking per indicator
 
-See [Pairing and Retry Logic](./docs/PAIRING_AND_RETRY.md) for complete documentation.
+See [Pairing and Retry Logic](./docs/PAIRING_AND_RETRY.md) for complete
+documentation.
 
 ## V2 Pipeline - Advanced Multi-Stage Classification
 
-The V2 pipeline provides production-grade classification with 6 specialized stages, context passing, and time series validation:
+The V2 pipeline provides production-grade classification with 6 specialized
+stages, context passing, and time series validation:
 
 ```typescript
 import { classifyV2 } from "@tellimer/classify/v2";
@@ -295,6 +320,7 @@ console.log(results.summary);
 ### V2 Features
 
 **🔁 Context Passing**: Each stage receives full reasoning from previous stages
+
 ```typescript
 // Stage 2 (Specialist) receives Stage 1 (Router) reasoning:
 {
@@ -304,7 +330,9 @@ console.log(results.summary);
 }
 ```
 
-**📈 Time Series Validation**: Statistical detection of cumulative (YTD) patterns
+**📈 Time Series Validation**: Statistical detection of cumulative (YTD)
+patterns
+
 ```typescript
 // Validation results stored in database:
 {
@@ -317,10 +345,12 @@ console.log(results.summary);
 ```
 
 **🎯 Type-Aware Filtering**: Only analyzes types that CAN be cumulative
+
 - ✅ Analyzed: flow, volume, balance, count (e.g., "GDP YTD", "Exports YTD")
 - ⏭️ Skipped: index, percentage, price, ratio, rate, stock (94% reduction)
 
 **🗄️ Database Storage**: Queryable SQLite database with full audit trail
+
 ```sql
 SELECT * FROM validation_results
 WHERE is_cumulative = 1 AND cumulative_confidence > 0.9;
@@ -341,7 +371,8 @@ Complete documentation is organized in the `/docs` directory:
 - **[V2 Architecture](./docs/v2/ARCHITECTURE.md)** - 6-stage pipeline design
 - **[Database Setup](./docs/v2/DATABASE.md)** - SQLite schema and queries
 - **[AI SDK Integration](./docs/v2/AI_SDK.md)** - Type-safe structured output
-- **[Time Series Validation](./docs/TIME_SERIES_VALIDATION_SUMMARY.md)** - Statistical cumulative detection
+- **[Time Series Validation](./docs/TIME_SERIES_VALIDATION_SUMMARY.md)** -
+  Statistical cumulative detection
 
 ### Key Documentation
 
@@ -362,7 +393,7 @@ Input indicator object with existing metadata:
 
 ```typescript
 interface Indicator {
-  id?: string;              // Optional unique ID (auto-generated if not provided)
+  id?: string; // Optional unique ID (auto-generated if not provided)
   name: string;
   units?: string;
   currency_code?: string;
@@ -391,36 +422,53 @@ type IndicatorCategory =
 
 type IndicatorType =
   // Physical/Fundamental
-  | "stock" | "flow" | "balance" | "capacity" | "volume"
+  | "stock"
+  | "flow"
+  | "balance"
+  | "capacity"
+  | "volume"
   // Numeric/Measurement
-  | "count" | "percentage" | "ratio" | "spread" | "share"
+  | "count"
+  | "percentage"
+  | "ratio"
+  | "spread"
+  | "share"
   // Price/Value
-  | "price" | "yield"
+  | "price"
+  | "yield"
   // Change/Movement
-  | "rate" | "volatility" | "gap"
+  | "rate"
+  | "volatility"
+  | "gap"
   // Composite/Derived
-  | "index" | "correlation" | "elasticity" | "multiplier"
+  | "index"
+  | "correlation"
+  | "elasticity"
+  | "multiplier"
   // Temporal
-  | "duration" | "probability" | "threshold"
+  | "duration"
+  | "probability"
+  | "threshold"
   // Qualitative
-  | "sentiment" | "allocation"
+  | "sentiment"
+  | "allocation"
   // Fallback
   | "other";
 
 type TemporalAggregation =
-  | "point-in-time"      // Snapshot at a moment
-  | "period-rate"        // Rate/flow during period
-  | "period-cumulative"  // Running total over period
-  | "period-average"     // Average over period
-  | "period-total"       // Sum over period
-  | "not-applicable";    // No temporal dimension
+  | "point-in-time" // Snapshot at a moment
+  | "period-rate" // Rate/flow during period
+  | "period-cumulative" // Running total over period
+  | "period-average" // Average over period
+  | "period-total" // Sum over period
+  | "not-applicable"; // No temporal dimension
 
 interface ClassifiedMetadata {
-  indicator_id: string;          // Matches the indicator's ID
+  indicator_id: string; // Matches the indicator's ID
   indicator_category: IndicatorCategory;
   indicator_type: IndicatorType;
   temporal_aggregation: TemporalAggregation;
-  is_currency_denominated: boolean;  // Whether values are in currency units
+  is_currency_denominated: boolean; // Whether values are in currency units
   heat_map_orientation: "higher-is-positive" | "lower-is-positive" | "neutral";
   confidence?: number; // 0-1
   reasoning?: string;
@@ -491,7 +539,7 @@ Result with comprehensive statistics:
 interface FailedIndicator {
   indicator: Indicator;
   error: string;
-  retries: number;  // Number of retry attempts made
+  retries: number; // Number of retry attempts made
 }
 
 interface ClassificationResult {
@@ -501,57 +549,87 @@ interface ClassificationResult {
     total: number;
     successful: number;
     failed: number;
-    successRate: number;  // Percentage (0-100)
+    successRate: number; // Percentage (0-100)
   };
-  processingTime: number;  // Milliseconds
+  processingTime: number; // Milliseconds
   apiCalls: number;
-  retries: number;  // Total retries performed
+  retries: number; // Total retries performed
 }
 ```
 
 ## Indicator Types
 
-The classifier uses a comprehensive taxonomy with 26 indicator types organized into 7 categories:
+The classifier uses a comprehensive taxonomy with 26 indicator types organized
+into 7 categories:
 
 ### Physical/Fundamental
-- **stock**: Absolute levels at a point in time (government debt, foreign reserves, population, wealth)
-- **flow**: Throughput over a period (GDP, income, exports, spending, production)
-- **balance**: Net positions that can be negative (trade balance, budget deficit/surplus, current account)
-- **capacity**: Maximum potential (potential GDP, production capacity, labor force)
-- **volume**: Transaction quantities (contract volumes, trade volumes, transaction counts)
+
+- **stock**: Absolute levels at a point in time (government debt, foreign
+  reserves, population, wealth)
+- **flow**: Throughput over a period (GDP, income, exports, spending,
+  production)
+- **balance**: Net positions that can be negative (trade balance, budget
+  deficit/surplus, current account)
+- **capacity**: Maximum potential (potential GDP, production capacity, labor
+  force)
+- **volume**: Transaction quantities (contract volumes, trade volumes,
+  transaction counts)
 
 ### Numeric/Measurement
-- **count**: Discrete units (number of jobs, housing starts, unemployment claims, bankruptcies)
-- **percentage**: 0-100% bounded values (unemployment rate, capacity utilization, tax rate)
+
+- **count**: Discrete units (number of jobs, housing starts, unemployment
+  claims, bankruptcies)
+- **percentage**: 0-100% bounded values (unemployment rate, capacity
+  utilization, tax rate)
 - **ratio**: Relative multiples (debt-to-GDP, price-to-earnings, loan-to-value)
-- **spread**: Absolute differences (yield curve spread, bid-ask spread, interest rate differential)
-- **share**: Compositional breakdown (labor share of income, consumption % of GDP, market share)
+- **spread**: Absolute differences (yield curve spread, bid-ask spread, interest
+  rate differential)
+- **share**: Compositional breakdown (labor share of income, consumption % of
+  GDP, market share)
 
 ### Price/Value
-- **price**: Market-clearing levels (interest rates, exchange rates, commodity prices, asset prices)
+
+- **price**: Market-clearing levels (interest rates, exchange rates, commodity
+  prices, asset prices)
 - **yield**: Returns/efficiency (bond yields, dividend yield, productivity, ROI)
 
 ### Change/Movement
-- **rate**: Directional change over time (inflation rate, growth rate, change in unemployment)
-- **volatility**: Statistical dispersion (VIX, price volatility, earnings volatility)
-- **gap**: Deviation from potential/trend (output gap, unemployment gap, inflation gap)
+
+- **rate**: Directional change over time (inflation rate, growth rate, change in
+  unemployment)
+- **volatility**: Statistical dispersion (VIX, price volatility, earnings
+  volatility)
+- **gap**: Deviation from potential/trend (output gap, unemployment gap,
+  inflation gap)
 
 ### Composite/Derived
-- **index**: Composite indicators (CPI, PMI, consumer confidence index, stock market index)
+
+- **index**: Composite indicators (CPI, PMI, consumer confidence index, stock
+  market index)
 - **correlation**: Relationship strength (Phillips curve coefficient, beta)
-- **elasticity**: Responsiveness measures (price elasticity of demand, income elasticity)
-- **multiplier**: Causal transmission coefficients (fiscal multiplier, money multiplier, velocity)
+- **elasticity**: Responsiveness measures (price elasticity of demand, income
+  elasticity)
+- **multiplier**: Causal transmission coefficients (fiscal multiplier, money
+  multiplier, velocity)
 
 ### Temporal
-- **duration**: Time-based measures (unemployment duration, bond duration, average tenure)
-- **probability**: Statistical likelihood (recession probability, default probability, forecast probability)
-- **threshold**: Critical levels/targets (inflation target, debt ceiling, reserve requirement)
+
+- **duration**: Time-based measures (unemployment duration, bond duration,
+  average tenure)
+- **probability**: Statistical likelihood (recession probability, default
+  probability, forecast probability)
+- **threshold**: Critical levels/targets (inflation target, debt ceiling,
+  reserve requirement)
 
 ### Qualitative
-- **sentiment**: Categorical/ordinal measures (consumer confidence, business sentiment, credit rating)
-- **allocation**: Portfolio/resource composition (asset allocation, budget allocation, sector weights)
+
+- **sentiment**: Categorical/ordinal measures (consumer confidence, business
+  sentiment, credit rating)
+- **allocation**: Portfolio/resource composition (asset allocation, budget
+  allocation, sector weights)
 
 ### Fallback
+
 - **other**: Only if none of the above categories apply
 
 ### Classification Decision Tree
@@ -575,7 +653,8 @@ The LLM uses this decision tree to ensure accurate classification:
 The classifier determines how indicator values aggregate over time:
 
 - **point-in-time**: Snapshot at a specific moment
-  - Examples: Stock level (414.8M barrels right now), current price, population today
+  - Examples: Stock level (414.8M barrels right now), current price, population
+    today
   - Characteristic: Single value at a moment, not accumulated
 
 - **period-rate**: Rate or flow during a period
@@ -591,7 +670,8 @@ The classifier determines how indicator values aggregate over time:
   - Characteristic: Mean value across the period
 
 - **period-total**: Sum of discrete events in a period
-  - Examples: Total transactions this week, daily contract volume (450k contracts)
+  - Examples: Total transactions this week, daily contract volume (450k
+    contracts)
   - Characteristic: Count or sum of distinct occurrences
 
 - **not-applicable**: No temporal dimension
@@ -611,15 +691,21 @@ The classifier determines how indicator values aggregate over time:
 
 ## Heat Map Orientation
 
-The classifier determines whether higher or lower values are considered positive for visualization purposes:
+The classifier determines whether higher or lower values are considered positive
+for visualization purposes:
 
-- **higher-is-positive**: Higher values are better (e.g., GDP growth, employment, exports, productivity)
-- **lower-is-positive**: Lower values are better (e.g., unemployment rate, inflation rate, debt levels, poverty rate)
-- **neutral**: Neither direction is inherently positive (e.g., exchange rates, interest rates in some contexts, population)
+- **higher-is-positive**: Higher values are better (e.g., GDP growth,
+  employment, exports, productivity)
+- **lower-is-positive**: Lower values are better (e.g., unemployment rate,
+  inflation rate, debt levels, poverty rate)
+- **neutral**: Neither direction is inherently positive (e.g., exchange rates,
+  interest rates in some contexts, population)
 
 This helps with:
+
 - Color coding in heat maps (green for positive, red for negative)
-- Trend visualization (up arrows for improvements, down arrows for deterioration)
+- Trend visualization (up arrows for improvements, down arrows for
+  deterioration)
 - Dashboard design and data presentation
 - Automatic alert thresholds
 
@@ -643,7 +729,8 @@ try {
 
 ## Testing
 
-The package includes comprehensive unit and integration tests using real economic indicator data covering all 26 indicator types across 7 categories.
+The package includes comprehensive unit and integration tests using real
+economic indicator data covering all 26 indicator types across 7 categories.
 
 ### Running Tests
 
@@ -670,9 +757,11 @@ deno task test:watch
 deno task test:cov
 ```
 
-**Note:** Integration tests automatically skip providers without API keys. Use Gemini 2.5 Flash (free tier) to avoid costs.
+**Note:** Integration tests automatically skip providers without API keys. Use
+Gemini 2.5 Flash (free tier) to avoid costs.
 
 **Integration test costs** (33 indicators):
+
 - Gemini 2.5 Flash: **Free**
 - GPT-4o-mini: **$0.01**
 - GPT-4o: **$0.09**
@@ -703,7 +792,8 @@ The test suite includes:
 
 ### Test Fixtures
 
-Test fixtures are located in `tests/fixtures/` and include real economic indicators:
+Test fixtures are located in `tests/fixtures/` and include real economic
+indicators:
 
 - `physical_fundamental.json` - Stock, flow, balance, capacity, volume
 - `numeric_measurement.json` - Count, percentage, ratio, spread, share
@@ -714,9 +804,11 @@ Test fixtures are located in `tests/fixtures/` and include real economic indicat
 - `qualitative.json` - Sentiment, allocation
 - `edge_cases.json` - Ambiguous indicators and boundary conditions
 
-Each fixture includes indicator metadata, time series data, and expected classifications for validation.
+Each fixture includes indicator metadata, time series data, and expected
+classifications for validation.
 
 **Edge Cases** test challenging scenarios:
+
 - Indicators that don't fit standard categories (happiness index, climate risk)
 - Ambiguous classifications (capacity utilization %, share vs percentage)
 - Boundary conditions (P/E ratio, growth rates, tax rates as thresholds)
@@ -737,5 +829,6 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please see the [main repository](https://github.com/Tellimer/open-source) for contribution guidelines.
-
+Contributions are welcome! Please see the
+[main repository](https://github.com/Tellimer/open-source) for contribution
+guidelines.

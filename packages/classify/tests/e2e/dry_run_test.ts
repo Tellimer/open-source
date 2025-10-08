@@ -1,26 +1,26 @@
-import { assertEquals, assertExists } from '@std/assert';
-import { classifyIndicatorsWithOptions } from '../../src/classify.ts';
-import type { Indicator } from '../../src/types.ts';
+import { assertEquals, assertExists } from "@std/assert";
+import { classifyIndicatorsWithOptions } from "../../src/classify.ts";
+import type { Indicator } from "../../src/types.ts";
 
-Deno.test('Dry Run - should execute without API calls', async () => {
+Deno.test("Dry Run - should execute without API calls", async () => {
   const indicators: Indicator[] = [
     {
-      id: 'test_gdp',
-      name: 'GDP Growth Rate',
-      units: '%',
+      id: "test_gdp",
+      name: "GDP Growth Rate",
+      units: "%",
     },
     {
-      id: 'test_cpi',
-      name: 'Consumer Price Index',
-      units: 'index',
+      id: "test_cpi",
+      name: "Consumer Price Index",
+      units: "index",
     },
   ];
 
   const result = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: {
-      provider: 'openai',
-      apiKey: 'dummy-key-not-used',
-      model: 'gpt-4o-mini',
+      provider: "openai",
+      apiKey: "dummy-key-not-used",
+      model: "gpt-4o-mini",
     },
     dryRun: true,
     debug: false,
@@ -51,8 +51,8 @@ Deno.test('Dry Run - should execute without API calls', async () => {
   assertExists(result.tokenUsage.outputTokens);
   assertExists(result.tokenUsage.totalTokens);
   assertExists(result.tokenUsage.estimatedCost);
-  assertEquals(result.tokenUsage.provider, 'openai');
-  assertEquals(result.tokenUsage.model, 'gpt-4o-mini');
+  assertEquals(result.tokenUsage.provider, "openai");
+  assertEquals(result.tokenUsage.model, "gpt-4o-mini");
 
   // Verify performance metrics
   assertExists(result.performance.avgTimePerIndicator);
@@ -61,68 +61,69 @@ Deno.test('Dry Run - should execute without API calls', async () => {
   assertExists(result.performance.avgCostPerIndicator);
 });
 
-Deno.test('Dry Run - should generate plausible mock classifications', async () => {
+Deno.test("Dry Run - should generate plausible mock classifications", async () => {
   const indicators: Indicator[] = [
     {
-      id: 'gdp_nominal',
-      name: 'Nominal GDP',
-      units: 'USD millions',
+      id: "gdp_nominal",
+      name: "Nominal GDP",
+      units: "USD millions",
     },
     {
-      id: 'unemployment_rate',
-      name: 'Unemployment Rate',
-      units: '%',
+      id: "unemployment_rate",
+      name: "Unemployment Rate",
+      units: "%",
     },
     {
-      id: 'population',
-      name: 'Total Population',
-      units: 'persons',
+      id: "population",
+      name: "Total Population",
+      units: "persons",
     },
   ];
 
   const result = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: {
-      provider: 'openai',
-      apiKey: 'dummy-key',
+      provider: "openai",
+      apiKey: "dummy-key",
     },
     dryRun: true,
     debug: false,
   });
 
   // Check GDP classification (should be flow)
-  const gdp = result.enriched.find((i) => i.id === 'gdp_nominal');
+  const gdp = result.enriched.find((i) => i.id === "gdp_nominal");
   assertExists(gdp);
-  assertEquals(gdp.classification.indicator_type, 'flow');
+  assertEquals(gdp.classification.indicator_type, "flow");
 
   // Check unemployment rate (should be percentage)
   const unemployment = result.enriched.find((i) =>
-    i.id === 'unemployment_rate'
+    i.id === "unemployment_rate"
   );
   assertExists(unemployment);
-  assertEquals(unemployment.classification.indicator_type, 'percentage');
+  assertEquals(unemployment.classification.indicator_type, "percentage");
 
   // Check population - mock heuristics may classify as count or other
-  const population = result.enriched.find((i) =>
-    i.id === 'population'
-  );
+  const population = result.enriched.find((i) => i.id === "population");
   assertExists(population);
   // Mock heuristics classify "persons" units as count or other
-  const validTypes = ['count', 'other'];
-  assertEquals(validTypes.includes(population.classification.indicator_type), true);
+  const validTypes = ["count", "other"];
+  assertEquals(
+    validTypes.includes(population.classification.indicator_type),
+    true,
+  );
 });
 
-Deno.test('Dry Run - should work with different providers', async () => {
+Deno.test("Dry Run - should work with different providers", async () => {
   const indicators: Indicator[] = [
-    { id: 'test1', name: 'Test Indicator', units: 'units' },
+    { id: "test1", name: "Test Indicator", units: "units" },
   ];
 
-  const providers = ['openai', 'anthropic', 'gemini'] as const;
+  const providers = ["openai", "anthropic", "gemini"] as const;
 
   for (const provider of providers) {
     const result = await classifyIndicatorsWithOptions(indicators, {
       llmConfig: {
         provider,
-        apiKey: 'dummy-key',
+        apiKey: "dummy-key",
       },
       dryRun: true,
       debug: false,
@@ -134,18 +135,18 @@ Deno.test('Dry Run - should work with different providers', async () => {
   }
 });
 
-Deno.test('Dry Run - should estimate costs correctly', async () => {
+Deno.test("Dry Run - should estimate costs correctly", async () => {
   const indicators: Indicator[] = Array.from({ length: 10 }, (_, i) => ({
     id: `test_${i}`,
     name: `Test Indicator ${i}`,
-    units: 'units',
+    units: "units",
   }));
 
   const result = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: {
-      provider: 'openai',
-      apiKey: 'dummy-key',
-      model: 'gpt-4o-mini',
+      provider: "openai",
+      apiKey: "dummy-key",
+      model: "gpt-4o-mini",
     },
     dryRun: true,
     debug: false,
@@ -160,8 +161,7 @@ Deno.test('Dry Run - should estimate costs correctly', async () => {
   assertEquals(result.tokenUsage.estimatedCost > 0, true);
 
   // Cost should match calculation
-  const expectedCost =
-    (result.tokenUsage.inputTokens / 1_000_000) * 0.150 +
+  const expectedCost = (result.tokenUsage.inputTokens / 1_000_000) * 0.150 +
     (result.tokenUsage.outputTokens / 1_000_000) * 0.600;
 
   // Allow for small floating point differences
@@ -171,17 +171,17 @@ Deno.test('Dry Run - should estimate costs correctly', async () => {
   );
 });
 
-Deno.test('Dry Run - should handle batch processing', async () => {
+Deno.test("Dry Run - should handle batch processing", async () => {
   const indicators: Indicator[] = Array.from({ length: 25 }, (_, i) => ({
     id: `test_${i}`,
     name: `Test Indicator ${i}`,
-    units: 'units',
+    units: "units",
   }));
 
   const result = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: {
-      provider: 'openai',
-      apiKey: 'dummy-key',
+      provider: "openai",
+      apiKey: "dummy-key",
     },
     batchSize: 10,
     dryRun: true,
@@ -199,15 +199,15 @@ Deno.test('Dry Run - should handle batch processing', async () => {
   }
 });
 
-Deno.test('Dry Run - should work with reasoning enabled', async () => {
+Deno.test("Dry Run - should work with reasoning enabled", async () => {
   const indicators: Indicator[] = [
-    { id: 'test1', name: 'GDP', units: 'USD' },
+    { id: "test1", name: "GDP", units: "USD" },
   ];
 
   const withoutReasoning = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: {
-      provider: 'openai',
-      apiKey: 'dummy-key',
+      provider: "openai",
+      apiKey: "dummy-key",
       includeReasoning: false,
     },
     dryRun: true,
@@ -216,8 +216,8 @@ Deno.test('Dry Run - should work with reasoning enabled', async () => {
 
   const withReasoning = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: {
-      provider: 'openai',
-      apiKey: 'dummy-key',
+      provider: "openai",
+      apiKey: "dummy-key",
       includeReasoning: true,
     },
     dryRun: true,

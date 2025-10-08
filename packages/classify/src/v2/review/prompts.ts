@@ -3,7 +3,7 @@
  * @module
  */
 
-import type { FlaggedIndicator } from '../types.ts';
+import type { FlaggedIndicator } from "../types.ts";
 
 /**
  * Review system prompt (optimized)
@@ -73,27 +73,25 @@ OUTPUT: JSON array. Each: {"indicator_id":"...","action":"confirm|fix|escalate",
  * Generate user prompt for flagged indicators (optimized)
  */
 export function generateReviewUserPrompt(
-  flaggedIndicators: Array<FlaggedIndicator & { name: string }>
+  flaggedIndicators: Array<FlaggedIndicator & { name: string }>,
 ): string {
   const flaggedList = flaggedIndicators
     .map((f, idx) => {
-      return `${idx + 1}. ${f.name} (${f.indicator_id})\n   Flag: ${
-        f.flag_type
-      }\n   Reason: ${f.flag_reason}${
-        f.current_value ? `\n   Current: ${f.current_value}` : ''
-      }${f.expected_value ? `\n   Expected: ${f.expected_value}` : ''}`;
+      return `${
+        idx + 1
+      }. ${f.name} (${f.indicator_id})\n   Flag: ${f.flag_type}\n   Reason: ${f.flag_reason}${
+        f.current_value ? `\n   Current: ${f.current_value}` : ""
+      }${f.expected_value ? `\n   Expected: ${f.expected_value}` : ""}`;
     })
-    .join('\n\n');
+    .join("\n\n");
 
   return `Review ${flaggedIndicators.length} flagged indicator${
-    flaggedIndicators.length === 1 ? '' : 's'
+    flaggedIndicators.length === 1 ? "" : "s"
   }:
 
 ${flaggedList}
 
-IMPORTANT: Return exactly ${
-    flaggedIndicators.length
-  } results in the SAME ORDER as above.
+IMPORTANT: Return exactly ${flaggedIndicators.length} results in the SAME ORDER as above.
 For each result, copy the EXACT indicator_id shown in parentheses above.
 
 Return JSON array: [{"indicator_id":"<copy exact ID>","action":"confirm|fix|escalate","diff":{...},"reason":"...","confidence":0-1}]`;

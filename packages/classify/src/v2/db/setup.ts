@@ -4,18 +4,18 @@
  * @module
  */
 
-import { createLocalDatabase } from './client.ts';
-import { CLEANUP_OLD_DATA } from './schema.ts';
+import { createLocalDatabase } from "./client.ts";
+import { CLEANUP_OLD_DATA } from "./schema.ts";
 
 /**
  * Setup local SQLite database
  */
 export async function setupLocalDatabase(
-  dbPath: string = './data/classify_v2.db',
+  dbPath: string = "./data/classify_v2.db",
   options: {
     clean?: boolean;
     verbose?: boolean;
-  } = {}
+  } = {},
 ): Promise<void> {
   const { clean = false, verbose = false } = options;
 
@@ -41,7 +41,7 @@ export async function setupLocalDatabase(
     // Verify tables exist
     const tables = db
       .prepare(
-        `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`
+        `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`,
       )
       .all()
       .map((row: any) => row.name);
@@ -85,7 +85,7 @@ export async function setupLocalDatabase(
   } catch (error) {
     console.error(`\n❌ Database setup failed:`);
     console.error(
-      `   ${error instanceof Error ? error.message : String(error)}\n`
+      `   ${error instanceof Error ? error.message : String(error)}\n`,
     );
     throw error;
   }
@@ -111,13 +111,13 @@ function getDbStats(db: any): {
   };
 
   return {
-    totalIndicators: getCount('classifications'),
-    routerResults: getCount('router_results'),
-    specialistResults: getCount('specialist_results'),
-    orientationResults: getCount('orientation_results'),
-    flaggedIndicators: getCount('flagging_results'),
-    reviewDecisions: getCount('review_decisions'),
-    pipelineExecutions: getCount('pipeline_executions'),
+    totalIndicators: getCount("classifications"),
+    routerResults: getCount("router_results"),
+    specialistResults: getCount("specialist_results"),
+    orientationResults: getCount("orientation_results"),
+    flaggedIndicators: getCount("flagging_results"),
+    reviewDecisions: getCount("review_decisions"),
+    pipelineExecutions: getCount("pipeline_executions"),
   };
 }
 
@@ -125,8 +125,8 @@ function getDbStats(db: any): {
  * Reset database (delete all data, keep schema)
  */
 export async function resetDatabase(
-  dbPath: string = './data/classify_v2.db',
-  verbose: boolean = false
+  dbPath: string = "./data/classify_v2.db",
+  verbose: boolean = false,
 ): Promise<void> {
   if (verbose) {
     console.log(`\n🔄 Resetting database...`);
@@ -136,13 +136,13 @@ export async function resetDatabase(
   await db.initialize();
 
   db.transaction(() => {
-    db.exec('DELETE FROM review_decisions');
-    db.exec('DELETE FROM flagging_results');
-    db.exec('DELETE FROM orientation_results');
-    db.exec('DELETE FROM specialist_results');
-    db.exec('DELETE FROM router_results');
-    db.exec('DELETE FROM classifications');
-    db.exec('DELETE FROM pipeline_executions');
+    db.exec("DELETE FROM review_decisions");
+    db.exec("DELETE FROM flagging_results");
+    db.exec("DELETE FROM orientation_results");
+    db.exec("DELETE FROM specialist_results");
+    db.exec("DELETE FROM router_results");
+    db.exec("DELETE FROM classifications");
+    db.exec("DELETE FROM pipeline_executions");
   });
 
   if (verbose) {
@@ -155,19 +155,19 @@ export async function resetDatabase(
 // CLI interface
 if (import.meta.main) {
   const args = Deno.args;
-  const command = args[0] || 'setup';
-  const dbPath = args[1] || './data/classify_v2.db';
+  const command = args[0] || "setup";
+  const dbPath = args[1] || "./data/classify_v2.db";
 
   switch (command) {
-    case 'setup':
+    case "setup":
       await setupLocalDatabase(dbPath, { verbose: true });
       break;
 
-    case 'reset':
+    case "reset":
       await resetDatabase(dbPath, true);
       break;
 
-    case 'clean':
+    case "clean":
       await setupLocalDatabase(dbPath, { clean: true, verbose: true });
       break;
 

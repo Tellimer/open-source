@@ -1,10 +1,12 @@
 # Type Validation System
 
-This document explains how the classify package ensures exact, valid type responses from LLMs.
+This document explains how the classify package ensures exact, valid type
+responses from LLMs.
 
 ## Problem Statement
 
 When using LLMs for classification, there's a risk that the model might:
+
 - Create variations of type names (e.g., "Stock" instead of "stock")
 - Invent new types not in the taxonomy
 - Use abbreviations or alternative spellings
@@ -12,49 +14,87 @@ When using LLMs for classification, there's a risk that the model might:
 
 ## Solution: Multi-Layer Validation
 
-The classify package implements a comprehensive validation system with multiple layers:
+The classify package implements a comprehensive validation system with multiple
+layers:
 
 ### 1. Type System Layer
 
 **Strict TypeScript Types**
+
 ```typescript
 export type IndicatorType =
-  | 'stock' | 'flow' | 'balance' | 'capacity' | 'volume'
-  | 'count' | 'percentage' | 'ratio' | 'spread' | 'share'
-  | 'price' | 'yield'
-  | 'rate' | 'volatility' | 'gap'
-  | 'index' | 'correlation' | 'elasticity' | 'multiplier'
-  | 'duration' | 'probability' | 'threshold'
-  | 'sentiment' | 'allocation'
-  | 'other';
+  | "stock"
+  | "flow"
+  | "balance"
+  | "capacity"
+  | "volume"
+  | "count"
+  | "percentage"
+  | "ratio"
+  | "spread"
+  | "share"
+  | "price"
+  | "yield"
+  | "rate"
+  | "volatility"
+  | "gap"
+  | "index"
+  | "correlation"
+  | "elasticity"
+  | "multiplier"
+  | "duration"
+  | "probability"
+  | "threshold"
+  | "sentiment"
+  | "allocation"
+  | "other";
 
 export type HeatMapOrientation =
-  | 'higher-is-positive'
-  | 'lower-is-positive'
-  | 'neutral';
+  | "higher-is-positive"
+  | "lower-is-positive"
+  | "neutral";
 ```
 
 **Validation Constants**
+
 ```typescript
 export const VALID_INDICATOR_TYPES: readonly IndicatorType[] = [
-  'stock', 'flow', 'balance', 'capacity', 'volume',
-  'count', 'percentage', 'ratio', 'spread', 'share',
-  'price', 'yield',
-  'rate', 'volatility', 'gap',
-  'index', 'correlation', 'elasticity', 'multiplier',
-  'duration', 'probability', 'threshold',
-  'sentiment', 'allocation',
-  'other',
+  "stock",
+  "flow",
+  "balance",
+  "capacity",
+  "volume",
+  "count",
+  "percentage",
+  "ratio",
+  "spread",
+  "share",
+  "price",
+  "yield",
+  "rate",
+  "volatility",
+  "gap",
+  "index",
+  "correlation",
+  "elasticity",
+  "multiplier",
+  "duration",
+  "probability",
+  "threshold",
+  "sentiment",
+  "allocation",
+  "other",
 ] as const;
 
 export const VALID_HEAT_MAP_ORIENTATIONS: readonly HeatMapOrientation[] = [
-  'higher-is-positive',
-  'lower-is-positive',
-  'neutral',
+  "higher-is-positive",
+  "lower-is-positive",
+  "neutral",
 ] as const;
 ```
 
 These constants are:
+
 - **Exported** for use by consumers
 - **Readonly** to prevent modification
 - **Type-safe** with `as const` assertion
@@ -65,6 +105,7 @@ These constants are:
 **Comprehensive Taxonomy**
 
 The system prompt includes:
+
 - Complete list of all 26 indicator types
 - Detailed descriptions and examples for each type
 - Organized into 7 logical categories
@@ -84,6 +125,7 @@ CRITICAL VALIDATION RULES:
 **Example Response Format**
 
 The prompt includes a concrete example showing the exact format expected:
+
 ```json
 [
   {
@@ -103,61 +145,71 @@ The prompt includes a concrete example showing the exact format expected:
 ```typescript
 export function parseClassificationResponse(
   response: string,
-  expectedCount: number
+  expectedCount: number,
 ): ClassifiedMetadata[] {
   // Parse JSON
   const parsed = JSON.parse(response);
-  
+
   // Validate array length
   if (parsed.length !== expectedCount) {
-    throw new Error(`Expected ${expectedCount} classifications, got ${parsed.length}`);
+    throw new Error(
+      `Expected ${expectedCount} classifications, got ${parsed.length}`,
+    );
   }
-  
+
   // Validate each classification
   return parsed.map((item, idx) => {
     // Validate indicator_type
     if (
-      typeof classification.indicator_type !== 'string' ||
+      typeof classification.indicator_type !== "string" ||
       !VALID_INDICATOR_TYPES.includes(classification.indicator_type as never)
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid indicator_type: "${
-          classification.indicator_type
-        }". Must be one of: ${VALID_INDICATOR_TYPES.join(', ')}`
+        `Classification ${
+          idx + 1
+        } has invalid indicator_type: "${classification.indicator_type}". Must be one of: ${
+          VALID_INDICATOR_TYPES.join(", ")
+        }`,
       );
     }
-    
+
     // Validate heat_map_orientation
     if (
-      typeof classification.heat_map_orientation !== 'string' ||
-      !VALID_HEAT_MAP_ORIENTATIONS.includes(classification.heat_map_orientation as never)
+      typeof classification.heat_map_orientation !== "string" ||
+      !VALID_HEAT_MAP_ORIENTATIONS.includes(
+        classification.heat_map_orientation as never,
+      )
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid heat_map_orientation: "${
-          classification.heat_map_orientation
-        }". Must be one of: ${VALID_HEAT_MAP_ORIENTATIONS.join(', ')}`
+        `Classification ${
+          idx + 1
+        } has invalid heat_map_orientation: "${classification.heat_map_orientation}". Must be one of: ${
+          VALID_HEAT_MAP_ORIENTATIONS.join(", ")
+        }`,
       );
     }
-    
+
     // Validate booleans
-    if (typeof classification.is_currency_denominated !== 'boolean') {
-      throw new Error(`Classification ${idx + 1} has invalid is_currency_denominated`);
+    if (typeof classification.is_currency_denominated !== "boolean") {
+      throw new Error(
+        `Classification ${idx + 1} has invalid is_currency_denominated`,
+      );
     }
-    
-    if (typeof classification.is_cumulative !== 'boolean') {
+
+    if (typeof classification.is_cumulative !== "boolean") {
       throw new Error(`Classification ${idx + 1} has invalid is_cumulative`);
     }
-    
+
     // Validate optional confidence
     if (
       classification.confidence !== undefined &&
-      (typeof classification.confidence !== 'number' ||
+      (typeof classification.confidence !== "number" ||
         classification.confidence < 0 ||
         classification.confidence > 1)
     ) {
       throw new Error(`Classification ${idx + 1} has invalid confidence`);
     }
-    
+
     return classification as ClassifiedMetadata;
   });
 }
@@ -166,12 +218,14 @@ export function parseClassificationResponse(
 **Error Messages**
 
 When validation fails, the error message includes:
+
 - Which classification failed (by index)
 - What field is invalid
 - The actual value received
 - **All valid options** for that field
 
 Example error:
+
 ```
 Classification 1 has invalid indicator_type: "Stock". 
 Must be one of: stock, flow, balance, capacity, volume, count, percentage, 
@@ -184,37 +238,37 @@ elasticity, multiplier, duration, probability, threshold, sentiment, allocation,
 **Validation Tests**
 
 ```typescript
-Deno.test('parseClassificationResponse - validates indicator_type', () => {
+Deno.test("parseClassificationResponse - validates indicator_type", () => {
   const response = JSON.stringify([
     {
-      indicator_type: 'invalid-type', // Should fail
+      indicator_type: "invalid-type", // Should fail
       is_currency_denominated: true,
       is_cumulative: false,
-      heat_map_orientation: 'higher-is-positive',
+      heat_map_orientation: "higher-is-positive",
     },
   ]);
 
   assertThrows(
     () => parseClassificationResponse(response, 1),
     Error,
-    'invalid indicator_type'
+    "invalid indicator_type",
   );
 });
 
-Deno.test('parseClassificationResponse - validates heat_map_orientation', () => {
+Deno.test("parseClassificationResponse - validates heat_map_orientation", () => {
   const response = JSON.stringify([
     {
-      indicator_type: 'flow',
+      indicator_type: "flow",
       is_currency_denominated: true,
       is_cumulative: false,
-      heat_map_orientation: 'invalid-orientation', // Should fail
+      heat_map_orientation: "invalid-orientation", // Should fail
     },
   ]);
 
   assertThrows(
     () => parseClassificationResponse(response, 1),
     Error,
-    'invalid heat_map_orientation'
+    "invalid heat_map_orientation",
   );
 });
 ```
@@ -236,11 +290,11 @@ This multi-layer approach provides:
 Consumers can use the validation constants:
 
 ```typescript
-import { 
-  VALID_INDICATOR_TYPES, 
-  VALID_HEAT_MAP_ORIENTATIONS,
+import {
+  type HeatMapOrientation,
   type IndicatorType,
-  type HeatMapOrientation
+  VALID_HEAT_MAP_ORIENTATIONS,
+  VALID_INDICATOR_TYPES,
 } from "@tellimer/classify";
 
 // Check if a type is valid
@@ -249,9 +303,9 @@ if (VALID_INDICATOR_TYPES.includes(someType as never)) {
 }
 
 // Get all valid types for UI dropdown
-const typeOptions = VALID_INDICATOR_TYPES.map(type => ({
+const typeOptions = VALID_INDICATOR_TYPES.map((type) => ({
   value: type,
-  label: type.charAt(0).toUpperCase() + type.slice(1)
+  label: type.charAt(0).toUpperCase() + type.slice(1),
 }));
 
 // Type-safe function parameters
@@ -273,4 +327,3 @@ When adding new indicator types:
 7. Update `CHANGELOG.md`
 
 The validation system will automatically enforce the new types.
-

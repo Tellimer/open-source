@@ -4,15 +4,15 @@
  * Creates escalation flags for human review
  */
 
-import type { LLMConfig } from '../../types.ts';
-import type { V2DatabaseClient } from '../db/client.ts';
-import { readClassifications } from '../output/storage.ts';
-import { AiSdkProvider } from '../providers/ai-sdk.ts';
+import type { LLMConfig } from "../../types.ts";
+import type { V2DatabaseClient } from "../db/client.ts";
+import { readClassifications } from "../output/storage.ts";
+import { AiSdkProvider } from "../providers/ai-sdk.ts";
 import {
   generateReviewSystemPrompt,
   generateReviewUserPrompt,
-} from './prompts.ts';
-import { ReviewBatchSchema } from '../schemas/index.ts';
+} from "./prompts.ts";
+import { ReviewBatchSchema } from "../schemas/index.ts";
 
 interface ReviewAllFlagResult {
   reviewed: number;
@@ -22,7 +22,7 @@ interface ReviewAllFlagResult {
   issues: Array<{
     indicator_id: string;
     indicator_name: string;
-    issue_type: 'needs_fix' | 'needs_escalation';
+    issue_type: "needs_fix" | "needs_escalation";
     reason: string;
     suggested_diff?: Record<string, any>;
     confidence: number;
@@ -37,7 +37,7 @@ export async function reviewAllAndFlag(
     concurrency?: number;
     debug?: boolean;
     quiet?: boolean;
-  } = {}
+  } = {},
 ): Promise<ReviewAllFlagResult> {
   const batchSize = options.batchSize || 20;
   const quiet = options.quiet || false;
@@ -45,7 +45,7 @@ export async function reviewAllAndFlag(
   // 1) Read all classifications
   const classifications = readClassifications(db);
   if (classifications.length === 0) {
-    if (!quiet) console.log('No classifications found.');
+    if (!quiet) console.log("No classifications found.");
     return {
       reviewed: 0,
       flaggedForFix: 0,
@@ -56,7 +56,9 @@ export async function reviewAllAndFlag(
   }
 
   if (!quiet) {
-    console.log(`📊 Total classifications to review: ${classifications.length}`);
+    console.log(
+      `📊 Total classifications to review: ${classifications.length}`,
+    );
     console.log(`📦 Batch size: ${batchSize}\n`);
   }
 
@@ -64,8 +66,8 @@ export async function reviewAllAndFlag(
   const now = new Date().toISOString();
   const syntheticFlags = classifications.map((c) => ({
     indicator_id: c.indicator_id,
-    flag_type: 'review_all_flag' as const,
-    flag_reason: 'Quality audit: review without auto-fix',
+    flag_type: "review_all_flag" as const,
+    flag_reason: "Quality audit: review without auto-fix",
     current_value: JSON.stringify({
       family: c.family,
       indicator_type: c.indicator_type,
@@ -96,18 +98,18 @@ export async function reviewAllAndFlag(
 
     if (!quiet) {
       console.log(
-        `🔍 Processing batch ${batchNum}/${totalBatches} (${batch.length} indicators)...`
+        `🔍 Processing batch ${batchNum}/${totalBatches} (${batch.length} indicators)...`,
       );
     }
 
     // Add indicator names to batch for better review context
     const batchWithNames = batch.map((flag) => {
       const classification = classifications.find(
-        (c) => c.indicator_id === flag.indicator_id
+        (c) => c.indicator_id === flag.indicator_id,
       );
       return {
         ...flag,
-        name: classification?.name || 'Unknown',
+        name: classification?.name || "Unknown",
       };
     });
 
@@ -118,15 +120,17 @@ export async function reviewAllAndFlag(
     const aiResult = await aiProvider.generateStructured(
       systemPrompt,
       userPrompt,
-      ReviewBatchSchema
+      ReviewBatchSchema,
     );
 
     // Debug: Log LLM response to catch any ID mismatches
     if (options.debug && !quiet) {
-      console.log('\n[DEBUG] LLM Response:');
+      console.log("\n[DEBUG] LLM Response:");
       console.log(JSON.stringify(aiResult.data.results.slice(0, 3), null, 2));
       console.log(
-        `[DEBUG] Expected IDs: ${batch.map((f) => f.indicator_id).slice(0, 3).join(', ')}\n`
+        `[DEBUG] Expected IDs: ${
+          batch.map((f) => f.indicator_id).slice(0, 3).join(", ")
+        }\n`,
       );
     }
 
@@ -136,29 +140,29 @@ export async function reviewAllAndFlag(
       const decision = aiResult.data.results[idx];
       const actualIndicator = batch[idx]; // Use index instead of trusting LLM's indicator_id
       const classification = classifications.find(
-        (c) => c.indicator_id === actualIndicator.indicator_id
+        (c) => c.indicator_id === actualIndicator.indicator_id,
       );
 
       result.reviewed++;
 
-      if (decision.action === 'confirm') {
+      if (decision.action === "confirm") {
         result.confirmed++;
-      } else if (decision.action === 'fix') {
+      } else if (decision.action === "fix") {
         result.flaggedForFix++;
         result.issues.push({
           indicator_id: actualIndicator.indicator_id, // Use actual ID from batch
-          indicator_name: classification?.name || 'Unknown',
-          issue_type: 'needs_fix',
+          indicator_name: classification?.name || "Unknown",
+          issue_type: "needs_fix",
           reason: decision.reason,
           suggested_diff: decision.diff,
           confidence: decision.confidence,
         });
-      } else if (decision.action === 'escalate') {
+      } else if (decision.action === "escalate") {
         result.flaggedForEscalation++;
         result.issues.push({
           indicator_id: actualIndicator.indicator_id, // Use actual ID from batch
-          indicator_name: classification?.name || 'Unknown',
-          issue_type: 'needs_escalation',
+          indicator_name: classification?.name || "Unknown",
+          issue_type: "needs_escalation",
           reason: decision.reason,
           confidence: decision.confidence,
         });
@@ -167,7 +171,7 @@ export async function reviewAllAndFlag(
 
     if (!quiet && options.debug) {
       console.log(
-        `  ✓ Batch ${batchNum}: ${aiResult.data.results.length} decisions`
+        `  ✓ Batch ${batchNum}: ${aiResult.data.results.length} decisions`,
       );
     }
   }
@@ -176,10 +180,9 @@ export async function reviewAllAndFlag(
   if (result.issues.length > 0) {
     const issueFlags = result.issues.map((issue) => ({
       indicator_id: issue.indicator_id,
-      flag_type:
-        issue.issue_type === 'needs_fix'
-          ? 'review_suggested_fix'
-          : 'review_escalation',
+      flag_type: issue.issue_type === "needs_fix"
+        ? "review_suggested_fix"
+        : "review_escalation",
       flag_reason: issue.reason,
       current_value: issue.suggested_diff
         ? JSON.stringify(issue.suggested_diff)
@@ -189,30 +192,32 @@ export async function reviewAllAndFlag(
     }));
 
     // Import and use writeFlaggingResults
-    const { writeFlaggingResults } = await import('./storage.ts');
+    const { writeFlaggingResults } = await import("./storage.ts");
     writeFlaggingResults(db, issueFlags as any);
   }
 
   // 5) Output summary
   if (!quiet) {
-    console.log('\n' + '='.repeat(60));
-    console.log('📋 REVIEW-ALL-FLAG SUMMARY');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("📋 REVIEW-ALL-FLAG SUMMARY");
+    console.log("=".repeat(60));
     console.log(`Total Reviewed:        ${result.reviewed}`);
     console.log(`✅ Confirmed Correct:   ${result.confirmed}`);
     console.log(`🔧 Flagged for Fix:    ${result.flaggedForFix}`);
     console.log(`⚠️  Flagged for Review: ${result.flaggedForEscalation}`);
-    console.log('='.repeat(60));
+    console.log("=".repeat(60));
 
     if (result.issues.length > 0) {
-      console.log('\n🚩 FLAGGED ISSUES:\n');
+      console.log("\n🚩 FLAGGED ISSUES:\n");
       result.issues.forEach((issue, idx) => {
-        console.log(`${idx + 1}. ${issue.indicator_name} (${issue.indicator_id})`);
+        console.log(
+          `${idx + 1}. ${issue.indicator_name} (${issue.indicator_id})`,
+        );
         console.log(`   Type: ${issue.issue_type}`);
         console.log(`   Reason: ${issue.reason}`);
         if (issue.suggested_diff) {
           console.log(
-            `   Suggested Fix: ${JSON.stringify(issue.suggested_diff)}`
+            `   Suggested Fix: ${JSON.stringify(issue.suggested_diff)}`,
           );
         }
         console.log(`   Confidence: ${(issue.confidence * 100).toFixed(0)}%\n`);
@@ -220,9 +225,9 @@ export async function reviewAllAndFlag(
     }
 
     console.log(
-      '\n💡 Issues have been flagged in the database for human review.'
+      "\n💡 Issues have been flagged in the database for human review.",
     );
-    console.log('   Run a query on flagging_results table to see all flags.');
+    console.log("   Run a query on flagging_results table to see all flags.");
   }
 
   return result;

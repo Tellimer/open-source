@@ -4,16 +4,16 @@
  * @module
  */
 
-import type { V2DatabaseClient } from '../db/client.ts';
-import type { V2Classification } from '../types.ts';
-import type { ClassificationData } from '../types.ts';
+import type { V2DatabaseClient } from "../db/client.ts";
+import type { V2Classification } from "../types.ts";
+import type { ClassificationData } from "../types.ts";
 
 /**
  * Read final classifications from database
  */
 export function readClassifications(
   db: V2DatabaseClient,
-  indicatorIds?: string[]
+  indicatorIds?: string[],
 ): V2Classification[] {
   let query = `
     SELECT
@@ -44,12 +44,12 @@ export function readClassifications(
   const params: string[] = [];
 
   if (indicatorIds && indicatorIds.length > 0) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     query += ` WHERE indicator_id IN (${placeholders})`;
     params.push(...indicatorIds);
   }
 
-  query += ' ORDER BY created_at ASC';
+  query += " ORDER BY created_at ASC";
 
   const rows = db.prepare(query).all(...params);
 
@@ -83,7 +83,7 @@ export function readClassifications(
  */
 export function readClassification(
   db: V2DatabaseClient,
-  indicatorId: string
+  indicatorId: string,
 ): V2Classification | null {
   const results = readClassifications(db, [indicatorId]);
   return results[0] || null;
@@ -96,7 +96,7 @@ export function writeClassifications(
   db: V2DatabaseClient,
   classifications: ClassificationData[],
   provider: string,
-  model: string
+  model: string,
 ): void {
   const stmt = db.prepare(`
     INSERT INTO classifications (
@@ -143,7 +143,9 @@ export function writeClassifications(
       cls.confidence_family,
       cls.indicator_type,
       cls.temporal_aggregation,
-      cls.is_currency_denominated !== undefined ? (cls.is_currency_denominated ? 1 : 0) : null,
+      cls.is_currency_denominated !== undefined
+        ? (cls.is_currency_denominated ? 1 : 0)
+        : null,
       cls.confidence_cls,
       cls.heat_map_orientation,
       cls.confidence_orient,
@@ -151,7 +153,7 @@ export function writeClassifications(
       cls.review_reason || null,
       provider,
       model,
-      'v2' // prompt version
+      "v2", // prompt version
     );
   }
 }
@@ -167,31 +169,43 @@ export function getClassificationStats(db: V2DatabaseClient): {
   reviewed: number;
   escalated: number;
 } {
-  const totalResult = db.prepare('SELECT COUNT(*) as count FROM classifications').value();
+  const totalResult = db.prepare(
+    "SELECT COUNT(*) as count FROM classifications",
+  ).value();
   const total = (totalResult as any)?.[0] || 0;
 
   const byFamily: Record<string, number> = {};
-  const familyRows = db.prepare('SELECT family, COUNT(*) as count FROM classifications GROUP BY family').all();
+  const familyRows = db.prepare(
+    "SELECT family, COUNT(*) as count FROM classifications GROUP BY family",
+  ).all();
   for (const row of familyRows as any[]) {
     byFamily[row.family] = row.count;
   }
 
   const byType: Record<string, number> = {};
-  const typeRows = db.prepare('SELECT indicator_type, COUNT(*) as count FROM classifications GROUP BY indicator_type').all();
+  const typeRows = db.prepare(
+    "SELECT indicator_type, COUNT(*) as count FROM classifications GROUP BY indicator_type",
+  ).all();
   for (const row of typeRows as any[]) {
     byType[row.indicator_type] = row.count;
   }
 
   const byOrientation: Record<string, number> = {};
-  const orientRows = db.prepare('SELECT heat_map_orientation, COUNT(*) as count FROM classifications GROUP BY heat_map_orientation').all();
+  const orientRows = db.prepare(
+    "SELECT heat_map_orientation, COUNT(*) as count FROM classifications GROUP BY heat_map_orientation",
+  ).all();
   for (const row of orientRows as any[]) {
     byOrientation[row.heat_map_orientation] = row.count;
   }
 
-  const reviewedResult = db.prepare('SELECT COUNT(*) as count FROM classifications WHERE review_status IS NOT NULL').value();
+  const reviewedResult = db.prepare(
+    "SELECT COUNT(*) as count FROM classifications WHERE review_status IS NOT NULL",
+  ).value();
   const reviewed = (reviewedResult as any)?.[0] || 0;
 
-  const escalatedResult = db.prepare("SELECT COUNT(*) as count FROM classifications WHERE review_status = 'escalate'").value();
+  const escalatedResult = db.prepare(
+    "SELECT COUNT(*) as count FROM classifications WHERE review_status = 'escalate'",
+  ).value();
   const escalated = (escalatedResult as any)?.[0] || 0;
 
   return {

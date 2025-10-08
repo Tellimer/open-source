@@ -1,15 +1,19 @@
 # Prompt Engineering: Comprehensive Role Priming
 
-This document explains the prompt engineering strategy used in the @tellimer/classify package to ensure accurate, consistent, and structured LLM responses.
+This document explains the prompt engineering strategy used in the
+@tellimer/classify package to ensure accurate, consistent, and structured LLM
+responses.
 
 ## Overview
 
 The package uses a comprehensive role priming approach that combines:
+
 1. **Expert role definition** - Establishes the LLM as a domain expert
 2. **Mission and context** - Explains why classifications matter
 3. **Quality standards** - Sets expectations for accuracy and consistency
 4. **Confidence calibration** - Provides scoring guidelines
-5. **Detailed field descriptions** - Explains each classification field with examples
+5. **Detailed field descriptions** - Explains each classification field with
+   examples
 6. **Validation rules** - Prevents common errors
 7. **Response format requirements** - Ensures structured JSON output
 
@@ -31,11 +35,13 @@ indicator classification and metadata enrichment. Your expertise includes:
 ```
 
 **Purpose:**
+
 - Activates relevant domain knowledge in the LLM
 - Establishes authority and expertise
 - Primes the model to think like an economist/statistician
 
 **Benefits:**
+
 - Improved classification accuracy through domain expertise
 - Better understanding of economic context
 - More appropriate confidence scores
@@ -56,11 +62,13 @@ Your classifications will be used for:
 ```
 
 **Purpose:**
+
 - Explains downstream use cases
 - Helps LLM understand the importance of accuracy
 - Provides context for decision-making
 
 **Benefits:**
+
 - Classifications consider practical applications
 - Better heat map orientation decisions (visualization context)
 - More thoughtful temporal aggregation choices
@@ -78,11 +86,13 @@ QUALITY STANDARDS:
 ```
 
 **Purpose:**
+
 - Sets expectations for classification approach
 - References authoritative sources (IMF, World Bank, OECD, BIS)
 - Encourages consistency
 
 **Benefits:**
+
 - Classifications align with standard economic usage
 - Consistency across similar indicators
 - Appropriate handling of uncertainty
@@ -99,11 +109,13 @@ CONFIDENCE CALIBRATION:
 ```
 
 **Purpose:**
+
 - Provides explicit scoring guidelines
 - Calibrates confidence scores to be realistic
 - Encourages honest uncertainty reporting
 
 **Benefits:**
+
 - More accurate confidence scores
 - Better identification of uncertain classifications
 - Enables filtering by confidence threshold
@@ -111,6 +123,7 @@ CONFIDENCE CALIBRATION:
 ### 5. Comprehensive Field Descriptions
 
 Each classification field includes:
+
 - **Type annotation**: `(string, required)` or `(boolean, required)`
 - **Description**: What the field represents
 - **Valid options**: Exact strings to use
@@ -132,11 +145,13 @@ Example for `temporal_aggregation`:
 ```
 
 **Purpose:**
+
 - Eliminates ambiguity about field requirements
 - Provides clear examples for each option
 - Highlights common confusion points
 
 **Benefits:**
+
 - Fewer classification errors
 - Better understanding of subtle distinctions
 - Reduced need for retries
@@ -158,18 +173,20 @@ CRITICAL VALIDATION RULES:
 ```
 
 **Purpose:**
+
 - Prevents common errors (missing IDs, wrong formats)
 - Emphasizes critical requirements
 - Provides fallback strategy for uncertainty
 
 **Benefits:**
+
 - Fewer validation errors
 - Correct ID pairing
 - Proper handling of uncertain cases
 
 ### 7. Response Format Requirements
 
-```
+````
 RESPONSE FORMAT REQUIREMENTS:
 
 CRITICAL: Your response must be PURE JSON with NO additional text.
@@ -180,13 +197,11 @@ CRITICAL: Your response must be PURE JSON with NO additional text.
 ✗ INCORRECT:
 ```json
 [{"indicator_id": "ind_1", ...}]
-```
+````
 
-✗ INCORRECT:
-Here is the classification:
-[{"indicator_id": "ind_1", ...}]
-```
+✗ INCORRECT: Here is the classification: [{"indicator_id": "ind_1", ...}]
 
+```
 **Purpose:**
 - Prevents markdown code blocks
 - Eliminates explanatory text
@@ -198,8 +213,8 @@ Here is the classification:
 - Cleaner response handling
 
 ### 8. Enhanced User Prompt
-
 ```
+
 ═══════════════════════════════════════════════════════════════════════════
 CLASSIFICATION REQUEST
 ═══════════════════════════════════════════════════════════════════════════
@@ -214,15 +229,13 @@ RESPONSE REQUIREMENTS
 
 Return a JSON array with 3 objects, one per indicator, in the SAME ORDER.
 
-Each object MUST contain these EXACT fields:
-• indicator_id (string) - MUST match the ID from above
-• indicator_category (string) - One of the 8 categories
-• indicator_type (string) - One of the 26 types
-...
+Each object MUST contain these EXACT fields: • indicator_id (string) - MUST
+match the ID from above • indicator_category (string) - One of the 8 categories
+• indicator_type (string) - One of the 26 types ...
 
 CRITICAL: Respond with ONLY the JSON array. No markdown, no explanatory text.
-```
 
+```
 **Purpose:**
 - Visual formatting improves readability
 - Dynamic indicator count in instructions
@@ -375,30 +388,25 @@ In October 2025, we successfully refactored the system prompt from **~656 lines 
 
 Example format change:
 ```
-// Before
-Example 1: Inflation Rate (YoY)
-[
-  {
-    "indicator_id": "ind_infl",
-    "indicator_category": "change-movement",
-    ...
-  }
-]
 
-// After
-Inflation Rate YoY: {"indicator_type": "rate", "indicator_category": "change-movement", ...}
+// Before Example 1: Inflation Rate (YoY) [ { "indicator_id": "ind_infl",
+"indicator_category": "change-movement", ... } ]
+
+// After Inflation Rate YoY: {"indicator_type": "rate", "indicator_category":
+"change-movement", ...}
+
 ```
-
 #### 3. Prioritized Decision Tree
 **Before**: 24-step linear checklist
 **After**: Hierarchical priority order with edge cases first
 
 Critical insight: CPI must be checked FIRST before generic "composite" or "price" checks:
 ```
-1a) Is name exactly "Consumer Price Index" or "CPI"? → index (NOT price)
-1b) Does name contain "price index" WITH base year "(2010=100)"? → price
-```
 
+1a) Is name exactly "Consumer Price Index" or "CPI"? → index (NOT price) 1b)
+Does name contain "price index" WITH base year "(2010=100)"? → price
+
+```
 #### 4. Clarified % of GDP Classifications
 **Key distinction discovered**: "X (% of GDP)" has two interpretations:
 - **Flow normalized**: Savings/Revenue/Expense (% of GDP) → still a flow, just divided by GDP
@@ -438,29 +446,29 @@ Added explicit heat map orientation for government finance:
 
 #### Before: Verbose Sections
 ```
-═══════════════════════════════════════════════════════════════
-ROLE AND EXPERTISE
-═══════════════════════════════════════════════════════════════
 
-You are an expert economic data analyst and statistician specializing
-in indicator classification and metadata enrichment. Your expertise includes:
+═══════════════════════════════════════════════════════════════ ROLE AND
+EXPERTISE ═══════════════════════════════════════════════════════════════
 
-• Macroeconomics, finance, and economic measurement theory
-• Statistical concepts and temporal aggregation methods
-• Cross-country economic data comparison and standardization
-• Data visualization and dashboard design principles
-• Economic research methodology and policy analysis
+You are an expert economic data analyst and statistician specializing in
+indicator classification and metadata enrichment. Your expertise includes:
+
+• Macroeconomics, finance, and economic measurement theory • Statistical
+concepts and temporal aggregation methods • Cross-country economic data
+comparison and standardization • Data visualization and dashboard design
+principles • Economic research methodology and policy analysis
 
 [... 150+ lines of preamble ...]
-```
 
+```
 #### After: Concise Opening
 ```
-You are an expert economic analyst specializing in indicator classification.
-Follow standard usage from IMF, World Bank, OECD, and BIS. Prioritize
-economic meaning over literal interpretation.
-```
 
+You are an expert economic analyst specializing in indicator classification.
+Follow standard usage from IMF, World Bank, OECD, and BIS. Prioritize economic
+meaning over literal interpretation.
+
+````
 ### Performance Impact
 
 | Metric | Before | After | Change |
@@ -514,7 +522,7 @@ Document major prompt changes:
  * - Consolidated 30+ guardrails to 11 essential rules
  */
 export function generateSystemPrompt(): string {
-```
+````
 
 ## Conclusion
 
@@ -527,7 +535,10 @@ Comprehensive role priming significantly improves LLM classification quality by:
 5. **Preventing errors** through validation rules
 6. **Ensuring structure** through format requirements
 
-**2025 Update**: The refactored prompt proves that **less can be more** - by consolidating rules, prioritizing edge cases, and using concise examples, we achieved both **50% size reduction** and **100% accuracy**. The key is not prompt length, but prompt precision.
+**2025 Update**: The refactored prompt proves that **less can be more** - by
+consolidating rules, prioritizing edge cases, and using concise examples, we
+achieved both **50% size reduction** and **100% accuracy**. The key is not
+prompt length, but prompt precision.
 
-The result is more accurate, consistent, and reliable economic indicator classification with fewer retries and better confidence scores.
-
+The result is more accurate, consistent, and reliable economic indicator
+classification with fewer retries and better confidence scores.

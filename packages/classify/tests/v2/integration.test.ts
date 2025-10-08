@@ -8,19 +8,19 @@
  * 4. Checks accuracy across all classification dimensions
  */
 
-import { assertEquals, assertExists } from 'jsr:@std/assert@1';
-import { classifyIndicatorsV2 } from '../../src/v2/pipeline.ts';
-import { V2DatabaseClient } from '../../src/v2/db/client.ts';
-import type { Indicator, LLMConfig } from '../../src/types.ts';
-import type { V2Classification, V2Config } from '../../src/v2/types.ts';
-import { TEST_INDICATORS } from '../fixtures/v2-test-indicators.ts';
-import type { TestIndicatorFixture } from '../fixtures/v2-test-indicators.ts';
+import { assertEquals, assertExists } from "jsr:@std/assert@1";
+import { classifyIndicatorsV2 } from "../../src/v2/pipeline.ts";
+import { V2DatabaseClient } from "../../src/v2/db/client.ts";
+import type { Indicator, LLMConfig } from "../../src/types.ts";
+import type { V2Classification, V2Config } from "../../src/v2/types.ts";
+import { TEST_INDICATORS } from "../fixtures/v2-test-indicators.ts";
+import type { TestIndicatorFixture } from "../fixtures/v2-test-indicators.ts";
 import {
   getModelForProvider,
   isProviderAvailable,
   requireApiKey,
   testThresholds,
-} from '../config.ts';
+} from "../config.ts";
 
 /**
  * Convert test fixture to Indicator format
@@ -46,10 +46,10 @@ function fixtureToIndicator(fixture: TestIndicatorFixture): Indicator {
  */
 function verifyTestIndicators(
   db: V2DatabaseClient,
-  fixtures: TestIndicatorFixture[]
+  fixtures: TestIndicatorFixture[],
 ): void {
   const indicatorIds = fixtures.map((f) => f.id);
-  const placeholders = indicatorIds.map(() => '?').join(',');
+  const placeholders = indicatorIds.map(() => "?").join(",");
 
   const count = db
     .prepare(
@@ -57,14 +57,14 @@ function verifyTestIndicators(
     SELECT COUNT(*) as count
     FROM source_indicators
     WHERE id IN (${placeholders})
-  `
+  `,
     )
     .get(...indicatorIds) as { count: number };
 
   if (count.count !== fixtures.length) {
     throw new Error(
       `Expected ${fixtures.length} test indicators in database, found ${count.count}. ` +
-        `Please run: deno task seed`
+        `Please run: deno task seed`,
     );
   }
 
@@ -109,7 +109,7 @@ function compareClassification(
     temporal_aggregation: string;
     heat_map_orientation: string;
     is_currency_denominated: boolean;
-  }
+  },
 ): ComparisonResult {
   const differences: string[] = [];
 
@@ -119,26 +119,26 @@ function compareClassification(
 
   if (actual.indicator_type !== expected.indicator_type) {
     differences.push(
-      `type: ${actual.indicator_type} ≠ ${expected.indicator_type}`
+      `type: ${actual.indicator_type} ≠ ${expected.indicator_type}`,
     );
   }
 
   if (actual.temporal_aggregation !== expected.temporal_aggregation) {
     differences.push(
-      `temporal: ${actual.temporal_aggregation} ≠ ${expected.temporal_aggregation}`
+      `temporal: ${actual.temporal_aggregation} ≠ ${expected.temporal_aggregation}`,
     );
   }
 
   if (actual.heat_map_orientation !== expected.heat_map_orientation) {
     differences.push(
-      `orientation: ${actual.heat_map_orientation} ≠ ${expected.heat_map_orientation}`
+      `orientation: ${actual.heat_map_orientation} ≠ ${expected.heat_map_orientation}`,
     );
   }
 
   const actualMonetary = actual.is_currency_denominated ?? false;
   if (actualMonetary !== expected.is_currency_denominated) {
     differences.push(
-      `is_currency_denominated: ${actualMonetary} ≠ ${expected.is_currency_denominated}`
+      `is_currency_denominated: ${actualMonetary} ≠ ${expected.is_currency_denominated}`,
     );
   }
 
@@ -155,11 +155,11 @@ function compareClassification(
  * Run V2 integration test for a specific provider
  */
 async function testV2IntegrationForProvider(
-  providerName: 'openai' | 'anthropic' | 'gemini'
+  providerName: "openai" | "anthropic" | "gemini",
 ) {
   if (!isProviderAvailable(providerName)) {
     console.log(
-      `⚠️  Skipping ${providerName} V2 integration test: API key not set (${providerName.toUpperCase()}_API_KEY)`
+      `⚠️  Skipping ${providerName} V2 integration test: API key not set (${providerName.toUpperCase()}_API_KEY)`,
     );
     return;
   }
@@ -167,15 +167,15 @@ async function testV2IntegrationForProvider(
   const apiKey = requireApiKey(providerName);
   const model = getModelForProvider(providerName);
 
-  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n${"=".repeat(60)}`);
   console.log(`V2 INTEGRATION TEST: ${providerName.toUpperCase()}`);
   console.log(`Model: ${model}`);
-  console.log(`${'='.repeat(60)}\n`);
+  console.log(`${"=".repeat(60)}\n`);
 
   // Use the main V2 database (already seeded with indicators)
-  const dbPath = './data/classify_v2.db';
+  const dbPath = "./data/classify_v2.db";
   const db = new V2DatabaseClient({
-    type: 'local',
+    type: "local",
     path: dbPath,
     walMode: true,
     autoMigrate: true,
@@ -187,7 +187,7 @@ async function testV2IntegrationForProvider(
 
     // Verify test indicators exist in database
     console.log(
-      `📦 Verifying ${TEST_INDICATORS.length} test indicators in database...`
+      `📦 Verifying ${TEST_INDICATORS.length} test indicators in database...`,
     );
     verifyTestIndicators(db, TEST_INDICATORS);
 
@@ -208,7 +208,7 @@ async function testV2IntegrationForProvider(
     // Configure V2 pipeline
     const v2Config: Partial<V2Config> = {
       database: {
-        type: 'local',
+        type: "local",
         path: dbPath,
         walMode: true,
         autoMigrate: true,
@@ -233,15 +233,15 @@ async function testV2IntegrationForProvider(
     };
 
     // Run V2 pipeline
-    console.log('🚀 Running V2 pipeline...\n');
+    console.log("🚀 Running V2 pipeline...\n");
     const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);
 
     // Verify pipeline execution
-    assertExists(result.executionId, 'Execution ID should be generated');
+    assertExists(result.executionId, "Execution ID should be generated");
     assertEquals(
       result.summary.total,
       TEST_INDICATORS.length,
-      'Should process all indicators'
+      "Should process all indicators",
     );
 
     console.log(`\n📊 Pipeline Summary:`);
@@ -257,22 +257,24 @@ async function testV2IntegrationForProvider(
 
     console.log(`\n📈 Stage Breakdown:`);
     console.log(
-      `  Router:      ${result.stages.router.processed} indicators, ${result.stages.router.apiCalls} API calls, ${result.stages.router.processingTime}ms`
+      `  Router:      ${result.stages.router.processed} indicators, ${result.stages.router.apiCalls} API calls, ${result.stages.router.processingTime}ms`,
     );
     console.log(
-      `  Specialist:  ${result.stages.specialist.processed} indicators across ${result.stages.specialist.families} families, ${result.stages.specialist.apiCalls} API calls, ${result.stages.specialist.processingTime}ms`
+      `  Specialist:  ${result.stages.specialist.processed} indicators across ${result.stages.specialist.families} families, ${result.stages.specialist.apiCalls} API calls, ${result.stages.specialist.processingTime}ms`,
     );
     console.log(
-      `  Validation:  ${result.stages.validation.analyzed} analyzed (${result.stages.validation.cumulative} cumulative, ${result.stages.validation.nonCumulative} non-cumulative), avg confidence ${(result.stages.validation.avgConfidence * 100).toFixed(1)}%, ${result.stages.validation.processingTime}ms`
+      `  Validation:  ${result.stages.validation.analyzed} analyzed (${result.stages.validation.cumulative} cumulative, ${result.stages.validation.nonCumulative} non-cumulative), avg confidence ${
+        (result.stages.validation.avgConfidence * 100).toFixed(1)
+      }%, ${result.stages.validation.processingTime}ms`,
     );
     console.log(
-      `  Orientation: ${result.stages.orientation.processed} indicators, ${result.stages.orientation.apiCalls} API calls, ${result.stages.orientation.processingTime}ms`
+      `  Orientation: ${result.stages.orientation.processed} indicators, ${result.stages.orientation.apiCalls} API calls, ${result.stages.orientation.processingTime}ms`,
     );
     console.log(
-      `  Flagging:    ${result.stages.flagging.flagged} indicators flagged`
+      `  Flagging:    ${result.stages.flagging.flagged} indicators flagged`,
     );
     console.log(
-      `  Review:      ${result.stages.review.reviewed} reviewed, ${result.stages.review.fixed} fixed, ${result.stages.review.escalated} escalated, ${result.stages.review.apiCalls} API calls, ${result.stages.review.processingTime}ms`
+      `  Review:      ${result.stages.review.reviewed} reviewed, ${result.stages.review.fixed} fixed, ${result.stages.review.escalated} escalated, ${result.stages.review.apiCalls} API calls, ${result.stages.review.processingTime}ms`,
     );
 
     // Compare classifications with expectations
@@ -283,7 +285,7 @@ async function testV2IntegrationForProvider(
 
     for (const fixture of TEST_INDICATORS) {
       const classification = result.classifications.find(
-        (c: V2Classification) => c.indicator_id === fixture.id
+        (c: V2Classification) => c.indicator_id === fixture.id,
       );
 
       if (!classification) {
@@ -300,7 +302,7 @@ async function testV2IntegrationForProvider(
           heat_map_orientation: classification.heat_map_orientation,
           is_currency_denominated: classification.is_currency_denominated,
         },
-        fixture.expectation
+        fixture.expectation,
       );
 
       comparisons.push(comparison);
@@ -310,72 +312,87 @@ async function testV2IntegrationForProvider(
         console.log(`  ✅ ${fixture.name}`);
       } else {
         console.log(`  ❌ ${fixture.name}`);
-        console.log(`     Differences: ${comparison.differences.join(', ')}`);
+        console.log(`     Differences: ${comparison.differences.join(", ")}`);
       }
     }
 
     // Calculate accuracy metrics
     const totalProcessed = comparisons.length;
-    const overallAccuracy =
-      totalProcessed > 0 ? (correctCount / totalProcessed) * 100 : 0;
+    const overallAccuracy = totalProcessed > 0
+      ? (correctCount / totalProcessed) * 100
+      : 0;
 
     // Calculate per-field accuracy
     const familyCorrect = comparisons.filter(
-      (c) => c.actual.family === c.expected.indicator_family
+      (c) => c.actual.family === c.expected.indicator_family,
     ).length;
     const typeCorrect = comparisons.filter(
-      (c) => c.actual.indicator_type === c.expected.indicator_type
+      (c) => c.actual.indicator_type === c.expected.indicator_type,
     ).length;
     const temporalCorrect = comparisons.filter(
-      (c) => c.actual.temporal_aggregation === c.expected.temporal_aggregation
+      (c) => c.actual.temporal_aggregation === c.expected.temporal_aggregation,
     ).length;
     const orientationCorrect = comparisons.filter(
-      (c) => c.actual.heat_map_orientation === c.expected.heat_map_orientation
+      (c) => c.actual.heat_map_orientation === c.expected.heat_map_orientation,
     ).length;
     const monetaryCorrect = comparisons.filter(
-      (c) => (c.actual.is_currency_denominated ?? false) === c.expected.is_currency_denominated
+      (c) =>
+        (c.actual.is_currency_denominated ?? false) ===
+          c.expected.is_currency_denominated,
     ).length;
 
-    console.log(`\n${'='.repeat(60)}`);
+    console.log(`\n${"=".repeat(60)}`);
     console.log(`📋 ACCURACY REPORT`);
-    console.log(`${'='.repeat(60)}`);
+    console.log(`${"=".repeat(60)}`);
     console.log(
-      `Overall Accuracy: ${correctCount}/${totalProcessed} (${overallAccuracy.toFixed(
-        1
-      )}%)`
+      `Overall Accuracy: ${correctCount}/${totalProcessed} (${
+        overallAccuracy.toFixed(
+          1,
+        )
+      }%)`,
     );
     console.log(`\nPer-Field Accuracy:`);
     console.log(
-      `  • Family:             ${familyCorrect}/${totalProcessed} (${(
-        (familyCorrect / totalProcessed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Family:             ${familyCorrect}/${totalProcessed} (${
+        (
+          (familyCorrect / totalProcessed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     console.log(
-      `  • Indicator Type:     ${typeCorrect}/${totalProcessed} (${(
-        (typeCorrect / totalProcessed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Indicator Type:     ${typeCorrect}/${totalProcessed} (${
+        (
+          (typeCorrect / totalProcessed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     console.log(
-      `  • Temporal Agg:       ${temporalCorrect}/${totalProcessed} (${(
-        (temporalCorrect / totalProcessed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Temporal Agg:       ${temporalCorrect}/${totalProcessed} (${
+        (
+          (temporalCorrect / totalProcessed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     console.log(
-      `  • Heat Map Orient:    ${orientationCorrect}/${totalProcessed} (${(
-        (orientationCorrect / totalProcessed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Heat Map Orient:    ${orientationCorrect}/${totalProcessed} (${
+        (
+          (orientationCorrect / totalProcessed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     console.log(
-      `  • Is Monetary:        ${monetaryCorrect}/${totalProcessed} (${(
-        (monetaryCorrect / totalProcessed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Is Monetary:        ${monetaryCorrect}/${totalProcessed} (${
+        (
+          (monetaryCorrect / totalProcessed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
-    console.log(`${'='.repeat(60)}\n`);
+    console.log(`${"=".repeat(60)}\n`);
 
     // Show mismatches (first 10)
     const mismatches = comparisons.filter((c) => !c.matches);
@@ -396,9 +413,11 @@ async function testV2IntegrationForProvider(
     // Assert minimum accuracy threshold
     if (overallAccuracy < testThresholds.classificationAccuracy) {
       throw new Error(
-        `V2 pipeline accuracy (${overallAccuracy.toFixed(
-          1
-        )}%) is below threshold (${testThresholds.classificationAccuracy}%)`
+        `V2 pipeline accuracy (${
+          overallAccuracy.toFixed(
+            1,
+          )
+        }%) is below threshold (${testThresholds.classificationAccuracy}%)`,
       );
     }
 
@@ -411,9 +430,9 @@ async function testV2IntegrationForProvider(
 
 // Test Anthropic (using Claude Sonnet 4.5 for all tests)
 Deno.test({
-  name: 'V2 Integration - Anthropic',
+  name: "V2 Integration - Anthropic",
   async fn() {
-    await testV2IntegrationForProvider('anthropic');
+    await testV2IntegrationForProvider("anthropic");
   },
-  ignore: !isProviderAvailable('anthropic'),
+  ignore: !isProviderAvailable("anthropic"),
 });

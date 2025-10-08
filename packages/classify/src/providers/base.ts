@@ -7,14 +7,14 @@ import type {
   ClassifiedMetadata,
   Indicator,
   TemporalDataPoint,
-} from '../types.ts';
+} from "../types.ts";
 import {
   INDICATOR_TYPE_TO_CATEGORY,
   VALID_HEAT_MAP_ORIENTATIONS,
   VALID_INDICATOR_CATEGORIES,
   VALID_INDICATOR_TYPES,
   VALID_TEMPORAL_AGGREGATIONS,
-} from '../types.ts';
+} from "../types.ts";
 
 /**
  * Apply deterministic, domain-aware fixes to LLM classifications to improve accuracy
@@ -22,7 +22,7 @@ import {
  */
 export function postProcessClassifications(
   indicators: Indicator[],
-  classifications: ClassifiedMetadata[]
+  classifications: ClassifiedMetadata[],
 ): ClassifiedMetadata[] {
   // Build a quick lookup for indicators by id
   const indicatorById = new Map<string, Indicator>();
@@ -30,7 +30,7 @@ export function postProcessClassifications(
     if (ind.id) indicatorById.set(ind.id, ind);
   }
 
-  const normalize = (s?: string) => (s || '').toLowerCase();
+  const normalize = (s?: string) => (s || "").toLowerCase();
   const containsAny = (hay: string, needles: string[]) =>
     needles.some((n) => hay.includes(n));
 
@@ -45,82 +45,82 @@ export function postProcessClassifications(
     // 1) Temporal aggregation corrections
     // Ratios/Percentages/Shares/Spreads are generally dimensionless and NA temporally
     if (
-      (c.indicator_type === 'ratio' ||
-        c.indicator_type === 'percentage' ||
-        c.indicator_type === 'share' ||
-        c.indicator_type === 'spread') &&
-      c.temporal_aggregation !== 'not-applicable'
+      (c.indicator_type === "ratio" ||
+        c.indicator_type === "percentage" ||
+        c.indicator_type === "share" ||
+        c.indicator_type === "spread") &&
+      c.temporal_aggregation !== "not-applicable"
     ) {
       // But allow explicit growth rates to remain period-rate
-      const looksLikeRate = containsAny(name + ' ' + desc, [
-        'yoy',
-        'y/y',
-        'qoq',
-        'q/q',
-        'mom',
-        'm/m',
-        'growth',
-        'rate',
-        'annualized',
+      const looksLikeRate = containsAny(name + " " + desc, [
+        "yoy",
+        "y/y",
+        "qoq",
+        "q/q",
+        "mom",
+        "m/m",
+        "growth",
+        "rate",
+        "annualized",
       ]);
       if (!looksLikeRate) {
-        updated = { ...updated, temporal_aggregation: 'not-applicable' };
+        updated = { ...updated, temporal_aggregation: "not-applicable" };
       }
     }
 
     // Rate is, by definition, measured over a period → period-rate
     if (
-      c.indicator_type === 'rate' &&
-      c.temporal_aggregation !== 'period-rate'
+      c.indicator_type === "rate" &&
+      c.temporal_aggregation !== "period-rate"
     ) {
-      updated = { ...updated, temporal_aggregation: 'period-rate' };
+      updated = { ...updated, temporal_aggregation: "period-rate" };
     }
 
     // Correlation/Elasticity/Multiplier are estimates over a window → period-average
     if (
-      (c.indicator_type === 'correlation' ||
-        c.indicator_type === 'elasticity' ||
-        c.indicator_type === 'multiplier') &&
-      c.temporal_aggregation !== 'period-average'
+      (c.indicator_type === "correlation" ||
+        c.indicator_type === "elasticity" ||
+        c.indicator_type === "multiplier") &&
+      c.temporal_aggregation !== "period-average"
     ) {
-      updated = { ...updated, temporal_aggregation: 'period-average' };
+      updated = { ...updated, temporal_aggregation: "period-average" };
     }
 
     // Gap temporal aggregation: allow model decision per prompt guardrails
 
     // Flows measured as YTD/cumulative → period-cumulative
     if (
-      c.indicator_type === 'flow' &&
-      containsAny(name + ' ' + desc, ['ytd', 'year-to-date', 'cumulative']) &&
-      c.temporal_aggregation !== 'period-cumulative'
+      c.indicator_type === "flow" &&
+      containsAny(name + " " + desc, ["ytd", "year-to-date", "cumulative"]) &&
+      c.temporal_aggregation !== "period-cumulative"
     ) {
-      updated = { ...updated, temporal_aggregation: 'period-cumulative' };
+      updated = { ...updated, temporal_aggregation: "period-cumulative" };
     }
 
     // Counts/Volumes typically are totals over the period
     if (
-      (c.indicator_type === 'count' || c.indicator_type === 'volume') &&
-      c.temporal_aggregation !== 'period-total'
+      (c.indicator_type === "count" || c.indicator_type === "volume") &&
+      c.temporal_aggregation !== "period-total"
     ) {
-      updated = { ...updated, temporal_aggregation: 'period-total' };
+      updated = { ...updated, temporal_aggregation: "period-total" };
     }
 
     // Prices, Yields, Indices, Sentiments temporal normalization
-    if (c.indicator_type === 'index') {
+    if (c.indicator_type === "index") {
       // Special-case: Prices Paid/Received subindices and LMI Inventory Costs are treated as period-average in fixtures
       const isPricesPaidOrReceived = containsAny(name, [
-        'prices paid',
-        'prices received',
+        "prices paid",
+        "prices received",
       ]);
       const isFedOrISM = containsAny(name, [
-        'ism',
-        'kansas',
-        'philly',
-        'dallas',
+        "ism",
+        "kansas",
+        "philly",
+        "dallas",
       ]);
       const isLmiInventoryCosts = containsAny(name, [
-        'lmi inventory costs',
-        'inventory costs',
+        "lmi inventory costs",
+        "inventory costs",
       ]);
 
       if (
@@ -128,31 +128,30 @@ export function postProcessClassifications(
         (isFedOrISM && isPricesPaidOrReceived) ||
         isLmiInventoryCosts
       ) {
-        if (c.temporal_aggregation !== 'period-average') {
-          updated = { ...updated, temporal_aggregation: 'period-average' };
+        if (c.temporal_aggregation !== "period-average") {
+          updated = { ...updated, temporal_aggregation: "period-average" };
         }
-      } else if (c.temporal_aggregation !== 'point-in-time') {
-        updated = { ...updated, temporal_aggregation: 'point-in-time' };
+      } else if (c.temporal_aggregation !== "point-in-time") {
+        updated = { ...updated, temporal_aggregation: "point-in-time" };
       }
     } else if (
-      (c.indicator_type === 'price' ||
-        c.indicator_type === 'yield' ||
-        c.indicator_type === 'sentiment' ||
-        c.indicator_type === 'allocation' ||
-        c.indicator_type === 'probability' ||
-        c.indicator_type === 'threshold') &&
-      c.temporal_aggregation !== 'point-in-time'
+      (c.indicator_type === "price" ||
+        c.indicator_type === "yield" ||
+        c.indicator_type === "sentiment" ||
+        c.indicator_type === "allocation" ||
+        c.indicator_type === "probability" ||
+        c.indicator_type === "threshold") &&
+      c.temporal_aggregation !== "point-in-time"
     ) {
-      updated = { ...updated, temporal_aggregation: 'point-in-time' };
+      updated = { ...updated, temporal_aggregation: "point-in-time" };
     }
 
     // 2) Heat map orientation nudges - removed to favor prompt-based guidance
 
     // 3) Ensure category aligns with type taxonomy
-    const expectedCategory =
-      INDICATOR_TYPE_TO_CATEGORY[
-        updated.indicator_type as keyof typeof INDICATOR_TYPE_TO_CATEGORY
-      ];
+    const expectedCategory = INDICATOR_TYPE_TO_CATEGORY[
+      updated.indicator_type as keyof typeof INDICATOR_TYPE_TO_CATEGORY
+    ];
     if (updated.indicator_category !== expectedCategory) {
       updated = { ...updated, indicator_category: expectedCategory };
     }
@@ -405,7 +404,7 @@ END OF INSTRUCTIONS
  */
 export function generateUserPrompt(
   indicators: Indicator[],
-  includeReasoning: boolean
+  includeReasoning: boolean,
 ): string {
   const indicatorDescriptions = indicators
     .map((ind, idx) => {
@@ -424,31 +423,31 @@ export function generateUserPrompt(
         // Check if sample_values are temporal data points or simple numbers
         const firstValue = ind.sample_values[0];
         if (
-          typeof firstValue === 'object' &&
+          typeof firstValue === "object" &&
           firstValue !== null &&
-          'date' in firstValue &&
-          'value' in firstValue
+          "date" in firstValue &&
+          "value" in firstValue
         ) {
           // Temporal data points - show date/value pairs
           const temporalValues = (ind.sample_values as TemporalDataPoint[])
             .slice(0, 5)
             .map((point) => `${point.date}: ${point.value}`)
-            .join(', ');
+            .join(", ");
           parts.push(`- Sample values (temporal): ${temporalValues}`);
           parts.push(
-            `  (${ind.sample_values.length} data points total - analyze for cumulative patterns)`
+            `  (${ind.sample_values.length} data points total - analyze for cumulative patterns)`,
           );
         } else {
           // Simple number array
           parts.push(
-            `- Sample values: ${ind.sample_values.slice(0, 5).join(', ')}`
+            `- Sample values: ${ind.sample_values.slice(0, 5).join(", ")}`,
           );
         }
       }
 
-      return parts.join('\n');
+      return parts.join("\n");
     })
-    .join('\n\n');
+    .join("\n\n");
 
   const reasoningNote = includeReasoning
     ? "\n\n⚠️  IMPORTANT: Include a 'reasoning' field in each classification object with a brief explanation."
@@ -459,7 +458,7 @@ CLASSIFICATION REQUEST
 ═══════════════════════════════════════════════════════════════════════════
 
 Please classify the following ${indicators.length} economic indicator${
-    indicators.length === 1 ? '' : 's'
+    indicators.length === 1 ? "" : "s"
   }:
 
 ${indicatorDescriptions}${reasoningNote}
@@ -469,7 +468,7 @@ RESPONSE REQUIREMENTS
 ═══════════════════════════════════════════════════════════════════════════
 
 Return a JSON array with ${indicators.length} object${
-    indicators.length === 1 ? '' : 's'
+    indicators.length === 1 ? "" : "s"
   }, one per indicator, in the SAME ORDER as above.
 
 Each object MUST contain these EXACT fields:
@@ -480,7 +479,7 @@ Each object MUST contain these EXACT fields:
 • is_monetary (boolean) - true or false
 • heat_map_orientation (string) - "higher-is-positive", "lower-is-positive", or "neutral"
 • confidence (number) - Between 0 and 1${
-    includeReasoning ? '\n• reasoning (string) - Brief explanation' : ''
+    includeReasoning ? "\n• reasoning (string) - Brief explanation" : ""
   }
 
 RULE CHECKLIST (tick mentally before responding):
@@ -497,16 +496,16 @@ CRITICAL: Respond with ONLY the JSON array. No markdown, no explanatory text, no
  */
 export function parseClassificationResponse(
   response: string,
-  expectedCount: number
+  expectedCount: number,
 ): ClassifiedMetadata[] {
   // Remove markdown code blocks if present
   let cleaned = response.trim();
-  if (cleaned.startsWith('```json')) {
+  if (cleaned.startsWith("```json")) {
     cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith('```')) {
+  } else if (cleaned.startsWith("```")) {
     cleaned = cleaned.slice(3);
   }
-  if (cleaned.endsWith('```')) {
+  if (cleaned.endsWith("```")) {
     cleaned = cleaned.slice(0, -3);
   }
   cleaned = cleaned.trim();
@@ -519,25 +518,25 @@ export function parseClassificationResponse(
     throw new Error(
       `Failed to parse LLM response as JSON: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 
   // Validate it's an array
   if (!Array.isArray(parsed)) {
-    throw new Error('LLM response must be a JSON array');
+    throw new Error("LLM response must be a JSON array");
   }
 
   // Validate count
   if (parsed.length !== expectedCount) {
     throw new Error(
-      `Expected ${expectedCount} classifications, got ${parsed.length}`
+      `Expected ${expectedCount} classifications, got ${parsed.length}`,
     );
   }
 
   // Validate each classification using type constants
   return parsed.map((item, idx) => {
-    if (typeof item !== 'object' || item === null) {
+    if (typeof item !== "object" || item === null) {
       throw new Error(`Classification ${idx + 1} is not an object`);
     }
 
@@ -545,104 +544,109 @@ export function parseClassificationResponse(
 
     // Validate indicator_id
     if (
-      typeof classification.indicator_id !== 'string' ||
+      typeof classification.indicator_id !== "string" ||
       !classification.indicator_id
     ) {
       throw new Error(
-        `Classification ${idx + 1} is missing or has invalid indicator_id: "${
-          classification.indicator_id
-        }"`
+        `Classification ${
+          idx + 1
+        } is missing or has invalid indicator_id: "${classification.indicator_id}"`,
       );
     }
 
     // Validate indicator_category
     if (
-      typeof classification.indicator_category !== 'string' ||
+      typeof classification.indicator_category !== "string" ||
       !VALID_INDICATOR_CATEGORIES.includes(
-        classification.indicator_category as never
+        classification.indicator_category as never,
       )
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid indicator_category: "${
-          classification.indicator_category
-        }". Must be one of: ${VALID_INDICATOR_CATEGORIES.join(', ')}`
+        `Classification ${
+          idx + 1
+        } has invalid indicator_category: "${classification.indicator_category}". Must be one of: ${
+          VALID_INDICATOR_CATEGORIES.join(", ")
+        }`,
       );
     }
 
     // Validate indicator_type
     if (
-      typeof classification.indicator_type !== 'string' ||
+      typeof classification.indicator_type !== "string" ||
       !VALID_INDICATOR_TYPES.includes(classification.indicator_type as never)
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid indicator_type: "${
-          classification.indicator_type
-        }". Must be one of: ${VALID_INDICATOR_TYPES.join(', ')}`
+        `Classification ${
+          idx + 1
+        } has invalid indicator_type: "${classification.indicator_type}". Must be one of: ${
+          VALID_INDICATOR_TYPES.join(", ")
+        }`,
       );
     }
 
     // Validate category matches type
-    const expectedCategory =
-      INDICATOR_TYPE_TO_CATEGORY[
-        classification.indicator_type as keyof typeof INDICATOR_TYPE_TO_CATEGORY
-      ];
+    const expectedCategory = INDICATOR_TYPE_TO_CATEGORY[
+      classification.indicator_type as keyof typeof INDICATOR_TYPE_TO_CATEGORY
+    ];
     if (classification.indicator_category !== expectedCategory) {
       throw new Error(
-        `Classification ${idx + 1} has mismatched category: indicator_type "${
-          classification.indicator_type
-        }" should have category "${expectedCategory}", but got "${
-          classification.indicator_category
-        }"`
+        `Classification ${
+          idx + 1
+        } has mismatched category: indicator_type "${classification.indicator_type}" should have category "${expectedCategory}", but got "${classification.indicator_category}"`,
       );
     }
 
     // Validate temporal_aggregation
     if (
-      typeof classification.temporal_aggregation !== 'string' ||
+      typeof classification.temporal_aggregation !== "string" ||
       !VALID_TEMPORAL_AGGREGATIONS.includes(
-        classification.temporal_aggregation as never
+        classification.temporal_aggregation as never,
       )
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid temporal_aggregation: "${
-          classification.temporal_aggregation
-        }". Must be one of: ${VALID_TEMPORAL_AGGREGATIONS.join(', ')}`
+        `Classification ${
+          idx + 1
+        } has invalid temporal_aggregation: "${classification.temporal_aggregation}". Must be one of: ${
+          VALID_TEMPORAL_AGGREGATIONS.join(", ")
+        }`,
       );
     }
 
     // Validate is_monetary
-    if (typeof classification.is_monetary !== 'boolean') {
+    if (typeof classification.is_monetary !== "boolean") {
       throw new Error(
-        `Classification ${idx + 1} has invalid is_monetary: ${
-          classification.is_monetary
-        }`
+        `Classification ${
+          idx + 1
+        } has invalid is_monetary: ${classification.is_monetary}`,
       );
     }
 
     if (
-      typeof classification.heat_map_orientation !== 'string' ||
+      typeof classification.heat_map_orientation !== "string" ||
       !VALID_HEAT_MAP_ORIENTATIONS.includes(
-        classification.heat_map_orientation as never
+        classification.heat_map_orientation as never,
       )
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid heat_map_orientation: "${
-          classification.heat_map_orientation
-        }". Must be one of: ${VALID_HEAT_MAP_ORIENTATIONS.join(', ')}`
+        `Classification ${
+          idx + 1
+        } has invalid heat_map_orientation: "${classification.heat_map_orientation}". Must be one of: ${
+          VALID_HEAT_MAP_ORIENTATIONS.join(", ")
+        }`,
       );
     }
 
     // Validate optional confidence
     if (
       classification.confidence !== undefined &&
-      (typeof classification.confidence !== 'number' ||
+      (typeof classification.confidence !== "number" ||
         classification.confidence < 0 ||
         classification.confidence > 1)
     ) {
       throw new Error(
-        `Classification ${idx + 1} has invalid confidence: ${
-          classification.confidence
-        }`
+        `Classification ${
+          idx + 1
+        } has invalid confidence: ${classification.confidence}`,
       );
     }
 
@@ -656,7 +660,7 @@ export function parseClassificationResponse(
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
   maxRetries: number,
-  baseDelay: number
+  baseDelay: number,
 ): Promise<T> {
   let lastError: Error | undefined;
 
@@ -669,23 +673,21 @@ export async function retryWithBackoff<T>(
       let retryable = true;
       let delayMs = baseDelay * Math.pow(2, attempt);
 
-      const isAbortError =
-        lastError.name === 'AbortError' ||
-        (lastError.name === 'DOMException' &&
+      const isAbortError = lastError.name === "AbortError" ||
+        (lastError.name === "DOMException" &&
           /aborted/i.test(lastError.message));
 
       type MaybeHttpError = Error & { status?: number; headers?: Headers };
       const httpErr = lastError as MaybeHttpError;
 
       if (httpErr.status !== undefined) {
-        retryable =
-          httpErr.status === 429 ||
+        retryable = httpErr.status === 429 ||
           httpErr.status === 408 ||
           httpErr.status >= 500;
         if (httpErr.status === 429 && httpErr.headers) {
-          const retryAfter = httpErr.headers.get('retry-after');
+          const retryAfter = httpErr.headers.get("retry-after");
           const reset = httpErr.headers.get(
-            'anthropic-ratelimit-requests-reset'
+            "anthropic-ratelimit-requests-reset",
           );
           const parsedRetryAfter = retryAfter ? Number(retryAfter) : NaN;
           const parsedReset = reset ? Number(reset) : NaN;

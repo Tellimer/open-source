@@ -1,5 +1,18 @@
 /**
- * Indicator classification logic
+ * Legacy indicator classification logic
+ *
+ * @deprecated This module provides basic classification for backward compatibility.
+ * For accurate, comprehensive indicator classification, use the @tellimer/classify package.
+ *
+ * The classify package provides:
+ * - 25+ indicator types (vs 5 legacy types here)
+ * - LLM-powered classification with confidence scores
+ * - Temporal aggregation detection
+ * - Currency denomination detection
+ * - Production-tested on 150+ real indicators
+ *
+ * Econify accepts classification results via `indicator_type` and `is_currency_denominated`
+ * fields and uses them to make smart normalization decisions.
  */
 
 import type {

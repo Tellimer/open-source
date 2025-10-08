@@ -5,6 +5,12 @@ normalization across all items of an indicator. This is critical when processing
 data for multiple countries or regions that should be normalized to consistent
 units.
 
+**Smart Normalization with Classification**: Batch processing works best when you
+provide `indicator_type` and `is_currency_denominated` fields from the
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package. These fields enable
+intelligent decisions like skipping time normalization for stock indicators or
+currency conversion for count indicators.
+
 ## The Problem
 
 When processing economic indicators like "Balance of Trade" for multiple
@@ -59,11 +65,14 @@ const session = new EconifyBatchSession({
 });
 
 // Add data points for all countries
+// Include indicator_type from @tellimer/classify for smart normalization
 session.addDataPoint({
   id: "bot_usa",
   name: "Balance of Trade",
   value: 100,
   unit: "USD million/month",
+  indicator_type: "flow", // From @tellimer/classify
+  is_currency_denominated: true,
   metadata: { country: "USA" },
 });
 
@@ -72,6 +81,8 @@ session.addDataPoint({
   name: "Balance of Trade",
   value: 200,
   unit: "EUR million/quarter",
+  indicator_type: "flow", // From @tellimer/classify
+  is_currency_denominated: true,
   metadata: { country: "Germany" },
 });
 
@@ -80,6 +91,8 @@ session.addDataPoint({
   name: "Balance of Trade",
   value: -150,
   unit: "JPY billion/month",
+  indicator_type: "flow", // From @tellimer/classify
+  is_currency_denominated: true,
   metadata: { country: "Japan" },
 });
 
@@ -101,29 +114,49 @@ group:
 import { processEconomicDataByIndicator } from "econify";
 
 const data = [
-  // Balance of Trade items
+  // Balance of Trade items (flow indicator)
   {
     id: "bot_usa",
     name: "Balance of Trade",
     value: 100,
     unit: "USD million/month",
+    indicator_type: "flow", // From @tellimer/classify
+    is_currency_denominated: true,
   },
   {
     id: "bot_uk",
     name: "Balance of Trade",
     value: 50,
     unit: "GBP million/month",
+    indicator_type: "flow",
+    is_currency_denominated: true,
   },
   {
     id: "bot_germany",
     name: "Balance of Trade",
     value: 200,
     unit: "EUR million/quarter",
+    indicator_type: "flow",
+    is_currency_denominated: true,
   },
 
-  // GDP items
-  { id: "gdp_usa", name: "GDP", value: 25000, unit: "USD billion/year" },
-  { id: "gdp_uk", name: "GDP", value: 3100, unit: "GBP billion/year" },
+  // GDP items (flow indicator)
+  {
+    id: "gdp_usa",
+    name: "GDP",
+    value: 25000,
+    unit: "USD billion/year",
+    indicator_type: "flow",
+    is_currency_denominated: true,
+  },
+  {
+    id: "gdp_uk",
+    name: "GDP",
+    value: 3100,
+    unit: "GBP billion/year",
+    indicator_type: "flow",
+    is_currency_denominated: true,
+  },
 ];
 
 const result = await processEconomicDataByIndicator(data, {

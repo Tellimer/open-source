@@ -1,6 +1,7 @@
 # V2 Pipeline Documentation
 
-The V2 pipeline is an advanced multi-stage classification system with persistent state, family-based routing, and quality control.
+The V2 pipeline is an advanced multi-stage classification system with persistent
+state, family-based routing, and quality control.
 
 ## Overview
 
@@ -17,7 +18,8 @@ V2 introduces a 6-stage pipeline for higher accuracy and better quality control:
 
 - **Multi-stage pipeline** - 6 specialized stages for accuracy
 - **Family-based routing** - 7 indicator families with specialized prompts
-- **Context passing with reasoning** - Each stage receives full context and reasoning from prior stages
+- **Context passing with reasoning** - Each stage receives full context and
+  reasoning from prior stages
 - **Persistent SQLite database** - Local or remote (Railway) storage
 - **Quality control** - Automatic flagging and LLM review
 - **Resume capability** - Restart from any stage using DB state
@@ -27,17 +29,17 @@ V2 introduces a 6-stage pipeline for higher accuracy and better quality control:
 ## Quick Start
 
 ```typescript
-import { classifyIndicatorsV2, createLocalDatabase } from '@tellimer/classify';
+import { classifyIndicatorsV2, createLocalDatabase } from "@tellimer/classify";
 
 // 1. Create database
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // 2. Run V2 pipeline
 const result = await classifyIndicatorsV2(indicators, {
-  provider: 'anthropic',
+  provider: "anthropic",
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-sonnet-4-5-20250929',  // Recommended: latest and most capable
+  model: "claude-sonnet-4-5-20250929", // Recommended: latest and most capable
 }, {
   database: db,
   thresholds: {
@@ -103,11 +105,14 @@ See [Architecture](./ARCHITECTURE.md) for detailed stage documentation.
 
 ## Context Passing & Reasoning Chain
 
-One of V2's key innovations is **context enrichment** - each stage receives full context and reasoning from all prior stages. This creates a reasoning chain where LLMs build on previous analysis rather than starting fresh.
+One of V2's key innovations is **context enrichment** - each stage receives full
+context and reasoning from all prior stages. This creates a reasoning chain
+where LLMs build on previous analysis rather than starting fresh.
 
 ### How It Works
 
 **Stage 1: Router**
+
 ```typescript
 {
   family: 'change-movement',
@@ -117,6 +122,7 @@ One of V2's key innovations is **context enrichment** - each stage receives full
 ```
 
 **Stage 2: Specialist** (receives router context)
+
 ```typescript
 // Specialist prompt includes:
 // - Router Family: change-movement
@@ -133,6 +139,7 @@ One of V2's key innovations is **context enrichment** - each stage receives full
 ```
 
 **Stage 3: Orientation** (receives router + specialist context)
+
 ```typescript
 // Orientation prompt includes ALL prior context:
 // Router: family, confidence, reasoning
@@ -182,20 +189,20 @@ V2 requires a SQLite database for persistent state.
 ### Local Database
 
 ```typescript
-import { createLocalDatabase } from '@tellimer/classify';
+import { createLocalDatabase } from "@tellimer/classify";
 
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 ```
 
 ### Remote Database (Railway)
 
 ```typescript
-import { createRemoteDatabase } from '@tellimer/classify';
+import { createRemoteDatabase } from "@tellimer/classify";
 
 const db = createRemoteDatabase(
-  'https://your-railway-db.railway.app',
-  { token: process.env.RAILWAY_TOKEN }
+  "https://your-railway-db.railway.app",
+  { token: process.env.RAILWAY_TOKEN },
 );
 await db.initialize();
 ```
@@ -212,9 +219,9 @@ const result = await classifyIndicatorsV2(indicators, llmConfig, {
 
   // Confidence thresholds for flagging
   thresholds: {
-    confidenceFamilyMin: 0.75,    // Router confidence
-    confidenceClsMin: 0.75,       // Specialist confidence
-    confidenceOrientMin: 0.75,    // Orientation confidence
+    confidenceFamilyMin: 0.75, // Router confidence
+    confidenceClsMin: 0.75, // Specialist confidence
+    confidenceOrientMin: 0.75, // Orientation confidence
   },
 
   // Batch sizes per stage
@@ -239,35 +246,39 @@ const result = await classifyIndicatorsV2(indicators, llmConfig, {
 
   // Per-stage model overrides (optional)
   models: {
-    router: 'claude-haiku-4-20250514',       // Cost optimization: cheaper model
-    specialist: 'claude-haiku-4-20250514',   // Cost optimization: cheaper model
-    orientation: 'claude-haiku-4-20250514',  // Cost optimization: cheaper model
-    review: 'claude-sonnet-4-5-20250929',    // Keep powerful model for review
+    router: "claude-haiku-4-20250514", // Cost optimization: cheaper model
+    specialist: "claude-haiku-4-20250514", // Cost optimization: cheaper model
+    orientation: "claude-haiku-4-20250514", // Cost optimization: cheaper model
+    review: "claude-sonnet-4-5-20250929", // Keep powerful model for review
   },
 });
 ```
 
 ### Multi-Model Configuration
 
-You can use different models for different stages. This is useful when mixing model providers (e.g., Claude for classification, GPT-5 for review):
+You can use different models for different stages. This is useful when mixing
+model providers (e.g., Claude for classification, GPT-5 for review):
 
 ```typescript
 const result = await classifyIndicatorsV2(indicators, {
-  provider: 'anthropic',
+  provider: "anthropic",
   apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-sonnet-4-5-20250929', // Default for all stages (recommended)
+  model: "claude-sonnet-4-5-20250929", // Default for all stages (recommended)
 }, {
   database: db,
   models: {
     // Use GPT-5 for review stage (cross-provider validation)
-    review: 'gpt-5',
+    review: "gpt-5",
   },
 });
 ```
 
-**Note**: The `models` override uses the model name directly. For cross-provider usage, the AI SDK will automatically use the appropriate provider based on the model name (e.g., `gpt-5` → OpenAI, `claude-*` → Anthropic).
+**Note**: The `models` override uses the model name directly. For cross-provider
+usage, the AI SDK will automatically use the appropriate provider based on the
+model name (e.g., `gpt-5` → OpenAI, `claude-*` → Anthropic).
 
 **Common configurations**:
+
 - **Cross-provider validation**: Claude for classification, GPT-5 for review
 - **Cost optimization**: Haiku/Flash for high-volume stages, Sonnet for review
 - **Best quality**: Claude Sonnet 4.5 for all stages (same price as Sonnet 4)
@@ -309,8 +320,8 @@ Flagged indicators are automatically reviewed by LLM:
 
 ```typescript
 // Get escalated indicators requiring human review
-const escalated = result.classifications.filter(c =>
-  c.review_decision?.action === 'escalate'
+const escalated = result.classifications.filter((c) =>
+  c.review_decision?.action === "escalate"
 );
 
 for (const indicator of escalated) {
@@ -384,22 +395,23 @@ V2 can resume from any stage using database state:
 
 ```typescript
 // First run - completes router and specialist
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 try {
   await classifyIndicatorsV2(indicators, llmConfig, { database: db });
 } catch (error) {
-  console.error('Pipeline failed, but state is saved');
+  console.error("Pipeline failed, but state is saved");
 }
 
 // Second run - resumes from where it left off
 const result = await classifyIndicatorsV2(indicators, llmConfig, {
-  database: db  // Automatically detects and skips completed stages
+  database: db, // Automatically detects and skips completed stages
 });
 ```
 
 The database stores:
+
 - Router results → Skip if already routed
 - Specialist results → Skip if already classified
 - Orientation results → Skip if already oriented
@@ -416,6 +428,7 @@ V2 pipeline is optimized for large-scale classification:
 - **Persistent state** - No reprocessing on failure
 
 Typical performance for 100 indicators:
+
 - Router: ~8-10s (40 per batch, 4 concurrent)
 - Specialist: ~12-15s (25 per family batch, 3 concurrent)
 - Orientation: ~6-8s (50 per batch, 4 concurrent)
@@ -429,11 +442,13 @@ Typical performance for 100 indicators:
 V2 uses more API calls but provides higher quality:
 
 ### V1 (Single Pass)
+
 - 100 indicators: ~$0.15
 - Single classification per indicator
 - No quality control
 
 ### V2 (Multi-Stage)
+
 - 100 indicators: ~$0.45
 - 3x more API calls (router + specialist + orientation + review)
 - Higher accuracy through family-based routing
@@ -455,6 +470,7 @@ deno task test
 ```
 
 Test coverage includes:
+
 - Full pipeline integration tests
 - Individual stage tests
 - Database persistence tests
@@ -468,12 +484,12 @@ Upgrading from V1 to V2 is opt-in and non-breaking:
 
 ```typescript
 // V1 (default)
-import { classifyIndicators } from '@tellimer/classify';
+import { classifyIndicators } from "@tellimer/classify";
 const enriched = await classifyIndicators(indicators, config);
 
 // V2 (opt-in)
-import { classifyIndicatorsV2, createLocalDatabase } from '@tellimer/classify';
-const db = createLocalDatabase('./data/classify_v2.db');
+import { classifyIndicatorsV2, createLocalDatabase } from "@tellimer/classify";
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 const result = await classifyIndicatorsV2(indicators, config, { database: db });
 ```
@@ -500,6 +516,7 @@ Choose V2 when you need:
 - **Audit trail** - Complete execution history in database
 
 Stick with V1 when you need:
+
 - **Simplicity** - One function call, no database
 - **Lower cost** - 3x cheaper
 - **Quick prototyping** - Faster to get started

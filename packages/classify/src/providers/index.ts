@@ -28,4 +28,3 @@ export function getProvider(provider: LLMProvider): LLMProviderInterface {
       throw new Error(`Unknown provider: ${provider}`);
   }
 }
-

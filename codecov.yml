@@ -1,0 +1,54 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    wait_for_ci: yes
+
+coverage:
+  status:
+    project:
+      default:
+        # Don't require overall project coverage
+        enabled: no
+      econify:
+        # Require 80% coverage for econify package
+        flags:
+          - econify
+        target: 80%
+        threshold: 1%
+        paths:
+          - packages/econify/
+      classify:
+        # Track classify package separately
+        flags:
+          - classify
+        target: auto
+        threshold: 1%
+        paths:
+          - packages/classify/
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+flags:
+  econify:
+    paths:
+      - packages/econify/
+    carryforward: true
+  classify:
+    paths:
+      - packages/classify/
+    carryforward: true
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: no
+  require_base: no
+  require_head: yes
+
+ignore:
+  - "packages/*/tests/"
+  - "packages/*/examples/"
+  - "packages/*/**/*_test.ts"
+  - "packages/*/**/*.test.ts"

@@ -9,36 +9,36 @@
  * - heat_map_orientation matches expected
  */
 
-import { classifyIndicatorsWithOptions } from '../../src/classify.ts';
+import { classifyIndicatorsWithOptions } from "../../src/classify.ts";
 import type {
   ClassifiedMetadata,
   Indicator,
   LLMConfig,
-} from '../../src/types.ts';
+} from "../../src/types.ts";
 import {
-  loadAllFixtures,
-  calculateAccuracy,
-  formatAccuracyReport,
   assertMinimumAccuracy,
-  compareClassification,
   assertValidSchema,
-} from '../utils.ts';
+  calculateAccuracy,
+  compareClassification,
+  formatAccuracyReport,
+  loadAllFixtures,
+} from "../utils.ts";
 import {
+  getModelForProvider,
   isProviderAvailable,
   requireApiKey,
-  getModelForProvider,
   testThresholds,
-} from '../config.ts';
+} from "../config.ts";
 
 /**
  * Run classification accuracy tests for a specific provider
  */
 async function testClassificationAccuracyForProvider(
-  providerName: 'openai' | 'anthropic' | 'gemini'
+  providerName: "openai" | "anthropic" | "gemini",
 ) {
   if (!isProviderAvailable(providerName)) {
     console.log(
-      `⚠️  Skipping ${providerName} tests: API key not set (${providerName.toUpperCase()}_API_KEY)`
+      `⚠️  Skipping ${providerName} tests: API key not set (${providerName.toUpperCase()}_API_KEY)`,
     );
     return;
   }
@@ -46,10 +46,10 @@ async function testClassificationAccuracyForProvider(
   const apiKey = requireApiKey(providerName);
   const model = getModelForProvider(providerName);
 
-  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n${"=".repeat(60)}`);
   console.log(`CLASSIFICATION ACCURACY TEST: ${providerName.toUpperCase()}`);
   console.log(`Model: ${model}`);
-  console.log(`${'='.repeat(60)}\n`);
+  console.log(`${"=".repeat(60)}\n`);
 
   // Load all fixtures
   const fixtures = await loadAllFixtures();
@@ -97,7 +97,7 @@ async function testClassificationAccuracyForProvider(
   };
 
   try {
-    console.log('🔄 Classifying indicators...\n');
+    console.log("🔄 Classifying indicators...\n");
     const result = await classifyIndicatorsWithOptions(indicators, {
       llmConfig,
       debug: false,
@@ -122,7 +122,7 @@ async function testClassificationAccuracyForProvider(
         console.log(
           `     Error: ${
             error instanceof Error ? error.message : String(error)
-          }`
+          }`,
         );
         mismatches.push({
           indicator: enriched.name,
@@ -137,7 +137,7 @@ async function testClassificationAccuracyForProvider(
 
       const comparison = compareClassification(
         enriched.classification,
-        expected
+        expected,
       );
 
       results.push({
@@ -151,7 +151,7 @@ async function testClassificationAccuracyForProvider(
         console.log(`  ✅ ${enriched.name}`);
       } else {
         console.log(`  ❌ ${enriched.name}`);
-        console.log(`     Differences: ${comparison.differences.join(', ')}`);
+        console.log(`     Differences: ${comparison.differences.join(", ")}`);
         if (enriched.classification.reasoning) {
           console.log(`     Reasoning: ${enriched.classification.reasoning}`);
         }
@@ -171,37 +171,44 @@ async function testClassificationAccuracyForProvider(
     }
 
     // Show overall test results
-    const overallAccuracy =
-      totalProcessed > 0 ? (totalCorrect / totalProcessed) * 100 : 0;
+    const overallAccuracy = totalProcessed > 0
+      ? (totalCorrect / totalProcessed) * 100
+      : 0;
     console.log(`
-${'='.repeat(60)}`);
+${"=".repeat(60)}`);
     console.log(`📋 FINAL TEST RESULTS`);
-    console.log(`${'='.repeat(60)}`);
+    console.log(`${"=".repeat(60)}`);
     console.log(
-      `✅ Correct:   ${totalCorrect}/${totalProcessed} (${overallAccuracy.toFixed(
-        1
-      )}%)`
+      `✅ Correct:   ${totalCorrect}/${totalProcessed} (${
+        overallAccuracy.toFixed(
+          1,
+        )
+      }%)`,
     );
     if (totalCorrect < totalProcessed) {
       console.log(
-        `❌ Incorrect: ${totalProcessed - totalCorrect}/${totalProcessed}`
+        `❌ Incorrect: ${totalProcessed - totalCorrect}/${totalProcessed}`,
       );
     }
     console.log(
-      `⏱️  Time:      ${result.processingTime}ms (${(
-        result.processingTime / 1000
-      ).toFixed(1)}s)`
+      `⏱️  Time:      ${result.processingTime}ms (${
+        (
+          result.processingTime / 1000
+        ).toFixed(1)
+      }s)`,
     );
     console.log(
-      `📊 Throughput: ${result.performance.throughput.toFixed(
-        2
-      )} indicators/sec`
+      `📊 Throughput: ${
+        result.performance.throughput.toFixed(
+          2,
+        )
+      } indicators/sec`,
     );
     console.log(`💰 Cost:      $${result.tokenUsage.estimatedCost.toFixed(4)}`);
     console.log(
-      `🎫 Tokens:    ${result.tokenUsage.totalTokens.toLocaleString()} (in: ${result.tokenUsage.inputTokens.toLocaleString()}, out: ${result.tokenUsage.outputTokens.toLocaleString()})`
+      `🎫 Tokens:    ${result.tokenUsage.totalTokens.toLocaleString()} (in: ${result.tokenUsage.inputTokens.toLocaleString()}, out: ${result.tokenUsage.outputTokens.toLocaleString()})`,
     );
-    console.log(`${'='.repeat(60)}
+    console.log(`${"=".repeat(60)}
 `);
   } catch (error) {
     console.error(`  ✗ Error processing batch:`, error);
@@ -233,7 +240,7 @@ ${'='.repeat(60)}`);
   assertMinimumAccuracy(
     accuracyReport,
     testThresholds.classificationAccuracy,
-    `Classification accuracy for ${providerName} is below threshold`
+    `Classification accuracy for ${providerName} is below threshold`,
   );
 
   console.log(`✅ Classification accuracy test passed for ${providerName}!\n`);
@@ -241,27 +248,27 @@ ${'='.repeat(60)}`);
 
 // Test OpenAI
 Deno.test({
-  name: 'Classification Accuracy - OpenAI',
+  name: "Classification Accuracy - OpenAI",
   async fn() {
-    await testClassificationAccuracyForProvider('openai');
+    await testClassificationAccuracyForProvider("openai");
   },
-  ignore: !isProviderAvailable('openai'),
+  ignore: !isProviderAvailable("openai"),
 });
 
 // Test Anthropic
 Deno.test({
-  name: 'Classification Accuracy - Anthropic',
+  name: "Classification Accuracy - Anthropic",
   async fn() {
-    await testClassificationAccuracyForProvider('anthropic');
+    await testClassificationAccuracyForProvider("anthropic");
   },
-  ignore: !isProviderAvailable('anthropic'),
+  ignore: !isProviderAvailable("anthropic"),
 });
 
 // Test Gemini
 Deno.test({
-  name: 'Classification Accuracy - Gemini',
+  name: "Classification Accuracy - Gemini",
   async fn() {
-    await testClassificationAccuracyForProvider('gemini');
+    await testClassificationAccuracyForProvider("gemini");
   },
-  ignore: !isProviderAvailable('gemini'),
+  ignore: !isProviderAvailable("gemini"),
 });

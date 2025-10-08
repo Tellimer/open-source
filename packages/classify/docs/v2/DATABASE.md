@@ -1,20 +1,21 @@
 # V2 Database Guide
 
-V2 uses SQLite for persistent state storage. This enables resume capability, audit trails, and stage-by-stage result tracking.
+V2 uses SQLite for persistent state storage. This enables resume capability,
+audit trails, and stage-by-stage result tracking.
 
 ## Quick Start
 
 Create and initialize a local database:
 
 ```typescript
-import { createLocalDatabase } from '@tellimer/classify';
+import { createLocalDatabase } from "@tellimer/classify";
 
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // Use with V2 pipeline
 const result = await classifyIndicatorsV2(indicators, llmConfig, {
-  database: db
+  database: db,
 });
 
 db.close();
@@ -27,6 +28,7 @@ V2 creates the following tables automatically:
 ### 1. Core Tables
 
 #### `classifications`
+
 Main table with final classifications for each indicator.
 
 ```sql
@@ -49,6 +51,7 @@ CREATE TABLE classifications (
 ### 2. Stage Tables
 
 #### `router_results`
+
 Family routing results.
 
 ```sql
@@ -62,6 +65,7 @@ CREATE TABLE router_results (
 ```
 
 #### `specialist_results`
+
 Type classification results.
 
 ```sql
@@ -77,6 +81,7 @@ CREATE TABLE specialist_results (
 ```
 
 #### `orientation_results`
+
 Heat map orientation results.
 
 ```sql
@@ -92,6 +97,7 @@ CREATE TABLE orientation_results (
 ### 3. Quality Control Tables
 
 #### `flagging_results`
+
 Quality flags for problematic indicators.
 
 ```sql
@@ -103,6 +109,7 @@ CREATE TABLE flagging_results (
 ```
 
 #### `review_decisions`
+
 LLM review decisions for flagged indicators.
 
 ```sql
@@ -118,6 +125,7 @@ CREATE TABLE review_decisions (
 ### 4. Telemetry Tables
 
 #### `pipeline_executions`
+
 Execution tracking and audit log.
 
 ```sql
@@ -137,18 +145,19 @@ CREATE TABLE pipeline_executions (
 Use local SQLite for development and small-scale processing:
 
 ```typescript
-import { createLocalDatabase } from '@tellimer/classify';
+import { createLocalDatabase } from "@tellimer/classify";
 
 // Default path
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 
 // Custom path
-const db = createLocalDatabase('/path/to/custom.db');
+const db = createLocalDatabase("/path/to/custom.db");
 
 await db.initialize();
 ```
 
 **Features:**
+
 - WAL mode for better concurrency
 - Automatic migrations
 - Transaction support
@@ -159,17 +168,18 @@ await db.initialize();
 Use Railway for remote SQLite hosting:
 
 ```typescript
-import { createRemoteDatabase } from '@tellimer/classify';
+import { createRemoteDatabase } from "@tellimer/classify";
 
 const db = createRemoteDatabase(
-  'https://your-project.railway.app',
-  { token: process.env.RAILWAY_TOKEN }
+  "https://your-project.railway.app",
+  { token: process.env.RAILWAY_TOKEN },
 );
 
 await db.initialize();
 ```
 
 **Benefits:**
+
 - Shared access across multiple machines
 - Centralized storage
 - Automatic backups (Railway feature)
@@ -185,9 +195,9 @@ Create `scripts/seed.ts`:
 ```typescript
 #!/usr/bin/env -S deno run --allow-all
 
-import { createLocalDatabase } from '../src/v2/db/client.ts';
+import { createLocalDatabase } from "../src/v2/db/client.ts";
 
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // Your indicator data
@@ -196,7 +206,7 @@ const indicators = [
     id: "GDP_USA",
     name: "Gross Domestic Product",
     units: "USD billions",
-    category_group: "National Accounts"
+    category_group: "National Accounts",
   },
   // ... more indicators
 ];
@@ -234,9 +244,9 @@ LIMIT 100;
 Save as JSON and import:
 
 ```typescript
-import indicators from './indicators.json' assert { type: 'json' };
+import indicators from "./indicators.json" assert { type: "json" };
 
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 db.transaction(() => {
@@ -253,7 +263,7 @@ db.transaction(() => {
       ind.units,
       ind.category_group,
       ind.periodicity,
-      ind.source_name
+      ind.source_name,
     );
   }
 });
@@ -266,9 +276,9 @@ db.close();
 Access classification results from the database:
 
 ```typescript
-import { createLocalDatabase } from '@tellimer/classify';
+import { createLocalDatabase } from "@tellimer/classify";
 
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // Get all classifications
@@ -305,19 +315,19 @@ db.close();
 V2 automatically resumes from database state:
 
 ```typescript
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // First run - may fail after router stage
 try {
   await classifyIndicatorsV2(indicators, llmConfig, { database: db });
 } catch (error) {
-  console.error('Pipeline failed, state saved to database');
+  console.error("Pipeline failed, state saved to database");
 }
 
 // Second run - automatically skips router, starts from specialist
 const result = await classifyIndicatorsV2(indicators, llmConfig, {
-  database: db
+  database: db,
 });
 
 // V2 checks each stage:
@@ -331,7 +341,7 @@ const result = await classifyIndicatorsV2(indicators, llmConfig, {
 ### Check Status
 
 ```typescript
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // Count classifications
@@ -359,20 +369,20 @@ console.log(`Specialist complete: ${specialistCount}`);
 Clear all results (keeps schema):
 
 ```typescript
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 db.transaction(() => {
-  db.prepare('DELETE FROM classifications').run();
-  db.prepare('DELETE FROM router_results').run();
-  db.prepare('DELETE FROM specialist_results').run();
-  db.prepare('DELETE FROM orientation_results').run();
-  db.prepare('DELETE FROM flagging_results').run();
-  db.prepare('DELETE FROM review_decisions').run();
-  db.prepare('DELETE FROM pipeline_executions').run();
+  db.prepare("DELETE FROM classifications").run();
+  db.prepare("DELETE FROM router_results").run();
+  db.prepare("DELETE FROM specialist_results").run();
+  db.prepare("DELETE FROM orientation_results").run();
+  db.prepare("DELETE FROM flagging_results").run();
+  db.prepare("DELETE FROM review_decisions").run();
+  db.prepare("DELETE FROM pipeline_executions").run();
 });
 
-console.log('✅ Database reset complete');
+console.log("✅ Database reset complete");
 ```
 
 ### Export Results
@@ -380,7 +390,7 @@ console.log('✅ Database reset complete');
 Export classifications to JSON:
 
 ```typescript
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 const classifications = db.prepare(`
@@ -388,8 +398,8 @@ const classifications = db.prepare(`
 `).all();
 
 await Deno.writeTextFile(
-  './classifications.json',
-  JSON.stringify(classifications, null, 2)
+  "./classifications.json",
+  JSON.stringify(classifications, null, 2),
 );
 
 console.log(`✅ Exported ${classifications.length} classifications`);
@@ -401,11 +411,12 @@ console.log(`✅ Exported ${classifications.length} classifications`);
 
 **Cause:** Multiple processes accessing the same database.
 
-**Solution:** Close other connections or use WAL mode (enabled by default for local DB).
+**Solution:** Close other connections or use WAL mode (enabled by default for
+local DB).
 
 ```typescript
 // WAL mode is automatic for local databases
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize(); // WAL mode enabled
 ```
 
@@ -416,7 +427,7 @@ await db.initialize(); // WAL mode enabled
 **Solution:** Always call `await db.initialize()` before use.
 
 ```typescript
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize(); // ← Required!
 ```
 

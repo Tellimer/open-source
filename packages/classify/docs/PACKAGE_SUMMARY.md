@@ -2,7 +2,9 @@
 
 ## Overview
 
-A comprehensive LLM-powered economic indicator classification package for TypeScript/Deno that automatically enriches indicator metadata using OpenAI, Anthropic, or Google Gemini.
+A comprehensive LLM-powered economic indicator classification package for
+TypeScript/Deno that automatically enriches indicator metadata using OpenAI,
+Anthropic, or Google Gemini.
 
 ## Package Structure
 
@@ -39,12 +41,15 @@ packages/classify/
 ## Core Features
 
 ### 1. Multi-Provider LLM Support
+
 - **OpenAI**: GPT-4o, GPT-4o-mini
 - **Anthropic**: Claude 3.5 Sonnet
 - **Google Gemini**: Gemini 2.0 Flash Thinking
 
 ### 2. Indicator Classification
+
 Automatically classifies indicators into types:
+
 - `stock` - Point-in-time values (debt, reserves)
 - `flow` - Period-based values (GDP, exports)
 - `count` - Discrete counts (number of companies)
@@ -55,7 +60,9 @@ Automatically classifies indicators into types:
 - `other` - Other types
 
 ### 3. Metadata Enrichment
+
 Adds the following metadata to each indicator:
+
 - `indicator_type` - Classification type
 - `is_currency_denominated` - Boolean flag for monetary values
 - `is_cumulative` - Boolean flag for cumulative values
@@ -64,6 +71,7 @@ Adds the following metadata to each indicator:
 - `reasoning` - Optional explanation (when requested)
 
 ### 4. Robust Processing
+
 - Batch processing with configurable batch sizes
 - Automatic retry with exponential backoff
 - Timeout handling
@@ -73,6 +81,7 @@ Adds the following metadata to each indicator:
 ## API Functions
 
 ### `classifyIndicators(indicators, config)`
+
 Classify multiple indicators with a single LLM call.
 
 ```typescript
@@ -83,6 +92,7 @@ const enriched = await classifyIndicators(indicators, {
 ```
 
 ### `classifyIndicator(indicator, config)`
+
 Classify a single indicator.
 
 ```typescript
@@ -93,6 +103,7 @@ const enriched = await classifyIndicator(indicator, {
 ```
 
 ### `classifyIndicatorsWithOptions(indicators, options)`
+
 Advanced classification with batching, retries, and error handling.
 
 ```typescript
@@ -107,16 +118,19 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ## Type Definitions
 
 ### Input Types
+
 - `Indicator` - Input indicator with metadata
 - `LLMConfig` - LLM provider configuration
 - `ClassificationOptions` - Advanced options
 
 ### Output Types
+
 - `EnrichedIndicator` - Indicator with classification
 - `ClassifiedMetadata` - LLM-generated metadata
 - `ClassificationResult` - Batch processing result
 
 ### Provider Types
+
 - `LLMProvider` - Provider name type
 - `LLMProviderInterface` - Provider interface
 - `IndicatorType` - Classification type
@@ -124,6 +138,7 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ## Configuration
 
 ### Default Values
+
 ```typescript
 {
   temperature: 0.1,
@@ -138,6 +153,7 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ```
 
 ### Default Models
+
 ```typescript
 {
   openai: "gpt-4o",
@@ -149,12 +165,14 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ## Testing
 
 ### Test Coverage
+
 - Unit tests for classification functions
 - Unit tests for all providers
 - Validation tests for parsing and error handling
 - Type safety tests
 
 ### Running Tests
+
 ```bash
 deno task test              # Run all tests
 deno task test:watch        # Watch mode
@@ -164,6 +182,7 @@ deno task test:cov          # With coverage
 ## Examples
 
 ### Basic Example
+
 ```typescript
 import { classifyIndicators } from "@tellimer/classify";
 
@@ -179,6 +198,7 @@ const enriched = await classifyIndicators(indicators, {
 ```
 
 ### Advanced Example
+
 ```typescript
 import { classifyIndicatorsWithOptions } from "@tellimer/classify";
 
@@ -232,4 +252,3 @@ See CONTRIBUTING.md for guidelines
 - [JSR Package](https://jsr.io/@tellimer/classify)
 - [Issues](https://github.com/Tellimer/open-source/issues)
 - [Tellimer](https://tellimer.com)
-

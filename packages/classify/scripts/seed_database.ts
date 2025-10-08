@@ -14,12 +14,12 @@
 import {
   createLocalDatabase,
   type V2DatabaseClient,
-} from '../src/v2/db/client.ts';
-import { INDICATORS_DATA } from '../data/indicators.ts';
+} from "../src/v2/db/client.ts";
+import { INDICATORS_DATA } from "../data/indicators.ts";
 import {
   COUNTRY_INDICATORS,
   type CountryIndicatorData,
-} from '../data/country_indicators.ts';
+} from "../data/country_indicators.ts";
 
 interface IndicatorData {
   id: string;
@@ -91,7 +91,7 @@ CREATE INDEX IF NOT EXISTS idx_source_country_indicators_date ON source_country_
  */
 function insertIndicators(
   db: V2DatabaseClient,
-  indicators: IndicatorData[]
+  indicators: IndicatorData[],
 ): void {
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO source_indicators (
@@ -119,7 +119,7 @@ function insertIndicators(
       ind.created_at,
       ind.updated_at,
       ind.deleted_at,
-      ind.currency_code
+      ind.currency_code,
     );
   }
 }
@@ -130,7 +130,7 @@ function insertIndicators(
 function insertCountryIndicators(
   db: V2DatabaseClient,
   values: CountryIndicatorData[],
-  validIndicatorIds: Set<string>
+  validIndicatorIds: Set<string>,
 ): void {
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO source_country_indicators (
@@ -157,12 +157,14 @@ function insertCountryIndicators(
       val.source_updated_at,
       val.created_at,
       val.updated_at,
-      val.deleted_at
+      val.deleted_at,
     );
   }
 
   if (skipped > 0) {
-    console.log(`   ⚠️  Skipped ${skipped} country indicators with invalid indicator_id references`);
+    console.log(
+      `   ⚠️  Skipped ${skipped} country indicators with invalid indicator_id references`,
+    );
   }
 }
 
@@ -175,11 +177,11 @@ function getStats(db: V2DatabaseClient): {
   avgValuesPerIndicator: number;
 } {
   const indicators = db
-    .prepare('SELECT COUNT(*) as count FROM source_indicators')
+    .prepare("SELECT COUNT(*) as count FROM source_indicators")
     .value();
 
   const values = db
-    .prepare('SELECT COUNT(*) as count FROM source_country_indicators')
+    .prepare("SELECT COUNT(*) as count FROM source_country_indicators")
     .value();
 
   const indicatorCount = (indicators as number[] | undefined)?.[0] || 0;
@@ -188,10 +190,9 @@ function getStats(db: V2DatabaseClient): {
   return {
     indicators: indicatorCount,
     countryIndicators: valuesCount,
-    avgValuesPerIndicator:
-      indicatorCount > 0
-        ? Math.round((valuesCount / indicatorCount) * 10) / 10
-        : 0,
+    avgValuesPerIndicator: indicatorCount > 0
+      ? Math.round((valuesCount / indicatorCount) * 10) / 10
+      : 0,
   };
 }
 
@@ -199,27 +200,27 @@ function getStats(db: V2DatabaseClient): {
  * Main seeding function
  */
 async function seedDatabase(
-  dbPath: string = './data/classify_v2.db'
+  dbPath: string = "./data/classify_v2.db",
 ): Promise<void> {
-  console.log('\n🌱 Seeding SQLite Database');
-  console.log('━'.repeat(50));
+  console.log("\n🌱 Seeding SQLite Database");
+  console.log("━".repeat(50));
   console.log(`📍 Database: ${dbPath}`);
   console.log(`📊 Indicators: ${INDICATORS_DATA.length}`);
   console.log(`📊 Country Indicators: ${COUNTRY_INDICATORS.length}\n`);
 
   try {
     // 1. Initialize SQLite database
-    console.log('⚙️  Initializing SQLite database...');
+    console.log("⚙️  Initializing SQLite database...");
     const db = createLocalDatabase(dbPath);
     await db.initialize();
 
     // 2. Create source tables
-    console.log('📦 Creating source tables...');
+    console.log("📦 Creating source tables...");
     db.exec(SOURCE_TABLES_SCHEMA);
-    console.log('✅ Source tables ready\n');
+    console.log("✅ Source tables ready\n");
 
     // 3. Insert indicators
-    console.log('💾 Inserting indicators...');
+    console.log("💾 Inserting indicators...");
     const validIndicatorIds = new Set<string>();
     db.transaction(() => {
       insertIndicators(db, INDICATORS_DATA);
@@ -231,30 +232,30 @@ async function seedDatabase(
     console.log(`✅ Inserted ${INDICATORS_DATA.length} indicators\n`);
 
     // 4. Insert country indicators
-    console.log('💾 Inserting country indicators...');
+    console.log("💾 Inserting country indicators...");
     db.transaction(() => {
       insertCountryIndicators(db, COUNTRY_INDICATORS, validIndicatorIds);
     });
-    console.log('✅ Inserted country indicators\n');
+    console.log("✅ Inserted country indicators\n");
 
     // 5. Show final statistics
     const stats = getStats(db);
-    console.log('📊 Final Statistics:');
-    console.log('━'.repeat(50));
+    console.log("📊 Final Statistics:");
+    console.log("━".repeat(50));
     console.log(`   Total Indicators:              ${stats.indicators}`);
     console.log(`   Total Country Indicators:      ${stats.countryIndicators}`);
     console.log(
-      `   Avg Values per Indicator:      ${stats.avgValuesPerIndicator}`
+      `   Avg Values per Indicator:      ${stats.avgValuesPerIndicator}`,
     );
-    console.log('━'.repeat(50));
+    console.log("━".repeat(50));
 
     // 6. Close database
     db.close();
-    console.log('\n✅ Database seeding complete!\n');
+    console.log("\n✅ Database seeding complete!\n");
   } catch (error) {
-    console.error('\n❌ Seeding failed:');
+    console.error("\n❌ Seeding failed:");
     console.error(
-      `   ${error instanceof Error ? error.message : String(error)}\n`
+      `   ${error instanceof Error ? error.message : String(error)}\n`,
     );
     Deno.exit(1);
   }
@@ -262,6 +263,6 @@ async function seedDatabase(
 
 // CLI interface
 if (import.meta.main) {
-  const dbPath = Deno.args[0] || './data/classify_v2.db';
+  const dbPath = Deno.args[0] || "./data/classify_v2.db";
   await seedDatabase(dbPath);
 }

@@ -7,22 +7,23 @@
  * Pricing per million tokens (MTok)
  * Updated: 2025-10-02
  */
-export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  // Anthropic Claude
-  'claude-sonnet-4-5-20250929': { input: 3, output: 15 },
-  'claude-sonnet-4-20250514': { input: 3, output: 15 },
-  'claude-haiku-4-20250514': { input: 0.80, output: 4 },
-  'claude-opus-4-20250514': { input: 15, output: 75 },
+export const MODEL_PRICING: Record<string, { input: number; output: number }> =
+  {
+    // Anthropic Claude
+    "claude-sonnet-4-5-20250929": { input: 3, output: 15 },
+    "claude-sonnet-4-20250514": { input: 3, output: 15 },
+    "claude-haiku-4-20250514": { input: 0.80, output: 4 },
+    "claude-opus-4-20250514": { input: 15, output: 75 },
 
-  // OpenAI
-  'gpt-5': { input: 5, output: 15 },
-  'gpt-4o': { input: 2.50, output: 10 },
-  'gpt-4o-mini': { input: 0.15, output: 0.60 },
+    // OpenAI
+    "gpt-5": { input: 5, output: 15 },
+    "gpt-4o": { input: 2.50, output: 10 },
+    "gpt-4o-mini": { input: 0.15, output: 0.60 },
 
-  // Google Gemini
-  'gemini-2.5-flash': { input: 0.075, output: 0.30 },
-  'gemini-2.5-pro': { input: 1.25, output: 5 },
-};
+    // Google Gemini
+    "gemini-2.5-flash": { input: 0.075, output: 0.30 },
+    "gemini-2.5-pro": { input: 1.25, output: 5 },
+  };
 
 /**
  * Calculate cost from token usage
@@ -30,7 +31,7 @@ export const MODEL_PRICING: Record<string, { input: number; output: number }> = 
 export function calculateCost(
   model: string,
   promptTokens: number,
-  completionTokens: number
+  completionTokens: number,
 ): number {
   const pricing = MODEL_PRICING[model];
 

@@ -16,7 +16,7 @@
     "@std/assert": "jsr:@std/assert@1",
     "xstate": "npm:xstate@^5.20.2"
   },
-  "description": "Economic data processing toolkit: classify indicators, parse units, and normalize values across currency, magnitude, and time with quality scoring, FX (live/historical), inflation, seasonal adjustment, aggregations, and an XState-powered pipeline.",
+  "description": "Economic data normalization and conversion toolkit: parse units, normalize values across currency, magnitude, and time with quality scoring, FX (live/historical), batch processing, and an XState-powered pipeline. For indicator classification, see @tellimer/classify.",
   "runtime": {
     "deno": true,
     "node": true,

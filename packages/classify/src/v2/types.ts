@@ -7,29 +7,29 @@ import type {
   ClassificationOptions,
   ClassificationResult,
   ClassifiedMetadata,
+  HeatMapOrientation,
   IndicatorCategory,
   IndicatorType,
   LLMProvider,
   TemporalAggregation,
-  HeatMapOrientation,
   TokenUsage,
-} from '../types.ts';
+} from "../types.ts";
 
 /**
  * V2 Pipeline Version
  */
-export type PipelineVersion = 'v1' | 'v2';
+export type PipelineVersion = "v1" | "v2";
 
 /**
  * V2 Pipeline Stages
  */
 export type V2PipelineStage =
-  | 'router'
-  | 'specialist'
-  | 'orientation'
-  | 'flagging'
-  | 'review'
-  | 'output';
+  | "router"
+  | "specialist"
+  | "orientation"
+  | "flagging"
+  | "review"
+  | "output";
 
 /**
  * Indicator Family (same as category for V2 routing)
@@ -41,7 +41,7 @@ export type IndicatorFamily = IndicatorCategory;
  */
 export interface DatabaseConfig {
   /** Connection type: local file or remote URL */
-  type: 'local' | 'remote';
+  type: "local" | "remote";
 
   /** Local: Path to SQLite file; Remote: Connection URL (e.g., Railway) */
   path: string;
@@ -189,15 +189,15 @@ export interface OrientationResult {
  * Flag Types
  */
 export type FlagType =
-  | 'low_confidence_family'
-  | 'low_confidence_cls'
-  | 'low_confidence_orient'
-  | 'temporal_mismatch'
-  | 'type_mismatch'
-  | 'orientation_mismatch'
-  | 'family_mismatch'
-  | 'rule_violation'
-  | 'review_all';
+  | "low_confidence_family"
+  | "low_confidence_cls"
+  | "low_confidence_orient"
+  | "temporal_mismatch"
+  | "type_mismatch"
+  | "orientation_mismatch"
+  | "family_mismatch"
+  | "rule_violation"
+  | "review_all";
 
 /**
  * Flagged Indicator
@@ -215,7 +215,7 @@ export interface FlaggedIndicator {
 /**
  * Review Action
  */
-export type ReviewAction = 'confirm' | 'fix' | 'escalate';
+export type ReviewAction = "confirm" | "fix" | "escalate";
 
 /**
  * Review Decision
@@ -421,7 +421,7 @@ export interface PipelineExecutionRecord {
   processing_time_ms?: number;
   provider: string;
   model: string;
-  status: 'running' | 'completed' | 'failed';
+  status: "running" | "completed" | "failed";
   error_message?: string;
 }
 
@@ -484,7 +484,7 @@ export interface V2PipelineResult {
  * Default V2 Configuration
  */
 export const DEFAULT_V2_CONFIG: Required<
-  Omit<V2Config, 'database' | 'prompts' | 'models'>
+  Omit<V2Config, "database" | "prompts" | "models">
 > = {
   thresholds: {
     confidenceFamilyMin: 0.75,

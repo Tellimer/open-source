@@ -5,6 +5,7 @@ Test and estimate costs without making actual LLM API calls.
 ## Overview
 
 Dry run mode allows you to:
+
 - ✅ **Estimate costs** before spending money
 - ✅ **Test configurations** without API keys
 - ✅ **Compare providers** side-by-side
@@ -16,13 +17,13 @@ Dry run mode allows you to:
 Simply add `dryRun: true` to your options:
 
 ```typescript
-import { classifyIndicatorsWithOptions } from '@tellimer/classify';
+import { classifyIndicatorsWithOptions } from "@tellimer/classify";
 
 const result = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: {
-    provider: 'openai',
-    apiKey: 'not-needed-for-dry-run', // Any value works
-    model: 'gpt-4o-mini',
+    provider: "openai",
+    apiKey: "not-needed-for-dry-run", // Any value works
+    model: "gpt-4o-mini",
   },
   dryRun: true, // 👈 Enable dry run
 });
@@ -37,7 +38,8 @@ console.log(`Estimated cost: $${result.tokenUsage.estimatedCost}`);
 - **Token estimation** - Uses 4 chars ≈ 1 token heuristic
 - **Cost calculation** - Based on current provider pricing
 - **Batch processing** - Shows how batches would be processed
-- **Mock classifications** - Generates plausible classifications based on indicator names/units
+- **Mock classifications** - Generates plausible classifications based on
+  indicator names/units
 
 ### ❌ Does NOT
 
@@ -106,7 +108,7 @@ const dryRun = await classifyIndicatorsWithOptions(indicators, {
 });
 
 if (dryRun.tokenUsage.estimatedCost > 0.10) {
-  console.warn('Cost exceeds budget, aborting');
+  console.warn("Cost exceeds budget, aborting");
   Deno.exit(1);
 }
 
@@ -120,15 +122,15 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ### 2. Compare Provider Costs
 
 ```typescript
-const providers: Array<'openai' | 'anthropic' | 'gemini'> = [
-  'openai',
-  'anthropic',
-  'gemini'
+const providers: Array<"openai" | "anthropic" | "gemini"> = [
+  "openai",
+  "anthropic",
+  "gemini",
 ];
 
 for (const provider of providers) {
   const dryRun = await classifyIndicatorsWithOptions(indicators, {
-    llmConfig: { provider, apiKey: 'not-needed' },
+    llmConfig: { provider, apiKey: "not-needed" },
     dryRun: true,
   });
 
@@ -154,7 +156,11 @@ for (const batchSize of batchSizes) {
   });
 
   const apiCalls = Math.ceil(indicators.length / batchSize);
-  console.log(`Batch ${batchSize}: ${apiCalls} API calls, ${dryRun.tokenUsage.estimatedCost.toFixed(6)}`);
+  console.log(
+    `Batch ${batchSize}: ${apiCalls} API calls, ${
+      dryRun.tokenUsage.estimatedCost.toFixed(6)
+    }`,
+  );
 }
 ```
 
@@ -166,8 +172,8 @@ Perfect for CI/CD, testing, or sharing examples:
 // No API key needed!
 const dryRun = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: {
-    provider: 'openai',
-    apiKey: 'test-mode', // Any string works
+    provider: "openai",
+    apiKey: "test-mode", // Any string works
   },
   dryRun: true,
 });
@@ -184,12 +190,14 @@ assert(dryRun.tokenUsage.estimatedCost > 0);
 const largeDataset = generateTestIndicators(1000);
 
 const dryRun = await classifyIndicatorsWithOptions(largeDataset, {
-  llmConfig: { provider: 'openai', apiKey: 'test' },
+  llmConfig: { provider: "openai", apiKey: "test" },
   batchSize: 25,
   dryRun: true,
 });
 
-console.log(`Cost for 1000 indicators: ${getCostSummary(dryRun).totalCostFormatted}`);
+console.log(
+  `Cost for 1000 indicators: ${getCostSummary(dryRun).totalCostFormatted}`,
+);
 // Output: "Cost for 1000 indicators: $0.097200"
 ```
 
@@ -235,6 +243,7 @@ Dry run uses a simple heuristic: **~4 characters = 1 token**
 **Accuracy:** ±10-20% of actual tokens
 
 **Why estimates vary:**
+
 - Actual tokenization is complex (subword units)
 - JSON structure adds overhead
 - System prompts vary by provider
@@ -245,7 +254,8 @@ Based on current pricing (Jan 2025):
 
 **Accuracy:** High (±5%) if token estimate is accurate
 
-**Note:** Provider pricing may change. Update `src/utils/token_counter.ts` if needed.
+**Note:** Provider pricing may change. Update `src/utils/token_counter.ts` if
+needed.
 
 ## Combining with Debug Mode
 
@@ -260,6 +270,7 @@ const dryRun = await classifyIndicatorsWithOptions(indicators, {
 ## Complete Example
 
 See [examples/dry_run_example.ts](../examples/dry_run_example.ts) for:
+
 - Basic dry run
 - Provider comparison
 - With/without reasoning comparison
@@ -267,6 +278,7 @@ See [examples/dry_run_example.ts](../examples/dry_run_example.ts) for:
 - Batch size impact analysis
 
 Run with:
+
 ```bash
 deno run --allow-env --allow-net examples/dry_run_example.ts
 ```
@@ -291,6 +303,7 @@ deno run --allow-env --allow-net examples/dry_run_example.ts
 ### Mock Classifications
 
 Mock classifications are **for testing only**:
+
 - Based on simple heuristics
 - Not as accurate as real LLM classifications
 - Always return `confidence: 0.85`
@@ -341,7 +354,7 @@ const result = await classifyIndicatorsWithOptions(productionData, {
 ```typescript
 // No API key needed for documentation
 const example = await classifyIndicatorsWithOptions(sampleData, {
-  llmConfig: { provider: 'openai', apiKey: 'demo' },
+  llmConfig: { provider: "openai", apiKey: "demo" },
   dryRun: true,
 });
 
@@ -379,6 +392,7 @@ interface ClassificationOptions {
 ```
 
 When `true`:
+
 - Skips actual LLM API calls
 - Generates mock classifications
 - Estimates tokens and costs
@@ -387,45 +401,48 @@ When `true`:
 ### Result Structure
 
 Same as normal mode, but:
+
 - `tokenUsage` contains estimates
 - `performance.throughput` is artificially high (no network delay)
 - `enriched[].classification.reasoning` has `[DRY RUN]` prefix
 
 ## FAQ
 
-**Q: Do I need an API key for dry run?**
-A: No! Any string works. The API key is never used.
+**Q: Do I need an API key for dry run?** A: No! Any string works. The API key is
+never used.
 
-**Q: Are cost estimates accurate?**
-A: Within ±20%. Actual costs may vary based on exact tokenization.
+**Q: Are cost estimates accurate?** A: Within ±20%. Actual costs may vary based
+on exact tokenization.
 
-**Q: Can I use mock classifications in production?**
-A: No! They're for testing only. Use real classifications in production.
+**Q: Can I use mock classifications in production?** A: No! They're for testing
+only. Use real classifications in production.
 
-**Q: Does dry run test my API key?**
-A: No. It doesn't make any API calls, so the key is never validated.
+**Q: Does dry run test my API key?** A: No. It doesn't make any API calls, so
+the key is never validated.
 
-**Q: Can I trust the mock indicator types?**
-A: For rough testing, yes. For accuracy, use real LLM classifications.
+**Q: Can I trust the mock indicator types?** A: For rough testing, yes. For
+accuracy, use real LLM classifications.
 
-**Q: How fast is dry run?**
-A: Near-instant. No network calls are made.
+**Q: How fast is dry run?** A: Near-instant. No network calls are made.
 
-**Q: Will dry run catch configuration errors?**
-A: Some (like missing required fields), but not all (like invalid API keys).
+**Q: Will dry run catch configuration errors?** A: Some (like missing required
+fields), but not all (like invalid API keys).
 
 ## Integration Test Costs
 
-Our test suite includes **33 integration test indicators** across 8 fixture files. Here are the estimated costs for running the full integration test suite with real LLM calls:
+Our test suite includes **33 integration test indicators** across 8 fixture
+files. Here are the estimated costs for running the full integration test suite
+with real LLM calls:
 
-| Provider | Model | Estimated Cost |
-|----------|-------|----------------|
-| Gemini | gemini-2.5-flash | **Free** |
-| OpenAI | gpt-4o-mini | **$0.01** |
-| OpenAI | gpt-4o | **$0.09** |
-| Anthropic | claude-3-5-sonnet-20241022 | **$0.12** |
+| Provider  | Model                      | Estimated Cost |
+| --------- | -------------------------- | -------------- |
+| Gemini    | gemini-2.5-flash           | **Free**       |
+| OpenAI    | gpt-4o-mini                | **$0.01**      |
+| OpenAI    | gpt-4o                     | **$0.09**      |
+| Anthropic | claude-3-5-sonnet-20241022 | **$0.12**      |
 
-**Recommendation:** Use `dryRun: true` for regular testing, or use Gemini 2.5 Flash (free tier) for integration tests to avoid costs.
+**Recommendation:** Use `dryRun: true` for regular testing, or use Gemini 2.5
+Flash (free tier) for integration tests to avoid costs.
 
 ### Fixture Breakdown
 

@@ -8,31 +8,31 @@ import type {
   Indicator,
   LLMConfig,
   LLMProviderInterface,
-} from '../types.ts';
+} from "../types.ts";
 import {
   ClassificationError,
   DEFAULT_CONFIG,
   DEFAULT_MODELS,
-} from '../types.ts';
+} from "../types.ts";
 import {
   generateSystemPrompt,
   generateUserPrompt,
   parseClassificationResponse,
   postProcessClassifications,
   retryWithBackoff,
-} from './base.ts';
+} from "./base.ts";
 
 /**
  * Anthropic API response types
  */
 interface AnthropicMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
 interface AnthropicResponse {
   content: Array<{
-    type: 'text';
+    type: "text";
     text: string;
   }>;
 }
@@ -41,17 +41,17 @@ interface AnthropicResponse {
  * Anthropic provider for indicator classification
  */
 export class AnthropicProvider implements LLMProviderInterface {
-  readonly name = 'anthropic' as const;
+  readonly name = "anthropic" as const;
 
   validateConfig(config: LLMConfig): void {
     if (!config.apiKey) {
-      throw new ClassificationError('Anthropic API key is required', this.name);
+      throw new ClassificationError("Anthropic API key is required", this.name);
     }
   }
 
   async classify(
     indicators: Indicator[],
-    config: LLMConfig
+    config: LLMConfig,
   ): Promise<ClassifiedMetadata[]> {
     this.validateConfig(config);
 
@@ -66,7 +66,7 @@ export class AnthropicProvider implements LLMProviderInterface {
     const userPrompt = generateUserPrompt(indicators, includeReasoning);
 
     const messages: AnthropicMessage[] = [
-      { role: 'user', content: userPrompt },
+      { role: "user", content: userPrompt },
     ];
 
     const requestBody = {
@@ -84,12 +84,12 @@ export class AnthropicProvider implements LLMProviderInterface {
           const timeoutId = setTimeout(() => controller.abort(), timeout);
 
           try {
-            const res = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
+            const res = await fetch("https://api.anthropic.com/v1/messages", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': config.apiKey,
-                'anthropic-version': '2023-06-01',
+                "Content-Type": "application/json",
+                "x-api-key": config.apiKey,
+                "anthropic-version": "2023-06-01",
               },
               body: JSON.stringify(requestBody),
               signal: controller.signal,
@@ -100,7 +100,7 @@ export class AnthropicProvider implements LLMProviderInterface {
             if (!res.ok) {
               const errorText = await res.text();
               const httpErr = new Error(
-                `Anthropic API error (${res.status}): ${errorText}`
+                `Anthropic API error (${res.status}): ${errorText}`,
               ) as Error & { status?: number; headers?: Headers };
               httpErr.status = res.status;
               httpErr.headers = res.headers;
@@ -114,12 +114,12 @@ export class AnthropicProvider implements LLMProviderInterface {
           }
         },
         (config.maxRetries ?? DEFAULT_CONFIG.maxRetries) as number,
-        (config.retryDelay ?? DEFAULT_CONFIG.retryDelay) as number
+        (config.retryDelay ?? DEFAULT_CONFIG.retryDelay) as number,
       );
 
       const content = response.content[0]?.text;
       if (!content) {
-        throw new Error('No content in Anthropic response');
+        throw new Error("No content in Anthropic response");
       }
 
       const parsed = parseClassificationResponse(content, indicators.length);
@@ -130,7 +130,7 @@ export class AnthropicProvider implements LLMProviderInterface {
           error instanceof Error ? error.message : String(error)
         }`,
         this.name,
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }

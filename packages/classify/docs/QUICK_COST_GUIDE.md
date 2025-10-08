@@ -5,10 +5,13 @@ Get the total estimated cost for your classification runs in seconds.
 ## TL;DR - Show Me the Cost!
 
 ```typescript
-import { classifyIndicatorsWithOptions, getCostSummary } from '@tellimer/classify';
+import {
+  classifyIndicatorsWithOptions,
+  getCostSummary,
+} from "@tellimer/classify";
 
 const result = await classifyIndicatorsWithOptions(indicators, {
-  llmConfig: { provider: 'openai', apiKey: 'sk-...' }
+  llmConfig: { provider: "openai", apiKey: "sk-..." },
 });
 
 // Method 1: Direct access
@@ -25,7 +28,7 @@ console.log(`Total cost: ${summary.totalCostFormatted}`); // "$0.002419"
 
 ```typescript
 const result = await classifyIndicatorsWithOptions(indicators, {
-  llmConfig: { provider: 'openai', apiKey: 'sk-...' }
+  llmConfig: { provider: "openai", apiKey: "sk-..." },
 });
 
 // Total cost for this run
@@ -44,12 +47,13 @@ console.log(`Avg cost per indicator: $${avgCost.toFixed(6)}`);
 ### Print Full Cost Summary
 
 ```typescript
-import { printCostSummary } from '@tellimer/classify';
+import { printCostSummary } from "@tellimer/classify";
 
 printCostSummary(result);
 ```
 
 **Output:**
+
 ```
 ============================================================
 💰 COST SUMMARY
@@ -73,7 +77,7 @@ Throughput:            6.50 ind/sec
 ### Project Costs for Large Datasets
 
 ```typescript
-import { projectCost } from '@tellimer/classify';
+import { projectCost } from "@tellimer/classify";
 
 // Based on sample run, project for 100,000 indicators
 const projection = projectCost(result, 100000);
@@ -84,12 +88,13 @@ console.log(`Cost for 100k: ${projection.totalCostFormatted}`);
 ### Print Cost Projections
 
 ```typescript
-import { printCostProjections } from '@tellimer/classify';
+import { printCostProjections } from "@tellimer/classify";
 
 printCostProjections(result, [100, 1000, 10000, 100000]);
 ```
 
 **Output:**
+
 ```
 ======================================================================
 📊 COST PROJECTIONS
@@ -111,12 +116,13 @@ Show cost summary automatically:
 
 ```typescript
 const result = await classifyIndicatorsWithOptions(indicators, {
-  llmConfig: { provider: 'openai', apiKey: 'sk-...' },
-  debug: true  // 👈 Shows full breakdown
+  llmConfig: { provider: "openai", apiKey: "sk-..." },
+  debug: true, // 👈 Shows full breakdown
 });
 ```
 
 **Output:**
+
 ```
 ============================================================
 CLASSIFICATION SUMMARY
@@ -152,7 +158,7 @@ Avg cost/indicator:      $0.000097
 All the data you need:
 
 ```typescript
-import { getCostSummary } from '@tellimer/classify';
+import { getCostSummary } from "@tellimer/classify";
 
 const summary = getCostSummary(result);
 // {
@@ -177,12 +183,12 @@ const summary = getCostSummary(result);
 const MAX_COST = 0.10; // $0.10 budget
 
 const result = await classifyIndicatorsWithOptions(indicators, {
-  llmConfig: { provider: 'openai', apiKey: 'sk-...' }
+  llmConfig: { provider: "openai", apiKey: "sk-..." },
 });
 
 if (result.tokenUsage.estimatedCost > MAX_COST) {
   throw new Error(
-    `Budget exceeded! $${result.tokenUsage.estimatedCost} > $${MAX_COST}`
+    `Budget exceeded! $${result.tokenUsage.estimatedCost} > $${MAX_COST}`,
   );
 }
 ```
@@ -190,34 +196,36 @@ if (result.tokenUsage.estimatedCost > MAX_COST) {
 ## Compare Providers
 
 ```typescript
-const providers = ['openai', 'anthropic', 'gemini'];
+const providers = ["openai", "anthropic", "gemini"];
 const costs = [];
 
 for (const provider of providers) {
   const result = await classifyIndicatorsWithOptions(sampleIndicators, {
-    llmConfig: { provider, apiKey: keys[provider] }
+    llmConfig: { provider, apiKey: keys[provider] },
   });
 
   costs.push({
     provider,
     cost: result.tokenUsage.estimatedCost,
-    model: result.tokenUsage.model
+    model: result.tokenUsage.model,
   });
 }
 
 costs.sort((a, b) => a.cost - b.cost);
-console.log('Cheapest:', costs[0]); // { provider: 'gemini', cost: 0, model: '...' }
+console.log("Cheapest:", costs[0]); // { provider: 'gemini', cost: 0, model: '...' }
 ```
 
 ## Run Examples
 
 ### Quick Cost Check
+
 ```bash
 export OPENAI_API_KEY="sk-..."
 deno run --allow-env --allow-net examples/quick_cost_check.ts
 ```
 
 ### Full Cost Analysis
+
 ```bash
 deno task cost-analysis
 ```
@@ -226,23 +234,23 @@ deno task cost-analysis
 
 **For 25 indicators:**
 
-| Provider | Model | Estimated Cost |
-|----------|-------|----------------|
-| Gemini | 2.0 Flash Thinking | **$0.00** (free preview) |
-| OpenAI | gpt-4o-mini | $0.0024 |
-| Anthropic | Claude 3.5 Sonnet | $0.0072 |
-| OpenAI | gpt-4o | $0.0194 |
-| OpenAI | gpt-4 | $0.0485 |
+| Provider  | Model              | Estimated Cost           |
+| --------- | ------------------ | ------------------------ |
+| Gemini    | 2.0 Flash Thinking | **$0.00** (free preview) |
+| OpenAI    | gpt-4o-mini        | $0.0024                  |
+| Anthropic | Claude 3.5 Sonnet  | $0.0072                  |
+| OpenAI    | gpt-4o             | $0.0194                  |
+| OpenAI    | gpt-4              | $0.0485                  |
 
 **Scaling to 100,000 indicators:**
 
-| Provider | Model | Projected Cost |
-|----------|-------|----------------|
-| Gemini | 2.0 Flash | **$0.00** |
-| OpenAI | gpt-4o-mini | $9.70 |
-| Anthropic | Claude 3.5 Sonnet | $28.80 |
-| OpenAI | gpt-4o | $77.60 |
-| OpenAI | gpt-4 | $194.00 |
+| Provider  | Model             | Projected Cost |
+| --------- | ----------------- | -------------- |
+| Gemini    | 2.0 Flash         | **$0.00**      |
+| OpenAI    | gpt-4o-mini       | $9.70          |
+| Anthropic | Claude 3.5 Sonnet | $28.80         |
+| OpenAI    | gpt-4o            | $77.60         |
+| OpenAI    | gpt-4             | $194.00        |
 
 ## See Also
 

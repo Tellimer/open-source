@@ -3,11 +3,11 @@
  * Reviews all classifications by synthesizing flags and passing to review stage
  */
 
-import type { LLMConfig } from '../../types.ts';
-import type { V2DatabaseClient } from '../db/client.ts';
-import { readClassifications } from '../output/storage.ts';
-import { writeFlaggingResults } from './storage.ts';
-import { reviewFlaggedIndicators } from './review.ts';
+import type { LLMConfig } from "../../types.ts";
+import type { V2DatabaseClient } from "../db/client.ts";
+import { readClassifications } from "../output/storage.ts";
+import { writeFlaggingResults } from "./storage.ts";
+import { reviewFlaggedIndicators } from "./review.ts";
 
 export async function reviewAllClassifications(
   db: V2DatabaseClient,
@@ -17,12 +17,12 @@ export async function reviewAllClassifications(
     concurrency?: number;
     debug?: boolean;
     quiet?: boolean;
-  } = {}
+  } = {},
 ) {
   // 1) Read all classifications
   const classifications = readClassifications(db);
   if (classifications.length === 0) {
-    if (!options.quiet) console.log('No classifications found.');
+    if (!options.quiet) console.log("No classifications found.");
     return;
   }
 
@@ -30,8 +30,8 @@ export async function reviewAllClassifications(
   const now = new Date().toISOString();
   const syntheticFlags = classifications.map((c) => ({
     indicator_id: c.indicator_id,
-    flag_type: 'review_all' as const,
-    flag_reason: 'Review-all: forced review of all classifications',
+    flag_type: "review_all" as const,
+    flag_reason: "Review-all: forced review of all classifications",
     flagged_at: now,
   }));
 
@@ -47,7 +47,7 @@ export async function reviewAllClassifications(
   });
 
   if (!options.quiet) {
-    console.log('\nReview-all complete.');
+    console.log("\nReview-all complete.");
     console.log(`  • Reviewed: ${result.reviewed}`);
     console.log(`  • Fixed: ${result.fixed}`);
     console.log(`  • Escalated: ${result.escalated}`);

@@ -1,6 +1,7 @@
 # @tellimer/classify Documentation
 
-Complete documentation for the LLM-powered economic indicator classification package.
+Complete documentation for the LLM-powered economic indicator classification
+package.
 
 ## Getting Started
 
@@ -10,12 +11,15 @@ Complete documentation for the LLM-powered economic indicator classification pac
 ## Pipeline Versions
 
 ### V1 Pipeline (Current Default)
+
 Single-pass classification with robust retry logic and ID-based pairing.
 
 - [V1 Documentation](./v1/README.md)
 
 ### V2 Pipeline (Advanced)
-Multi-stage classification with persistent state, family-based routing, and quality control.
+
+Multi-stage classification with persistent state, family-based routing, and
+quality control.
 
 - [V2 Documentation](./v2/README.md)
 - [V1 to V2 Migration Guide](./MIGRATION.md)
@@ -23,16 +27,21 @@ Multi-stage classification with persistent state, family-based routing, and qual
 ## Core Concepts
 
 ### Classification System
-- [Type Validation](./TYPE_VALIDATION.md) - Understanding indicator types and categories
+
+- [Type Validation](./TYPE_VALIDATION.md) - Understanding indicator types and
+  categories
 - [Prompt Engineering](./PROMPT_ENGINEERING.md) - How the LLM prompts work
-- [Pairing and Retry Logic](./PAIRING_AND_RETRY.md) - ID-based pairing and failure handling
+- [Pairing and Retry Logic](./PAIRING_AND_RETRY.md) - ID-based pairing and
+  failure handling
 
 ### Testing & Quality
+
 - [Testing Guide](./TESTING_GUIDE.md) - Running tests and adding test cases
 - [E2E Testing Summary](./E2E_TESTING_SUMMARY.md) - End-to-end test results
 - [Implementation Summary](./IMPLEMENTATION_SUMMARY.md) - Implementation details
 
 ### Performance & Optimization
+
 - [Benchmarking](./BENCHMARKING.md) - Performance benchmarks
 - [Performance Summary](./PERFORMANCE_SUMMARY.md) - Performance analysis
 - [Cost Tracking](./COST_TRACKING.md) - LLM cost estimation and tracking
@@ -71,17 +80,20 @@ docs/
 ## Quick Links
 
 ### For New Users
+
 1. [Quick Start](./QUICK_START.md) - Start here
 2. [Package Summary](./PACKAGE_SUMMARY.md) - Understand the package
 3. [V1 Documentation](./v1/README.md) - Use the default pipeline
 
 ### For V2 Users
+
 1. [V2 Overview](./v2/README.md) - Multi-stage pipeline
 2. [V2 Architecture](./v2/ARCHITECTURE.md) - How V2 works
 3. [Database Setup](./v2/DATABASE.md) - Set up persistent storage
 4. [Migration Guide](./MIGRATION.md) - Upgrade from V1
 
 ### For Contributors
+
 1. [Testing Guide](./TESTING_GUIDE.md) - Run and add tests
 2. [Prompt Engineering](./PROMPT_ENGINEERING.md) - Understand prompts
 3. [Type Validation](./TYPE_VALIDATION.md) - Type system details

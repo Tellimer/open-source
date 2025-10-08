@@ -3,16 +3,16 @@
  * @module
  */
 
-import type { V2DatabaseClient } from '../db/client.ts';
-import type { SpecialistResult } from '../types.ts';
-import { INDICATOR_TYPE_TO_CATEGORY } from '../../types.ts';
+import type { V2DatabaseClient } from "../db/client.ts";
+import type { SpecialistResult } from "../types.ts";
+import { INDICATOR_TYPE_TO_CATEGORY } from "../../types.ts";
 
 /**
  * Write specialist results to database (upsert)
  */
 export function writeSpecialistResults(
   db: V2DatabaseClient,
-  results: SpecialistResult[]
+  results: SpecialistResult[],
 ): void {
   if (results.length === 0) return;
 
@@ -47,7 +47,7 @@ export function writeSpecialistResults(
     for (const result of results) {
       const category = INDICATOR_TYPE_TO_CATEGORY[result.indicator_type];
       const familyRow = getFamilyStmt.get(result.indicator_id) as any;
-      const family = familyRow?.family || 'qualitative';
+      const family = familyRow?.family || "qualitative";
 
       stmt.run(
         result.indicator_id,
@@ -57,7 +57,7 @@ export function writeSpecialistResults(
         result.is_currency_denominated ? 1 : 0,
         result.confidence_cls,
         family,
-        result.reasoning || null
+        result.reasoning || null,
       );
     }
 
@@ -81,7 +81,7 @@ export function writeSpecialistResults(
         result.is_currency_denominated ? 1 : 0,
         result.confidence_cls,
         result.reasoning || null,
-        result.indicator_id
+        result.indicator_id,
       );
     }
   });
@@ -92,7 +92,7 @@ export function writeSpecialistResults(
  */
 export function readSpecialistResults(
   db: V2DatabaseClient,
-  indicatorIds?: string[]
+  indicatorIds?: string[],
 ): SpecialistResult[] {
   let query = `
     SELECT
@@ -109,12 +109,12 @@ export function readSpecialistResults(
   const params: string[] = [];
 
   if (indicatorIds && indicatorIds.length > 0) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     query += ` WHERE indicator_id IN (${placeholders})`;
     params.push(...indicatorIds);
   }
 
-  query += ' ORDER BY created_at ASC';
+  query += " ORDER BY created_at ASC";
 
   const rows = db.prepare(query).all(...params);
 
@@ -134,11 +134,11 @@ export function readSpecialistResults(
  */
 export function hasSpecialistResult(
   db: V2DatabaseClient,
-  indicatorId: string
+  indicatorId: string,
 ): boolean {
   const result = db
     .prepare(
-      'SELECT 1 FROM specialist_results WHERE indicator_id = ? LIMIT 1'
+      "SELECT 1 FROM specialist_results WHERE indicator_id = ? LIMIT 1",
     )
     .value(indicatorId);
 

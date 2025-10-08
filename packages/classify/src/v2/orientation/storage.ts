@@ -3,15 +3,15 @@
  * @module
  */
 
-import type { V2DatabaseClient } from '../db/client.ts';
-import type { OrientationResult } from '../types.ts';
+import type { V2DatabaseClient } from "../db/client.ts";
+import type { OrientationResult } from "../types.ts";
 
 /**
  * Write orientation results to database (upsert)
  */
 export function writeOrientationResults(
   db: V2DatabaseClient,
-  results: OrientationResult[]
+  results: OrientationResult[],
 ): void {
   if (results.length === 0) return;
 
@@ -32,7 +32,7 @@ export function writeOrientationResults(
         result.heat_map_orientation,
         result.confidence_orient,
         result.reasoning || null,
-        result.indicator_id
+        result.indicator_id,
       );
     }
 
@@ -56,7 +56,7 @@ export function writeOrientationResults(
         result.indicator_id,
         result.heat_map_orientation,
         result.confidence_orient,
-        result.reasoning || null
+        result.reasoning || null,
       );
     }
   });
@@ -67,7 +67,7 @@ export function writeOrientationResults(
  */
 export function readOrientationResults(
   db: V2DatabaseClient,
-  indicatorIds?: string[]
+  indicatorIds?: string[],
 ): OrientationResult[] {
   let query = `
     SELECT
@@ -81,12 +81,12 @@ export function readOrientationResults(
   const params: string[] = [];
 
   if (indicatorIds && indicatorIds.length > 0) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     query += ` WHERE indicator_id IN (${placeholders})`;
     params.push(...indicatorIds);
   }
 
-  query += ' ORDER BY created_at ASC';
+  query += " ORDER BY created_at ASC";
 
   const rows = db.prepare(query).all(...params);
 
@@ -103,11 +103,11 @@ export function readOrientationResults(
  */
 export function hasOrientationResult(
   db: V2DatabaseClient,
-  indicatorId: string
+  indicatorId: string,
 ): boolean {
   const result = db
     .prepare(
-      'SELECT 1 FROM orientation_results WHERE indicator_id = ? LIMIT 1'
+      "SELECT 1 FROM orientation_results WHERE indicator_id = ? LIMIT 1",
     )
     .value(indicatorId);
 

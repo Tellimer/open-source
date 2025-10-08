@@ -2,9 +2,11 @@
 
 ## What You Asked
 
-> "We provide time series data - can we analyze it to detect cumulative patterns with higher certainty instead of just checking the name?"
+> "We provide time series data - can we analyze it to detect cumulative patterns
+> with higher certainty instead of just checking the name?"
 
-**Answer**: ✅ **YES!** Implemented statistical analysis that detects YTD patterns from actual data.
+**Answer**: ✅ **YES!** Implemented statistical analysis that detects YTD
+patterns from actual data.
 
 ## How It Works Now
 
@@ -56,14 +58,16 @@ Flags cumulative mismatch if **EITHER**:
 
 ```typescript
 // Name-based (existing)
-if (name.includes('YTD') || name.includes('cumulative')) {
+if (name.includes("YTD") || name.includes("cumulative")) {
   flag_if_not_cumulative();
 }
 
 // Data-based (NEW!)
-if (canBeCumulative &&            // Is flow/volume/balance/count
-    timeSeries.is_cumulative &&   // Statistical pattern detected
-    confidence > 0.7) {           // High confidence
+if (
+  canBeCumulative && // Is flow/volume/balance/count
+  timeSeries.is_cumulative && // Statistical pattern detected
+  confidence > 0.7
+) { // High confidence
   flag_if_not_cumulative();
 }
 ```
@@ -88,12 +92,12 @@ Result: Analyze 6/100 = 6% (94% reduction!)
 
 ### Performance
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Indicators analyzed | 30/100 | 6/100 | **80% fewer** |
-| Analysis time | 150ms | 30ms | **80% faster** |
-| False analysis | High | Zero | **100% precision** |
-| Coverage | Name-based only | Name + Data | **2x detection** |
+| Metric              | Before          | After       | Improvement        |
+| ------------------- | --------------- | ----------- | ------------------ |
+| Indicators analyzed | 30/100          | 6/100       | **80% fewer**      |
+| Analysis time       | 150ms           | 30ms        | **80% faster**     |
+| False analysis      | High            | Zero        | **100% precision** |
+| Coverage            | Name-based only | Name + Data | **2x detection**   |
 
 ## What Gets Stored
 
@@ -114,8 +118,8 @@ flagging_results:
   expected_value: 'period-cumulative'
 ```
 
-**Pros**: ✅ Simple, works now
-**Cons**: ❌ Evidence buried in text, not queryable
+**Pros**: ✅ Simple, works now **Cons**: ❌ Evidence buried in text, not
+queryable
 
 ### Future Enhancement (Phase 2 - Recommended)
 
@@ -143,6 +147,7 @@ CREATE TABLE validation_results (
 ```
 
 **Benefits**:
+
 - ✅ Structured evidence (queryable)
 - ✅ Reusable across pipeline runs
 - ✅ Audit trail for decisions
@@ -172,6 +177,7 @@ CREATE TABLE validation_results (
 ### Processing
 
 **1. Specialist** classifies:
+
 ```json
 {
   "indicator_type": "flow",
@@ -181,9 +187,10 @@ CREATE TABLE validation_results (
 ```
 
 **2. Flagging** runs analysis:
+
 ```typescript
 // Check: Is it a cumulable type?
-canBeCumulative = ('flow' in CUMULABLE_TYPES)  // ✓ YES
+canBeCumulative = "flow" in CUMULABLE_TYPES; // ✓ YES
 
 // Analyze time series
 const analysis = analyzeTimeSeriesPattern(sample_values);
@@ -197,29 +204,32 @@ const analysis = analyzeTimeSeriesPattern(sample_values);
 
 // Flag mismatch!
 flag({
-  type: 'temporal_mismatch',
-  reason: 'Time series analysis indicates cumulative with 98% confidence. Dec/Jan=23x, monotonic increase',
-  current: 'period-total',
-  expected: 'period-cumulative'
+  type: "temporal_mismatch",
+  reason:
+    "Time series analysis indicates cumulative with 98% confidence. Dec/Jan=23x, monotonic increase",
+  current: "period-total",
+  expected: "period-cumulative",
 });
 ```
 
 **3. Review** sees flag and corrects:
+
 ```json
 {
   "action": "fix",
-  "diff": {"temporal_aggregation": "period-cumulative"},
+  "diff": { "temporal_aggregation": "period-cumulative" },
   "reason": "Time series evidence strongly indicates YTD pattern"
 }
 ```
 
 **4. Final Output**:
+
 ```json
 {
   "indicator_id": "GDP_TOTAL_Q1",
   "indicator_type": "flow",
-  "temporal_aggregation": "period-cumulative",  // ← CORRECTED!
-  "confidence_cls": 0.98  // ← Higher after validation
+  "temporal_aggregation": "period-cumulative", // ← CORRECTED!
+  "confidence_cls": 0.98 // ← Higher after validation
 }
 ```
 
@@ -228,6 +238,7 @@ flag({
 ### Q: What gets communicated to tables?
 
 **A**: Currently (Phase 1):
+
 - `flagging_results.flag_reason` = Text with analysis evidence
 - Future (Phase 2):
   - `validation_results` = Full structured analysis
@@ -237,6 +248,7 @@ flag({
 ### Q: Should there be a separate validation table?
 
 **A**: **Recommended for Phase 2**:
+
 - ✅ Structured storage of analysis results
 - ✅ Reusable across pipeline runs
 - ✅ Queryable for debugging/analytics
@@ -245,6 +257,7 @@ flag({
 ### Q: Should classification table have extra columns?
 
 **A**: **Yes**, minimal additions:
+
 ```sql
 ALTER TABLE classifications ADD COLUMN validated BOOLEAN DEFAULT 0;
 ALTER TABLE classifications ADD COLUMN validation_confidence REAL;
@@ -256,12 +269,12 @@ ALTER TABLE classifications ADD COLUMN validation_confidence REAL;
 
 1. **Type filter** (biggest savings):
    ```typescript
-   if (!CUMULABLE_TYPES.has(type)) skip();  // ← 60% reduction
+   if (!CUMULABLE_TYPES.has(type)) skip(); // ← 60% reduction
    ```
 
 2. **Data filter**:
    ```typescript
-   if (!timeSeries || timeSeries.length < 6) skip();  // ← 70% reduction
+   if (!timeSeries || timeSeries.length < 6) skip(); // ← 70% reduction
    ```
 
 3. **Confidence filter**:
@@ -274,18 +287,21 @@ ALTER TABLE classifications ADD COLUMN validation_confidence REAL;
 ## Migration Path
 
 ### ✅ Phase 1 (Implemented)
+
 - Statistical analysis algorithm
 - Type-based filtering
 - Inline analysis in flagging
 - Evidence in flag text
 
 ### 📋 Phase 2 (Recommended Next)
+
 - Add `validation_results` table
 - Create dedicated validation stage
 - Store structured results
 - Enable result reuse
 
 ### 🔮 Phase 3 (Future)
+
 - Validation analytics dashboard
 - Track accuracy over time
 - Use for model training
@@ -323,11 +339,13 @@ deno task test:v2
 ## Next Steps
 
 ### Immediate (Optional)
+
 - [x] Document design ✅
 - [ ] Implement Phase 2 (validation table + stage)
 - [ ] Add validation to final output schema
 
 ### Future
+
 - [ ] Build validation accuracy dashboard
 - [ ] Track validation performance metrics
 - [ ] Use validation data for prompt improvements

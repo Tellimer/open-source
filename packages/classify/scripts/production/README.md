@@ -1,6 +1,7 @@
 # Production Scripts
 
-These scripts run the V2 classification pipeline on all 668 production indicators using a local SQLite database, with optional sync to Railway.
+These scripts run the V2 classification pipeline on all 668 production
+indicators using a local SQLite database, with optional sync to Railway.
 
 ## Environment Setup
 
@@ -16,6 +17,7 @@ RAILWAY_DATABASE_TOKEN=your_auth_token_here
 ```
 
 Your indicators and time series data should already be in:
+
 - `data/indicators.ts` - All 668 indicators
 - `data/country_indicators.ts` - Time series data
 
@@ -30,13 +32,16 @@ deno task prod:run
 ```
 
 **What it does:**
+
 - Loads all 668 indicators from `data/indicators.ts`
 - Loads time series data from `data/country_indicators.ts`
-- Runs 6-stage pipeline (Router → Specialist → Validation → Orientation → Flagging → Review)
+- Runs 6-stage pipeline (Router → Specialist → Validation → Orientation →
+  Flagging → Review)
 - Saves all results to local SQLite: `./data/classify_production_v2.db`
 - Shows detailed summary with timing, costs, and flagged items
 
 **Expected output:**
+
 ```
 🚀 Running Production Classification Pipeline
 ============================================================
@@ -77,6 +82,7 @@ deno task prod:sync
 ```
 
 **What it does:**
+
 - Reads all classification results from local database
 - Connects to Railway libSQL
 - Copies all tables to Railway:
@@ -90,6 +96,7 @@ deno task prod:sync
 - Shows progress and statistics
 
 **Expected output:**
+
 ```
 🔄 Syncing Local Database to Railway
 ============================================================
@@ -120,6 +127,7 @@ deno task prod:setup
 ```
 
 **What it does:**
+
 - Connects to Railway libSQL
 - Creates all V2 pipeline tables
 - Verifies schema
@@ -133,6 +141,7 @@ deno task prod:reset
 ```
 
 **What it does:**
+
 - Prompts for confirmation
 - Deletes all pipeline results from Railway
 - Shows before/after counts
@@ -180,10 +189,12 @@ deno task prod:sync
 ## Database Tables
 
 ### Source Tables (Data Input)
+
 - `source_indicators` - 668 economic indicators
 - `source_country_indicators` - Time series values (~200k+ rows)
 
 ### Pipeline Results Tables
+
 - `classifications` - Final classifications (1 row per indicator)
 - `router_results` - Family assignments from Stage 1
 - `specialist_results` - Type classifications from Stage 2
@@ -223,13 +234,16 @@ JOIN source_indicators i ON r.indicator_id = i.id;
 ### Connection Issues
 
 If you get connection errors:
+
 - Verify `RAILWAY_DATABASE_URL` is correct
-- Check if `RAILWAY_DATABASE_TOKEN` is set (may be optional for public databases)
+- Check if `RAILWAY_DATABASE_TOKEN` is set (may be optional for public
+  databases)
 - Ensure Railway database is running
 
 ### Seeding Failures
 
 If seeding fails partway through:
+
 - Re-run `deno task prod:seed` - it uses `INSERT OR REPLACE` so it's idempotent
 - Check Railway database size limits
 - Verify data files exist: `data/indicators.ts`, `data/country_indicators.ts`
@@ -237,6 +251,7 @@ If seeding fails partway through:
 ### Pipeline Failures
 
 If pipeline fails:
+
 - Check `ANTHROPIC_API_KEY` is valid
 - Verify you have API credits
 - Check network connectivity
@@ -245,6 +260,7 @@ If pipeline fails:
 ### Out of Memory
 
 If you run out of memory with 668 indicators:
+
 - Reduce `batchSize` in `run_pipeline.ts`
 - Process indicators in chunks (modify script)
 - Increase Railway memory allocation
@@ -259,6 +275,7 @@ Running the full pipeline on 668 indicators:
 - **Time**: ~20-30 minutes
 
 Breakdown by stage:
+
 - Router: ~50k tokens, ~$1.50
 - Specialist: ~600k tokens, ~$18
 - Validation: No API calls (time series analysis)
@@ -269,6 +286,7 @@ Breakdown by stage:
 ## Safety Features
 
 All scripts include:
+
 - ✅ Connection validation before operations
 - ✅ Confirmation prompts for destructive operations
 - ✅ Detailed progress logging
@@ -279,6 +297,7 @@ All scripts include:
 ## Next Steps
 
 After successful pipeline execution:
+
 1. Review flagged indicators in `flagging_results`
 2. Examine review decisions in `review_decisions`
 3. Export classifications for use in your application

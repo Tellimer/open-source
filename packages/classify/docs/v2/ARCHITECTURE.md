@@ -116,11 +116,13 @@ interface RouterResult {
 ### Context Enrichment
 
 The Specialist stage receives **full router context** including:
+
 - Router family assignment
 - Router confidence score
 - **Router reasoning** - Why the family was chosen
 
 This allows the Specialist LLM to:
+
 - Build on prior analysis rather than starting fresh
 - Make decisions aware of router's reasoning
 - Provide better classification within family context
@@ -129,9 +131,10 @@ This allows the Specialist LLM to:
 // Indicators are enriched with router context
 const enrichedIndicator = {
   ...indicator,
-  router_family: 'physical-fundamental',
+  router_family: "physical-fundamental",
   router_confidence: 0.95,
-  router_reasoning: 'GDP is measured over a period with real substance (economic output)'
+  router_reasoning:
+    "GDP is measured over a period with real substance (economic output)",
 };
 ```
 
@@ -140,6 +143,7 @@ const enrichedIndicator = {
 Each family has a tailored prompt:
 
 #### Physical-Fundamental Prompt
+
 ```
 Types: stock, flow, balance, capacity, volume
 - stock: Absolute levels at a point (debt, reserves, population)
@@ -150,6 +154,7 @@ Types: stock, flow, balance, capacity, volume
 ```
 
 #### Numeric-Measurement Prompt
+
 ```
 Types: count, percentage, ratio, spread, share
 - count: Discrete units (jobs, housing starts, claims)
@@ -159,7 +164,7 @@ Types: count, percentage, ratio, spread, share
 - share: Compositional (labor share, market share)
 ```
 
-*... 5 more family-specific prompts*
+_... 5 more family-specific prompts_
 
 ### Grouping Logic
 
@@ -213,17 +218,21 @@ interface SpecialistResult {
 The Orientation stage receives **full context from both prior stages**:
 
 **Router Context:**
+
 - Family assignment
 - Router confidence
 - Router reasoning
 
 **Specialist Context:**
+
 - Indicator type
 - Temporal aggregation
 - Monetary flag
 - Specialist reasoning
 
-This rich context enables the Orientation LLM to make better-informed decisions about heat map direction by understanding:
+This rich context enables the Orientation LLM to make better-informed decisions
+about heat map direction by understanding:
+
 - The indicator's family and classification journey
 - The reasoning behind family and type assignments
 - Both stages' confidence levels and thought processes
@@ -233,14 +242,14 @@ This rich context enables the Orientation LLM to make better-informed decisions 
 const enrichedIndicator = {
   ...indicator,
   // Router context
-  router_family: 'change-movement',
+  router_family: "change-movement",
   router_confidence: 0.93,
-  router_reasoning: 'CPI YoY measures price change rate',
+  router_reasoning: "CPI YoY measures price change rate",
   // Specialist context
-  indicator_type: 'rate',
-  temporal_aggregation: 'period-rate',
+  indicator_type: "rate",
+  temporal_aggregation: "period-rate",
   is_currency_denominated: false,
-  specialist_reasoning: 'Inflation rate measures price growth over period'
+  specialist_reasoning: "Inflation rate measures price growth over period",
 };
 ```
 
@@ -278,7 +287,7 @@ Orientation is based on welfare impact:
 ```typescript
 interface OrientationResult {
   indicator_id: string;
-  heat_map_orientation: 'higher-is-positive' | 'lower-is-positive' | 'neutral';
+  heat_map_orientation: "higher-is-positive" | "lower-is-positive" | "neutral";
   confidence: number;
   reasoning?: string;
 }
@@ -299,11 +308,13 @@ interface OrientationResult {
 
 1. **low_confidence_family**
    - Trigger: Router confidence < threshold (default: 0.75)
-   - Reason: "Router assigned family '{family}' with low confidence {confidence}"
+   - Reason: "Router assigned family '{family}' with low confidence
+     {confidence}"
 
 2. **low_confidence_cls**
    - Trigger: Specialist confidence < threshold (default: 0.75)
-   - Reason: "Specialist classified as '{type}' with low confidence {confidence}"
+   - Reason: "Specialist classified as '{type}' with low confidence
+     {confidence}"
 
 3. **low_confidence_orient**
    - Trigger: Orientation confidence < threshold (default: 0.75)
@@ -330,7 +341,7 @@ interface OrientationResult {
 interface Flag {
   type: FlagType;
   reason: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   current_value?: string;
   expected_value?: string;
 }
@@ -341,9 +352,10 @@ function applyFlaggingRules(classification: Classification): Flag[] {
   // Rule 1: Low confidence family
   if (classification.confidence_family < 0.75) {
     flags.push({
-      type: 'low_confidence_family',
-      reason: `Router confidence ${classification.confidence_family} below threshold`,
-      severity: 'medium',
+      type: "low_confidence_family",
+      reason:
+        `Router confidence ${classification.confidence_family} below threshold`,
+      severity: "medium",
     });
   }
 
@@ -421,7 +433,7 @@ Diff format: "field: old_value → new_value"
 ```typescript
 interface ReviewDecision {
   indicator_id: string;
-  action: 'confirm' | 'fix' | 'escalate';
+  action: "confirm" | "fix" | "escalate";
   diff?: string; // Only if action=fix
   reasoning: string;
 }
@@ -448,7 +460,7 @@ async function assembleOutput(db: Database): Promise<V2PipelineResult> {
   // 2. Apply review fixes
   for (const classification of classifications) {
     const review = await getReviewDecision(db, classification.id);
-    if (review?.action === 'fix' && review.diff) {
+    if (review?.action === "fix" && review.diff) {
       applyDiff(classification, review.diff);
     }
   }
@@ -456,20 +468,22 @@ async function assembleOutput(db: Database): Promise<V2PipelineResult> {
   // 3. Collect metrics
   const summary = {
     total: classifications.length,
-    successful: classifications.filter(c => c.indicator_type).length,
-    failed: classifications.filter(c => !c.indicator_type).length,
-    flagged: classifications.filter(c => c.flags?.length > 0).length,
-    reviewed: classifications.filter(c => c.review_decision).length,
-    escalated: classifications.filter(c => c.review_decision?.action === 'escalate').length,
+    successful: classifications.filter((c) => c.indicator_type).length,
+    failed: classifications.filter((c) => !c.indicator_type).length,
+    flagged: classifications.filter((c) => c.flags?.length > 0).length,
+    reviewed: classifications.filter((c) => c.review_decision).length,
+    escalated:
+      classifications.filter((c) => c.review_decision?.action === "escalate")
+        .length,
     successRate: (successful / total) * 100,
   };
 
   // 4. Collect stage metrics
   const stages = {
-    router: await getStageMetrics(db, 'router'),
-    specialist: await getStageMetrics(db, 'specialist'),
-    orientation: await getStageMetrics(db, 'orientation'),
-    review: await getStageMetrics(db, 'review'),
+    router: await getStageMetrics(db, "router"),
+    specialist: await getStageMetrics(db, "specialist"),
+    orientation: await getStageMetrics(db, "orientation"),
+    review: await getStageMetrics(db, "review"),
   };
 
   return {
@@ -521,15 +535,15 @@ interface StageMetrics {
 
 ### Typical Timing (100 indicators)
 
-| Stage | Processing Time | API Calls | Notes |
-|-------|----------------|-----------|-------|
-| Router | 8-10s | 3 batches | 40 per batch, 4 concurrent |
-| Specialist | 12-15s | 7-10 batches | 25 per family, 3 concurrent families |
-| Orientation | 6-8s | 2 batches | 50 per batch, 4 concurrent |
-| Flagging | <1s | 0 | Rule-based, no LLM |
-| Review | 4-6s | 1-2 batches | 20 per batch, only flagged (~12%) |
-| Output | <1s | 0 | Database assembly |
-| **Total** | **30-40s** | **13-17** | End-to-end |
+| Stage       | Processing Time | API Calls    | Notes                                |
+| ----------- | --------------- | ------------ | ------------------------------------ |
+| Router      | 8-10s           | 3 batches    | 40 per batch, 4 concurrent           |
+| Specialist  | 12-15s          | 7-10 batches | 25 per family, 3 concurrent families |
+| Orientation | 6-8s            | 2 batches    | 50 per batch, 4 concurrent           |
+| Flagging    | <1s             | 0            | Rule-based, no LLM                   |
+| Review      | 4-6s            | 1-2 batches  | 20 per batch, only flagged (~12%)    |
+| Output      | <1s             | 0            | Database assembly                    |
+| **Total**   | **30-40s**      | **13-17**    | End-to-end                           |
 
 ### Scalability
 
@@ -549,7 +563,7 @@ try {
   const routerResults = await routeIndicators(indicators, llmConfig);
   await writeRouterResults(db, routerResults);
 } catch (error) {
-  await updateExecutionStatus(db, executionId, 'failed', error.message);
+  await updateExecutionStatus(db, executionId, "failed", error.message);
   throw error; // State is saved, can resume later
 }
 ```
@@ -577,12 +591,15 @@ if (!hasSpecialistResults) {
 
 ### Database-First Architecture
 
-The V2 pipeline uses **SQLite for state persistence** at every stage. Each stage:
+The V2 pipeline uses **SQLite for state persistence** at every stage. Each
+stage:
+
 1. **Reads** the latest state from database tables
 2. **Processes** indicators with LLM or rules
 3. **Writes** results back to database tables
 
 This enables:
+
 - **Resume capability** - Restart from any failed stage
 - **Debugging** - Inspect intermediate results
 - **Incremental updates** - Re-run specific stages only
@@ -613,6 +630,7 @@ Stage 6 (Output)      → reads from → classifications (final state)
 ### Tables
 
 **Stage Tables** - Store raw output from each stage:
+
 ```sql
 -- Stage 1: Router
 CREATE TABLE router_results (
@@ -660,6 +678,7 @@ CREATE TABLE review_decisions (
 ```
 
 **Master Table** - Consolidated final state:
+
 ```sql
 CREATE TABLE classifications (
   indicator_id TEXT PRIMARY KEY,
@@ -693,22 +712,30 @@ CREATE TABLE classifications (
 ```
 
 **Why Both?**
-- **Stage tables** = Historical record of each stage's raw output (for debugging)
+
+- **Stage tables** = Historical record of each stage's raw output (for
+  debugging)
 - **Classifications table** = Current consolidated state (for queries)
 
 This allows you to:
-- Query final state: `SELECT * FROM classifications WHERE family = 'composite-derived'`
-- Debug stage issues: `SELECT * FROM specialist_results WHERE confidence_cls < 0.5`
+
+- Query final state:
+  `SELECT * FROM classifications WHERE family = 'composite-derived'`
+- Debug stage issues:
+  `SELECT * FROM specialist_results WHERE confidence_cls < 0.5`
 - Track changes: Compare classifications table before/after review stage
 
 ## Design Principles
 
-1. **Database-First Architecture** - Each stage persists results; next stage reads from database
+1. **Database-First Architecture** - Each stage persists results; next stage
+   reads from database
 2. **Separation of Concerns** - Each stage has a single responsibility
 3. **Family-Based Routing** - Specialized prompts for each family
 4. **Quality First** - Automatic flagging and review for problematic cases
-5. **Persistent State** - Resume capability via SQLite storage, complete audit trail
-6. **Observable** - Comprehensive metrics per stage, queryable intermediate results
+5. **Persistent State** - Resume capability via SQLite storage, complete audit
+   trail
+6. **Observable** - Comprehensive metrics per stage, queryable intermediate
+   results
 7. **Type-Safe** - AI SDK + Valibot for runtime validation
 8. **Scalable** - Configurable batching and concurrency
 

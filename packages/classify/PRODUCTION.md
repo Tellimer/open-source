@@ -1,6 +1,7 @@
 # Production Deployment Guide
 
-This guide covers deploying and running the V2 classification pipeline against your Railway-hosted production database.
+This guide covers deploying and running the V2 classification pipeline against
+your Railway-hosted production database.
 
 ## Quick Start
 
@@ -30,16 +31,17 @@ deno task prod:seed
 deno task prod:run
 ```
 
-That's it! Your production database is now populated with classifications for all 668 indicators.
+That's it! Your production database is now populated with classifications for
+all 668 indicators.
 
 ## Commands
 
-| Command | Description | Duration |
-|---------|-------------|----------|
-| `deno task prod:setup` | Create database schema | ~5s |
-| `deno task prod:seed` | Load 668 indicators + time series | ~30s |
-| `deno task prod:run` | Run V2 pipeline on all indicators | ~20min |
-| `deno task prod:reset` | Clear results (keeps source data) | ~5s |
+| Command                | Description                       | Duration |
+| ---------------------- | --------------------------------- | -------- |
+| `deno task prod:setup` | Create database schema            | ~5s      |
+| `deno task prod:seed`  | Load 668 indicators + time series | ~30s     |
+| `deno task prod:run`   | Run V2 pipeline on all indicators | ~20min   |
+| `deno task prod:reset` | Clear results (keeps source data) | ~5s      |
 
 ## Architecture
 
@@ -92,15 +94,15 @@ Final Classifications
 
 ### Token Breakdown
 
-| Stage | Tokens | Cost |
-|-------|--------|------|
-| Router | ~50k | $1.50 |
-| Specialist | ~600k | $18.00 |
-| Validation | 0 (local) | $0 |
-| Orientation | ~100k | $3.00 |
-| Flagging | 0 (rules) | $0 |
-| Review | ~100k | $3.00 |
-| **Total** | **~850k** | **~$25.50** |
+| Stage       | Tokens    | Cost        |
+| ----------- | --------- | ----------- |
+| Router      | ~50k      | $1.50       |
+| Specialist  | ~600k     | $18.00      |
+| Validation  | 0 (local) | $0          |
+| Orientation | ~100k     | $3.00       |
+| Flagging    | 0 (rules) | $0          |
+| Review      | ~100k     | $3.00       |
+| **Total**   | **~850k** | **~$25.50** |
 
 ## Output Example
 
@@ -269,6 +271,7 @@ console.log('✅ Connected');
 ### API Rate Limits
 
 If you hit Anthropic rate limits:
+
 - Reduce `concurrency` in `run_pipeline.ts`
 - Add delays between batches
 - Use smaller `batchSize`
@@ -276,6 +279,7 @@ If you hit Anthropic rate limits:
 ### Memory Issues
 
 For large datasets:
+
 - Process indicators in chunks
 - Reduce batch size
 - Increase Railway memory allocation
@@ -314,6 +318,7 @@ For large datasets:
 ## Support
 
 For issues or questions:
+
 1. Check logs in Railway dashboard
 2. Review [scripts/production/README.md](scripts/production/README.md)
 3. Open GitHub issue with error details
@@ -322,6 +327,7 @@ For issues or questions:
 ## Next Steps
 
 After successful deployment:
+
 1. ✅ Set up monitoring/alerting
 2. ✅ Create export scripts for your app
 3. ✅ Schedule regular pipeline runs

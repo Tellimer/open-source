@@ -3,27 +3,27 @@
  * @module
  */
 
-import type { LLMConfig } from '../../types.ts';
-import type { V2DatabaseClient } from '../db/client.ts';
+import type { LLMConfig } from "../../types.ts";
+import type { V2DatabaseClient } from "../db/client.ts";
 import type {
   FlaggedIndicator,
-  ReviewDecision,
   ReviewAction,
-  ReviewConfig,
   ReviewBatchResult,
-} from '../types.ts';
-import { AiSdkProvider } from '../providers/ai-sdk.ts';
-import { ReviewBatchSchema } from '../schemas/index.ts';
+  ReviewConfig,
+  ReviewDecision,
+} from "../types.ts";
+import { AiSdkProvider } from "../providers/ai-sdk.ts";
+import { ReviewBatchSchema } from "../schemas/index.ts";
 import {
   generateReviewSystemPrompt,
   generateReviewUserPrompt,
-} from './prompts.ts';
+} from "./prompts.ts";
 import {
+  applyReviewDiff,
   readFlaggedIndicators,
   writeReviewDecisions,
-  applyReviewDiff,
-} from './storage.ts';
-import { Spinner } from '../../utils/spinner.ts';
+} from "./storage.ts";
+import { Spinner } from "../../utils/spinner.ts";
 
 /**
  * Review a batch of flagged indicators using LLM (AI SDK-based)
@@ -31,7 +31,7 @@ import { Spinner } from '../../utils/spinner.ts';
 async function reviewBatch(
   flaggedIndicators: Array<FlaggedIndicator & { name: string }>,
   llmConfig: LLMConfig,
-  config: ReviewConfig
+  _config: ReviewConfig,
 ): Promise<{
   decisions: ReviewDecision[];
   usage: {
@@ -48,7 +48,7 @@ async function reviewBatch(
   const aiResult = await aiProvider.generateStructured(
     systemPrompt,
     userPrompt,
-    ReviewBatchSchema
+    ReviewBatchSchema,
   );
 
   // Map AI SDK result to ReviewDecision format (diff typed to Partial<ClassifiedMetadata>)
@@ -72,7 +72,7 @@ async function reviewBatch(
 export async function reviewFlaggedIndicators(
   db: V2DatabaseClient,
   llmConfig: LLMConfig,
-  config: ReviewConfig
+  config: ReviewConfig,
 ): Promise<ReviewBatchResult> {
   const startTime = Date.now();
 
@@ -81,7 +81,7 @@ export async function reviewFlaggedIndicators(
 
   if (flaggedIndicators.length === 0) {
     if (!config.quiet) {
-      console.log('✓ No flagged indicators to review');
+      console.log("✓ No flagged indicators to review");
     }
     return {
       reviewed: 0,
@@ -101,7 +101,7 @@ export async function reviewFlaggedIndicators(
 
   if (!config.quiet) {
     console.log(
-      `\n📋 Reviewing ${flaggedIndicators.length} flagged indicators...`
+      `\n📋 Reviewing ${flaggedIndicators.length} flagged indicators...`,
     );
   }
 
@@ -116,7 +116,7 @@ export async function reviewFlaggedIndicators(
     totalTokens: 0,
   };
 
-  const spinner = new Spinner('Processing review batches...');
+  const spinner = new Spinner("Processing review batches...");
   if (!config.quiet) spinner.start();
 
   const batches: Array<Array<FlaggedIndicator & { name: string }>> = [];
@@ -141,14 +141,14 @@ export async function reviewFlaggedIndicators(
         return result.decisions;
       } catch (error) {
         if (config.debug) {
-          console.error('[Review] Batch failed:', error);
+          console.error("[Review] Batch failed:", error);
         }
         // Return escalate decisions for failed batch
         return batch.map((flagged) => ({
           indicator_id: flagged.indicator_id,
-          action: 'escalate' as ReviewAction,
+          action: "escalate" as ReviewAction,
           reason: `Review failed: ${
-            error instanceof Error ? error.message : 'Unknown error'
+            error instanceof Error ? error.message : "Unknown error"
           }`,
           confidence: 0,
         }));
@@ -159,10 +159,12 @@ export async function reviewFlaggedIndicators(
     allDecisions.push(...batchResults.flat());
 
     if (!config.quiet) {
-      spinner.text = `Processed ${Math.min(
-        (i + concurrency) * batchSize,
-        flaggedIndicators.length
-      )}/${flaggedIndicators.length} flagged indicators...`;
+      spinner.text = `Processed ${
+        Math.min(
+          (i + concurrency) * batchSize,
+          flaggedIndicators.length,
+        )
+      }/${flaggedIndicators.length} flagged indicators...`;
     }
   }
 
@@ -173,7 +175,7 @@ export async function reviewFlaggedIndicators(
 
   // 4. Apply fixes to classifications table
   const fixedDecisions = allDecisions.filter(
-    (d) => d.action === 'fix' && d.diff
+    (d) => d.action === "fix" && d.diff,
   );
   for (const decision of fixedDecisions) {
     if (decision.diff) {
@@ -181,15 +183,15 @@ export async function reviewFlaggedIndicators(
         db,
         decision.indicator_id,
         decision.diff,
-        decision.reason
+        decision.reason,
       );
     }
   }
 
   // 5. Calculate summary stats
-  const confirmed = allDecisions.filter((d) => d.action === 'confirm').length;
-  const fixed = allDecisions.filter((d) => d.action === 'fix').length;
-  const escalated = allDecisions.filter((d) => d.action === 'escalate').length;
+  const confirmed = allDecisions.filter((d) => d.action === "confirm").length;
+  const fixed = allDecisions.filter((d) => d.action === "fix").length;
+  const escalated = allDecisions.filter((d) => d.action === "escalate").length;
 
   const result: ReviewBatchResult = {
     reviewed: allDecisions.length,
@@ -206,19 +208,23 @@ export async function reviewFlaggedIndicators(
     console.log(`\n✓ Review complete:`);
     console.log(`  • Reviewed: ${result.reviewed}`);
     console.log(
-      `  • Confirmed: ${confirmed} (${(
-        (confirmed / result.reviewed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Confirmed: ${confirmed} (${
+        (
+          (confirmed / result.reviewed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     console.log(
-      `  • Fixed: ${fixed} (${((fixed / result.reviewed) * 100).toFixed(1)}%)`
+      `  • Fixed: ${fixed} (${((fixed / result.reviewed) * 100).toFixed(1)}%)`,
     );
     console.log(
-      `  • Escalated: ${escalated} (${(
-        (escalated / result.reviewed) *
-        100
-      ).toFixed(1)}%)`
+      `  • Escalated: ${escalated} (${
+        (
+          (escalated / result.reviewed) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     console.log(`  • Time: ${result.processingTime}ms`);
   }
@@ -232,14 +238,14 @@ export async function reviewFlaggedIndicators(
 export async function reviewSingleIndicator(
   flaggedIndicator: FlaggedIndicator & { name: string },
   llmConfig: LLMConfig,
-  config: ReviewConfig
+  config: ReviewConfig,
 ): Promise<ReviewDecision> {
   const result = await reviewBatch([flaggedIndicator], llmConfig, config);
   return (
     result.decisions[0] || {
       indicator_id: flaggedIndicator.indicator_id,
-      action: 'escalate',
-      reason: 'No decision returned from LLM',
+      action: "escalate",
+      reason: "No decision returned from LLM",
       confidence: 0,
     }
   );

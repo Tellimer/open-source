@@ -2,35 +2,39 @@
 
 ## Quick Reference
 
-The test suite includes **9 edge case indicators** that test challenging classification scenarios:
+The test suite includes **9 edge case indicators** that test challenging
+classification scenarios:
 
-| Indicator | Challenge | Expected Type | Category | Notes |
-|-----------|-----------|---------------|----------|-------|
-| World Happiness Index | Non-economic composite | `other` | `other` | Subjective well-being, doesn't fit standard categories |
-| Capacity Utilization % | Name suggests capacity | `percentage` | `numeric-measurement` | Tests percentage vs capacity distinction |
-| Labor Share of Income | Share vs percentage | `share` | `numeric-measurement` | Compositional breakdown, not bounded rate |
-| S&P 500 P/E Ratio | Could be price/index | `ratio` | `numeric-measurement` | Relative multiple, not absolute price |
-| GDP Growth Rate QoQ | Rate vs percentage | `rate` | `change-movement` | Change metric, not bounded value |
-| Corporate Tax Rate | Policy parameter | `threshold` | `temporal` | Threshold/cutoff, not measurement |
-| Climate Risk Score | Unconventional | `other` | `other` | Mixes physical science and economics |
-| Forex Reserve Adequacy | Unusual units | `ratio` | `numeric-measurement` | "Months of imports" denominator |
-| Unknown Type | Fallback testing | `unknown` | `other` | Tests unknown classification |
+| Indicator              | Challenge              | Expected Type | Category              | Notes                                                  |
+| ---------------------- | ---------------------- | ------------- | --------------------- | ------------------------------------------------------ |
+| World Happiness Index  | Non-economic composite | `other`       | `other`               | Subjective well-being, doesn't fit standard categories |
+| Capacity Utilization % | Name suggests capacity | `percentage`  | `numeric-measurement` | Tests percentage vs capacity distinction               |
+| Labor Share of Income  | Share vs percentage    | `share`       | `numeric-measurement` | Compositional breakdown, not bounded rate              |
+| S&P 500 P/E Ratio      | Could be price/index   | `ratio`       | `numeric-measurement` | Relative multiple, not absolute price                  |
+| GDP Growth Rate QoQ    | Rate vs percentage     | `rate`        | `change-movement`     | Change metric, not bounded value                       |
+| Corporate Tax Rate     | Policy parameter       | `threshold`   | `temporal`            | Threshold/cutoff, not measurement                      |
+| Climate Risk Score     | Unconventional         | `other`       | `other`               | Mixes physical science and economics                   |
+| Forex Reserve Adequacy | Unusual units          | `ratio`       | `numeric-measurement` | "Months of imports" denominator                        |
+| Unknown Type           | Fallback testing       | `unknown`     | `other`               | Tests unknown classification                           |
 
 ## Key Testing Objectives
 
 ### 1. Ambiguity Handling
+
 - **Test**: Can LLM handle indicators that don't fit neatly into categories?
 - **Success**: Appropriate use of "other" and "unknown" types
 - **Metric**: 70%+ accuracy (lower than standard indicators)
 
 ### 2. Confidence Calibration
+
 - **Test**: Do edge cases produce lower confidence scores?
 - **Success**: Average confidence 0.60-0.80 (vs 0.85+ for standard)
 - **Metric**: Confidence correlates with classification difficulty
 
 ### 3. Boundary Conditions
+
 - **Test**: Correct classification at type boundaries
-- **Examples**: 
+- **Examples**:
   - Percentage vs share (both use %)
   - Rate vs percentage (both use %)
   - Capacity vs percentage (utilization)
@@ -38,11 +42,13 @@ The test suite includes **9 edge case indicators** that test challenging classif
   - Ratio vs price (relative vs absolute)
 
 ### 4. Fallback Behavior
+
 - **Test**: System uses "other" when appropriate
 - **Success**: Non-standard indicators classified as "other"
 - **Examples**: Happiness index, climate risk score
 
 ### 5. Provider Consistency
+
 - **Test**: Different LLMs handle edge cases similarly
 - **Success**: 60%+ agreement across providers (vs 80%+ for standard)
 - **Metric**: Cross-provider classification consistency
@@ -99,22 +105,24 @@ The test suite includes **9 edge case indicators** that test challenging classif
 
 ### Accuracy Targets
 
-| Metric | Standard Indicators | Edge Cases |
-|--------|-------------------|------------|
-| Overall Accuracy | 85%+ | 70%+ |
-| Average Confidence | 0.85-0.95 | 0.60-0.80 |
-| Schema Validation | 95%+ | 90%+ |
-| Provider Agreement | 80%+ | 60%+ |
+| Metric             | Standard Indicators | Edge Cases |
+| ------------------ | ------------------- | ---------- |
+| Overall Accuracy   | 85%+                | 70%+       |
+| Average Confidence | 0.85-0.95           | 0.60-0.80  |
+| Schema Validation  | 95%+                | 90%+       |
+| Provider Agreement | 80%+                | 60%+       |
 
 ### Confidence Distribution
 
 **Standard Indicators**:
+
 - Very High (0.95-1.0): 40%
 - High (0.85-0.94): 45%
 - Moderate (0.70-0.84): 12%
 - Low (<0.70): 3%
 
 **Edge Cases**:
+
 - Very High (0.95-1.0): 10%
 - High (0.85-0.94): 20%
 - Moderate (0.70-0.84): 50%
@@ -161,18 +169,21 @@ The test suite includes **9 edge case indicators** that test challenging classif
 ## Production Implications
 
 ### Low Confidence Indicators
+
 - Flag for human review
 - Show LLM reasoning to users
 - Allow manual override
 - Track for pattern analysis
 
 ### Ambiguous Classifications
+
 - Provide multiple possible types
 - Show confidence for each
 - Explain distinctions
 - Let users choose
 
 ### Edge Case Monitoring
+
 - Track which indicators consistently fail
 - Identify new edge case patterns
 - Update test suite with new cases
@@ -200,11 +211,12 @@ The test suite includes **9 edge case indicators** that test challenging classif
 ## Conclusion
 
 Edge cases are critical for:
+
 - ✅ Testing classification robustness
 - ✅ Validating confidence calibration
 - ✅ Ensuring fallback behavior
 - ✅ Handling real-world complexity
 - ✅ Identifying prompt improvements
 
-The 9 edge cases cover major ambiguity types and provide comprehensive testing of boundary conditions and unusual indicators.
-
+The 9 edge cases cover major ambiguity types and provide comprehensive testing
+of boundary conditions and unusual indicators.

@@ -142,4 +142,3 @@ Deno.test("ClassificationError - includes cause when provided", () => {
 
   assertEquals(error.cause, cause);
 });
-

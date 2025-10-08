@@ -3,7 +3,7 @@
  * @module
  */
 
-import type { Indicator } from '../../types.ts';
+import type { Indicator } from "../../types.ts";
 
 /**
  * Router system prompt for family classification (comprehensive, water-tight)
@@ -234,16 +234,16 @@ export function generateRouterUserPrompt(indicators: Indicator[]): string {
       if (ind.source) parts.push(`- Source: ${ind.source}`);
       if (ind.description) parts.push(`- Description: ${ind.description}`);
 
-      return parts.join('\n');
+      return parts.join("\n");
     })
-    .join('\n\n');
+    .join("\n\n");
 
   return `═══════════════════════════════════════════════════════════════════════════
 FAMILY CLASSIFICATION REQUEST
 ═══════════════════════════════════════════════════════════════════════════
 
 Please classify the following ${indicators.length} economic indicator${
-    indicators.length === 1 ? '' : 's'
+    indicators.length === 1 ? "" : "s"
   } into families:
 
 ${indicatorDescriptions}
@@ -252,10 +252,8 @@ ${indicatorDescriptions}
 RESPONSE REQUIREMENTS
 ═══════════════════════════════════════════════════════════════════════════
 
-Return a JSON object with "results" array containing ${
-    indicators.length
-  } classification${
-    indicators.length === 1 ? '' : 's'
+Return a JSON object with "results" array containing ${indicators.length} classification${
+    indicators.length === 1 ? "" : "s"
   }, one per indicator, in the SAME ORDER as above.
 
 Each classification object MUST contain:

@@ -7,7 +7,7 @@ export class Spinner {
   private _text: string;
   private isRunning = false;
 
-  constructor(initialText = '') {
+  constructor(initialText = "") {
     this._text = initialText;
   }
 

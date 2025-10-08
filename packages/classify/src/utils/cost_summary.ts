@@ -3,8 +3,8 @@
  * @module
  */
 
-import type { ClassificationResult } from '../types.ts';
-import { formatCost, formatTokens } from './token_counter.ts';
+import type { ClassificationResult } from "../types.ts";
+import { formatCost, formatTokens } from "./token_counter.ts";
 
 /**
  * Cost summary information
@@ -58,7 +58,9 @@ export function getCostSummary(result: ClassificationResult): CostSummary {
     totalCost: result.tokenUsage.estimatedCost,
     totalCostFormatted: formatCost(result.tokenUsage.estimatedCost),
     avgCostPerIndicator: result.performance.avgCostPerIndicator,
-    avgCostPerIndicatorFormatted: formatCost(result.performance.avgCostPerIndicator),
+    avgCostPerIndicatorFormatted: formatCost(
+      result.performance.avgCostPerIndicator,
+    ),
     totalTokens: result.tokenUsage.totalTokens,
     totalTokensFormatted: formatTokens(result.tokenUsage.totalTokens),
     inputTokens: result.tokenUsage.inputTokens,
@@ -84,39 +86,53 @@ export function getCostSummary(result: ClassificationResult): CostSummary {
  */
 export function printCostSummary(
   result: ClassificationResult,
-  options: { verbose?: boolean } = {}
+  options: { verbose?: boolean } = {},
 ): void {
   const summary = getCostSummary(result);
 
-  console.log('\n' + '='.repeat(60));
-  console.log('💰 COST SUMMARY');
-  console.log('='.repeat(60));
+  console.log("\n" + "=".repeat(60));
+  console.log("💰 COST SUMMARY");
+  console.log("=".repeat(60));
   console.log(`Provider:              ${summary.provider}`);
   console.log(`Model:                 ${summary.model}`);
   console.log(`Indicators processed:  ${summary.successfulClassifications}`);
-  console.log('');
+  console.log("");
   console.log(`Total tokens:          ${summary.totalTokensFormatted}`);
   console.log(`  Input tokens:        ${formatTokens(summary.inputTokens)}`);
   console.log(`  Output tokens:       ${formatTokens(summary.outputTokens)}`);
-  console.log('');
+  console.log("");
   console.log(`💵 TOTAL COST:         ${summary.totalCostFormatted}`);
   console.log(`   Per indicator:      ${summary.avgCostPerIndicatorFormatted}`);
-  console.log('');
+  console.log("");
   console.log(`Processing time:       ${summary.processingTimeMs}ms`);
-  console.log(`Throughput:            ${result.performance.throughput.toFixed(2)} ind/sec`);
+  console.log(
+    `Throughput:            ${
+      result.performance.throughput.toFixed(2)
+    } ind/sec`,
+  );
 
   if (options.verbose) {
-    console.log('');
-    console.log('Detailed breakdown:');
+    console.log("");
+    console.log("Detailed breakdown:");
     console.log(`  API calls:           ${result.apiCalls}`);
     console.log(`  Retries:             ${result.retries}`);
-    console.log(`  Success rate:        ${result.summary.successRate.toFixed(1)}%`);
+    console.log(
+      `  Success rate:        ${result.summary.successRate.toFixed(1)}%`,
+    );
     console.log(`  Failed:              ${result.summary.failed}`);
-    console.log(`  Avg time/indicator:  ${result.performance.avgTimePerIndicator.toFixed(2)}ms`);
-    console.log(`  Avg tokens/indicator: ${result.performance.avgTokensPerIndicator.toFixed(0)}`);
+    console.log(
+      `  Avg time/indicator:  ${
+        result.performance.avgTimePerIndicator.toFixed(2)
+      }ms`,
+    );
+    console.log(
+      `  Avg tokens/indicator: ${
+        result.performance.avgTokensPerIndicator.toFixed(0)
+      }`,
+    );
   }
 
-  console.log('='.repeat(60) + '\n');
+  console.log("=".repeat(60) + "\n");
 }
 
 /**
@@ -135,7 +151,7 @@ export function printCostSummary(
  */
 export function projectCost(
   result: ClassificationResult,
-  targetCount: number
+  targetCount: number,
 ): {
   targetCount: number;
   totalCost: number;
@@ -190,15 +206,19 @@ export function projectCost(
  */
 export function printCostProjections(
   result: ClassificationResult,
-  targetCounts: number[] = [100, 1000, 10000, 100000]
+  targetCounts: number[] = [100, 1000, 10000, 100000],
 ): void {
-  console.log('\n' + '='.repeat(70));
-  console.log('📊 COST PROJECTIONS');
-  console.log('='.repeat(70));
-  console.log(`Based on: ${result.summary.successful} indicators @ ${formatCost(result.tokenUsage.estimatedCost)}`);
-  console.log('');
-  console.log('Indicators | Est. Cost      | Est. Tokens    | Est. Time');
-  console.log('-'.repeat(70));
+  console.log("\n" + "=".repeat(70));
+  console.log("📊 COST PROJECTIONS");
+  console.log("=".repeat(70));
+  console.log(
+    `Based on: ${result.summary.successful} indicators @ ${
+      formatCost(result.tokenUsage.estimatedCost)
+    }`,
+  );
+  console.log("");
+  console.log("Indicators | Est. Cost      | Est. Tokens    | Est. Time");
+  console.log("-".repeat(70));
 
   for (const count of targetCounts) {
     const projection = projectCost(result, count);
@@ -210,5 +230,5 @@ export function printCostProjections(
     console.log(`${countStr} | ${costStr} | ${tokensStr} | ${timeStr}`);
   }
 
-  console.log('='.repeat(70) + '\n');
+  console.log("=".repeat(70) + "\n");
 }

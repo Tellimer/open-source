@@ -3,14 +3,14 @@
  * @module
  */
 
-import { generateObject } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { valibotSchema } from '@ai-sdk/valibot';
-import type { BaseSchema } from 'valibot';
-import * as v from 'valibot';
-import type { LLMConfig } from '../../types.ts';
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { valibotSchema } from "@ai-sdk/valibot";
+import type { BaseSchema } from "valibot";
+import * as v from "valibot";
+import type { LLMConfig } from "../../types.ts";
 
 /**
  * AI SDK generation result with metrics
@@ -43,24 +43,24 @@ export class AiSdkProvider {
     const { provider, model, apiKey } = this.config;
 
     if (!model) {
-      throw new Error('Model is required in LLMConfig');
+      throw new Error("Model is required in LLMConfig");
     }
     if (!apiKey) {
-      throw new Error('API key is required in LLMConfig');
+      throw new Error("API key is required in LLMConfig");
     }
 
     switch (provider) {
-      case 'openai': {
+      case "openai": {
         const openaiProvider = createOpenAI({ apiKey });
         return openaiProvider(model as any);
       }
 
-      case 'anthropic': {
+      case "anthropic": {
         const anthropicProvider = createAnthropic({ apiKey });
         return anthropicProvider(model as any);
       }
 
-      case 'gemini': {
+      case "gemini": {
         const googleProvider = createGoogleGenerativeAI({ apiKey });
         return googleProvider(model as any);
       }
@@ -77,11 +77,11 @@ export class AiSdkProvider {
   async generateStructured<T>(
     systemPrompt: string,
     userPrompt: string,
-    schema: BaseSchema<any, T, any>
+    schema: BaseSchema<any, T, any>,
   ): Promise<AiSdkResult<T>> {
     const model = this.getModel() as any;
     // Some OpenAI reasoning models do not support temperature – omit for OpenAI
-    const isOpenAI = this.config.provider === 'openai';
+    const isOpenAI = this.config.provider === "openai";
     const temperature = isOpenAI ? undefined : this.config.temperature ?? 0.0;
 
     // Use valibotSchema() helper for universal compatibility across all providers
@@ -89,11 +89,11 @@ export class AiSdkProvider {
       model,
       schema: valibotSchema(schema as any),
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
     };
-    if (typeof temperature === 'number') {
+    if (typeof temperature === "number") {
       generationArgs.temperature = temperature;
     }
 
@@ -102,8 +102,8 @@ export class AiSdkProvider {
     // Log raw response if debug mode enabled
     if (this.config.debug) {
       console.log(
-        '[AI SDK] Raw LLM response:',
-        JSON.stringify(result.object, null, 2)
+        "[AI SDK] Raw LLM response:",
+        JSON.stringify(result.object, null, 2),
       );
     }
 
@@ -112,12 +112,12 @@ export class AiSdkProvider {
     try {
       validated = v.parse(schema, result.object) as T;
     } catch (validationError) {
-      console.error('[AI SDK] Validation failed!');
+      console.error("[AI SDK] Validation failed!");
       console.error(
-        '[AI SDK] Raw response:',
-        JSON.stringify(result.object, null, 2)
+        "[AI SDK] Raw response:",
+        JSON.stringify(result.object, null, 2),
       );
-      console.error('[AI SDK] Validation error:', validationError);
+      console.error("[AI SDK] Validation error:", validationError);
       throw validationError;
     }
 
@@ -128,7 +128,7 @@ export class AiSdkProvider {
         completionTokens: (result.usage as any).completionTokens || 0,
         totalTokens: result.usage.totalTokens || 0,
       },
-      model: this.config.model || '',
+      model: this.config.model || "",
       provider: this.config.provider,
     };
   }

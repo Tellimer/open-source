@@ -3,19 +3,19 @@
  * @module
  */
 
-import type { LLMConfig } from '../../types.ts';
-import { INDICATOR_TYPE_TO_CATEGORY } from '../../types.ts';
-import type { IndicatorFamily, SpecialistResult } from '../types.ts';
-import { AiSdkProvider } from '../providers/ai-sdk.ts';
-import { SpecialistBatchSchema } from '../schemas/index.ts';
-import { FAMILY_PROMPTS, generateSpecialistUserPrompt } from './prompts.ts';
-import type { IndicatorWithFamily } from './grouping.ts';
+import type { LLMConfig } from "../../types.ts";
+import { INDICATOR_TYPE_TO_CATEGORY } from "../../types.ts";
+import type { IndicatorFamily, SpecialistResult } from "../types.ts";
+import { AiSdkProvider } from "../providers/ai-sdk.ts";
+import { SpecialistBatchSchema } from "../schemas/index.ts";
+import { FAMILY_PROMPTS, generateSpecialistUserPrompt } from "./prompts.ts";
+import type { IndicatorWithFamily } from "./grouping.ts";
 import {
-  groupIndicatorsByFamily,
   createFamilyBatches,
   getFamilyDistribution,
-} from './grouping.ts';
-import { Spinner } from '@std/cli/unstable-spinner';
+  groupIndicatorsByFamily,
+} from "./grouping.ts";
+import { Spinner } from "@std/cli/unstable-spinner";
 
 /**
  * Specialist configuration
@@ -54,7 +54,7 @@ export interface SpecialistBatchResult {
  */
 export interface SpecialistStageResult {
   successful: SpecialistResult[];
-  failed: SpecialistBatchResult['failed'];
+  failed: SpecialistBatchResult["failed"];
   summary: {
     total: number;
     successful: number;
@@ -85,14 +85,14 @@ function mapBatchToSpecialistResults(
     is_currency_denominated: boolean;
     confidence: number;
     reasoning?: string;
-  }>
+  }>,
 ): SpecialistResult[] {
   return batchResults.map((result) => ({
     indicator_id: result.indicator_id,
     indicator_type: result.indicator_type as any,
     indicator_category: (INDICATOR_TYPE_TO_CATEGORY[
       result.indicator_type as keyof typeof INDICATOR_TYPE_TO_CATEGORY
-    ] || 'qualitative') as any,
+    ] || "qualitative") as any,
     temporal_aggregation: result.temporal_aggregation as any,
     is_currency_denominated: result.is_currency_denominated,
     confidence_cls: result.confidence,
@@ -119,7 +119,7 @@ function mapBatchToSpecialistResults(
  */
 function normalizeTemporalForKnownIndices(
   results: SpecialistResult[],
-  indicators: IndicatorWithFamily[]
+  indicators: IndicatorWithFamily[],
 ): SpecialistResult[] {
   const indicatorById = new Map<string, IndicatorWithFamily>();
   for (const ind of indicators) {
@@ -128,28 +128,26 @@ function normalizeTemporalForKnownIndices(
 
   return results.map((r) => {
     const ind = indicatorById.get(r.indicator_id);
-    const name = (ind?.name || '').toLowerCase();
+    const name = (ind?.name || "").toLowerCase();
 
-    const isPricesPaidOrReceived =
-      name.includes('prices paid') ||
-      name.includes('prices received') ||
-      name.includes('manufacturing prices') ||
-      name.includes('non manufacturing prices');
-    const isFedOrIsm =
-      name.includes('ism') ||
-      name.includes('kansas') ||
-      name.includes('philly') ||
-      name.includes('dallas');
-    const isLmiInventoryCosts = name.includes('inventory costs');
+    const isPricesPaidOrReceived = name.includes("prices paid") ||
+      name.includes("prices received") ||
+      name.includes("manufacturing prices") ||
+      name.includes("non manufacturing prices");
+    const isFedOrIsm = name.includes("ism") ||
+      name.includes("kansas") ||
+      name.includes("philly") ||
+      name.includes("dallas");
+    const isLmiInventoryCosts = name.includes("inventory costs");
 
     if (
-      r.indicator_type === 'index' &&
+      r.indicator_type === "index" &&
       (isLmiInventoryCosts ||
         isPricesPaidOrReceived ||
         (isFedOrIsm && isPricesPaidOrReceived))
     ) {
-      if (r.temporal_aggregation !== 'period-average') {
-        return { ...r, temporal_aggregation: 'period-average' as any };
+      if (r.temporal_aggregation !== "period-average") {
+        return { ...r, temporal_aggregation: "period-average" as any };
       }
     }
     return r;
@@ -163,7 +161,7 @@ async function classifyFamilyBatchWithRetry(
   indicators: IndicatorWithFamily[],
   family: IndicatorFamily,
   config: SpecialistConfig,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<{
   success: boolean;
   results?: SpecialistResult[];
@@ -176,7 +174,7 @@ async function classifyFamilyBatchWithRetry(
   };
 }> {
   const aiProvider = new AiSdkProvider(config.llmConfig);
-  let lastError: string = '';
+  let lastError: string = "";
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -188,7 +186,7 @@ async function classifyFamilyBatchWithRetry(
       const aiResult = await aiProvider.generateStructured(
         systemPrompt,
         userPrompt,
-        SpecialistBatchSchema
+        SpecialistBatchSchema,
       );
 
       // Extract results from wrapped object
@@ -211,7 +209,7 @@ async function classifyFamilyBatchWithRetry(
           `[Specialist ${family}] Attempt ${attempt + 1}/${
             maxRetries + 1
           } failed:`,
-          lastError
+          lastError,
         );
         console.error(`[Specialist ${family}] Full error:`, error);
       }
@@ -233,7 +231,7 @@ async function classifyFamilyBatchWithRetry(
 async function processFamilyIndicators(
   family: IndicatorFamily,
   indicators: IndicatorWithFamily[],
-  config: SpecialistConfig
+  config: SpecialistConfig,
 ): Promise<SpecialistBatchResult> {
   const startTime = Date.now();
   const batchSize = config.batchSize ?? 25;
@@ -242,7 +240,7 @@ async function processFamilyIndicators(
   const debug = config.debug ?? false;
 
   const successful: SpecialistResult[] = [];
-  const failed: SpecialistBatchResult['failed'] = [];
+  const failed: SpecialistBatchResult["failed"] = [];
   let apiCalls = 0;
   let totalRetries = 0;
   let totalUsage = {
@@ -256,7 +254,7 @@ async function processFamilyIndicators(
 
   if (debug) {
     console.log(
-      `\n  📦 ${family}: ${indicators.length} indicators, ${batches.length} batches`
+      `\n  📦 ${family}: ${indicators.length} indicators, ${batches.length} batches`,
     );
   }
 
@@ -267,7 +265,7 @@ async function processFamilyIndicators(
     const results = await Promise.all(
       batchChunk.map((batch) =>
         classifyFamilyBatchWithRetry(batch, family, config, maxRetries)
-      )
+      ),
     );
 
     // Aggregate results
@@ -292,7 +290,7 @@ async function processFamilyIndicators(
         for (const indicator of batch) {
           failed.push({
             indicator,
-            error: result.error || 'Unknown error',
+            error: result.error || "Unknown error",
             retries: result.retries,
           });
         }
@@ -304,7 +302,7 @@ async function processFamilyIndicators(
 
   if (debug) {
     console.log(
-      `     ✓ Completed: ${successful.length}/${indicators.length} (${processingTime}ms)`
+      `     ✓ Completed: ${successful.length}/${indicators.length} (${processingTime}ms)`,
     );
   }
 
@@ -323,7 +321,7 @@ async function processFamilyIndicators(
  */
 export async function classifyByFamily(
   indicatorsWithFamilies: IndicatorWithFamily[],
-  config: SpecialistConfig
+  config: SpecialistConfig,
 ): Promise<SpecialistStageResult> {
   const startTime = Date.now();
   const debug = config.debug ?? false;
@@ -360,29 +358,30 @@ export async function classifyByFamily(
   // Group by family
   const grouped = groupIndicatorsByFamily(
     indicatorsWithFamilies,
-    routerResults
+    routerResults,
   );
 
   if (debug && !quiet) {
-    console.log('\n' + '='.repeat(60));
-    console.log('🔬 SPECIALIST STAGE - FAMILY-BASED CLASSIFICATION');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("🔬 SPECIALIST STAGE - FAMILY-BASED CLASSIFICATION");
+    console.log("=".repeat(60));
     console.log(`Total indicators: ${indicatorsWithFamilies.length}`);
-    console.log('Family distribution:', getFamilyDistribution(grouped));
-    console.log('='.repeat(60));
+    console.log("Family distribution:", getFamilyDistribution(grouped));
+    console.log("=".repeat(60));
   }
 
   let spinner: Spinner | undefined;
   if (!quiet && !debug) {
     spinner = new Spinner({
-      message: `Classifying ${indicatorsWithFamilies.length} indicators by family...`,
-      color: 'cyan',
+      message:
+        `Classifying ${indicatorsWithFamilies.length} indicators by family...`,
+      color: "cyan",
     });
     spinner.start();
   }
 
   const allSuccessful: SpecialistResult[] = [];
-  const allFailed: SpecialistBatchResult['failed'] = [];
+  const allFailed: SpecialistBatchResult["failed"] = [];
   let totalApiCalls = 0;
   let totalRetries = 0;
   let totalUsage = {
@@ -401,7 +400,7 @@ export async function classifyByFamily(
     const result = await processFamilyIndicators(
       family,
       familyIndicators,
-      config
+      config,
     );
 
     allSuccessful.push(...result.successful);
@@ -429,14 +428,16 @@ export async function classifyByFamily(
   const total = indicatorsWithFamilies.length;
 
   if (debug && !quiet) {
-    console.log('\n' + '='.repeat(60));
-    console.log('📊 SPECIALIST SUMMARY');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("📊 SPECIALIST SUMMARY");
+    console.log("=".repeat(60));
     console.log(
-      `✓ Success: ${allSuccessful.length}/${total} (${(
-        (allSuccessful.length / total) *
-        100
-      ).toFixed(1)}%)`
+      `✓ Success: ${allSuccessful.length}/${total} (${
+        (
+          (allSuccessful.length / total) *
+          100
+        ).toFixed(1)
+      }%)`,
     );
     if (allFailed.length > 0) {
       console.log(`✗ Failed: ${allFailed.length}/${total}`);
@@ -444,16 +445,18 @@ export async function classifyByFamily(
     console.log(`⏱  Time: ${processingTime}ms`);
     console.log(`🔄 Retries: ${totalRetries}`);
     console.log(`🔌 API Calls: ${totalApiCalls}`);
-    console.log('\nBy Family:');
+    console.log("\nBy Family:");
     for (const [family, stats] of Object.entries(byFamily)) {
       console.log(
-        `  • ${family}: ${stats.successful}/${stats.total} (${(
-          (stats.successful / stats.total) *
-          100
-        ).toFixed(1)}%)`
+        `  • ${family}: ${stats.successful}/${stats.total} (${
+          (
+            (stats.successful / stats.total) *
+            100
+          ).toFixed(1)
+        }%)`,
       );
     }
-    console.log('='.repeat(60) + '\n');
+    console.log("=".repeat(60) + "\n");
   }
 
   return {

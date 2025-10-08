@@ -4,7 +4,7 @@
  * @module
  */
 
-import { createLocalDatabase } from './client.ts';
+import { createLocalDatabase } from "./client.ts";
 
 /**
  * Source tables schema (mirrors PostgreSQL structure)
@@ -58,15 +58,15 @@ CREATE INDEX IF NOT EXISTS idx_source_country_indicators_date ON source_country_
  * This script must be run from Claude Code environment where mcp__postgres__query is available
  */
 export async function seedDatabase(
-  sqliteDbPath: string = './data/classify_v2.db',
+  sqliteDbPath: string = "./data/classify_v2.db",
   limit: number = 100,
-  verbose: boolean = true
+  verbose: boolean = true,
 ): Promise<{
   indicators: number;
   timeSeriesValues: number;
 }> {
   if (verbose) {
-    console.log('\n🌱 Seeding SQLite from PostgreSQL via MCP...');
+    console.log("\n🌱 Seeding SQLite from PostgreSQL via MCP...");
     console.log(`📍 SQLite: ${sqliteDbPath}`);
     console.log(`📊 Limit: ${limit} indicators\n`);
   }
@@ -79,13 +79,15 @@ export async function seedDatabase(
   db.exec(SOURCE_TABLES_SCHEMA);
 
   if (verbose) {
-    console.log('✅ Source tables created');
+    console.log("✅ Source tables created");
   }
 
   // NOTE: The actual PostgreSQL queries will be executed via Claude Code's MCP tool
   // This script outputs the SQL that should be run via mcp__postgres__query
 
-  console.log('\n📋 Step 1: Run this query via MCP to get unique indicators:\n');
+  console.log(
+    "\n📋 Step 1: Run this query via MCP to get unique indicators:\n",
+  );
   console.log(`
 WITH RankedIndicators AS (
   SELECT
@@ -134,7 +136,9 @@ ORDER BY name ASC
 LIMIT ${limit};
   `);
 
-  console.log('\n📋 Step 2: For each indicator, run this query to get time series:\n');
+  console.log(
+    "\n📋 Step 2: For each indicator, run this query to get time series:\n",
+  );
   console.log(`
 WITH RankedValues AS (
   SELECT
@@ -169,8 +173,10 @@ WHERE rn <= 10
 ORDER BY date DESC;
   `);
 
-  console.log('\n💡 This script needs to be run from Claude Code environment.');
-  console.log('   Use the mcp__postgres__query tool to execute these queries.\n');
+  console.log("\n💡 This script needs to be run from Claude Code environment.");
+  console.log(
+    "   Use the mcp__postgres__query tool to execute these queries.\n",
+  );
 
   db.close();
 
@@ -182,7 +188,7 @@ ORDER BY date DESC;
  */
 export function insertIndicators(
   db: any,
-  indicators: any[]
+  indicators: any[],
 ): void {
   db.transaction(() => {
     const stmt = db.prepare(`
@@ -211,7 +217,7 @@ export function insertIndicators(
         ind.created_at,
         ind.updated_at,
         ind.deleted_at,
-        ind.currency_code
+        ind.currency_code,
       );
     }
   });
@@ -224,7 +230,7 @@ export function insertIndicators(
  */
 export function insertCountryIndicators(
   db: any,
-  countryIndicators: any[]
+  countryIndicators: any[],
 ): void {
   db.transaction(() => {
     const stmt = db.prepare(`
@@ -245,7 +251,7 @@ export function insertCountryIndicators(
         ci.source_updated_at,
         ci.created_at,
         ci.updated_at,
-        ci.deleted_at
+        ci.deleted_at,
       );
     }
   });
@@ -258,7 +264,7 @@ export function insertCountryIndicators(
  */
 export function getIndicatorsForClassification(
   db: any,
-  limit?: number
+  limit?: number,
 ): Array<{
   id: string;
   name: string;
@@ -299,11 +305,11 @@ export function getSeededStats(db: any): {
   avgValuesPerIndicator: number;
 } {
   const indicators = db
-    .prepare('SELECT COUNT(*) as count FROM source_indicators')
+    .prepare("SELECT COUNT(*) as count FROM source_indicators")
     .value<[number]>();
 
   const values = db
-    .prepare('SELECT COUNT(*) as count FROM source_country_indicators')
+    .prepare("SELECT COUNT(*) as count FROM source_country_indicators")
     .value<[number]>();
 
   const indicatorCount = indicators?.[0] || 0;
@@ -320,8 +326,8 @@ export function getSeededStats(db: any): {
 
 // CLI interface
 if (import.meta.main) {
-  const limit = parseInt(Deno.args[0] || '100');
-  const dbPath = Deno.args[1] || './data/classify_v2.db';
+  const limit = parseInt(Deno.args[0] || "100");
+  const dbPath = Deno.args[1] || "./data/classify_v2.db";
 
   await seedDatabase(dbPath, limit, true);
 }

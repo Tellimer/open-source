@@ -4,7 +4,7 @@
  * @module
  */
 
-import * as v from 'valibot';
+import * as v from "valibot";
 
 /**
  * Single orientation result schema
@@ -12,17 +12,17 @@ import * as v from 'valibot';
 export const OrientationResultSchema = v.object({
   indicator_id: v.pipe(
     v.string(),
-    v.minLength(1, 'Indicator ID must not be empty')
+    v.minLength(1, "Indicator ID must not be empty"),
   ),
   heat_map_orientation: v.union([
-    v.literal('higher-is-positive'),
-    v.literal('lower-is-positive'),
-    v.literal('neutral'),
-  ], 'Invalid heat map orientation'),
+    v.literal("higher-is-positive"),
+    v.literal("lower-is-positive"),
+    v.literal("neutral"),
+  ], "Invalid heat map orientation"),
   confidence: v.pipe(
     v.number(),
-    v.minValue(0, 'Confidence must be >= 0'),
-    v.maxValue(1, 'Confidence must be <= 1')
+    v.minValue(0, "Confidence must be >= 0"),
+    v.maxValue(1, "Confidence must be <= 1"),
   ),
   reasoning: v.optional(v.string()),
 });
@@ -33,7 +33,7 @@ export const OrientationResultSchema = v.object({
 export const OrientationBatchSchema = v.object({
   results: v.pipe(
     v.array(OrientationResultSchema),
-    v.minLength(1, 'Batch must contain at least one result')
+    v.minLength(1, "Batch must contain at least one result"),
   ),
 });
 

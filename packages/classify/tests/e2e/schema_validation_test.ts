@@ -9,28 +9,25 @@
  * - Category matches type
  */
 
-import { classifyIndicatorsWithOptions } from '../../src/classify.ts';
-import type { LLMConfig } from '../../src/types.ts';
+import { classifyIndicatorsWithOptions } from "../../src/classify.ts";
+import type { LLMConfig } from "../../src/types.ts";
+import { assertValidSchema, loadAllFixtures } from "../utils.ts";
 import {
-  loadAllFixtures,
-  assertValidSchema,
-} from '../utils.ts';
-import {
+  getModelForProvider,
   isProviderAvailable,
   requireApiKey,
-  getModelForProvider,
   testThresholds,
-} from '../config.ts';
+} from "../config.ts";
 
 /**
  * Run schema validation tests for a specific provider
  */
 async function testSchemaValidationForProvider(
-  providerName: 'openai' | 'anthropic' | 'gemini'
+  providerName: "openai" | "anthropic" | "gemini",
 ) {
   if (!isProviderAvailable(providerName)) {
     console.log(
-      `⚠️  Skipping ${providerName} tests: API key not set (${providerName.toUpperCase()}_API_KEY)`
+      `⚠️  Skipping ${providerName} tests: API key not set (${providerName.toUpperCase()}_API_KEY)`,
     );
     return;
   }
@@ -38,10 +35,10 @@ async function testSchemaValidationForProvider(
   const apiKey = requireApiKey(providerName);
   const model = getModelForProvider(providerName);
 
-  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n${"=".repeat(60)}`);
   console.log(`SCHEMA VALIDATION TEST: ${providerName.toUpperCase()}`);
   console.log(`Model: ${model}`);
-  console.log(`${'='.repeat(60)}\n`);
+  console.log(`${"=".repeat(60)}\n`);
 
   // Load all fixtures
   const fixtures = await loadAllFixtures();
@@ -81,7 +78,9 @@ async function testSchemaValidationForProvider(
           console.log(`  ✓ ${enriched.name}`);
         } catch (error) {
           invalidSchemas++;
-          const errorMsg = error instanceof Error ? error.message : String(error);
+          const errorMsg = error instanceof Error
+            ? error.message
+            : String(error);
           errors.push({
             indicator: enriched.name,
             error: errorMsg,
@@ -92,7 +91,9 @@ async function testSchemaValidationForProvider(
 
       // Report failed indicators
       if (result.failed.length > 0) {
-        console.log(`\n  Failed to classify ${result.failed.length} indicators:`);
+        console.log(
+          `\n  Failed to classify ${result.failed.length} indicators:`,
+        );
         for (const failed of result.failed) {
           console.log(`    ✗ ${failed.indicator.name}: ${failed.error}`);
           errors.push({
@@ -118,15 +119,17 @@ async function testSchemaValidationForProvider(
   const passRate = totalIndicators > 0 ? validSchemas / totalIndicators : 0;
 
   // Print summary
-  console.log(`\n${'='.repeat(60)}`);
+  console.log(`\n${"=".repeat(60)}`);
   console.log(`SCHEMA VALIDATION SUMMARY: ${providerName.toUpperCase()}`);
-  console.log(`${'='.repeat(60)}`);
+  console.log(`${"=".repeat(60)}`);
   console.log(`Total indicators tested: ${totalIndicators}`);
   console.log(`✓ Valid schemas: ${validSchemas}`);
   console.log(`✗ Invalid schemas: ${invalidSchemas}`);
   console.log(`Pass rate: ${(passRate * 100).toFixed(1)}%`);
-  console.log(`Threshold: ${(testThresholds.schemaValidation * 100).toFixed(1)}%`);
-  console.log(`${'='.repeat(60)}\n`);
+  console.log(
+    `Threshold: ${(testThresholds.schemaValidation * 100).toFixed(1)}%`,
+  );
+  console.log(`${"=".repeat(60)}\n`);
 
   // Print errors if any
   if (errors.length > 0) {
@@ -144,7 +147,11 @@ async function testSchemaValidationForProvider(
   // Assert minimum pass rate
   if (passRate < testThresholds.schemaValidation) {
     throw new Error(
-      `Schema validation pass rate ${(passRate * 100).toFixed(1)}% is below threshold ${(testThresholds.schemaValidation * 100).toFixed(1)}%`
+      `Schema validation pass rate ${
+        (passRate * 100).toFixed(1)
+      }% is below threshold ${
+        (testThresholds.schemaValidation * 100).toFixed(1)
+      }%`,
     );
   }
 
@@ -153,28 +160,27 @@ async function testSchemaValidationForProvider(
 
 // Test OpenAI
 Deno.test({
-  name: 'Schema Validation - OpenAI',
+  name: "Schema Validation - OpenAI",
   async fn() {
-    await testSchemaValidationForProvider('openai');
+    await testSchemaValidationForProvider("openai");
   },
-  ignore: !isProviderAvailable('openai'),
+  ignore: !isProviderAvailable("openai"),
 });
 
 // Test Anthropic
 Deno.test({
-  name: 'Schema Validation - Anthropic',
+  name: "Schema Validation - Anthropic",
   async fn() {
-    await testSchemaValidationForProvider('anthropic');
+    await testSchemaValidationForProvider("anthropic");
   },
-  ignore: !isProviderAvailable('anthropic'),
+  ignore: !isProviderAvailable("anthropic"),
 });
 
 // Test Gemini
 Deno.test({
-  name: 'Schema Validation - Gemini',
+  name: "Schema Validation - Gemini",
   async fn() {
-    await testSchemaValidationForProvider('gemini');
+    await testSchemaValidationForProvider("gemini");
   },
-  ignore: !isProviderAvailable('gemini'),
+  ignore: !isProviderAvailable("gemini"),
 });
-

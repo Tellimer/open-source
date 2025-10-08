@@ -56,7 +56,9 @@ const enriched = await classifyIndicators(indicators, config);
 for (const indicator of enriched) {
   console.log(`${indicator.name}:`);
   console.log(`  Type: ${indicator.classification.indicator_type}`);
-  console.log(`  Monetary: ${indicator.classification.is_currency_denominated}`);
+  console.log(
+    `  Monetary: ${indicator.classification.is_currency_denominated}`,
+  );
   console.log(`  Cumulative: ${indicator.classification.is_cumulative}`);
 }
 ```
@@ -223,4 +225,3 @@ const config = {
 
 - [GitHub Issues](https://github.com/Tellimer/open-source/issues)
 - [Main Repository](https://github.com/Tellimer/open-source)
-

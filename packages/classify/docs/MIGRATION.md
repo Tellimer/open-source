@@ -4,25 +4,27 @@ This guide helps you migrate from V1 (single-pass) to V2 (multi-stage) pipeline.
 
 ## Overview
 
-V2 is **opt-in** and **non-breaking**. V1 remains the default pipeline. Both can coexist in the same project.
+V2 is **opt-in** and **non-breaking**. V1 remains the default pipeline. Both can
+coexist in the same project.
 
 ## Quick Comparison
 
-| Feature | V1 | V2 |
-|---------|----|----|
-| **API** | `classifyIndicators()` | `classifyIndicatorsV2()` |
-| **Stages** | Single pass | 6 stages (Router → Specialist → Orientation → Flagging → Review → Output) |
-| **Database** | None | SQLite (local or remote) |
-| **Prompts** | Single generic prompt | 7 family-specific prompts |
-| **Quality Control** | None | Automatic flagging + LLM review |
-| **Resume** | No | Yes (via persistent state) |
-| **Cost** | ~$0.15 per 100 indicators | ~$0.45 per 100 indicators (3x) |
-| **Accuracy** | Good | Better (family-based routing) |
-| **Setup** | None | Requires database initialization |
+| Feature             | V1                        | V2                                                                        |
+| ------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| **API**             | `classifyIndicators()`    | `classifyIndicatorsV2()`                                                  |
+| **Stages**          | Single pass               | 6 stages (Router → Specialist → Orientation → Flagging → Review → Output) |
+| **Database**        | None                      | SQLite (local or remote)                                                  |
+| **Prompts**         | Single generic prompt     | 7 family-specific prompts                                                 |
+| **Quality Control** | None                      | Automatic flagging + LLM review                                           |
+| **Resume**          | No                        | Yes (via persistent state)                                                |
+| **Cost**            | ~$0.15 per 100 indicators | ~$0.45 per 100 indicators (3x)                                            |
+| **Accuracy**        | Good                      | Better (family-based routing)                                             |
+| **Setup**           | None                      | Requires database initialization                                          |
 
 ## When to Migrate
 
 ### Choose V2 when:
+
 - You need **higher accuracy** (family-based routing)
 - You want **quality control** (automatic flagging and review)
 - You need **persistent state** (resume on failure)
@@ -30,6 +32,7 @@ V2 is **opt-in** and **non-breaking**. V1 remains the default pipeline. Both can
 - You need **audit trail** (execution history in database)
 
 ### Stick with V1 when:
+
 - You need **simplicity** (one function call, no database)
 - You want **lower cost** (3x cheaper)
 - You're **prototyping** (faster to get started)
@@ -58,9 +61,9 @@ V2 uses AI SDK and Valibot (already in package):
 V2 requires a SQLite database:
 
 ```typescript
-import { createLocalDatabase } from '@tellimer/classify';
+import { createLocalDatabase } from "@tellimer/classify";
 
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 ```
 
@@ -69,7 +72,7 @@ await db.initialize();
 #### Before (V1)
 
 ```typescript
-import { classifyIndicators } from '@tellimer/classify';
+import { classifyIndicators } from "@tellimer/classify";
 
 const indicators = [
   { name: "GDP", units: "USD billions" },
@@ -77,9 +80,9 @@ const indicators = [
 ];
 
 const config = {
-  provider: 'openai',
+  provider: "openai",
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-4o',
+  model: "gpt-4o",
 };
 
 const enriched = await classifyIndicators(indicators, config);
@@ -90,7 +93,7 @@ console.log(enriched[0].classification);
 #### After (V2)
 
 ```typescript
-import { classifyIndicatorsV2, createLocalDatabase } from '@tellimer/classify';
+import { classifyIndicatorsV2, createLocalDatabase } from "@tellimer/classify";
 
 const indicators = [
   { name: "GDP", units: "USD billions" },
@@ -98,13 +101,13 @@ const indicators = [
 ];
 
 const config = {
-  provider: 'openai',
+  provider: "openai",
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-4o',
+  model: "gpt-4o",
 };
 
 // Create and initialize database
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 // Run V2 pipeline
@@ -170,6 +173,7 @@ console.log(result.stages.router);
 ### 1. Result Structure
 
 **V1** returns enriched indicators:
+
 ```typescript
 interface EnrichedIndicator {
   id: string;
@@ -181,6 +185,7 @@ interface EnrichedIndicator {
 ```
 
 **V2** returns comprehensive pipeline result:
+
 ```typescript
 interface V2PipelineResult {
   classifications: V2Classification[];
@@ -194,14 +199,16 @@ interface V2PipelineResult {
 ### 2. Database Requirement
 
 **V1:** No database needed
+
 ```typescript
 const enriched = await classifyIndicators(indicators, config);
 // That's it!
 ```
 
 **V2:** Requires database initialization
+
 ```typescript
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 const result = await classifyIndicatorsV2(indicators, config, { database: db });
@@ -212,9 +219,10 @@ db.close(); // Don't forget to close
 ### 3. Configuration Options
 
 **V1:** Simple config
+
 ```typescript
 const result = await classifyIndicatorsWithOptions(indicators, {
-  llmConfig: { provider: 'openai', apiKey: '...' },
+  llmConfig: { provider: "openai", apiKey: "..." },
   batchSize: 5,
   maxRetries: 3,
   debug: true,
@@ -222,6 +230,7 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ```
 
 **V2:** Extensive stage-specific config
+
 ```typescript
 const result = await classifyIndicatorsV2(indicators, llmConfig, {
   database: db,
@@ -249,27 +258,29 @@ const result = await classifyIndicatorsV2(indicators, llmConfig, {
 ### 4. Quality Control
 
 **V1:** No quality control
+
 ```typescript
 // Manual checks if needed
 const enriched = await classifyIndicators(indicators, config);
-const lowConfidence = enriched.filter(e => e.classification.confidence < 0.8);
+const lowConfidence = enriched.filter((e) => e.classification.confidence < 0.8);
 ```
 
 **V2:** Automatic flagging and review
+
 ```typescript
 const result = await classifyIndicatorsV2(indicators, config, { database: db });
 
 // Flagged indicators
-const flagged = result.classifications.filter(c => c.flags?.length > 0);
+const flagged = result.classifications.filter((c) => c.flags?.length > 0);
 
 // Escalated (need human review)
-const escalated = result.classifications.filter(c =>
-  c.review_decision?.action === 'escalate'
+const escalated = result.classifications.filter((c) =>
+  c.review_decision?.action === "escalate"
 );
 
 // Fixed by review
-const fixed = result.classifications.filter(c =>
-  c.review_decision?.action === 'fix'
+const fixed = result.classifications.filter((c) =>
+  c.review_decision?.action === "fix"
 );
 ```
 
@@ -284,7 +295,7 @@ import {
   classifyIndicators,
   classifyIndicatorsV2,
   createLocalDatabase,
-} from '@tellimer/classify';
+} from "@tellimer/classify";
 
 async function classify(indicators: Indicator[], useV2 = false) {
   if (!useV2) {
@@ -292,9 +303,11 @@ async function classify(indicators: Indicator[], useV2 = false) {
     return await classifyIndicators(indicators, config);
   } else {
     // V2: High accuracy, quality control
-    const db = createLocalDatabase('./data/classify_v2.db');
+    const db = createLocalDatabase("./data/classify_v2.db");
     await db.initialize();
-    const result = await classifyIndicatorsV2(indicators, config, { database: db });
+    const result = await classifyIndicatorsV2(indicators, config, {
+      database: db,
+    });
     db.close();
     return result.classifications;
   }
@@ -310,24 +323,26 @@ Use V1 for initial pass, V2 for low-confidence cases:
 const v1Results = await classifyIndicators(indicators, config);
 
 // 2. Identify low confidence
-const lowConfidence = v1Results.filter(r => r.classification.confidence < 0.8);
+const lowConfidence = v1Results.filter((r) =>
+  r.classification.confidence < 0.8
+);
 
 // 3. Re-run with V2 for better accuracy
 if (lowConfidence.length > 0) {
-  const db = createLocalDatabase('./data/classify_v2.db');
+  const db = createLocalDatabase("./data/classify_v2.db");
   await db.initialize();
 
   const v2Results = await classifyIndicatorsV2(
-    lowConfidence.map(r => ({ id: r.id, name: r.name, units: r.units })),
+    lowConfidence.map((r) => ({ id: r.id, name: r.name, units: r.units })),
     config,
-    { database: db }
+    { database: db },
   );
 
   db.close();
 
   // 4. Merge results
-  const final = v1Results.map(v1 => {
-    const v2 = v2Results.classifications.find(c => c.id === v1.id);
+  const final = v1Results.map((v1) => {
+    const v2 = v2Results.classifications.find((c) => c.id === v1.id);
     return v2 || v1;
   });
 }
@@ -338,21 +353,27 @@ if (lowConfidence.length > 0) {
 Reuse database across multiple runs:
 
 ```typescript
-import { createLocalDatabase, classifyIndicatorsV2 } from '@tellimer/classify';
+import { classifyIndicatorsV2, createLocalDatabase } from "@tellimer/classify";
 
 // Initialize once
-const db = createLocalDatabase('./data/classify_v2.db');
+const db = createLocalDatabase("./data/classify_v2.db");
 await db.initialize();
 
 try {
   // Run 1
-  const batch1 = await classifyIndicatorsV2(indicators1, config, { database: db });
+  const batch1 = await classifyIndicatorsV2(indicators1, config, {
+    database: db,
+  });
 
   // Run 2 (reuses same database)
-  const batch2 = await classifyIndicatorsV2(indicators2, config, { database: db });
+  const batch2 = await classifyIndicatorsV2(indicators2, config, {
+    database: db,
+  });
 
   // Run 3
-  const batch3 = await classifyIndicatorsV2(indicators3, config, { database: db });
+  const batch3 = await classifyIndicatorsV2(indicators3, config, {
+    database: db,
+  });
 } finally {
   db.close(); // Close when done
 }
@@ -366,8 +387,8 @@ V2 may escalate indicators for human review:
 const result = await classifyIndicatorsV2(indicators, config, { database: db });
 
 // Get escalated indicators
-const escalated = result.classifications.filter(c =>
-  c.review_decision?.action === 'escalate'
+const escalated = result.classifications.filter((c) =>
+  c.review_decision?.action === "escalate"
 );
 
 if (escalated.length > 0) {
@@ -392,10 +413,12 @@ if (escalated.length > 0) {
 V2 costs ~3x more than V1 due to multiple stages:
 
 ### V1 Cost (100 indicators)
+
 - 1 API call per batch (~10 batches)
 - **Total: ~$0.15**
 
 ### V2 Cost (100 indicators)
+
 - Router: 3 batches
 - Specialist: 8 batches (grouped by family)
 - Orientation: 2 batches
@@ -403,6 +426,7 @@ V2 costs ~3x more than V1 due to multiple stages:
 - **Total: ~$0.45**
 
 **Cost optimization:**
+
 - Use V1 for initial pass
 - Use V2 only for low-confidence cases
 - Adjust batch sizes to reduce API calls
@@ -410,20 +434,24 @@ V2 costs ~3x more than V1 due to multiple stages:
 
 ## Performance Comparison
 
-| Metric | V1 | V2 |
-|--------|----|----|
-| **100 indicators** | ~10-15s | ~30-40s |
-| **API calls** | ~10 | ~14 |
-| **Accuracy** | Good | Better |
-| **Resume on failure** | No | Yes |
-| **Quality control** | Manual | Automatic |
+| Metric                | V1      | V2        |
+| --------------------- | ------- | --------- |
+| **100 indicators**    | ~10-15s | ~30-40s   |
+| **API calls**         | ~10     | ~14       |
+| **Accuracy**          | Good    | Better    |
+| **Resume on failure** | No      | Yes       |
+| **Quality control**   | Manual  | Automatic |
 
 ## Testing Migration
 
 Test both pipelines side-by-side:
 
 ```typescript
-import { classifyIndicators, classifyIndicatorsV2, createLocalDatabase } from '@tellimer/classify';
+import {
+  classifyIndicators,
+  classifyIndicatorsV2,
+  createLocalDatabase,
+} from "@tellimer/classify";
 
 const testIndicators = [
   { name: "GDP", units: "USD billions" },
@@ -435,9 +463,11 @@ const testIndicators = [
 const v1Results = await classifyIndicators(testIndicators, config);
 
 // V2 results
-const db = createLocalDatabase('./test_v2.db');
+const db = createLocalDatabase("./test_v2.db");
 await db.initialize();
-const v2Result = await classifyIndicatorsV2(testIndicators, config, { database: db });
+const v2Result = await classifyIndicatorsV2(testIndicators, config, {
+  database: db,
+});
 db.close();
 
 // Compare
@@ -460,7 +490,8 @@ for (let i = 0; i < testIndicators.length; i++) {
 If V2 doesn't work as expected:
 
 1. **Keep V1 function** - V1 is not removed
-2. **Switch back** - Simply use `classifyIndicators()` instead of `classifyIndicatorsV2()`
+2. **Switch back** - Simply use `classifyIndicators()` instead of
+   `classifyIndicatorsV2()`
 3. **No data loss** - V2 database is separate, doesn't affect V1
 
 ```typescript
@@ -505,7 +536,7 @@ try {
 const result = await classifyIndicatorsV2(indicators, config, {
   database: db,
   thresholds: {
-    confidenceFamilyMin: 0.65,  // Lower from 0.75
+    confidenceFamilyMin: 0.65, // Lower from 0.75
     confidenceClsMin: 0.65,
     confidenceOrientMin: 0.65,
   },
@@ -522,14 +553,14 @@ const result = await classifyIndicatorsV2(indicators, config, {
 const result = await classifyIndicatorsV2(indicators, config, {
   database: db,
   batch: {
-    routerBatchSize: 50,        // Increase from 40
-    specialistBatchSize: 30,    // Increase from 25
-    orientationBatchSize: 60,   // Increase from 50
+    routerBatchSize: 50, // Increase from 40
+    specialistBatchSize: 30, // Increase from 25
+    orientationBatchSize: 60, // Increase from 50
   },
   concurrency: {
-    router: 8,                  // Increase from 4
-    specialist: 6,              // Increase from 3
-    orientation: 8,             // Increase from 4
+    router: 8, // Increase from 4
+    specialist: 6, // Increase from 3
+    orientation: 8, // Increase from 4
   },
 });
 ```

@@ -1,19 +1,21 @@
 # V2 Review Features
 
-The V2 pipeline includes two powerful review features for quality control and auditing of classifications.
+The V2 pipeline includes two powerful review features for quality control and
+auditing of classifications.
 
 ## Overview
 
-| Feature | Purpose | Auto-Fix | Output |
-|---------|---------|----------|--------|
-| `review:all` | Review and fix all classifications | ✅ Yes | Applies fixes automatically |
-| `review:all-flag` | Audit all classifications | ❌ No | Flags issues for human review |
+| Feature           | Purpose                            | Auto-Fix | Output                        |
+| ----------------- | ---------------------------------- | -------- | ----------------------------- |
+| `review:all`      | Review and fix all classifications | ✅ Yes   | Applies fixes automatically   |
+| `review:all-flag` | Audit all classifications          | ❌ No    | Flags issues for human review |
 
 ---
 
 ## 1. Review:All (Auto-Fix)
 
-**Purpose**: Review all classifications and automatically apply fixes when issues are found.
+**Purpose**: Review all classifications and automatically apply fixes when
+issues are found.
 
 ### Usage
 
@@ -61,6 +63,7 @@ Review-all complete.
 ### Use Cases
 
 ✅ **After Prompt Improvements** - Apply new logic to historical data
+
 ```bash
 REVIEW_MODEL=claude-sonnet-4-5-20250929 deno task review:all
 ```
@@ -73,7 +76,8 @@ REVIEW_MODEL=claude-sonnet-4-5-20250929 deno task review:all
 
 ## 2. Review:All-Flag (Audit Mode)
 
-**Purpose**: Review all classifications and flag issues WITHOUT auto-fixing. Creates a list of issues for human oversight.
+**Purpose**: Review all classifications and flag issues WITHOUT auto-fixing.
+Creates a list of issues for human oversight.
 
 ### Usage
 
@@ -171,6 +175,7 @@ WHERE f.flag_type IN ('review_suggested_fix', 'review_escalation');
 ### Use Cases
 
 ✅ **Quality Audit** - Review all data without making changes
+
 ```bash
 REVIEW_MODEL=claude-sonnet-4-5-20250929 deno task review:all-flag
 ```
@@ -186,12 +191,14 @@ REVIEW_MODEL=claude-sonnet-4-5-20250929 deno task review:all-flag
 ## Comparison: When to Use Which?
 
 ### Use `review:all` when:
+
 - ✅ You trust the review model to make corrections
 - ✅ You want to fix issues automatically
 - ✅ You've improved prompts and want to apply fixes to historical data
 - ✅ You want a quick cleanup of systematic errors
 
 ### Use `review:all-flag` when:
+
 - ✅ You want human oversight before making changes
 - ✅ You're auditing quality without committing to fixes
 - ✅ You want to compare multiple review models' suggestions
@@ -272,7 +279,8 @@ CREATE TABLE flagging_results (
 
 ## Best Practices
 
-1. **Start with Audit Mode** - Always run `review:all-flag` first to see what would change
+1. **Start with Audit Mode** - Always run `review:all-flag` first to see what
+   would change
 2. **Review High-Confidence Fixes** - Focus on fixes with >85% confidence
 3. **Escalate Low-Confidence** - Have humans review anything <70% confidence
 4. **Use Strong Models** - Use Claude Sonnet 4.5 or GPT-5 for review

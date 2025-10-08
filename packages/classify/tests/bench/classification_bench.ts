@@ -7,71 +7,74 @@
  * - Batch sizes
  */
 
-import { classifyIndicators, classifyIndicatorsWithOptions } from '../../src/classify.ts';
-import type { Indicator, LLMConfig } from '../../src/types.ts';
+import {
+  classifyIndicators,
+  classifyIndicatorsWithOptions,
+} from "../../src/classify.ts";
+import type { Indicator, LLMConfig } from "../../src/types.ts";
 
 // Sample indicators for benchmarking
 const sampleIndicators: Indicator[] = [
   {
-    name: 'GDP',
-    units: 'USD billions',
-    currency_code: 'USD',
-    periodicity: 'quarterly',
+    name: "GDP",
+    units: "USD billions",
+    currency_code: "USD",
+    periodicity: "quarterly",
     sample_values: [26500, 27000, 27200, 27500],
   },
   {
-    name: 'Unemployment Rate',
-    units: '%',
-    periodicity: 'monthly',
+    name: "Unemployment Rate",
+    units: "%",
+    periodicity: "monthly",
     sample_values: [3.7, 3.9, 3.8, 3.9],
   },
   {
-    name: 'Inflation Rate',
-    units: '%',
-    periodicity: 'monthly',
+    name: "Inflation Rate",
+    units: "%",
+    periodicity: "monthly",
     sample_values: [3.1, 3.2, 3.5, 3.4],
   },
   {
-    name: 'Trade Balance',
-    units: 'USD millions',
-    currency_code: 'USD',
-    periodicity: 'monthly',
+    name: "Trade Balance",
+    units: "USD millions",
+    currency_code: "USD",
+    periodicity: "monthly",
     sample_values: [-68000, -70000, -65000, -72000],
   },
   {
-    name: 'Consumer Price Index',
-    units: 'Index (2015=100)',
-    periodicity: 'monthly',
+    name: "Consumer Price Index",
+    units: "Index (2015=100)",
+    periodicity: "monthly",
     sample_values: [308.4, 310.3, 312.2, 313.5],
   },
   {
-    name: 'S&P 500 Index',
-    units: 'index',
-    periodicity: 'daily',
+    name: "S&P 500 Index",
+    units: "index",
+    periodicity: "daily",
     sample_values: [4567, 4589, 4543, 4612],
   },
   {
-    name: 'Housing Starts',
-    units: 'thousands of units',
-    periodicity: 'monthly',
+    name: "Housing Starts",
+    units: "thousands of units",
+    periodicity: "monthly",
     sample_values: [1331, 1521, 1321, 1360],
   },
   {
-    name: '10-Year Treasury Yield',
-    units: '%',
-    periodicity: 'daily',
+    name: "10-Year Treasury Yield",
+    units: "%",
+    periodicity: "daily",
     sample_values: [4.18, 4.22, 4.15, 4.28],
   },
   {
-    name: 'VIX Volatility Index',
-    units: 'index',
-    periodicity: 'daily',
+    name: "VIX Volatility Index",
+    units: "index",
+    periodicity: "daily",
     sample_values: [14.2, 15.8, 13.5, 16.3],
   },
   {
-    name: 'Consumer Sentiment Index',
-    units: 'index',
-    periodicity: 'monthly',
+    name: "Consumer Sentiment Index",
+    units: "index",
+    periodicity: "monthly",
     sample_values: [79.0, 76.9, 79.4, 77.2],
   },
 ];
@@ -96,27 +99,27 @@ function generateIndicators(count: number): Indicator[] {
  * Get test config from environment
  */
 function getTestConfig(): LLMConfig | null {
-  const openaiKey = Deno.env.get('OPENAI_API_KEY');
-  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
-  const geminiKey = Deno.env.get('GEMINI_API_KEY');
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
 
   if (openaiKey) {
     return {
-      provider: 'openai',
+      provider: "openai",
       apiKey: openaiKey,
-      model: 'gpt-4o-mini', // Use cheaper model for benchmarks
+      model: "gpt-4o-mini", // Use cheaper model for benchmarks
     };
   } else if (anthropicKey) {
     return {
-      provider: 'anthropic',
+      provider: "anthropic",
       apiKey: anthropicKey,
-      model: 'claude-3-5-sonnet-20241022',
+      model: "claude-3-5-sonnet-20241022",
     };
   } else if (geminiKey) {
     return {
-      provider: 'gemini',
+      provider: "gemini",
       apiKey: geminiKey,
-      model: 'gemini-2.0-flash-thinking-exp-01-21',
+      model: "gemini-2.0-flash-thinking-exp-01-21",
     };
   }
 
@@ -127,15 +130,15 @@ function getTestConfig(): LLMConfig | null {
 const config = getTestConfig();
 if (!config) {
   console.warn(
-    '⚠️  No API keys found. Skipping benchmarks. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY.'
+    "⚠️  No API keys found. Skipping benchmarks. Set OPENAI_API_KEY, ANTHROPIC_API_KEY, or GEMINI_API_KEY.",
   );
   Deno.exit(0);
 }
 
 // Baseline: Single Indicator
 Deno.bench({
-  name: 'classify 1 indicator',
-  group: 'indicator-count',
+  name: "classify 1 indicator",
+  group: "indicator-count",
   baseline: true,
   async fn() {
     const indicators = generateIndicators(1);
@@ -145,8 +148,8 @@ Deno.bench({
 
 // Small batch
 Deno.bench({
-  name: 'classify 10 indicators',
-  group: 'indicator-count',
+  name: "classify 10 indicators",
+  group: "indicator-count",
   async fn() {
     const indicators = generateIndicators(10);
     await classifyIndicatorsWithOptions(indicators, {
@@ -159,8 +162,8 @@ Deno.bench({
 
 // Medium batch
 Deno.bench({
-  name: 'classify 25 indicators',
-  group: 'indicator-count',
+  name: "classify 25 indicators",
+  group: "indicator-count",
   async fn() {
     const indicators = generateIndicators(25);
     await classifyIndicatorsWithOptions(indicators, {
@@ -173,8 +176,8 @@ Deno.bench({
 
 // Large batch
 Deno.bench({
-  name: 'classify 50 indicators',
-  group: 'indicator-count',
+  name: "classify 50 indicators",
+  group: "indicator-count",
   async fn() {
     const indicators = generateIndicators(50);
     await classifyIndicatorsWithOptions(indicators, {
@@ -187,8 +190,8 @@ Deno.bench({
 
 // Very large batch (stress test)
 Deno.bench({
-  name: 'classify 100 indicators',
-  group: 'indicator-count',
+  name: "classify 100 indicators",
+  group: "indicator-count",
   async fn() {
     const indicators = generateIndicators(100);
     await classifyIndicatorsWithOptions(indicators, {
@@ -203,8 +206,8 @@ Deno.bench({
 const indicators25 = generateIndicators(25);
 
 Deno.bench({
-  name: 'batch size 5',
-  group: 'batch-size',
+  name: "batch size 5",
+  group: "batch-size",
   baseline: true,
   async fn() {
     await classifyIndicatorsWithOptions(indicators25, {
@@ -216,8 +219,8 @@ Deno.bench({
 });
 
 Deno.bench({
-  name: 'batch size 10',
-  group: 'batch-size',
+  name: "batch size 10",
+  group: "batch-size",
   async fn() {
     await classifyIndicatorsWithOptions(indicators25, {
       llmConfig: config,
@@ -228,8 +231,8 @@ Deno.bench({
 });
 
 Deno.bench({
-  name: 'batch size 25 (all at once)',
-  group: 'batch-size',
+  name: "batch size 25 (all at once)",
+  group: "batch-size",
   async fn() {
     await classifyIndicatorsWithOptions(indicators25, {
       llmConfig: config,
@@ -243,8 +246,8 @@ Deno.bench({
 const indicators10 = generateIndicators(10);
 
 Deno.bench({
-  name: 'without reasoning',
-  group: 'reasoning',
+  name: "without reasoning",
+  group: "reasoning",
   baseline: true,
   async fn() {
     await classifyIndicatorsWithOptions(indicators10, {
@@ -257,8 +260,8 @@ Deno.bench({
 });
 
 Deno.bench({
-  name: 'with reasoning',
-  group: 'reasoning',
+  name: "with reasoning",
+  group: "reasoning",
   async fn() {
     await classifyIndicatorsWithOptions(indicators10, {
       llmConfig: { ...config, includeReasoning: true },

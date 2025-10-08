@@ -3,8 +3,8 @@
  * @module
  */
 
-import type { Indicator } from '../../types.ts';
-import type { IndicatorFamily, RouterResult } from '../types.ts';
+import type { Indicator } from "../../types.ts";
+import type { IndicatorFamily, RouterResult } from "../types.ts";
 
 /**
  * Indicator with router result attached
@@ -20,7 +20,7 @@ export interface IndicatorWithFamily extends Indicator {
  */
 export function groupIndicatorsByFamily(
   indicators: Indicator[],
-  routerResults: RouterResult[]
+  routerResults: RouterResult[],
 ): Map<IndicatorFamily, IndicatorWithFamily[]> {
   const grouped = new Map<IndicatorFamily, IndicatorWithFamily[]>();
 
@@ -59,7 +59,7 @@ export function groupIndicatorsByFamily(
  */
 export function createFamilyBatches(
   indicators: IndicatorWithFamily[],
-  batchSize: number = 25
+  batchSize: number = 25,
 ): IndicatorWithFamily[][] {
   const batches: IndicatorWithFamily[][] = [];
 
@@ -74,7 +74,7 @@ export function createFamilyBatches(
  * Get family distribution summary
  */
 export function getFamilyDistribution(
-  grouped: Map<IndicatorFamily, IndicatorWithFamily[]>
+  grouped: Map<IndicatorFamily, IndicatorWithFamily[]>,
 ): Record<IndicatorFamily, number> {
   const distribution: Record<IndicatorFamily, number> = {} as any;
 

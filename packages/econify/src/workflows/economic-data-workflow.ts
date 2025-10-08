@@ -156,6 +156,10 @@ export interface ParsedData {
   scale?: string; // "Millions", "Billions", "Thousands" - takes precedence over unit string parsing
   currency_code?: string; // "USD", "SAR", "XOF" - takes precedence over unit string parsing
 
+  /** Classification from classify package - when provided, used instead of econify's own classification */
+  indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio", etc.
+  is_currency_denominated?: boolean; // true for currency amounts, false otherwise
+
   parsedUnit?: ParsedUnit;
   inferredUnit?: string;
   normalized?: number;

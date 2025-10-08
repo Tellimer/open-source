@@ -3,20 +3,20 @@
  * Tests complete V2 pipeline using existing fixtures
  */
 
-import { assertEquals, assertExists } from '@std/assert';
-import { describe, it, beforeEach, afterEach } from '@std/testing/bdd';
+import { assertEquals, assertExists } from "@std/assert";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import {
   classifyIndicatorsV2,
   createLocalDatabase,
-  type V2Config,
   type LLMConfig,
-} from '../../../mod.ts';
-import { loadAllFixtures, type FixtureFile } from '../../../tests/utils.ts';
+  type V2Config,
+} from "../../../mod.ts";
+import { type FixtureFile, loadAllFixtures } from "../../../tests/utils.ts";
 
-describe('V2 Pipeline', () => {
+describe("V2 Pipeline", () => {
   let db: ReturnType<typeof createLocalDatabase>;
   let fixtures: FixtureFile[];
-  const testDbPath = './test_v2_pipeline.db';
+  const testDbPath = "./test_v2_pipeline.db";
 
   beforeEach(async () => {
     // Load all fixtures
@@ -39,17 +39,17 @@ describe('V2 Pipeline', () => {
     }
   });
 
-  describe('Full Pipeline Flow', () => {
-    it('should process physical-fundamental indicators', async () => {
-      const fixture = fixtures.find((f) => f.family === 'physical-fundamental');
-      assertExists(fixture, 'Physical fundamental fixture should exist');
+  describe("Full Pipeline Flow", () => {
+    it("should process physical-fundamental indicators", async () => {
+      const fixture = fixtures.find((f) => f.family === "physical-fundamental");
+      assertExists(fixture, "Physical fundamental fixture should exist");
 
       const indicators = fixture.indicators.slice(0, 3); // Test with first 3
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -74,7 +74,11 @@ describe('V2 Pipeline', () => {
         },
       };
 
-      const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);
+      const result = await classifyIndicatorsV2(
+        indicators,
+        llmConfig,
+        v2Config,
+      );
 
       // Verify result structure
       assertEquals(result.summary.total, indicators.length);
@@ -91,7 +95,7 @@ describe('V2 Pipeline', () => {
         assertExists(classification.indicator_type);
         assertExists(classification.temporal_aggregation);
         assertExists(classification.heat_map_orientation);
-        assertEquals(typeof classification.is_currency_denominated, 'boolean');
+        assertEquals(typeof classification.is_currency_denominated, "boolean");
       }
 
       // Verify stage metrics
@@ -102,7 +106,7 @@ describe('V2 Pipeline', () => {
       assertExists(result.stages.review);
     });
 
-    it('should handle multiple families', async () => {
+    it("should handle multiple families", async () => {
       // Mix indicators from different families
       const indicators = [];
       for (const fixture of fixtures.slice(0, 3)) {
@@ -110,9 +114,9 @@ describe('V2 Pipeline', () => {
       }
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -120,7 +124,11 @@ describe('V2 Pipeline', () => {
         database: db as any,
       };
 
-      const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);
+      const result = await classifyIndicatorsV2(
+        indicators,
+        llmConfig,
+        v2Config,
+      );
 
       assertEquals(result.summary.total, indicators.length);
       assertEquals(result.summary.successful, indicators.length);
@@ -132,15 +140,15 @@ describe('V2 Pipeline', () => {
     });
   });
 
-  describe('Flagging and Review', () => {
-    it('should flag low confidence indicators', async () => {
+  describe("Flagging and Review", () => {
+    it("should flag low confidence indicators", async () => {
       const fixture = fixtures[0];
       const indicators = fixture.indicators.slice(0, 5);
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -154,7 +162,11 @@ describe('V2 Pipeline', () => {
         },
       };
 
-      const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);
+      const result = await classifyIndicatorsV2(
+        indicators,
+        llmConfig,
+        v2Config,
+      );
 
       // Some indicators should be flagged with high thresholds
       assertExists(result.summary.flagged);
@@ -168,15 +180,15 @@ describe('V2 Pipeline', () => {
     });
   });
 
-  describe('Database Persistence', () => {
-    it('should persist all stage results', async () => {
+  describe("Database Persistence", () => {
+    it("should persist all stage results", async () => {
       const fixture = fixtures[0];
       const indicators = fixture.indicators.slice(0, 3);
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -188,43 +200,43 @@ describe('V2 Pipeline', () => {
 
       // Verify router results in database
       const routerResults = db
-        .prepare('SELECT * FROM router_results')
+        .prepare("SELECT * FROM router_results")
         .all();
       assertEquals(routerResults.length, indicators.length);
 
       // Verify specialist results in database
       const specialistResults = db
-        .prepare('SELECT * FROM specialist_results')
+        .prepare("SELECT * FROM specialist_results")
         .all();
       assertEquals(specialistResults.length, indicators.length);
 
       // Verify orientation results in database
       const orientationResults = db
-        .prepare('SELECT * FROM orientation_results')
+        .prepare("SELECT * FROM orientation_results")
         .all();
       assertEquals(orientationResults.length, indicators.length);
 
       // Verify classifications table populated
       const classifications = db
-        .prepare('SELECT * FROM classifications')
+        .prepare("SELECT * FROM classifications")
         .all();
       assertEquals(classifications.length, indicators.length);
 
       // Verify execution record created
       const executions = db
-        .prepare('SELECT * FROM pipeline_executions')
+        .prepare("SELECT * FROM pipeline_executions")
         .all();
       assertEquals(executions.length, 1);
     });
 
-    it('should support upsert behavior', async () => {
+    it("should support upsert behavior", async () => {
       const fixture = fixtures[0];
       const indicators = fixture.indicators.slice(0, 2);
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -236,35 +248,35 @@ describe('V2 Pipeline', () => {
       await classifyIndicatorsV2(indicators, llmConfig, v2Config);
 
       const countBefore = db
-        .prepare('SELECT COUNT(*) FROM classifications')
+        .prepare("SELECT COUNT(*) FROM classifications")
         .value();
 
       // Second run - should upsert, not duplicate
       await classifyIndicatorsV2(indicators, llmConfig, v2Config);
 
       const countAfter = db
-        .prepare('SELECT COUNT(*) FROM classifications')
+        .prepare("SELECT COUNT(*) FROM classifications")
         .value();
 
       assertEquals(countBefore, countAfter);
 
       // But should have 2 execution records
       const executions = db
-        .prepare('SELECT * FROM pipeline_executions')
+        .prepare("SELECT * FROM pipeline_executions")
         .all();
       assertEquals(executions.length, 2);
     });
   });
 
-  describe('Performance and Metrics', () => {
-    it('should track token usage and costs', async () => {
+  describe("Performance and Metrics", () => {
+    it("should track token usage and costs", async () => {
       const fixture = fixtures[0];
       const indicators = fixture.indicators.slice(0, 3);
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -272,7 +284,11 @@ describe('V2 Pipeline', () => {
         database: db as any,
       };
 
-      const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);
+      const result = await classifyIndicatorsV2(
+        indicators,
+        llmConfig,
+        v2Config,
+      );
 
       // Verify metrics exist
       assertExists(result.apiCalls);
@@ -284,14 +300,14 @@ describe('V2 Pipeline', () => {
       assertEquals(result.stages.orientation.apiCalls > 0, true);
     });
 
-    it('should complete within reasonable time', async () => {
+    it("should complete within reasonable time", async () => {
       const fixture = fixtures[0];
       const indicators = fixture.indicators.slice(0, 5);
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -300,7 +316,11 @@ describe('V2 Pipeline', () => {
       };
 
       const startTime = Date.now();
-      const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);
+      const result = await classifyIndicatorsV2(
+        indicators,
+        llmConfig,
+        v2Config,
+      );
       const duration = Date.now() - startTime;
 
       // Should complete in reasonable time (adjust as needed)
@@ -312,17 +332,17 @@ describe('V2 Pipeline', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle invalid indicators gracefully', async () => {
+  describe("Error Handling", () => {
+    it("should handle invalid indicators gracefully", async () => {
       const indicators = [
-        { name: '' }, // Invalid - no name
-        { name: 'Test', id: 'test-1' },
+        { name: "" }, // Invalid - no name
+        { name: "Test", id: "test-1" },
       ];
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: Deno.env.get('ANTHROPIC_API_KEY') || 'test-key',
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY") || "test-key",
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 
@@ -338,13 +358,13 @@ describe('V2 Pipeline', () => {
       }
     });
 
-    it('should record failed executions', async () => {
-      const indicators = [{ name: 'Test', id: 'test-1' }];
+    it("should record failed executions", async () => {
+      const indicators = [{ name: "Test", id: "test-1" }];
 
       const llmConfig: LLMConfig = {
-        provider: 'anthropic',
-        apiKey: 'invalid-key', // Invalid API key
-        model: 'claude-3-5-sonnet-20241022',
+        provider: "anthropic",
+        apiKey: "invalid-key", // Invalid API key
+        model: "claude-3-5-sonnet-20241022",
         temperature: 0.1,
       };
 

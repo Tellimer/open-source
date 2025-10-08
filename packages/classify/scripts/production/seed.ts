@@ -14,44 +14,44 @@
  * @module
  */
 
-import { createClient } from '@libsql/client';
-import { INDICATORS_DATA } from '../../data/indicators.ts';
-import { COUNTRY_INDICATORS } from '../../data/country_indicators.ts';
+import { createClient } from "@libsql/client";
+import { INDICATORS_DATA } from "../../data/indicators.ts";
+import { COUNTRY_INDICATORS } from "../../data/country_indicators.ts";
 
 async function seedProductionDatabase() {
-  console.log('\n🌱 Seeding Production Database (Railway libSQL)');
-  console.log('='.repeat(60));
+  console.log("\n🌱 Seeding Production Database (Railway libSQL)");
+  console.log("=".repeat(60));
 
   // Get connection details from environment
-  const dbUrl = Deno.env.get('RAILWAY_DATABASE_URL');
-  const authToken = Deno.env.get('RAILWAY_DATABASE_TOKEN');
+  const dbUrl = Deno.env.get("RAILWAY_DATABASE_URL");
+  const authToken = Deno.env.get("RAILWAY_DATABASE_TOKEN");
 
   if (!dbUrl) {
     console.error(
-      '❌ ERROR: RAILWAY_DATABASE_URL environment variable not set'
+      "❌ ERROR: RAILWAY_DATABASE_URL environment variable not set",
     );
     Deno.exit(1);
   }
 
   console.log(`📍 Database URL: ${dbUrl}`);
-  console.log(`🔐 Auth: ${authToken ? '✓ Token provided' : '✗ No token'}`);
+  console.log(`🔐 Auth: ${authToken ? "✓ Token provided" : "✗ No token"}`);
   console.log(`📊 Indicators: ${INDICATORS_DATA.length}`);
   console.log(`📊 Country Indicators: ${COUNTRY_INDICATORS.length}\n`);
 
   try {
     // Create libSQL client
-    console.log('🔌 Connecting to Railway libSQL...');
+    console.log("🔌 Connecting to Railway libSQL...");
     const client = createClient({
       url: dbUrl,
       authToken: authToken,
     });
 
     // Test connection
-    await client.execute('SELECT 1');
-    console.log('✅ Connected successfully\n');
+    await client.execute("SELECT 1");
+    console.log("✅ Connected successfully\n");
 
     // Insert indicators
-    console.log('💾 Inserting indicators...');
+    console.log("💾 Inserting indicators...");
     let indicatorCount = 0;
     const validIndicatorIds = new Set<string>();
 
@@ -88,22 +88,22 @@ async function seedProductionDatabase() {
 
         if (indicatorCount % 100 === 0) {
           console.log(
-            `   Inserted ${indicatorCount}/${INDICATORS_DATA.length} indicators...`
+            `   Inserted ${indicatorCount}/${INDICATORS_DATA.length} indicators...`,
           );
         }
-      } catch (error) {
+      } catch (_error) {
         console.error(
-          `   ⚠️  Failed to insert indicator ${ind.id}: ${error.message}`
+          `   ⚠️  Failed to insert indicator ${ind.id}: ${error.message}`,
         );
       }
     }
 
     console.log(
-      `✅ Inserted ${indicatorCount}/${INDICATORS_DATA.length} indicators\n`
+      `✅ Inserted ${indicatorCount}/${INDICATORS_DATA.length} indicators\n`,
     );
 
     // Insert country indicators (time series)
-    console.log('💾 Inserting country indicators (time series data)...');
+    console.log("💾 Inserting country indicators (time series data)...");
     let valueCount = 0;
     let skippedCount = 0;
     const batchSize = 1000;
@@ -138,68 +138,68 @@ async function seedProductionDatabase() {
             ],
           });
           valueCount++;
-        } catch (error) {
+        } catch (_error) {
           skippedCount++;
         }
       }
 
       if ((i + batchSize) % 10000 === 0) {
         console.log(
-          `   Inserted ${valueCount}/${COUNTRY_INDICATORS.length} values...`
+          `   Inserted ${valueCount}/${COUNTRY_INDICATORS.length} values...`,
         );
       }
     }
 
     console.log(
-      `✅ Inserted ${valueCount}/${COUNTRY_INDICATORS.length} country indicators`
+      `✅ Inserted ${valueCount}/${COUNTRY_INDICATORS.length} country indicators`,
     );
     if (skippedCount > 0) {
       console.log(`   ⚠️  Skipped ${skippedCount} invalid entries\n`);
     } else {
-      console.log('');
+      console.log("");
     }
 
     // Get final statistics
     const statsQueries = [
       {
-        name: 'Total Indicators',
-        query: 'SELECT COUNT(*) as count FROM source_indicators',
+        name: "Total Indicators",
+        query: "SELECT COUNT(*) as count FROM source_indicators",
       },
       {
-        name: 'Total Country Indicators',
-        query: 'SELECT COUNT(*) as count FROM source_country_indicators',
+        name: "Total Country Indicators",
+        query: "SELECT COUNT(*) as count FROM source_country_indicators",
       },
       {
-        name: 'Avg Values per Indicator',
+        name: "Avg Values per Indicator",
         query:
-          'SELECT ROUND(CAST(COUNT(*) AS REAL) / (SELECT COUNT(*) FROM source_indicators), 1) as avg FROM source_country_indicators',
+          "SELECT ROUND(CAST(COUNT(*) AS REAL) / (SELECT COUNT(*) FROM source_indicators), 1) as avg FROM source_country_indicators",
       },
     ];
 
-    console.log('📊 Final Statistics:');
-    console.log('='.repeat(60));
+    console.log("📊 Final Statistics:");
+    console.log("=".repeat(60));
     for (const { name, query } of statsQueries) {
       try {
         const result = await client.execute(query);
         const value = result.rows[0]?.count || result.rows[0]?.avg || 0;
         console.log(`   ${name.padEnd(35)}: ${value}`);
-      } catch (error) {
+      } catch (_error) {
         console.log(`   ${name.padEnd(35)}: Error`);
       }
     }
-    console.log('='.repeat(60));
+    console.log("=".repeat(60));
 
-    console.log('\n✅ Production database seeded successfully!\n');
-    console.log('Next step:');
+    console.log("\n✅ Production database seeded successfully!\n");
+    console.log("Next step:");
     console.log(
-      '  Run: deno task prod:run      # Run classification pipeline\n'
+      "  Run: deno task prod:run      # Run classification pipeline\n",
     );
-  } catch (error) {
-    console.error('\n❌ Seeding failed:');
+  } catch (_error) {
+    console.error("\n❌ Seeding failed:");
     console.error(
-      `   ${error instanceof Error ? error.message : String(error)}\n`
+      `   ${error instanceof Error ? error.message : String(error)}\n`,
     );
-    console.error('Stack trace:', error);
+    console.error("Stack trace:", error);
     Deno.exit(1);
   }
 }

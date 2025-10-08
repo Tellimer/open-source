@@ -1,11 +1,14 @@
 # Indicator Pairing & Retry System
 
-This document explains how the classify package ensures proper pairing between requests and responses, with robust retry logic for failed indicators.
+This document explains how the classify package ensures proper pairing between
+requests and responses, with robust retry logic for failed indicators.
 
 ## Problem Statement
 
 When classifying multiple indicators with an LLM, several issues can occur:
-1. **Response Mismatch**: LLM might return responses in wrong order or skip indicators
+
+1. **Response Mismatch**: LLM might return responses in wrong order or skip
+   indicators
 2. **Partial Failures**: Some indicators might fail while others succeed
 3. **Schema Violations**: LLM might return invalid data for specific indicators
 4. **No Error Tracking**: Need to know which indicators failed and why
@@ -23,12 +26,15 @@ function ensureIndicatorId(indicator: Indicator, index: number): Indicator {
   }
   return {
     ...indicator,
-    id: `ind_${index + 1}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `ind_${index + 1}_${Date.now()}_${
+      Math.random().toString(36).substr(2, 9)
+    }`,
   };
 }
 ```
 
 **Benefits:**
+
 - Unique identification for each indicator
 - Supports user-provided IDs or auto-generation
 - Timestamp + random component ensures uniqueness
@@ -59,9 +65,12 @@ Every classification response is validated to include indicator_id:
 
 ```typescript
 // Validate indicator_id
-if (typeof classification.indicator_id !== 'string' || !classification.indicator_id) {
+if (
+  typeof classification.indicator_id !== "string" ||
+  !classification.indicator_id
+) {
   throw new Error(
-    `Classification ${idx + 1} is missing or has invalid indicator_id`
+    `Classification ${idx + 1} is missing or has invalid indicator_id`,
   );
 }
 ```
@@ -81,7 +90,9 @@ for (const classification of classifications) {
 return indicatorsWithIds.map((indicator) => {
   const classification = classificationMap.get(indicator.id!);
   if (!classification) {
-    throw new Error(`No classification found for indicator ID: ${indicator.id}`);
+    throw new Error(
+      `No classification found for indicator ID: ${indicator.id}`,
+    );
   }
   return {
     ...indicator,
@@ -91,6 +102,7 @@ return indicatorsWithIds.map((indicator) => {
 ```
 
 **Benefits:**
+
 - Order-independent pairing
 - Handles missing responses
 - Fast O(1) lookup
@@ -104,47 +116,52 @@ Failed indicators are retried up to 3 times (configurable):
 async function classifySingleIndicatorWithRetry(
   indicator: Indicator,
   config: LLMConfig,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<{
   success: boolean;
   classification?: ClassifiedMetadata;
   error?: string;
   retries: number;
 }> {
-  let lastError: string = '';
-  
+  let lastError: string = "";
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const classifications = await provider.classify([indicator], config);
-      
+
       // Validate count
       if (classifications.length !== 1) {
-        throw new Error(`Expected 1 classification, got ${classifications.length}`);
+        throw new Error(
+          `Expected 1 classification, got ${classifications.length}`,
+        );
       }
-      
+
       // Validate ID match
       if (classification.indicator_id !== indicator.id) {
         throw new Error(
-          `Indicator ID mismatch: expected "${indicator.id}", got "${classification.indicator_id}"`
+          `Indicator ID mismatch: expected "${indicator.id}", got "${classification.indicator_id}"`,
         );
       }
-      
+
       return { success: true, classification, retries: attempt };
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
-      
+
       // Exponential backoff
       if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (attempt + 1))
+        );
       }
     }
   }
-  
+
   return { success: false, error: lastError, retries: maxRetries };
 }
 ```
 
 **Features:**
+
 - Up to 3 retry attempts per indicator
 - Exponential backoff (1s, 2s, 3s)
 - Validates response count and ID matching
@@ -166,9 +183,9 @@ try {
     const result = await classifySingleIndicatorWithRetry(
       indicator,
       config,
-      maxRetries
+      maxRetries,
     );
-    
+
     if (result.success && result.classification) {
       enriched.push({
         ...indicator,
@@ -177,7 +194,7 @@ try {
     } else {
       failed.push({
         indicator,
-        error: result.error || 'Unknown error',
+        error: result.error || "Unknown error",
         retries: result.retries,
       });
     }
@@ -186,6 +203,7 @@ try {
 ```
 
 **Strategy:**
+
 1. Try batch (efficient)
 2. If batch fails, retry each indicator individually
 3. Track retries and errors per indicator
@@ -203,7 +221,7 @@ interface ClassificationResult {
     total: number;
     successful: number;
     failed: number;
-    successRate: number;  // Percentage
+    successRate: number; // Percentage
   };
   processingTime: number;
   apiCalls: number;
@@ -213,7 +231,7 @@ interface ClassificationResult {
 interface FailedIndicator {
   indicator: Indicator;
   error: string;
-  retries: number;  // How many times we tried
+  retries: number; // How many times we tried
 }
 ```
 
@@ -269,7 +287,9 @@ console.log(`Success rate: ${result.summary.successRate}%`);
 console.log(`Failed indicators: ${result.failed.length}`);
 
 for (const failed of result.failed) {
-  console.log(`- ${failed.indicator.name}: ${failed.error} (${failed.retries} retries)`);
+  console.log(
+    `- ${failed.indicator.name}: ${failed.error} (${failed.retries} retries)`,
+  );
 }
 ```
 
@@ -298,7 +318,9 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 
 // Process successful classifications
 for (const indicator of result.enriched) {
-  console.log(`✓ ${indicator.name}: ${indicator.classification.indicator_type}`);
+  console.log(
+    `✓ ${indicator.name}: ${indicator.classification.indicator_type}`,
+  );
 }
 
 // Handle failures
@@ -306,7 +328,7 @@ for (const failed of result.failed) {
   console.error(`✗ ${failed.indicator.name}:`);
   console.error(`  Error: ${failed.error}`);
   console.error(`  Retries: ${failed.retries}`);
-  
+
   // Optionally retry with different config or log for manual review
 }
 ```
@@ -318,33 +340,34 @@ for (const failed of result.failed) {
 3. **Order Independence**: Responses can be in any order
 4. **Partial Success**: Some indicators can succeed while others fail
 5. **Detailed Errors**: Know exactly which indicators failed and why
-6. **Performance**: Batch processing when possible, individual retries when needed
+6. **Performance**: Batch processing when possible, individual retries when
+   needed
 7. **Observability**: Comprehensive statistics and debug logging
 8. **Graceful Degradation**: System continues even if some indicators fail
 
 ## Error Scenarios Handled
 
-| Scenario | Handling |
-|----------|----------|
-| LLM returns wrong order | ID-based pairing corrects order |
-| LLM skips an indicator | Detected and retried individually |
-| LLM returns invalid schema | Validation fails, indicator retried |
-| LLM returns wrong ID | Validation fails, indicator retried |
-| Transient API error | Exponential backoff retry |
-| Persistent failure | Logged in failed array after max retries |
-| Batch failure | Fall back to individual processing |
-| Partial batch success | Not possible - batch is atomic |
+| Scenario                   | Handling                                 |
+| -------------------------- | ---------------------------------------- |
+| LLM returns wrong order    | ID-based pairing corrects order          |
+| LLM skips an indicator     | Detected and retried individually        |
+| LLM returns invalid schema | Validation fails, indicator retried      |
+| LLM returns wrong ID       | Validation fails, indicator retried      |
+| Transient API error        | Exponential backoff retry                |
+| Persistent failure         | Logged in failed array after max retries |
+| Batch failure              | Fall back to individual processing       |
+| Partial batch success      | Not possible - batch is atomic           |
 
 ## Configuration
 
 ```typescript
 interface ClassificationOptions {
   llmConfig: LLMConfig;
-  batchSize?: number;        // Default: 10
-  maxRetries?: number;       // Default: 3
-  retryDelay?: number;       // Not used (exponential backoff)
+  batchSize?: number; // Default: 10
+  maxRetries?: number; // Default: 3
+  retryDelay?: number; // Not used (exponential backoff)
   includeReasoning?: boolean;
-  debug?: boolean;           // Enable detailed logging
+  debug?: boolean; // Enable detailed logging
 }
 ```
 
@@ -357,4 +380,3 @@ interface ClassificationOptions {
 5. **Provide custom IDs**: For better traceability in your system
 6. **Monitor retry counts**: High retries may indicate LLM issues
 7. **Log failed indicators**: For manual review or alternative processing
-

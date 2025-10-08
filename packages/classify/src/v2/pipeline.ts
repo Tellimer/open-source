@@ -4,32 +4,35 @@
  * @module
  */
 
-import type { Indicator, LLMConfig } from '../types.ts';
+import type { Indicator, LLMConfig } from "../types.ts";
 import type {
-  V2Config,
   ClassificationData,
-  V2PipelineResult,
   PipelineExecutionRecord,
   ReviewBatchResult,
-} from './types.ts';
-import type { V2DatabaseClient } from './db/client.ts';
-import { V2DatabaseClient as V2DbClient } from './db/client.ts';
-import { DEFAULT_V2_CONFIG } from './types.ts';
-import { createV2Provider } from './providers.ts';
-import { routeIndicators } from './router/router.ts';
-import { writeRouterResults } from './router/storage.ts';
-import { groupIndicatorsByFamily } from './specialist/grouping.ts';
-import { classifyByFamily } from './specialist/specialist.ts';
-import { writeSpecialistResults } from './specialist/storage.ts';
-import { validateIndicators } from './validation/validation.ts';
-import { writeValidationResults, readValidationResults } from './validation/storage.ts';
-import { classifyOrientations } from './orientation/orientation.ts';
-import { writeOrientationResults } from './orientation/storage.ts';
-import { applyFlaggingRules } from './review/flagging.ts';
-import { writeFlaggingResults } from './review/storage.ts';
-import { reviewFlaggedIndicators } from './review/review.ts';
-import { readClassifications, writeClassifications } from './output/storage.ts';
-import { calculateCost } from './utils/pricing.ts';
+  V2Config,
+  V2PipelineResult,
+} from "./types.ts";
+import type { V2DatabaseClient } from "./db/client.ts";
+import { V2DatabaseClient as V2DbClient } from "./db/client.ts";
+import { DEFAULT_V2_CONFIG } from "./types.ts";
+import { createV2Provider } from "./providers.ts";
+import { routeIndicators } from "./router/router.ts";
+import { writeRouterResults } from "./router/storage.ts";
+import { groupIndicatorsByFamily } from "./specialist/grouping.ts";
+import { classifyByFamily } from "./specialist/specialist.ts";
+import { writeSpecialistResults } from "./specialist/storage.ts";
+import { validateIndicators } from "./validation/validation.ts";
+import {
+  readValidationResults,
+  writeValidationResults,
+} from "./validation/storage.ts";
+import { classifyOrientations } from "./orientation/orientation.ts";
+import { writeOrientationResults } from "./orientation/storage.ts";
+import { applyFlaggingRules } from "./review/flagging.ts";
+import { writeFlaggingResults } from "./review/storage.ts";
+import { reviewFlaggedIndicators } from "./review/review.ts";
+import { readClassifications, writeClassifications } from "./output/storage.ts";
+import { calculateCost } from "./utils/pricing.ts";
 
 /**
  * Main V2 pipeline entry point
@@ -37,7 +40,7 @@ import { calculateCost } from './utils/pricing.ts';
 export async function classifyIndicatorsV2(
   indicators: Indicator[],
   llmConfig: LLMConfig,
-  v2Config: Partial<V2Config> = {}
+  v2Config: Partial<V2Config> = {},
 ): Promise<V2PipelineResult> {
   const startTime = Date.now();
 
@@ -53,13 +56,13 @@ export async function classifyIndicatorsV2(
   // Initialize database client from provided config
   const db = new V2DbClient(config.database as any);
   await db.initialize();
-  const provider = createV2Provider(llmConfig);
+  createV2Provider(llmConfig); // Create provider to validate config
 
   const debug = Boolean(llmConfig.debug ?? false);
   const quiet = Boolean(llmConfig.quiet ?? false);
 
   if (!quiet) {
-    console.log('\n🚀 Starting V2 Classification Pipeline...\n');
+    console.log("\n🚀 Starting V2 Classification Pipeline...\n");
   }
 
   // Track execution
@@ -69,7 +72,7 @@ export async function classifyIndicatorsV2(
     started_at: new Date().toISOString(),
     total_indicators: indicators.length,
     provider: llmConfig.provider,
-    model: llmConfig.model || 'default',
+    model: llmConfig.model || "default",
   };
 
   // Track costs
@@ -81,7 +84,7 @@ export async function classifyIndicatorsV2(
     // ═══════════════════════════════════════════════════════════════════════
     // STAGE 1: ROUTER - Assign family to each indicator
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('📍 Stage 1: Router (Family Assignment)');
+    if (!quiet) console.log("📍 Stage 1: Router (Family Assignment)");
 
     // Use router-specific model if provided, otherwise use default
     const routerLlmConfig = config.models?.router
@@ -101,28 +104,29 @@ export async function classifyIndicatorsV2(
 
     // Calculate cost for router stage
     const routerCost = calculateCost(
-      routerLlmConfig.model || llmConfig.model || 'claude-sonnet-4-5-20250929',
+      routerLlmConfig.model || llmConfig.model || "claude-sonnet-4-5-20250929",
       routerResult.usage.promptTokens,
-      routerResult.usage.completionTokens
+      routerResult.usage.completionTokens,
     );
     totalCost += routerCost;
 
     if (debug) {
       console.log(
-        `[Router] Processed ${routerResult.successful.length} indicators in ${routerResult.processingTime}ms`
+        `[Router] Processed ${routerResult.successful.length} indicators in ${routerResult.processingTime}ms`,
       );
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     // STAGE 2: SPECIALIST - Family-specific classification
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet)
-      console.log('\n🎯 Stage 2: Specialist (Family-Specific Classification)');
+    if (!quiet) {
+      console.log("\n🎯 Stage 2: Specialist (Family-Specific Classification)");
+    }
 
     // Use in-memory router results
     const groupedByFamily = groupIndicatorsByFamily(
       indicators,
-      routerResult.successful
+      routerResult.successful,
     );
 
     // Use specialist-specific model if provided, otherwise use default
@@ -138,7 +142,7 @@ export async function classifyIndicatorsV2(
         concurrency: config.concurrency!.specialist!,
         debug: debug,
         quiet: quiet,
-      }
+      },
     );
 
     // Persist specialist results to database
@@ -149,36 +153,39 @@ export async function classifyIndicatorsV2(
     const specialistCost = calculateCost(
       specialistLlmConfig.model ||
         llmConfig.model ||
-        'claude-sonnet-4-5-20250929',
+        "claude-sonnet-4-5-20250929",
       specialistResult.usage.promptTokens,
-      specialistResult.usage.completionTokens
+      specialistResult.usage.completionTokens,
     );
     totalCost += specialistCost;
 
     if (debug) {
       console.log(
-        `[Specialist] Processed ${specialistResult.successful.length} indicators across ${groupedByFamily.size} families in ${specialistResult.processingTime}ms`
+        `[Specialist] Processed ${specialistResult.successful.length} indicators across ${groupedByFamily.size} families in ${specialistResult.processingTime}ms`,
       );
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     // STAGE 3: VALIDATION - Time Series Analysis
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('\n🔬 Stage 3: Validation (Time Series Analysis)');
+    if (!quiet) console.log("\n🔬 Stage 3: Validation (Time Series Analysis)");
 
     const validationStartTime = Date.now();
     const validationResults = validateIndicators(
       indicators,
       specialistResult.successful,
-      { quiet }
+      { quiet },
     );
     const validationProcessingTime = Date.now() - validationStartTime;
 
     // Calculate validation metrics
-    const cumulativeCount = validationResults.filter(r => r.is_cumulative).length;
+    const cumulativeCount = validationResults.filter((r) =>
+      r.is_cumulative
+    ).length;
     const nonCumulativeCount = validationResults.length - cumulativeCount;
     const avgConfidence = validationResults.length > 0
-      ? validationResults.reduce((sum, r) => sum + r.cumulative_confidence, 0) / validationResults.length
+      ? validationResults.reduce((sum, r) => sum + r.cumulative_confidence, 0) /
+        validationResults.length
       : 0;
 
     // Write validation results to database
@@ -186,27 +193,27 @@ export async function classifyIndicatorsV2(
       writeValidationResults(db, validationResults);
       if (!quiet) {
         console.log(
-          `  ✓ Validated ${validationResults.length} indicators, saved to database`
+          `  ✓ Validated ${validationResults.length} indicators, saved to database`,
         );
       }
     } else {
       if (!quiet) {
         console.log(
-          `  ℹ️  No indicators required validation (all non-cumulable types)`
+          `  ℹ️  No indicators required validation (all non-cumulable types)`,
         );
       }
     }
 
     if (debug) {
       console.log(
-        `[Validation] Analyzed ${validationResults.length} indicators in ${validationProcessingTime}ms`
+        `[Validation] Analyzed ${validationResults.length} indicators in ${validationProcessingTime}ms`,
       );
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     // STAGE 4: ORIENTATION - Heat map orientation
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('\n🧭 Stage 4: Orientation (Heat Map Direction)');
+    if (!quiet) console.log("\n🧭 Stage 4: Orientation (Heat Map Direction)");
 
     // Use in-memory stage outputs for enrichment
     const dbRouterResults = routerResult.successful;
@@ -215,8 +222,10 @@ export async function classifyIndicatorsV2(
     // Enrich indicators with router and specialist context for orientation stage
     const enrichedIndicatorsForOrientation = indicators.map((ind) => {
       const router = dbRouterResults.find((r) => r.indicator_id === ind.id);
-      const specialist = dbSpecialistResults.find((s) => s.indicator_id === ind.id);
-      
+      const specialist = dbSpecialistResults.find((s) =>
+        s.indicator_id === ind.id
+      );
+
       return {
         ...ind,
         router_family: router?.family,
@@ -234,13 +243,16 @@ export async function classifyIndicatorsV2(
       ? { ...llmConfig, model: config.models.orientation }
       : llmConfig;
 
-    const orientationResult = await classifyOrientations(enrichedIndicatorsForOrientation as any, {
-      llmConfig: orientationLlmConfig,
-      batchSize: config.batch!.orientationBatchSize!,
-      concurrency: config.concurrency!.orientation!,
-      debug: debug,
-      quiet: quiet,
-    });
+    const orientationResult = await classifyOrientations(
+      enrichedIndicatorsForOrientation as any,
+      {
+        llmConfig: orientationLlmConfig,
+        batchSize: config.batch!.orientationBatchSize!,
+        concurrency: config.concurrency!.orientation!,
+        debug: debug,
+        quiet: quiet,
+      },
+    );
 
     writeOrientationResults(db, orientationResult.successful);
     totalApiCalls += orientationResult.apiCalls;
@@ -249,22 +261,22 @@ export async function classifyIndicatorsV2(
     const orientationCost = calculateCost(
       orientationLlmConfig.model ||
         llmConfig.model ||
-        'claude-sonnet-4-5-20250929',
+        "claude-sonnet-4-5-20250929",
       orientationResult.usage.promptTokens,
-      orientationResult.usage.completionTokens
+      orientationResult.usage.completionTokens,
     );
     totalCost += orientationCost;
 
     if (debug) {
       console.log(
-        `[Orientation] Processed ${orientationResult.successful.length} indicators in ${orientationResult.processingTime}ms`
+        `[Orientation] Processed ${orientationResult.successful.length} indicators in ${orientationResult.processingTime}ms`,
       );
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     // STAGE 5: FLAGGING - Quality control checks
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('\n🚩 Stage 5: Flagging (Quality Control)');
+    if (!quiet) console.log("\n🚩 Stage 5: Flagging (Quality Control)");
 
     // Use in-memory stage outputs instead of re-reading DB
     const dbOrientationResults = orientationResult.successful;
@@ -277,10 +289,10 @@ export async function classifyIndicatorsV2(
       (ind) => {
         const router = dbRouterResults.find((r) => r.indicator_id === ind.id);
         const specialist = dbSpecialistResults.find(
-          (s) => s.indicator_id === ind.id
+          (s) => s.indicator_id === ind.id,
         );
         const orientation = dbOrientationResults.find(
-          (o) => o.indicator_id === ind.id
+          (o) => o.indicator_id === ind.id,
         );
         const validation = validationResultsMap.get(ind.id!);
 
@@ -289,19 +301,19 @@ export async function classifyIndicatorsV2(
           name: ind.name,
           units: ind.units,
           description: ind.description,
-          family: router?.family || 'qualitative',
+          family: router?.family || "qualitative",
           confidence_family: router?.confidence_family || 0,
-          indicator_type: specialist?.indicator_type || 'other',
-          temporal_aggregation:
-            specialist?.temporal_aggregation || 'not-applicable',
+          indicator_type: specialist?.indicator_type || "other",
+          temporal_aggregation: specialist?.temporal_aggregation ||
+            "not-applicable",
           is_currency_denominated: specialist?.is_currency_denominated,
           confidence_cls: specialist?.confidence_cls || 0,
-          heat_map_orientation: orientation?.heat_map_orientation || 'neutral',
+          heat_map_orientation: orientation?.heat_map_orientation || "neutral",
           confidence_orient: orientation?.confidence_orient || 0,
           validated: validation ? 1 : 0,
           validation_confidence: validation?.cumulative_confidence,
         };
-      }
+      },
     );
 
     // Convert to flagging format (requires different structure)
@@ -311,7 +323,11 @@ export async function classifyIndicatorsV2(
       let timeSeries: any[] | undefined;
       if (ind.sample_values && Array.isArray(ind.sample_values)) {
         // Check if it's temporal data (has date field)
-        if (ind.sample_values.length > 0 && typeof ind.sample_values[0] === 'object' && 'date' in ind.sample_values[0]) {
+        if (
+          ind.sample_values.length > 0 &&
+          typeof ind.sample_values[0] === "object" &&
+          "date" in ind.sample_values[0]
+        ) {
           timeSeries = ind.sample_values as any[];
         }
       }
@@ -320,7 +336,9 @@ export async function classifyIndicatorsV2(
         indicator: ind,
         router: dbRouterResults.find((r) => r.indicator_id === ind.id),
         specialist: dbSpecialistResults.find((s) => s.indicator_id === ind.id),
-        orientation: dbOrientationResults.find((o) => o.indicator_id === ind.id),
+        orientation: dbOrientationResults.find((o) =>
+          o.indicator_id === ind.id
+        ),
         validation: validationResultsMap.get(ind.id!),
         time_series: timeSeries,
       };
@@ -338,12 +356,12 @@ export async function classifyIndicatorsV2(
       db,
       allClassificationData,
       llmConfig.provider,
-      llmConfig.model || 'default'
+      llmConfig.model || "default",
     );
 
     if (!quiet) {
       console.log(
-        `  • Flagged ${flaggedIndicators.length}/${indicators.length} indicators for review`
+        `  • Flagged ${flaggedIndicators.length}/${indicators.length} indicators for review`,
       );
     }
 
@@ -354,7 +372,7 @@ export async function classifyIndicatorsV2(
     const shouldReviewAll = Boolean((config as any).reviewAll);
     if (flaggedIndicators.length > 0 || shouldReviewAll) {
       if (!quiet) {
-        console.log('\n🔍 Stage 5: Review (LLM Correction)');
+        console.log("\n🔍 Stage 5: Review (LLM Correction)");
         if (config.models?.review) {
           console.log(`  Using model: ${config.models.review}`);
         }
@@ -378,9 +396,9 @@ export async function classifyIndicatorsV2(
       const reviewCost = calculateCost(
         reviewLlmConfig.model ||
           llmConfig.model ||
-          'claude-sonnet-4-5-20250929',
+          "claude-sonnet-4-5-20250929",
         reviewResult.usage.promptTokens,
-        reviewResult.usage.completionTokens
+        reviewResult.usage.completionTokens,
       );
       totalCost += reviewCost;
 
@@ -399,7 +417,7 @@ export async function classifyIndicatorsV2(
             updateStmt.run(
               decision.action,
               decision.reason,
-              decision.indicator_id
+              decision.indicator_id,
             );
           }
         });
@@ -407,11 +425,11 @@ export async function classifyIndicatorsV2(
 
       if (debug) {
         console.log(
-          `[Review] Reviewed ${reviewResult.reviewed} indicators in ${reviewResult.processingTime}ms`
+          `[Review] Reviewed ${reviewResult.reviewed} indicators in ${reviewResult.processingTime}ms`,
         );
       }
     } else {
-      if (!quiet) console.log('\n✓ Stage 5: Review - Skipped (no flags)');
+      if (!quiet) console.log("\n✓ Stage 5: Review - Skipped (no flags)");
       reviewResult = {
         reviewed: 0,
         confirmed: 0,
@@ -431,11 +449,11 @@ export async function classifyIndicatorsV2(
     // ═══════════════════════════════════════════════════════════════════════
     // STAGE 6: OUTPUT - Fetch final classifications
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('\n📤 Stage 6: Output Assembly');
+    if (!quiet) console.log("\n📤 Stage 6: Output Assembly");
 
     const finalClassifications = readClassifications(
       db,
-      indicators.map((i) => i.id!)
+      indicators.map((i) => i.id!),
     );
 
     // Calculate metrics
@@ -452,7 +470,7 @@ export async function classifyIndicatorsV2(
     execution.total_fixed = reviewResult.fixed;
     execution.total_escalated = reviewResult.escalated;
     execution.processing_time_ms = processingTime;
-    execution.status = 'completed';
+    execution.status = "completed";
 
     // Write execution record
     writeExecutionRecord(db, execution as PipelineExecutionRecord);
@@ -511,29 +529,32 @@ export async function classifyIndicatorsV2(
     };
 
     if (!quiet) {
-      console.log('\n✅ V2 Pipeline Complete!');
+      console.log("\n✅ V2 Pipeline Complete!");
       console.log(`  • Total Time: ${processingTime}ms`);
       console.log(`  • Total API Calls: ${totalApiCalls}`);
       console.log(
-        `  • Success Rate: ${((successful / indicators.length) * 100).toFixed(
-          1
-        )}%`
+        `  • Success Rate: ${
+          ((successful / indicators.length) * 100).toFixed(
+            1,
+          )
+        }%`,
       );
       if (result.summary.escalated > 0) {
         console.log(
-          `  ⚠️  ${result.summary.escalated} indicator(s) require human review`
+          `  ⚠️  ${result.summary.escalated} indicator(s) require human review`,
         );
       }
-      console.log('');
+      console.log("");
     }
 
     return result;
   } catch (error) {
     // Update execution record with error
     execution.completed_at = new Date().toISOString();
-    execution.status = 'failed';
-    execution.error_message =
-      error instanceof Error ? error.message : 'Unknown error';
+    execution.status = "failed";
+    execution.error_message = error instanceof Error
+      ? error.message
+      : "Unknown error";
     execution.processing_time_ms = Date.now() - startTime;
     execution.total_cost = totalCost;
 
@@ -548,7 +569,7 @@ export async function classifyIndicatorsV2(
  */
 function writeExecutionRecord(
   db: V2DatabaseClient,
-  record: PipelineExecutionRecord
+  record: PipelineExecutionRecord,
 ): void {
   // Align with schema: start_time, end_time, total_duration_ms, ...
   const configJson = JSON.stringify({});
@@ -569,7 +590,7 @@ function writeExecutionRecord(
       config_json,
       telemetry_json
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `
+  `,
   ).run(
     record.execution_id,
     record.started_at,
@@ -582,6 +603,6 @@ function writeExecutionRecord(
     record.provider,
     record.model,
     configJson,
-    telemetryJson
+    telemetryJson,
   );
 }

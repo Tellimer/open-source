@@ -3,6 +3,10 @@
 Welcome to the Econify documentation! This guide will help you navigate all
 available documentation resources.
 
+**Econify** is focused on **normalization and conversion** of economic data. For **indicator classification**
+(determining if an indicator is a stock, flow, ratio, etc.), see the separate
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package.
+
 ## 📚 Documentation Structure
 
 ### 🚀 Getting Started
@@ -62,7 +66,11 @@ Visual documentation and architecture diagrams:
 
 ### I want to...
 
-#### Process economic data with normalization
+#### Classify economic indicators (stock, flow, ratio, etc.)
+
+→ Use the [@tellimer/classify](https://jsr.io/@tellimer/classify) package
+
+#### Normalize and convert economic data (currency, magnitude, time)
 
 → Start with [Main README](../README.md) and [Examples](../examples/README.md)
 

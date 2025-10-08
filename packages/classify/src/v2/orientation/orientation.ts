@@ -3,15 +3,15 @@
  * @module
  */
 
-import type { Indicator, LLMConfig, HeatMapOrientation } from '../../types.ts';
-import type { OrientationResult } from '../types.ts';
-import { AiSdkProvider } from '../providers/ai-sdk.ts';
-import { OrientationBatchSchema } from '../schemas/index.ts';
+import type { HeatMapOrientation, Indicator, LLMConfig } from "../../types.ts";
+import type { OrientationResult } from "../types.ts";
+import { AiSdkProvider } from "../providers/ai-sdk.ts";
+import { OrientationBatchSchema } from "../schemas/index.ts";
 import {
   generateOrientationSystemPrompt,
   generateOrientationUserPrompt,
-} from './prompts.ts';
-import { Spinner } from '@std/cli/unstable-spinner';
+} from "./prompts.ts";
+import { Spinner } from "@std/cli/unstable-spinner";
 
 /**
  * Orientation configuration
@@ -50,7 +50,7 @@ function mapBatchToOrientationResults(
     heat_map_orientation: HeatMapOrientation;
     confidence: number;
     reasoning?: string;
-  }>
+  }>,
 ): OrientationResult[] {
   return batchResults.map((result) => ({
     indicator_id: result.indicator_id,
@@ -66,7 +66,7 @@ function mapBatchToOrientationResults(
 async function orientBatchWithRetry(
   indicators: Indicator[],
   config: OrientationConfig,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<{
   success: boolean;
   results?: OrientationResult[];
@@ -79,7 +79,7 @@ async function orientBatchWithRetry(
   };
 }> {
   const aiProvider = new AiSdkProvider(config.llmConfig);
-  let lastError: string = '';
+  let lastError: string = "";
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -91,7 +91,7 @@ async function orientBatchWithRetry(
       const aiResult = await aiProvider.generateStructured(
         systemPrompt,
         userPrompt,
-        OrientationBatchSchema
+        OrientationBatchSchema,
       );
 
       // Extract results from wrapped object
@@ -101,16 +101,19 @@ async function orientBatchWithRetry(
         success: true,
         results,
         retries: attempt,
-        usage: aiResult.usage
+        usage: aiResult.usage,
       };
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
-      
+
       if (config.debug) {
-        console.error(`[Orientation] Attempt ${attempt + 1}/${maxRetries + 1} failed:`, lastError);
-        console.error('[Orientation] Full error:', error);
+        console.error(
+          `[Orientation] Attempt ${attempt + 1}/${maxRetries + 1} failed:`,
+          lastError,
+        );
+        console.error("[Orientation] Full error:", error);
       }
-      
+
       if (attempt < maxRetries) {
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * (attempt + 1))
@@ -127,7 +130,7 @@ async function orientBatchWithRetry(
  */
 export async function classifyOrientations(
   indicators: Indicator[],
-  config: OrientationConfig
+  config: OrientationConfig,
 ): Promise<OrientationBatchResult> {
   const startTime = Date.now();
   const batchSize = config.batchSize ?? 50;
@@ -152,7 +155,7 @@ export async function classifyOrientations(
   }
 
   const successful: OrientationResult[] = [];
-  const failed: OrientationBatchResult['failed'] = [];
+  const failed: OrientationBatchResult["failed"] = [];
   let apiCalls = 0;
   let totalRetries = 0;
   let totalUsage = {
@@ -168,21 +171,21 @@ export async function classifyOrientations(
   }
 
   if (debug && !quiet) {
-    console.log('\n' + '='.repeat(60));
-    console.log('🧭 ORIENTATION STAGE - HEAT MAP ORIENTATION');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("🧭 ORIENTATION STAGE - HEAT MAP ORIENTATION");
+    console.log("=".repeat(60));
     console.log(`Total indicators: ${indicators.length}`);
     console.log(`Batch size: ${batchSize}`);
     console.log(`Concurrency: ${concurrency}`);
     console.log(`Total batches: ${batches.length}`);
-    console.log('='.repeat(60));
+    console.log("=".repeat(60));
   }
 
   let spinner: Spinner | undefined;
   if (!quiet && !debug) {
     spinner = new Spinner({
       message: `Determining orientation for ${indicators.length} indicators...`,
-      color: 'cyan',
+      color: "cyan",
     });
     spinner.start();
   }
@@ -193,12 +196,16 @@ export async function classifyOrientations(
 
     if (debug) {
       console.log(
-        `\n📦 Processing batches ${i + 1}-${i + batchChunk.length} of ${batches.length}`
+        `\n📦 Processing batches ${i + 1}-${
+          i + batchChunk.length
+        } of ${batches.length}`,
       );
     }
 
     const results = await Promise.all(
-      batchChunk.map((batch) => orientBatchWithRetry(batch, config, maxRetries))
+      batchChunk.map((batch) =>
+        orientBatchWithRetry(batch, config, maxRetries)
+      ),
     );
 
     // Aggregate results
@@ -220,12 +227,14 @@ export async function classifyOrientations(
         }
 
         if (debug) {
-          console.log(`   ✓ Batch ${i + j + 1}: ${result.results.length} oriented`);
+          console.log(
+            `   ✓ Batch ${i + j + 1}: ${result.results.length} oriented`,
+          );
           // Show orientation distribution
           const orientCount: Record<HeatMapOrientation, number> = {
-            'higher-is-positive': 0,
-            'lower-is-positive': 0,
-            'neutral': 0,
+            "higher-is-positive": 0,
+            "lower-is-positive": 0,
+            "neutral": 0,
           };
           for (const r of result.results) {
             orientCount[r.heat_map_orientation]++;
@@ -237,7 +246,7 @@ export async function classifyOrientations(
         for (const indicator of batch) {
           failed.push({
             indicator,
-            error: result.error || 'Unknown error',
+            error: result.error || "Unknown error",
             retries: result.retries,
           });
         }
@@ -258,21 +267,21 @@ export async function classifyOrientations(
   if (debug && !quiet) {
     // Calculate orientation distribution
     const orientDistribution: Record<HeatMapOrientation, number> = {
-      'higher-is-positive': 0,
-      'lower-is-positive': 0,
-      'neutral': 0,
+      "higher-is-positive": 0,
+      "lower-is-positive": 0,
+      "neutral": 0,
     };
     for (const result of successful) {
       orientDistribution[result.heat_map_orientation]++;
     }
 
-    console.log('\n' + '='.repeat(60));
-    console.log('📊 ORIENTATION SUMMARY');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("📊 ORIENTATION SUMMARY");
+    console.log("=".repeat(60));
     console.log(
       `✓ Success: ${successful.length}/${indicators.length} (${
         ((successful.length / indicators.length) * 100).toFixed(1)
-      }%)`
+      }%)`,
     );
     if (failed.length > 0) {
       console.log(`✗ Failed: ${failed.length}/${indicators.length}`);
@@ -280,11 +289,11 @@ export async function classifyOrientations(
     console.log(`⏱  Time: ${processingTime}ms`);
     console.log(`🔄 Retries: ${totalRetries}`);
     console.log(`🔌 API Calls: ${apiCalls}`);
-    console.log('\nOrientation Distribution:');
+    console.log("\nOrientation Distribution:");
     for (const [orient, count] of Object.entries(orientDistribution)) {
       console.log(`  • ${orient}: ${count}`);
     }
-    console.log('='.repeat(60) + '\n');
+    console.log("=".repeat(60) + "\n");
   }
 
   return {

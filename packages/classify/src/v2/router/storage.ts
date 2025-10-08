@@ -3,9 +3,9 @@
  * @module
  */
 
-import type { V2DatabaseClient } from '../db/client.ts';
-import type { RouterResult } from '../types.ts';
-import type { Indicator } from '../../types.ts';
+import type { V2DatabaseClient } from "../db/client.ts";
+import type { RouterResult } from "../types.ts";
+import type { Indicator } from "../../types.ts";
 
 /**
  * Write router results to database (upsert)
@@ -13,7 +13,9 @@ import type { Indicator } from '../../types.ts';
 export function writeRouterResults(
   db: V2DatabaseClient,
   results: RouterResult[],
-  indicators: Array<{ id?: string; name: string; units?: string; definition?: string }>
+  indicators: Array<
+    { id?: string; name: string; units?: string; definition?: string }
+  >,
 ): void {
   if (results.length === 0) return;
 
@@ -37,7 +39,9 @@ export function writeRouterResults(
     `);
 
     for (const result of results) {
-      const indicator = indicators.find(ind => ind.id === result.indicator_id);
+      const indicator = indicators.find((ind) =>
+        ind.id === result.indicator_id
+      );
 
       // Generate description if not provided
       let description = indicator?.definition;
@@ -49,12 +53,12 @@ export function writeRouterResults(
 
       updateClassifications.run(
         result.indicator_id,
-        indicator?.name || '',
+        indicator?.name || "",
         indicator?.units || null,
         description || null,
         result.family,
         result.confidence_family,
-        result.reasoning || null
+        result.reasoning || null,
       );
     }
 
@@ -78,7 +82,7 @@ export function writeRouterResults(
         result.indicator_id,
         result.family,
         result.confidence_family,
-        result.reasoning || null
+        result.reasoning || null,
       );
     }
   });
@@ -89,7 +93,7 @@ export function writeRouterResults(
  */
 export function readRouterResults(
   db: V2DatabaseClient,
-  indicatorIds?: string[]
+  indicatorIds?: string[],
 ): RouterResult[] {
   let query = `
     SELECT
@@ -103,12 +107,12 @@ export function readRouterResults(
   const params: string[] = [];
 
   if (indicatorIds && indicatorIds.length > 0) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     query += ` WHERE indicator_id IN (${placeholders})`;
     params.push(...indicatorIds);
   }
 
-  query += ' ORDER BY created_at ASC';
+  query += " ORDER BY created_at ASC";
 
   const rows = db.prepare(query).all(...params);
 
@@ -125,10 +129,10 @@ export function readRouterResults(
  */
 export function hasRouterResult(
   db: V2DatabaseClient,
-  indicatorId: string
+  indicatorId: string,
 ): boolean {
   const result = db
-    .prepare('SELECT 1 FROM router_results WHERE indicator_id = ? LIMIT 1')
+    .prepare("SELECT 1 FROM router_results WHERE indicator_id = ? LIMIT 1")
     .value(indicatorId);
 
   return result !== undefined;
@@ -139,7 +143,7 @@ export function hasRouterResult(
  */
 export function getIndicatorsNeedingRouting(
   db: V2DatabaseClient,
-  allIndicators: Indicator[]
+  allIndicators: Indicator[],
 ): Indicator[] {
   const needsRouting: Indicator[] = [];
 
@@ -157,7 +161,7 @@ export function getIndicatorsNeedingRouting(
  */
 export function updateClassificationsMetadata(
   db: V2DatabaseClient,
-  indicators: Indicator[]
+  indicators: Indicator[],
 ): void {
   if (indicators.length === 0) return;
 
@@ -180,9 +184,9 @@ export function updateClassificationsMetadata(
       if (indicator.id) {
         stmt.run(
           indicator.id,
-          indicator.name || '',
+          indicator.name || "",
           indicator.units || null,
-          indicator.description || null
+          indicator.description || null,
         );
       }
     }

@@ -1,8 +1,58 @@
 /**
- * Type definitions for economic indicator classification and normalization
+ * Type definitions for economic indicator normalization and conversion
+ *
+ * Note: For indicator classification, see @tellimer/classify package.
+ * Econify focuses on normalization and conversion, accepting classification
+ * results from the classify package via the `indicator_type` field.
  */
 
-export type IndicatorType = "stock" | "flow" | "rate" | "currency" | "unknown";
+/**
+ * Economic indicator types - matches @tellimer/classify package taxonomy
+ *
+ * These types should be provided by the @tellimer/classify package.
+ * Econify accepts these via the `indicator_type` field and uses them to
+ * make smart normalization decisions (e.g., skip time conversion for stocks).
+ *
+ * Legacy classification functions exist in econify for backward compatibility
+ * but are deprecated in favor of the classify package.
+ */
+export type IndicatorType =
+  // Physical/Fundamental
+  | "stock"
+  | "flow"
+  | "balance"
+  | "capacity"
+  | "volume"
+  // Numeric/Measurement
+  | "count"
+  | "percentage"
+  | "ratio"
+  | "spread"
+  | "share"
+  // Price/Value
+  | "price"
+  | "yield"
+  // Change/Movement
+  | "rate"
+  | "volatility"
+  | "gap"
+  // Composite/Derived
+  | "index"
+  | "correlation"
+  | "elasticity"
+  | "multiplier"
+  // Temporal
+  | "duration"
+  | "probability"
+  | "threshold"
+  // Qualitative
+  | "sentiment"
+  | "allocation"
+  // Legacy (used by old econify classification, not by classify package)
+  | "currency"
+  | "unknown"
+  // Fallback
+  | "other";
 
 export type IndicatorInput =
   | string

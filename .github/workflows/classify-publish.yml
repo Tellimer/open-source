@@ -1,0 +1,70 @@
+name: "classify: publish to JSR"
+
+on:
+  push:
+    tags:
+      - "classify-v*"
+
+concurrency:
+  group: "classify-${{ github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/classify
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Run tests
+        run: deno test --allow-read --allow-env --parallel
+        env:
+          DENO_JOBS: 4
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: packages/classify
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+          cache: true
+
+      - name: Verify tag matches deno.json version
+        run: |
+          ver=$(jq -r .version deno.json)
+          expected="refs/tags/classify-v$ver"
+          echo "GITHUB_REF=$GITHUB_REF, expected=$expected"
+          if [ "$GITHUB_REF" != "$expected" ]; then
+            echo "Tag ($GITHUB_REF) does not match deno.json version ($ver)"
+            exit 1
+          fi
+
+      - name: Publish dry-run
+        run: deno publish --dry-run
+
+      - name: Publish to JSR
+        env:
+          JSR_TOKEN: ${{ secrets.JSR_TOKEN }}
+        run: deno publish

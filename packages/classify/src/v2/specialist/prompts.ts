@@ -3,14 +3,15 @@
  * @module
  */
 
-import type { Indicator } from '../../types.ts';
-import type { IndicatorFamily } from '../types.ts';
+import type { Indicator } from "../../types.ts";
+import type { IndicatorFamily } from "../types.ts";
 
 /**
  * Concise family prompts - optimized for token usage, robust for edge cases
  */
 
-const PHYSICAL_FUNDAMENTAL_PROMPT = `You are classifying PHYSICAL-FUNDAMENTAL indicators (stocks, flows, balances, capacity, volume).
+const PHYSICAL_FUNDAMENTAL_PROMPT =
+  `You are classifying PHYSICAL-FUNDAMENTAL indicators (stocks, flows, balances, capacity, volume).
 
 TYPES (choose exact match):
 • stock: Point-in-time level (debt, reserves, population, capital stock)
@@ -71,7 +72,8 @@ Net TIC Flows → {"indicator_type":"balance","temporal_aggregation":"period-tot
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
-const NUMERIC_MEASUREMENT_PROMPT = `You are classifying NUMERIC-MEASUREMENT indicators (dimensionless ratios, percentages, counts).
+const NUMERIC_MEASUREMENT_PROMPT =
+  `You are classifying NUMERIC-MEASUREMENT indicators (dimensionless ratios, percentages, counts).
 
 TYPES (choose exact match):
 • count: Discrete positive events (housing starts, jobless claims)
@@ -89,9 +91,15 @@ CRITICAL DISTINCTIONS:
 • "Jobless Claims 4-week Average" → COUNT with period-average temporal (averaged count over 4 weeks)
 • "Unemployment Rate %" → PERCENTAGE (0-100% bounded), not-applicable
 • "Government Spending to GDP" → RATIO (X-to-Y), not-applicable, is_currency_denominated FALSE
-• "GDP per capita" → RATIO, not-applicable, is_currency_denominated TRUE (if in currency)
 • "Nurses per 1000 population" → RATIO, point-in-time (observed at specific time)
 • "Medical Doctors per 1000 population" → RATIO, point-in-time (observed at specific time)
+
+⚠️ SPECIAL CASE - GDP PER CAPITA:
+• "GDP per capita" is NOT a ratio - it's a FLOW indicator
+• Reason: GDP is a flow (economic output over period), divided by population
+• Has dimensions of currency/person, NOT dimensionless
+• Should be classified in PHYSICAL-FUNDAMENTAL family as FLOW, not NUMERIC-MEASUREMENT
+• True ratios are dimensionless (%, debt-to-GDP, etc.)
 
 TEMPORAL AGGREGATION:
 • count → period-total (sum of discrete events over period)
@@ -105,8 +113,8 @@ TEMPORAL AGGREGATION:
 IS_CURRENCY_DENOMINATED:
 • Counts of people/events → FALSE (never monetary)
 • Ratios/percentages → FALSE (dimensionless, even if derived from money)
-• GDP per capita in USD → TRUE (currency amount per person)
 • "X to GDP" ratio → FALSE (dimensionless ratio)
+• NOTE: GDP per capita should be classified as FLOW in PHYSICAL-FUNDAMENTAL, not here
 
 EXAMPLES:
 Employment Change → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":false}
@@ -115,13 +123,14 @@ Jobless Claims → {"indicator_type":"count","temporal_aggregation":"period-tota
 Jobless Claims 4-week Average → {"indicator_type":"count","temporal_aggregation":"period-average","is_currency_denominated":false}
 Unemployment Rate % → {"indicator_type":"percentage","temporal_aggregation":"not-applicable","is_currency_denominated":false}
 Government Spending to GDP → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_currency_denominated":false}
-GDP per capita (USD) → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_currency_denominated":true}
+Debt to GDP Ratio → {"indicator_type":"ratio","temporal_aggregation":"not-applicable","is_currency_denominated":false}
 Nurses per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 Medical Doctors per 1000 population → {"indicator_type":"ratio","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
-const PRICE_VALUE_PROMPT = `You are classifying PRICE-VALUE indicators (market-determined prices and rates).
+const PRICE_VALUE_PROMPT =
+  `You are classifying PRICE-VALUE indicators (market-determined prices and rates).
 
 TYPES (choose exact match):
 • price: Interest rates, exchange rates, commodity prices, asset prices, stock prices, electricity prices
@@ -151,7 +160,8 @@ SOFR (%) → {"indicator_type":"price","temporal_aggregation":"point-in-time","i
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
-const CHANGE_MOVEMENT_PROMPT = `You are classifying CHANGE-MOVEMENT indicators (rates of change, volatility, gaps).
+const CHANGE_MOVEMENT_PROMPT =
+  `You are classifying CHANGE-MOVEMENT indicators (rates of change, volatility, gaps).
 
 TYPES (choose exact match):
 • rate: Growth rates, inflation rates, percent changes (GDP growth, CPI YoY, Producer Prices Change, Import Prices MoM)
@@ -195,7 +205,8 @@ VIX Volatility → {"indicator_type":"volatility","temporal_aggregation":"period
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
-const COMPOSITE_DERIVED_PROMPT = `You are classifying COMPOSITE-DERIVED indicators (indices, statistical relationships).
+const COMPOSITE_DERIVED_PROMPT =
+  `You are classifying COMPOSITE-DERIVED indicators (indices, statistical relationships).
 
 TYPES (choose exact match):
 • index: Composite indices (CPI, PMI, S&P 500, confidence index, business climate index, economic optimism index, price indices)
@@ -281,7 +292,8 @@ Fiscal Multiplier → {"indicator_type":"multiplier","temporal_aggregation":"per
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
-const TEMPORAL_PROMPT = `You are classifying TEMPORAL indicators (time-based measurements).
+const TEMPORAL_PROMPT =
+  `You are classifying TEMPORAL indicators (time-based measurements).
 
 TYPES (choose exact match):
 • duration: Time length, maturity, time to event
@@ -300,7 +312,8 @@ Recession Probability → {"indicator_type":"probability","temporal_aggregation"
 
 OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggregation":"...","is_currency_denominated":true|false,"confidence":0-1,"reasoning":"1 sentence why"}]}`;
 
-const QUALITATIVE_PROMPT = `You are classifying QUALITATIVE indicators (surveys, sentiment, allocations).
+const QUALITATIVE_PROMPT =
+  `You are classifying QUALITATIVE indicators (surveys, sentiment, allocations).
 
 TYPES (choose exact match):
 • sentiment: Pure sentiment/confidence surveys WITHOUT "index" in name (consumer sentiment, business sentiment)
@@ -329,11 +342,11 @@ OUTPUT: {"results":[{"indicator_id":"...","indicator_type":"...","temporal_aggre
  * Family-specific prompts mapping
  */
 export const FAMILY_PROMPTS: Record<IndicatorFamily, string> = {
-  'physical-fundamental': PHYSICAL_FUNDAMENTAL_PROMPT,
-  'numeric-measurement': NUMERIC_MEASUREMENT_PROMPT,
-  'price-value': PRICE_VALUE_PROMPT,
-  'change-movement': CHANGE_MOVEMENT_PROMPT,
-  'composite-derived': COMPOSITE_DERIVED_PROMPT,
+  "physical-fundamental": PHYSICAL_FUNDAMENTAL_PROMPT,
+  "numeric-measurement": NUMERIC_MEASUREMENT_PROMPT,
+  "price-value": PRICE_VALUE_PROMPT,
+  "change-movement": CHANGE_MOVEMENT_PROMPT,
+  "composite-derived": COMPOSITE_DERIVED_PROMPT,
   temporal: TEMPORAL_PROMPT,
   qualitative: QUALITATIVE_PROMPT,
   other: QUALITATIVE_PROMPT, // Use qualitative prompt for 'other' category
@@ -344,7 +357,7 @@ export const FAMILY_PROMPTS: Record<IndicatorFamily, string> = {
  */
 export function generateSpecialistUserPrompt(
   indicators: Indicator[],
-  family: IndicatorFamily
+  family: IndicatorFamily,
 ): string {
   const indicatorList = indicators
     .map((ind, idx) => {
@@ -357,38 +370,42 @@ export function generateSpecialistUserPrompt(
       if (ind.units) parts.push(`- Units: ${ind.units}`);
       if (ind.currency_code) parts.push(`- Currency: ${ind.currency_code}`);
       if (ind.periodicity) parts.push(`- Periodicity: ${ind.periodicity}`);
-      if (ind.aggregation_method)
+      if (ind.aggregation_method) {
         parts.push(`- Aggregation Method: ${ind.aggregation_method}`);
+      }
       if (ind.description) parts.push(`- Description: ${ind.description}`);
 
       // Include router decision (family classification from previous stage)
       const extInd = ind as any;
-      if (extInd.router_family || extInd.family)
+      if (extInd.router_family || extInd.family) {
         parts.push(
-          `- Router Family Decision: ${extInd.router_family || extInd.family}`
+          `- Router Family Decision: ${extInd.router_family || extInd.family}`,
         );
+      }
       if (
         typeof (extInd.router_confidence || extInd.confidence_family) ===
-        'number'
-      )
+          "number"
+      ) {
         parts.push(
           `- Router Confidence: ${
             extInd.router_confidence || extInd.confidence_family
-          }`
+          }`,
         );
-      if (extInd.router_reasoning)
+      }
+      if (extInd.router_reasoning) {
         parts.push(`- Router Reasoning: ${extInd.router_reasoning}`);
+      }
 
-      return parts.join('\n');
+      return parts.join("\n");
     })
-    .join('\n\n');
+    .join("\n\n");
 
   return `═══════════════════════════════════════════════════════════════════════════
 ${family.toUpperCase()} SPECIALIST CLASSIFICATION
 ═══════════════════════════════════════════════════════════════════════════
 
 The Router stage classified these ${indicators.length} indicator${
-    indicators.length === 1 ? '' : 's'
+    indicators.length === 1 ? "" : "s"
   } as ${family} family.
 Your task: Determine the specific TYPE, TEMPORAL AGGREGATION, and IS_CURRENCY_DENOMINATED for each.
 
@@ -398,10 +415,8 @@ ${indicatorList}
 RESPONSE REQUIREMENTS
 ═══════════════════════════════════════════════════════════════════════════
 
-Return a JSON object with "results" array containing ${
-    indicators.length
-  } classification${
-    indicators.length === 1 ? '' : 's'
+Return a JSON object with "results" array containing ${indicators.length} classification${
+    indicators.length === 1 ? "" : "s"
   }, in the SAME ORDER as above.
 
 Each classification MUST contain:

@@ -1,13 +1,18 @@
 # V1 Pipeline Documentation
 
-The V1 pipeline is the default classification system for @tellimer/classify. It provides single-pass classification with robust retry logic and comprehensive error handling.
+The V1 pipeline is the default classification system for @tellimer/classify. It
+provides single-pass classification with robust retry logic and comprehensive
+error handling.
 
 ## Overview
 
-V1 uses a single LLM call to classify indicators with all metadata in one request. It includes:
+V1 uses a single LLM call to classify indicators with all metadata in one
+request. It includes:
 
-- **ID-based pairing** - Automatic unique ID generation for reliable response matching
-- **Individual retry logic** - Failed indicators retry up to 3 times with exponential backoff
+- **ID-based pairing** - Automatic unique ID generation for reliable response
+  matching
+- **Individual retry logic** - Failed indicators retry up to 3 times with
+  exponential backoff
 - **Batch processing** - Efficient batching with configurable sizes
 - **Multi-provider support** - OpenAI, Anthropic, and Google Gemini
 - **Comprehensive statistics** - Detailed success/failure tracking
@@ -98,7 +103,7 @@ console.log(`Retries performed: ${result.retries}`);
 // Handle failures with retry information
 for (const failure of result.failed) {
   console.error(
-    `Failed to classify ${failure.indicator.name}: ${failure.error} (after ${failure.retries} retries)`
+    `Failed to classify ${failure.indicator.name}: ${failure.error} (after ${failure.retries} retries)`,
   );
 }
 ```
@@ -147,7 +152,8 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 
 ### Types
 
-See the [main README](../../README.md#api-reference) for complete type definitions:
+See the [main README](../../README.md#api-reference) for complete type
+definitions:
 
 - `Indicator` - Input indicator
 - `ClassifiedMetadata` - LLM-classified metadata
@@ -160,11 +166,14 @@ See the [main README](../../README.md#api-reference) for complete type definitio
 
 V1 classifies each indicator with:
 
-- **indicator_category** - One of 7 categories (physical-fundamental, numeric-measurement, etc.)
-- **indicator_type** - One of 26 types (stock, flow, count, percentage, index, etc.)
+- **indicator_category** - One of 7 categories (physical-fundamental,
+  numeric-measurement, etc.)
+- **indicator_type** - One of 26 types (stock, flow, count, percentage, index,
+  etc.)
 - **temporal_aggregation** - How values aggregate over time
 - **is_currency_denominated** - Whether the indicator is monetary
-- **heat_map_orientation** - Visualization direction (higher-is-positive, lower-is-positive, neutral)
+- **heat_map_orientation** - Visualization direction (higher-is-positive,
+  lower-is-positive, neutral)
 - **confidence** - Classification confidence (0-1)
 - **reasoning** - LLM reasoning (optional)
 
@@ -306,9 +315,11 @@ See [Testing Guide](../TESTING_GUIDE.md) for details.
 
 ## Upgrading to V2
 
-V2 provides multi-stage classification with persistent state and quality control. See the [Migration Guide](../MIGRATION.md) to upgrade.
+V2 provides multi-stage classification with persistent state and quality
+control. See the [Migration Guide](../MIGRATION.md) to upgrade.
 
 Key V2 benefits:
+
 - Family-based routing for better accuracy
 - Persistent SQLite database
 - Quality flagging and LLM review

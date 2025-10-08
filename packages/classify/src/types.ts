@@ -6,7 +6,7 @@
 /**
  * Supported LLM providers
  */
-export type LLMProvider = 'openai' | 'anthropic' | 'gemini';
+export type LLMProvider = "openai" | "anthropic" | "gemini";
 
 /**
  * Economic indicator types - Comprehensive taxonomy
@@ -53,76 +53,76 @@ export type LLMProvider = 'openai' | 'anthropic' | 'gemini';
  */
 export type IndicatorType =
   // Physical/Fundamental
-  | 'stock'
-  | 'flow'
-  | 'balance'
-  | 'capacity'
-  | 'volume'
+  | "stock"
+  | "flow"
+  | "balance"
+  | "capacity"
+  | "volume"
   // Numeric/Measurement
-  | 'count'
-  | 'percentage'
-  | 'ratio'
-  | 'spread'
-  | 'share'
+  | "count"
+  | "percentage"
+  | "ratio"
+  | "spread"
+  | "share"
   // Price/Value
-  | 'price'
-  | 'yield'
+  | "price"
+  | "yield"
   // Change/Movement
-  | 'rate'
-  | 'volatility'
-  | 'gap'
+  | "rate"
+  | "volatility"
+  | "gap"
   // Composite/Derived
-  | 'index'
-  | 'correlation'
-  | 'elasticity'
-  | 'multiplier'
+  | "index"
+  | "correlation"
+  | "elasticity"
+  | "multiplier"
   // Temporal
-  | 'duration'
-  | 'probability'
-  | 'threshold'
+  | "duration"
+  | "probability"
+  | "threshold"
   // Qualitative
-  | 'sentiment'
-  | 'allocation'
+  | "sentiment"
+  | "allocation"
   // Fallback
-  | 'other';
+  | "other";
 
 /**
  * All valid indicator types as a constant array for validation
  */
 export const VALID_INDICATOR_TYPES: readonly IndicatorType[] = [
   // Physical/Fundamental
-  'stock',
-  'flow',
-  'balance',
-  'capacity',
-  'volume',
+  "stock",
+  "flow",
+  "balance",
+  "capacity",
+  "volume",
   // Numeric/Measurement
-  'count',
-  'percentage',
-  'ratio',
-  'spread',
-  'share',
+  "count",
+  "percentage",
+  "ratio",
+  "spread",
+  "share",
   // Price/Value
-  'price',
-  'yield',
+  "price",
+  "yield",
   // Change/Movement
-  'rate',
-  'volatility',
-  'gap',
+  "rate",
+  "volatility",
+  "gap",
   // Composite/Derived
-  'index',
-  'correlation',
-  'elasticity',
-  'multiplier',
+  "index",
+  "correlation",
+  "elasticity",
+  "multiplier",
   // Temporal
-  'duration',
-  'probability',
-  'threshold',
+  "duration",
+  "probability",
+  "threshold",
   // Qualitative
-  'sentiment',
-  'allocation',
+  "sentiment",
+  "allocation",
   // Fallback
-  'other',
+  "other",
 ] as const;
 
 /**
@@ -133,105 +133,105 @@ export const INDICATOR_TYPE_TO_CATEGORY: Record<
   IndicatorCategory
 > = {
   // Physical/Fundamental
-  stock: 'physical-fundamental',
-  flow: 'physical-fundamental',
-  balance: 'physical-fundamental',
-  capacity: 'physical-fundamental',
-  volume: 'physical-fundamental',
+  stock: "physical-fundamental",
+  flow: "physical-fundamental",
+  balance: "physical-fundamental",
+  capacity: "physical-fundamental",
+  volume: "physical-fundamental",
   // Numeric/Measurement
-  count: 'numeric-measurement',
-  percentage: 'numeric-measurement',
-  ratio: 'numeric-measurement',
-  spread: 'numeric-measurement',
-  share: 'numeric-measurement',
+  count: "numeric-measurement",
+  percentage: "numeric-measurement",
+  ratio: "numeric-measurement",
+  spread: "numeric-measurement",
+  share: "numeric-measurement",
   // Price/Value
-  price: 'price-value',
-  yield: 'price-value',
+  price: "price-value",
+  yield: "price-value",
   // Change/Movement
-  rate: 'change-movement',
-  volatility: 'change-movement',
-  gap: 'change-movement',
+  rate: "change-movement",
+  volatility: "change-movement",
+  gap: "change-movement",
   // Composite/Derived
-  index: 'composite-derived',
-  correlation: 'composite-derived',
-  elasticity: 'composite-derived',
-  multiplier: 'composite-derived',
+  index: "composite-derived",
+  correlation: "composite-derived",
+  elasticity: "composite-derived",
+  multiplier: "composite-derived",
   // Temporal
-  duration: 'temporal',
-  probability: 'temporal',
-  threshold: 'temporal',
+  duration: "temporal",
+  probability: "temporal",
+  threshold: "temporal",
   // Qualitative
-  sentiment: 'qualitative',
-  allocation: 'qualitative',
+  sentiment: "qualitative",
+  allocation: "qualitative",
   // Fallback
-  other: 'other',
+  other: "other",
 };
 
 /**
  * Indicator category - high-level grouping
  */
 export type IndicatorCategory =
-  | 'physical-fundamental'
-  | 'numeric-measurement'
-  | 'price-value'
-  | 'change-movement'
-  | 'composite-derived'
-  | 'temporal'
-  | 'qualitative'
-  | 'other';
+  | "physical-fundamental"
+  | "numeric-measurement"
+  | "price-value"
+  | "change-movement"
+  | "composite-derived"
+  | "temporal"
+  | "qualitative"
+  | "other";
 
 /**
  * All valid indicator categories as a constant array for validation
  */
 export const VALID_INDICATOR_CATEGORIES: readonly IndicatorCategory[] = [
-  'physical-fundamental',
-  'numeric-measurement',
-  'price-value',
-  'change-movement',
-  'composite-derived',
-  'temporal',
-  'qualitative',
-  'other',
+  "physical-fundamental",
+  "numeric-measurement",
+  "price-value",
+  "change-movement",
+  "composite-derived",
+  "temporal",
+  "qualitative",
+  "other",
 ] as const;
 
 /**
  * Temporal aggregation type - how values accumulate over time
  */
 export type TemporalAggregation =
-  | 'point-in-time' // Snapshot at a moment (stock level, current price)
-  | 'period-rate' // Rate/flow during period (GDP per quarter, production per day)
-  | 'period-cumulative' // Running total over period (YTD production, cumulative sales)
-  | 'period-average' // Average over period (average temperature, average price)
-  | 'period-total' // Sum over period (total transactions, total volume)
-  | 'not-applicable'; // Doesn't have temporal dimension (ratios, percentages)
+  | "point-in-time" // Snapshot at a moment (stock level, current price)
+  | "period-rate" // Rate/flow during period (GDP per quarter, production per day)
+  | "period-cumulative" // Running total over period (YTD production, cumulative sales)
+  | "period-average" // Average over period (average temperature, average price)
+  | "period-total" // Sum over period (total transactions, total volume)
+  | "not-applicable"; // Doesn't have temporal dimension (ratios, percentages)
 
 /**
  * All valid temporal aggregations as a constant array for validation
  */
 export const VALID_TEMPORAL_AGGREGATIONS: readonly TemporalAggregation[] = [
-  'point-in-time',
-  'period-rate',
-  'period-cumulative',
-  'period-average',
-  'period-total',
-  'not-applicable',
+  "point-in-time",
+  "period-rate",
+  "period-cumulative",
+  "period-average",
+  "period-total",
+  "not-applicable",
 ] as const;
 
 /**
  * Heat map orientation indicating whether higher or lower values are positive
  */
 export type HeatMapOrientation =
-  | 'higher-is-positive' // Higher values are better (e.g., GDP, employment)
-  | 'lower-is-positive' // Lower values are better (e.g., unemployment, inflation)
-  | 'neutral'; // Neither direction is inherently positive (e.g., exchange rates)
+  | "higher-is-positive" // Higher values are better (e.g., GDP, employment)
+  | "lower-is-positive" // Lower values are better (e.g., unemployment, inflation)
+  | "neutral"; // Neither direction is inherently positive (e.g., exchange rates)
 
 /**
  * All valid heat map orientations as a constant array for validation
  */
 export const VALID_HEAT_MAP_ORIENTATIONS: readonly HeatMapOrientation[] = [
-  'higher-is-positive',
-  'lower-is-positive',
-  'neutral',
+  "higher-is-positive",
+  "lower-is-positive",
+  "neutral",
 ] as const;
 
 /**
@@ -361,7 +361,7 @@ export class ClassificationError extends Error {
 
   constructor(message: string, provider: LLMProvider, cause?: Error) {
     super(message);
-    this.name = 'ClassificationError';
+    this.name = "ClassificationError";
     this.provider = provider;
     this.cause = cause;
   }
@@ -457,7 +457,7 @@ export interface LLMProviderInterface {
    */
   classify(
     indicators: Indicator[],
-    config: LLMConfig
+    config: LLMConfig,
   ): Promise<ClassifiedMetadata[]>;
 
   /**
@@ -472,9 +472,9 @@ export interface LLMProviderInterface {
  * Default model names for each provider
  */
 export const DEFAULT_MODELS: Record<LLMProvider, string> = {
-  openai: 'gpt-5s',
-  anthropic: 'claude-3-5-sonnet-20241022',
-  gemini: 'gemini-2.5-flash',
+  openai: "gpt-5s",
+  anthropic: "claude-3-5-sonnet-20241022",
+  gemini: "gemini-2.5-flash",
 };
 
 /**

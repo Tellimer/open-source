@@ -1,6 +1,7 @@
 # End-to-End Tests for @tellimer/classify
 
-This directory contains comprehensive end-to-end tests using real economic indicator data from the Tellimer database.
+This directory contains comprehensive end-to-end tests using real economic
+indicator data from the Tellimer database.
 
 ## Directory Structure
 
@@ -25,22 +26,24 @@ tests/
     ├── confidence_scores_test.ts      # Confidence calibration validation
     ├── retry_and_pairing_test.ts      # ID-based pairing and retry logic
     └── provider_consistency_test.ts   # Cross-provider consistency
-
 ```
 
 ## Running Tests
 
 ### All Tests
+
 ```bash
 deno test --allow-env --allow-net tests/e2e/
 ```
 
 ### Specific Test Suite
+
 ```bash
 deno test --allow-env --allow-net tests/e2e/schema_validation_test.ts
 ```
 
 ### With Specific Provider
+
 ```bash
 OPENAI_API_KEY=sk-... deno test --allow-env --allow-net tests/e2e/
 ```
@@ -69,7 +72,8 @@ The test suite covers:
 
 ## Fixtures
 
-Fixtures are JSON files containing real economic indicators from the Tellimer database with:
+Fixtures are JSON files containing real economic indicators from the Tellimer
+database with:
 
 - Indicator metadata (name, units, currency, periodicity, source, description)
 - Time series data (12-24+ data points with dates and values)
@@ -90,9 +94,9 @@ Example fixture structure:
         "source": "World Bank",
         "description": "Total value of goods and services produced",
         "sample_values": [
-          {"date": "2023-Q1", "value": 26500},
-          {"date": "2023-Q2", "value": 27000},
-          {"date": "2023-Q3", "value": 27500}
+          { "date": "2023-Q1", "value": 26500 },
+          { "date": "2023-Q2", "value": 27000 },
+          { "date": "2023-Q3", "value": 27500 }
         ]
       },
       "expected_classification": {
@@ -125,4 +129,3 @@ To add new test cases:
 3. Include expected classification (ground truth)
 4. Run tests to validate
 5. Document any edge cases discovered
-

@@ -3,15 +3,15 @@
  * @module
  */
 
-import type { V2DatabaseClient } from '../db/client.ts';
-import type { ValidationResult } from '../types.ts';
+import type { V2DatabaseClient } from "../db/client.ts";
+import type { ValidationResult } from "../types.ts";
 
 /**
  * Write validation results to database
  */
 export function writeValidationResults(
   db: V2DatabaseClient,
-  results: ValidationResult[]
+  results: ValidationResult[],
 ): void {
   if (results.length === 0) return;
 
@@ -46,7 +46,7 @@ export function writeValidationResults(
         result.reset_at_boundary_pct ?? null,
         result.suggested_temporal ?? null,
         result.validation_reasoning,
-        result.data_points_analyzed
+        result.data_points_analyzed,
       );
     }
 
@@ -75,13 +75,13 @@ export function writeValidationResults(
  */
 export function readValidationResults(
   db: V2DatabaseClient,
-  indicatorIds: string[]
+  indicatorIds: string[],
 ): Map<string, ValidationResult> {
   const results = new Map<string, ValidationResult>();
 
   if (indicatorIds.length === 0) return results;
 
-  const placeholders = indicatorIds.map(() => '?').join(',');
+  const placeholders = indicatorIds.map(() => "?").join(",");
   const stmt = db.prepare(`
     SELECT * FROM validation_results
     WHERE indicator_id IN (${placeholders})

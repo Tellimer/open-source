@@ -48,11 +48,11 @@ export {
 } from "./src/utils/token_counter.ts";
 
 export {
+  type CostSummary,
   getCostSummary,
+  printCostProjections,
   printCostSummary,
   projectCost,
-  printCostProjections,
-  type CostSummary,
 } from "./src/utils/cost_summary.ts";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -64,26 +64,26 @@ export { classifyIndicatorsV2 } from "./src/v2/pipeline.ts";
 
 // V2 types
 export type {
-  V2Config,
-  V2Classification,
-  V2PipelineResult,
-  V2PipelineStage,
-  PipelineVersion,
   DatabaseConfig,
+  FlaggedIndicator,
   IndicatorFamily,
+  OrientationResult,
+  PipelineVersion,
+  ReviewAction,
+  ReviewDecision,
   RouterResult,
   SpecialistResult,
-  OrientationResult,
-  FlaggedIndicator,
-  ReviewDecision,
-  ReviewAction,
+  V2Classification,
+  V2Config,
+  V2PipelineResult,
+  V2PipelineStage,
 } from "./src/v2/types.ts";
 
 // Database clients
 export {
-  V2DatabaseClient,
   createLocalDatabase,
   createRemoteDatabase,
+  V2DatabaseClient,
 } from "./src/v2/db/client.ts";
 
 // Individual stage functions (for advanced usage)
@@ -94,20 +94,25 @@ export { applyFlaggingRules } from "./src/v2/review/flagging.ts";
 export { reviewFlaggedIndicators } from "./src/v2/review/review.ts";
 
 // Storage utilities
-export { readClassifications, getClassificationStats } from "./src/v2/output/storage.ts";
+export {
+  getClassificationStats,
+  readClassifications,
+} from "./src/v2/output/storage.ts";
 export { getEscalatedIndicators } from "./src/v2/review/storage.ts";
 
 // Telemetry and logging
-export { TelemetryCollector, createTelemetryCollector } from "./src/v2/telemetry/collector.ts";
-export { V2Logger, createLogger, logger } from "./src/v2/telemetry/logger.ts";
+export {
+  createTelemetryCollector,
+  TelemetryCollector,
+} from "./src/v2/telemetry/collector.ts";
+export { createLogger, logger, V2Logger } from "./src/v2/telemetry/logger.ts";
 export type {
-  StageTelemetryEvent,
   ErrorTelemetryEvent,
   PipelineTelemetry,
+  StageTelemetryEvent,
 } from "./src/v2/telemetry/collector.ts";
 export type {
-  LogLevel,
   LogEntry,
   LoggerConfig,
+  LogLevel,
 } from "./src/v2/telemetry/logger.ts";
-

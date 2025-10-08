@@ -1,15 +1,18 @@
 # Cost Tracking & Performance Analysis
 
-Complete guide to using token usage tracking and performance metrics in @tellimer/classify.
+Complete guide to using token usage tracking and performance metrics in
+@tellimer/classify.
 
 ## Overview
 
 The package automatically tracks:
+
 - **Token Usage** - Input, output, and total tokens consumed
 - **Cost Estimation** - Real-time cost calculations based on provider pricing
 - **Performance Metrics** - Throughput, latency, and efficiency metrics
 
-All metrics are included in the `ClassificationResult` returned by `classifyIndicatorsWithOptions()`.
+All metrics are included in the `ClassificationResult` returned by
+`classifyIndicatorsWithOptions()`.
 
 ## Token Usage Tracking
 
@@ -19,7 +22,7 @@ Every classification operation tracks token usage:
 
 ```typescript
 const result = await classifyIndicatorsWithOptions(indicators, {
-  llmConfig: { provider: 'openai', apiKey: 'sk-...' },
+  llmConfig: { provider: "openai", apiKey: "sk-..." },
 });
 
 console.log(result.tokenUsage);
@@ -35,39 +38,42 @@ console.log(result.tokenUsage);
 
 ### Token Usage Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `inputTokens` | `number` | Tokens in the prompt (indicator data + system prompt) |
-| `outputTokens` | `number` | Tokens in the completion (classifications) |
-| `totalTokens` | `number` | Sum of input and output tokens |
-| `estimatedCost` | `number` | Estimated cost in USD |
-| `provider` | `LLMProvider` | Provider used ('openai', 'anthropic', 'gemini') |
-| `model` | `string` | Model used (e.g., 'gpt-4o-mini') |
+| Field           | Type          | Description                                           |
+| --------------- | ------------- | ----------------------------------------------------- |
+| `inputTokens`   | `number`      | Tokens in the prompt (indicator data + system prompt) |
+| `outputTokens`  | `number`      | Tokens in the completion (classifications)            |
+| `totalTokens`   | `number`      | Sum of input and output tokens                        |
+| `estimatedCost` | `number`      | Estimated cost in USD                                 |
+| `provider`      | `LLMProvider` | Provider used ('openai', 'anthropic', 'gemini')       |
+| `model`         | `string`      | Model used (e.g., 'gpt-4o-mini')                      |
 
 ## Cost Calculation
 
 ### Pricing Table (Per 1M Tokens)
 
 #### OpenAI
-| Model | Input | Output |
-|-------|-------|--------|
-| gpt-4o | $2.50 | $10.00 |
-| gpt-4o-mini | $0.15 | $0.60 |
+
+| Model       | Input  | Output |
+| ----------- | ------ | ------ |
+| gpt-4o      | $2.50  | $10.00 |
+| gpt-4o-mini | $0.15  | $0.60  |
 | gpt-4-turbo | $10.00 | $30.00 |
 
 #### Anthropic
-| Model | Input | Output |
-|-------|-------|--------|
-| claude-3-5-sonnet-20241022 | $3.00 | $15.00 |
-| claude-3-opus-20240229 | $15.00 | $75.00 |
-| claude-3-haiku-20240307 | $0.25 | $1.25 |
+
+| Model                      | Input  | Output |
+| -------------------------- | ------ | ------ |
+| claude-3-5-sonnet-20241022 | $3.00  | $15.00 |
+| claude-3-opus-20240229     | $15.00 | $75.00 |
+| claude-3-haiku-20240307    | $0.25  | $1.25  |
 
 #### Google Gemini
-| Model | Input | Output |
-|-------|-------|--------|
-| gemini-2.0-flash-thinking-exp | $0.00 | $0.00 (preview) |
-| gemini-1.5-pro | $1.25 | $5.00 |
-| gemini-1.5-flash | $0.075 | $0.30 |
+
+| Model                         | Input  | Output          |
+| ----------------------------- | ------ | --------------- |
+| gemini-2.0-flash-thinking-exp | $0.00  | $0.00 (preview) |
+| gemini-1.5-pro                | $1.25  | $5.00           |
+| gemini-1.5-flash              | $0.075 | $0.30           |
 
 ### Cost Formula
 
@@ -78,6 +84,7 @@ cost = (inputTokens / 1,000,000 × inputPrice) + (outputTokens / 1,000,000 × ou
 ### Example Calculation
 
 For 10 indicators with GPT-4o-mini:
+
 ```
 Input:  1,200 tokens × $0.15/1M = $0.00018
 Output:   800 tokens × $0.60/1M = $0.00048
@@ -98,12 +105,12 @@ console.log(result.performance);
 // }
 ```
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `avgTimePerIndicator` | `number` | Average processing time per indicator (ms) |
-| `throughput` | `number` | Indicators processed per second |
-| `avgTokensPerIndicator` | `number` | Average tokens used per indicator |
-| `avgCostPerIndicator` | `number` | Average cost per indicator (USD) |
+| Metric                  | Type     | Description                                |
+| ----------------------- | -------- | ------------------------------------------ |
+| `avgTimePerIndicator`   | `number` | Average processing time per indicator (ms) |
+| `throughput`            | `number` | Indicators processed per second            |
+| `avgTokensPerIndicator` | `number` | Average tokens used per indicator          |
+| `avgCostPerIndicator`   | `number` | Average cost per indicator (USD)           |
 
 ## Cost Optimization Strategies
 
@@ -113,9 +120,9 @@ console.log(result.performance);
 // Expensive: GPT-4
 const expensive = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: {
-    provider: 'openai',
+    provider: "openai",
     apiKey: key,
-    model: 'gpt-4'
+    model: "gpt-4",
   },
 });
 // Cost: ~$0.001 per indicator
@@ -123,9 +130,9 @@ const expensive = await classifyIndicatorsWithOptions(indicators, {
 // Affordable: GPT-4o-mini
 const affordable = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: {
-    provider: 'openai',
+    provider: "openai",
     apiKey: key,
-    model: 'gpt-4o-mini'
+    model: "gpt-4o-mini",
   },
 });
 // Cost: ~$0.00006 per indicator (17x cheaper!)
@@ -139,7 +146,7 @@ Larger batches = fewer API calls = lower overhead:
 // Many small calls (less efficient)
 const small = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: config,
-  batchSize: 5,  // 20 API calls for 100 indicators
+  batchSize: 5, // 20 API calls for 100 indicators
 });
 
 // Fewer large calls (more efficient)
@@ -155,7 +162,7 @@ const large = await classifyIndicatorsWithOptions(indicators, {
 // With reasoning (higher cost)
 const withReasoning = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: config,
-  includeReasoning: true,  // +40-60% tokens
+  includeReasoning: true, // +40-60% tokens
 });
 
 // Without reasoning (lower cost)
@@ -171,9 +178,9 @@ const withoutReasoning = await classifyIndicatorsWithOptions(indicators, {
 // Gemini 2.0 Flash Thinking is FREE during preview
 const free = await classifyIndicatorsWithOptions(indicators, {
   llmConfig: {
-    provider: 'gemini',
+    provider: "gemini",
     apiKey: geminiKey,
-    model: 'gemini-2.0-flash-thinking-exp-01-21',
+    model: "gemini-2.0-flash-thinking-exp-01-21",
   },
 });
 // Cost: $0.00 🎉
@@ -184,10 +191,10 @@ const free = await classifyIndicatorsWithOptions(indicators, {
 ### Project Costs for Large Datasets
 
 ```typescript
-import { formatCost } from '@tellimer/classify/utils/token_counter';
+import { formatCost } from "@tellimer/classify/utils/token_counter";
 
 const result = await classifyIndicatorsWithOptions(sampleIndicators, {
-  llmConfig: config
+  llmConfig: config,
 });
 
 const avgCost = result.performance.avgCostPerIndicator;
@@ -202,9 +209,9 @@ console.log(`Cost for 100k indicators: ${formatCost(projection)}`);
 
 ```typescript
 const models = [
-  { name: 'gpt-4o-mini', cost: 0.000066 },
-  { name: 'claude-3-haiku', cost: 0.000045 },
-  { name: 'gemini-1.5-flash', cost: 0.000038 },
+  { name: "gpt-4o-mini", cost: 0.000066 },
+  { name: "claude-3-haiku", cost: 0.000045 },
+  { name: "gemini-1.5-flash", cost: 0.000038 },
 ];
 
 const indicatorCounts = [1000, 10000, 100000];
@@ -226,7 +233,7 @@ for (const model of models) {
 async function classifyWithBudget(
   indicators: Indicator[],
   config: LLMConfig,
-  maxCost: number
+  maxCost: number,
 ) {
   const result = await classifyIndicatorsWithOptions(indicators, {
     llmConfig: config,
@@ -234,7 +241,9 @@ async function classifyWithBudget(
 
   if (result.tokenUsage.estimatedCost > maxCost) {
     console.warn(
-      `⚠️  Cost exceeded budget: ${formatCost(result.tokenUsage.estimatedCost)} > ${formatCost(maxCost)}`
+      `⚠️  Cost exceeded budget: ${
+        formatCost(result.tokenUsage.estimatedCost)
+      } > ${formatCost(maxCost)}`,
     );
   }
 
@@ -250,7 +259,7 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 });
 
 // Send to analytics/monitoring service
-await analytics.track('classification', {
+await analytics.track("classification", {
   indicators: result.summary.total,
   success_rate: result.summary.successRate,
   tokens: result.tokenUsage.totalTokens,
@@ -267,22 +276,25 @@ await analytics.track('classification', {
 ### Format Values
 
 ```typescript
-import { formatCost, formatTokens } from '@tellimer/classify/utils/token_counter';
+import {
+  formatCost,
+  formatTokens,
+} from "@tellimer/classify/utils/token_counter";
 
-formatCost(0.001234);    // "$0.001234"
-formatTokens(1500000);   // "1,500,000"
+formatCost(0.001234); // "$0.001234"
+formatTokens(1500000); // "1,500,000"
 ```
 
 ### Calculate Costs Manually
 
 ```typescript
-import { calculateCost } from '@tellimer/classify/utils/token_counter';
+import { calculateCost } from "@tellimer/classify/utils/token_counter";
 
 const cost = calculateCost(
-  1000,      // input tokens
-  500,       // output tokens
-  'openai',  // provider
-  'gpt-4o-mini'
+  1000, // input tokens
+  500, // output tokens
+  "openai", // provider
+  "gpt-4o-mini",
 );
 
 console.log(formatCost(cost)); // "$0.000450"
@@ -291,7 +303,7 @@ console.log(formatCost(cost)); // "$0.000450"
 ### Estimate Tokens
 
 ```typescript
-import { estimateTokens } from '@tellimer/classify/utils/token_counter';
+import { estimateTokens } from "@tellimer/classify/utils/token_counter";
 
 const text = "Gross Domestic Product measures...";
 const tokens = estimateTokens(text);
@@ -312,6 +324,7 @@ const result = await classifyIndicatorsWithOptions(indicators, {
 ### 2. Monitor Cost Trends
 
 Track average cost per indicator over time to detect:
+
 - Model pricing changes
 - Prompt inefficiencies
 - Data complexity changes
@@ -322,26 +335,30 @@ Track average cost per indicator over time to detect:
 const COST_LIMIT = 0.10; // $0.10 max per batch
 
 if (result.tokenUsage.estimatedCost > COST_LIMIT) {
-  throw new Error('Cost limit exceeded');
+  throw new Error("Cost limit exceeded");
 }
 ```
 
 ### 4. Use Cost-Effective Models for Bulk Operations
 
 For large-scale classification (>10k indicators):
+
 - Use `gpt-4o-mini` or `gemini-1.5-flash`
 - Avoid expensive models like `gpt-4` or `claude-3-opus`
 - Consider batch processing overnight to reduce urgency
 
 ## Example: Cost Analysis Script
 
-See [examples/cost_analysis.ts](../examples/cost_analysis.ts) for a complete cost analysis example that:
+See [examples/cost_analysis.ts](../examples/cost_analysis.ts) for a complete
+cost analysis example that:
+
 - Compares costs across different configurations
 - Projects costs for large datasets
 - Analyzes batch size impact
 - Compares reasoning vs no reasoning
 
 Run it with:
+
 ```bash
 deno task cost-analysis
 ```
@@ -355,6 +372,7 @@ deno task bench
 ```
 
 This will:
+
 - Test different indicator counts (1, 10, 25, 50, 100)
 - Compare batch sizes (5, 10, 25)
 - Measure with/without reasoning
@@ -362,20 +380,21 @@ This will:
 
 ## FAQ
 
-**Q: Are costs estimated or exact?**
-A: Costs are estimated based on token counts. Actual costs may vary slightly based on provider billing.
+**Q: Are costs estimated or exact?** A: Costs are estimated based on token
+counts. Actual costs may vary slightly based on provider billing.
 
-**Q: Can I use custom pricing?**
-A: Token counting utilities are in `src/utils/token_counter.ts`. You can fork and modify the `PRICING` constant.
+**Q: Can I use custom pricing?** A: Token counting utilities are in
+`src/utils/token_counter.ts`. You can fork and modify the `PRICING` constant.
 
-**Q: How accurate is token estimation?**
-A: ~90% accurate. We use a simple heuristic (4 chars ≈ 1 token). For exact counts, check provider response metadata.
+**Q: How accurate is token estimation?** A: ~90% accurate. We use a simple
+heuristic (4 chars ≈ 1 token). For exact counts, check provider response
+metadata.
 
-**Q: Do failed indicators count toward costs?**
-A: Yes, if an API call was made. Retries also consume tokens/cost.
+**Q: Do failed indicators count toward costs?** A: Yes, if an API call was made.
+Retries also consume tokens/cost.
 
-**Q: Which provider is cheapest?**
-A: Currently Gemini 2.0 Flash (free preview), followed by Gemini 1.5 Flash ($0.075/$0.30 per 1M tokens).
+**Q: Which provider is cheapest?** A: Currently Gemini 2.0 Flash (free preview),
+followed by Gemini 1.5 Flash ($0.075/$0.30 per 1M tokens).
 
 ## See Also
 

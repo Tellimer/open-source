@@ -4,9 +4,9 @@
  * @module
  */
 
-import { Database } from '@db/sqlite';
-import type { DatabaseConfig } from '../types.ts';
-import { V2_SCHEMA, SCHEMA_VERSION } from './schema.ts';
+import { Database } from "@db/sqlite";
+import type { DatabaseConfig } from "../types.ts";
+import { SCHEMA_VERSION, V2_SCHEMA } from "./schema.ts";
 
 /**
  * Database Client for V2 Pipeline
@@ -25,12 +25,12 @@ export class V2DatabaseClient {
    */
   async initialize(): Promise<void> {
     if (this.db) {
-      throw new Error('Database already initialized');
+      throw new Error("Database already initialized");
     }
 
     try {
       // Connect based on type
-      if (this.config.type === 'local') {
+      if (this.config.type === "local") {
         await this.connectLocal();
       } else {
         await this.connectRemote();
@@ -42,14 +42,14 @@ export class V2DatabaseClient {
       }
 
       // Enable WAL mode for local databases (better concurrency)
-      if (this.config.type === 'local' && this.config.walMode !== false) {
-        this.db!.exec('PRAGMA journal_mode = WAL;');
+      if (this.config.type === "local" && this.config.walMode !== false) {
+        this.db!.exec("PRAGMA journal_mode = WAL;");
       }
     } catch (error) {
       throw new Error(
         `Failed to initialize database: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -71,30 +71,28 @@ export class V2DatabaseClient {
 
     // Option 1: If Railway provides libSQL (Turso-compatible)
     if (
-      this.config.path.startsWith('libsql://') ||
-      this.config.path.startsWith('https://')
+      this.config.path.startsWith("libsql://") ||
+      this.config.path.startsWith("https://")
     ) {
       // Use libSQL client (would need to add as dependency)
       throw new Error(
-        'Remote SQLite via libSQL not yet implemented. ' +
-          'Please use local database or implement libSQL client.'
+        "Remote SQLite via libSQL not yet implemented. " +
+          "Please use local database or implement libSQL client.",
       );
-    }
-
-    // Option 2: If Railway provides SQLite via HTTP REST API
+    } // Option 2: If Railway provides SQLite via HTTP REST API
     else if (
-      this.config.path.startsWith('http://') ||
-      this.config.path.startsWith('https://')
+      this.config.path.startsWith("http://") ||
+      this.config.path.startsWith("https://")
     ) {
       // Use HTTP client wrapper
       throw new Error(
-        'Remote SQLite via HTTP not yet implemented. ' +
-          'Please use local database or implement HTTP adapter.'
+        "Remote SQLite via HTTP not yet implemented. " +
+          "Please use local database or implement HTTP adapter.",
       );
     } else {
       throw new Error(
         `Invalid remote database URL: ${this.config.path}. ` +
-          'Expected libsql:// or https:// URL for Railway SQLite.'
+          "Expected libsql:// or https:// URL for Railway SQLite.",
       );
     }
   }
@@ -104,7 +102,7 @@ export class V2DatabaseClient {
    */
   private async migrate(): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     try {
@@ -113,7 +111,7 @@ export class V2DatabaseClient {
       try {
         const result = this.db
           .prepare(
-            'SELECT version FROM schema_version ORDER BY version DESC LIMIT 1'
+            "SELECT version FROM schema_version ORDER BY version DESC LIMIT 1",
           )
           .value<[number]>();
 
@@ -132,7 +130,7 @@ export class V2DatabaseClient {
       throw new Error(
         `Migration failed: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -142,7 +140,7 @@ export class V2DatabaseClient {
    */
   exec(sql: string): void {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
     this.db.exec(sql);
   }
@@ -152,7 +150,7 @@ export class V2DatabaseClient {
    */
   prepare(sql: string) {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
     return this.db.prepare(sql);
   }
@@ -162,16 +160,16 @@ export class V2DatabaseClient {
    */
   transaction<T>(fn: () => T): T {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
-    this.exec('BEGIN TRANSACTION;');
+    this.exec("BEGIN TRANSACTION;");
     try {
       const result = fn();
-      this.exec('COMMIT;');
+      this.exec("COMMIT;");
       return result;
     } catch (error) {
-      this.exec('ROLLBACK;');
+      this.exec("ROLLBACK;");
       throw error;
     }
   }
@@ -198,7 +196,7 @@ export class V2DatabaseClient {
    */
   getDb(): Database {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
     return this.db;
   }
@@ -208,10 +206,10 @@ export class V2DatabaseClient {
  * Create a database client with default local configuration
  */
 export function createLocalDatabase(
-  path: string = './data/classify_v2.db'
+  path: string = "./data/classify_v2.db",
 ): V2DatabaseClient {
   return new V2DatabaseClient({
-    type: 'local',
+    type: "local",
     path,
     walMode: true,
     autoMigrate: true,
@@ -223,10 +221,10 @@ export function createLocalDatabase(
  */
 export function createRemoteDatabase(
   url: string,
-  auth?: { token?: string; username?: string; password?: string }
+  auth?: { token?: string; username?: string; password?: string },
 ): V2DatabaseClient {
   return new V2DatabaseClient({
-    type: 'remote',
+    type: "remote",
     path: url,
     auth,
     autoMigrate: true,

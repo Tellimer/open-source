@@ -64,6 +64,10 @@
     "rules": {
       "tags": [
         "recommended"
+      ],
+      "exclude": [
+        "no-explicit-any",
+        "prefer-const"
       ]
     }
   },

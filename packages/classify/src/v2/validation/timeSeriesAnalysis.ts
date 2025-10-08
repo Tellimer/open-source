@@ -3,7 +3,7 @@
  * @module
  */
 
-import type { TemporalDataPoint } from '../../types.ts';
+import type { TemporalDataPoint } from "../../types.ts";
 
 /**
  * Time series analysis result
@@ -37,7 +37,7 @@ export interface TimeSeriesAnalysis {
  * Analyze time series to detect cumulative patterns
  */
 export function analyzeTimeSeriesPattern(
-  values: TemporalDataPoint[]
+  values: TemporalDataPoint[],
 ): TimeSeriesAnalysis {
   if (!values || values.length < 6) {
     // Not enough data for analysis
@@ -100,12 +100,10 @@ export function analyzeTimeSeriesPattern(
     }
 
     // Check Dec vs Jan ratio for this year
-    const janValue = yearData.find((v) =>
-      v.date.substring(5, 7) === '01'
-    )?.value as number;
-    const decValue = yearData.find((v) =>
-      v.date.substring(5, 7) === '12'
-    )?.value as number;
+    const janValue = yearData.find((v) => v.date.substring(5, 7) === "01")
+      ?.value as number;
+    const decValue = yearData.find((v) => v.date.substring(5, 7) === "12")
+      ?.value as number;
 
     if (janValue && decValue && janValue > 0) {
       decJanRatios.push(decValue / janValue);
@@ -118,10 +116,10 @@ export function analyzeTimeSeriesPattern(
     const nextYearData = yearGroups.get(years[i + 1])!;
 
     const decThisYear = thisYearData.find((v) =>
-      v.date.substring(5, 7) === '12'
+      v.date.substring(5, 7) === "12"
     )?.value as number;
     const janNextYear = nextYearData.find((v) =>
-      v.date.substring(5, 7) === '01'
+      v.date.substring(5, 7) === "01"
     )?.value as number;
 
     if (decThisYear && janNextYear) {
@@ -155,8 +153,8 @@ export function analyzeTimeSeriesPattern(
   // 1. Values reset at year boundary AND
   // 2. Values increase within year AND
   // 3. Dec/Jan ratio is high
-  const isCumulative =
-    hasSeasonalReset && isMonotonicWithinYear && hasHighDecJanRatio;
+  const isCumulative = hasSeasonalReset && isMonotonicWithinYear &&
+    hasHighDecJanRatio;
 
   // Confidence based on strength of signals
   let confidence = 0;
@@ -182,41 +180,53 @@ export function analyzeTimeSeriesPattern(
  * Format analysis for LLM consumption
  */
 export function formatAnalysisForLLM(
-  analysis: TimeSeriesAnalysis
+  analysis: TimeSeriesAnalysis,
 ): string {
   // Note: Don't return early for 0 confidence - still provide analysis details
-  if (analysis.cumulative_confidence === 0 && !analysis.evidence.dec_jan_ratio) {
-    return 'No clear temporal pattern detected from time series data.';
+  if (
+    analysis.cumulative_confidence === 0 && !analysis.evidence.dec_jan_ratio
+  ) {
+    return "No clear temporal pattern detected from time series data.";
   }
 
   const parts: string[] = [];
 
   if (analysis.is_cumulative) {
     parts.push(
-      `🔍 Time series analysis indicates CUMULATIVE (YTD) pattern with ${(analysis.cumulative_confidence * 100).toFixed(0)}% confidence:`
+      `🔍 Time series analysis indicates CUMULATIVE (YTD) pattern with ${
+        (analysis.cumulative_confidence * 100).toFixed(0)
+      }% confidence:`,
     );
   } else {
     parts.push(
-      `🔍 Time series analysis indicates NON-cumulative pattern:`
+      `🔍 Time series analysis indicates NON-cumulative pattern:`,
     );
   }
 
   const ev = analysis.evidence;
   if (ev.dec_jan_ratio) {
     parts.push(
-      `  • Dec/Jan ratio: ${ev.dec_jan_ratio.toFixed(1)}x ${ev.dec_jan_ratio > 5 ? '(typical of cumulative)' : ''}`
+      `  • Dec/Jan ratio: ${ev.dec_jan_ratio.toFixed(1)}x ${
+        ev.dec_jan_ratio > 5 ? "(typical of cumulative)" : ""
+      }`,
     );
   }
   if (ev.within_year_increase_pct !== undefined) {
     parts.push(
-      `  • Within-year increases: ${ev.within_year_increase_pct.toFixed(0)}% ${ev.within_year_increase_pct > 80 ? '(monotonically increasing)' : ''}`
+      `  • Within-year increases: ${ev.within_year_increase_pct.toFixed(0)}% ${
+        ev.within_year_increase_pct > 80 ? "(monotonically increasing)" : ""
+      }`,
     );
   }
   if (ev.reset_at_boundary_pct !== undefined && ev.year_boundaries) {
     parts.push(
-      `  • Year boundary resets: ${ev.reset_at_boundary_pct.toFixed(0)}% of ${ev.year_boundaries} boundaries ${ev.reset_at_boundary_pct > 50 ? '(resets to zero)' : ''}`
+      `  • Year boundary resets: ${
+        ev.reset_at_boundary_pct.toFixed(0)
+      }% of ${ev.year_boundaries} boundaries ${
+        ev.reset_at_boundary_pct > 50 ? "(resets to zero)" : ""
+      }`,
     );
   }
 
-  return parts.join('\n');
+  return parts.join("\n");
 }

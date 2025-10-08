@@ -4,8 +4,8 @@
  * @module
  */
 
-import type { LLMProvider } from '../../types.ts';
-import type { V2PipelineStage } from '../types.ts';
+import type { LLMProvider } from "../../types.ts";
+import type { V2PipelineStage } from "../types.ts";
 
 /**
  * Stage-level telemetry event
@@ -67,7 +67,7 @@ export class TelemetryCollector {
     executionId: string,
     provider: LLMProvider,
     model: string,
-    totalIndicators: number
+    totalIndicators: number,
   ) {
     this.telemetry = {
       executionId,
@@ -103,7 +103,7 @@ export class TelemetryCollector {
       outputTokens?: number;
       estimatedCost?: number;
       metadata?: Record<string, unknown>;
-    }
+    },
   ): void {
     const startTime = this.stageStartTimes.get(stage);
     if (!startTime) {
@@ -156,7 +156,7 @@ export class TelemetryCollector {
     stage: V2PipelineStage,
     error: Error | string,
     indicatorId?: string,
-    retryAttempt?: number
+    retryAttempt?: number,
   ): void {
     const event: ErrorTelemetryEvent = {
       executionId: this.telemetry.executionId,
@@ -175,8 +175,7 @@ export class TelemetryCollector {
    */
   finalize(): PipelineTelemetry {
     this.telemetry.endTime = new Date().toISOString();
-    this.telemetry.totalDuration =
-      new Date(this.telemetry.endTime).getTime() -
+    this.telemetry.totalDuration = new Date(this.telemetry.endTime).getTime() -
       new Date(this.telemetry.startTime).getTime();
 
     return this.telemetry;
@@ -203,7 +202,10 @@ export class TelemetryCollector {
     if (!events || events.length === 0) return null;
 
     const totalDuration = events.reduce((sum, e) => sum + e.duration, 0);
-    const totalIndicators = events.reduce((sum, e) => sum + e.indicatorsProcessed, 0);
+    const totalIndicators = events.reduce(
+      (sum, e) => sum + e.indicatorsProcessed,
+      0,
+    );
     const totalApiCalls = events.reduce((sum, e) => sum + e.apiCalls, 0);
 
     return {
@@ -211,7 +213,9 @@ export class TelemetryCollector {
       totalIndicators,
       totalApiCalls,
       avgDuration: totalDuration / events.length,
-      avgIndicatorsPerCall: totalApiCalls > 0 ? totalIndicators / totalApiCalls : 0,
+      avgIndicatorsPerCall: totalApiCalls > 0
+        ? totalIndicators / totalApiCalls
+        : 0,
     };
   }
 
@@ -221,7 +225,9 @@ export class TelemetryCollector {
   toJSON(): string {
     const data = {
       ...this.telemetry,
-      stages: Array.from(this.telemetry.stages.entries()).map(([stage, events]) => ({
+      stages: Array.from(this.telemetry.stages.entries()).map((
+        [stage, events],
+      ) => ({
         stage,
         events,
       })),
@@ -233,23 +239,29 @@ export class TelemetryCollector {
    * Print summary to console
    */
   printSummary(): void {
-    console.log('\n📊 V2 Pipeline Telemetry Summary');
-    console.log('═'.repeat(60));
+    console.log("\n📊 V2 Pipeline Telemetry Summary");
+    console.log("═".repeat(60));
     console.log(`Execution ID: ${this.telemetry.executionId}`);
-    console.log(`Provider: ${this.telemetry.provider} (${this.telemetry.model})`);
+    console.log(
+      `Provider: ${this.telemetry.provider} (${this.telemetry.model})`,
+    );
     console.log(`Total Indicators: ${this.telemetry.totalIndicators}`);
     console.log(`Total API Calls: ${this.telemetry.totalApiCalls}`);
     console.log(
-      `Total Tokens: ${this.telemetry.totalInputTokens + this.telemetry.totalOutputTokens} (in: ${this.telemetry.totalInputTokens}, out: ${this.telemetry.totalOutputTokens})`
+      `Total Tokens: ${
+        this.telemetry.totalInputTokens + this.telemetry.totalOutputTokens
+      } (in: ${this.telemetry.totalInputTokens}, out: ${this.telemetry.totalOutputTokens})`,
     );
-    console.log(`Estimated Cost: $${this.telemetry.totalEstimatedCost.toFixed(4)}`);
+    console.log(
+      `Estimated Cost: $${this.telemetry.totalEstimatedCost.toFixed(4)}`,
+    );
     if (this.telemetry.totalDuration) {
       console.log(`Total Duration: ${this.telemetry.totalDuration}ms`);
     }
-    console.log('');
+    console.log("");
 
-    console.log('Stage Breakdown:');
-    for (const [stage, events] of this.telemetry.stages.entries()) {
+    console.log("Stage Breakdown:");
+    for (const [stage, _events] of this.telemetry.stages.entries()) {
       const summary = this.getStageSummary(stage);
       if (summary) {
         console.log(`  ${stage}:`);
@@ -257,17 +269,19 @@ export class TelemetryCollector {
         console.log(`    • Indicators: ${summary.totalIndicators}`);
         console.log(`    • API Calls: ${summary.totalApiCalls}`);
         console.log(
-          `    • Avg Time/Call: ${summary.avgDuration.toFixed(1)}ms`
+          `    • Avg Time/Call: ${summary.avgDuration.toFixed(1)}ms`,
         );
       }
     }
 
     if (this.telemetry.errors.length > 0) {
-      console.log('');
+      console.log("");
       console.log(`⚠️  Errors: ${this.telemetry.errors.length}`);
       for (const error of this.telemetry.errors.slice(0, 5)) {
         console.log(
-          `  • [${error.stage}] ${error.error}${error.indicatorId ? ` (${error.indicatorId})` : ''}`
+          `  • [${error.stage}] ${error.error}${
+            error.indicatorId ? ` (${error.indicatorId})` : ""
+          }`,
         );
       }
       if (this.telemetry.errors.length > 5) {
@@ -275,8 +289,8 @@ export class TelemetryCollector {
       }
     }
 
-    console.log('═'.repeat(60));
-    console.log('');
+    console.log("═".repeat(60));
+    console.log("");
   }
 }
 
@@ -287,7 +301,7 @@ export function createTelemetryCollector(
   executionId: string,
   provider: LLMProvider,
   model: string,
-  totalIndicators: number
+  totalIndicators: number,
 ): TelemetryCollector {
   return new TelemetryCollector(executionId, provider, model, totalIndicators);
 }

@@ -2,7 +2,7 @@
  * Test configuration for end-to-end tests
  */
 
-import type { LLMProvider } from '../src/types.ts';
+import type { LLMProvider } from "../src/types.ts";
 
 /**
  * Test configuration interface
@@ -31,12 +31,12 @@ export interface TestConfig {
  */
 function getApiKey(provider: LLMProvider): string | undefined {
   switch (provider) {
-    case 'openai':
-      return Deno.env.get('OPENAI_API_KEY');
-    case 'anthropic':
-      return Deno.env.get('ANTHROPIC_API_KEY');
-    case 'gemini':
-      return Deno.env.get('GEMINI_API_KEY');
+    case "openai":
+      return Deno.env.get("OPENAI_API_KEY");
+    case "anthropic":
+      return Deno.env.get("ANTHROPIC_API_KEY");
+    case "gemini":
+      return Deno.env.get("GEMINI_API_KEY");
     default:
       return undefined;
   }
@@ -46,7 +46,7 @@ function getApiKey(provider: LLMProvider): string | undefined {
  * Get available providers (those with API keys set)
  */
 export function getAvailableProviders(): LLMProvider[] {
-  const allProviders: LLMProvider[] = ['openai', 'anthropic', 'gemini'];
+  const allProviders: LLMProvider[] = ["openai", "anthropic", "gemini"];
   return allProviders.filter((provider) => getApiKey(provider) !== undefined);
 }
 
@@ -56,9 +56,9 @@ export function getAvailableProviders(): LLMProvider[] {
 export const defaultTestConfig: TestConfig = {
   providers: getAvailableProviders(),
   apiKeys: {
-    openai: getApiKey('openai'),
-    anthropic: getApiKey('anthropic'),
-    gemini: getApiKey('gemini'),
+    openai: getApiKey("openai"),
+    anthropic: getApiKey("anthropic"),
+    gemini: getApiKey("gemini"),
   },
   timeout: 60000, // 60 seconds
   maxRetries: 3,
@@ -92,7 +92,7 @@ export function requireApiKey(provider: LLMProvider): string {
   const apiKey = getApiKey(provider);
   if (!apiKey) {
     throw new Error(
-      `API key for ${provider} not found. Set ${provider.toUpperCase()}_API_KEY environment variable.`
+      `API key for ${provider} not found. Set ${provider.toUpperCase()}_API_KEY environment variable.`,
     );
   }
   return apiKey;
@@ -104,7 +104,7 @@ export function requireApiKey(provider: LLMProvider): string {
 export function skipIfProviderUnavailable(provider: LLMProvider): void {
   if (!isProviderAvailable(provider)) {
     console.log(
-      `⚠️  Skipping test: ${provider} API key not set (${provider.toUpperCase()}_API_KEY)`
+      `⚠️  Skipping test: ${provider} API key not set (${provider.toUpperCase()}_API_KEY)`,
     );
     Deno.exit(0);
   }
@@ -137,28 +137,28 @@ export const testThresholds = {
  * Confidence score ranges for validation
  */
 export const confidenceRanges = {
-  veryHigh: { min: 0.95, max: 1.0, label: 'Very High (0.95-1.0)' },
-  high: { min: 0.85, max: 0.94, label: 'High (0.85-0.94)' },
-  moderate: { min: 0.7, max: 0.84, label: 'Moderate (0.70-0.84)' },
-  low: { min: 0.0, max: 0.69, label: 'Low (<0.70)' },
+  veryHigh: { min: 0.95, max: 1.0, label: "Very High (0.95-1.0)" },
+  high: { min: 0.85, max: 0.94, label: "High (0.85-0.94)" },
+  moderate: { min: 0.7, max: 0.84, label: "Moderate (0.70-0.84)" },
+  low: { min: 0.0, max: 0.69, label: "Low (<0.70)" },
 };
 
 /**
  * Test data paths
  */
 export const testPaths = {
-  fixtures: './tests/fixtures',
-  e2e: './tests/e2e',
-  results: './tests/results',
+  fixtures: "./tests/fixtures",
+  e2e: "./tests/e2e",
+  results: "./tests/results",
 };
 
 /**
  * Model configurations for each provider
  */
 export const providerModels = {
-  openai: 'claude-sonnet-4-5-20250929',  // Use Claude for all providers for now
-  anthropic: 'claude-sonnet-4-5-20250929',  // Same cost as Sonnet 4, but more powerful
-  gemini: 'claude-sonnet-4-5-20250929',  // Use Claude for all providers for now
+  openai: "claude-sonnet-4-5-20250929", // Use Claude for all providers for now
+  anthropic: "claude-sonnet-4-5-20250929", // Same cost as Sonnet 4, but more powerful
+  gemini: "claude-sonnet-4-5-20250929", // Use Claude for all providers for now
 };
 
 /**

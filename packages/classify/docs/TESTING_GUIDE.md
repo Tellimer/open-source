@@ -1,10 +1,13 @@
 # Testing Guide for @tellimer/classify
 
-This document provides comprehensive guidance on testing the @tellimer/classify package with real economic indicator data.
+This document provides comprehensive guidance on testing the @tellimer/classify
+package with real economic indicator data.
 
 ## Overview
 
-The testing system validates that LLM-powered classification produces accurate, consistent, and well-structured results across all 26 indicator types and 7 categories.
+The testing system validates that LLM-powered classification produces accurate,
+consistent, and well-structured results across all 26 indicator types and 7
+categories.
 
 ## Test Architecture
 
@@ -72,10 +75,10 @@ Each fixture file contains real economic indicators with:
         "source": "Bureau of Economic Analysis",
         "description": "Total value of goods and services produced",
         "sample_values": [
-          {"date": "2023-Q1", "value": 26500},
-          {"date": "2023-Q2", "value": 27000},
-          {"date": "2023-Q3", "value": 27200},
-          {"date": "2023-Q4", "value": 27500}
+          { "date": "2023-Q1", "value": 26500 },
+          { "date": "2023-Q2", "value": 27000 },
+          { "date": "2023-Q3", "value": 27200 },
+          { "date": "2023-Q4", "value": 27500 }
         ]
       },
       "expected_classification": {
@@ -98,6 +101,7 @@ Each fixture file contains real economic indicators with:
 **Purpose**: Verify LLM responses conform to expected schema
 
 **Validates**:
+
 - ✓ All required fields present (`indicator_id`, `indicator_category`, etc.)
 - ✓ Correct field types (string, boolean, number)
 - ✓ Valid enum values (category, type, aggregation, orientation)
@@ -108,6 +112,7 @@ Each fixture file contains real economic indicators with:
 **Success Criteria**: 95%+ pass rate
 
 **Run**:
+
 ```bash
 deno test --allow-env --allow-net tests/e2e/schema_validation_test.ts
 ```
@@ -117,6 +122,7 @@ deno test --allow-env --allow-net tests/e2e/schema_validation_test.ts
 **Purpose**: Verify classifications match ground truth
 
 **Validates**:
+
 - ✓ `indicator_category` matches expected
 - ✓ `indicator_type` matches expected
 - ✓ `temporal_aggregation` matches expected
@@ -124,6 +130,7 @@ deno test --allow-env --allow-net tests/e2e/schema_validation_test.ts
 - ✓ `heat_map_orientation` matches expected
 
 **Tracks**:
+
 - Overall accuracy (all fields correct)
 - Per-field accuracy
 - Mismatches with reasoning
@@ -131,6 +138,7 @@ deno test --allow-env --allow-net tests/e2e/schema_validation_test.ts
 **Success Criteria**: 85%+ overall accuracy
 
 **Run**:
+
 ```bash
 deno test --allow-env --allow-net tests/e2e/classification_accuracy_test.ts
 ```
@@ -183,22 +191,22 @@ Configuration is managed in `tests/config.ts`:
 
 ```typescript
 export const defaultTestConfig: TestConfig = {
-  providers: getAvailableProviders(),  // Auto-detect from env
-  timeout: 60000,                      // 60 seconds
-  maxRetries: 3,                       // Retry failed indicators
-  batchSize: 5,                        // Indicators per batch
-  includeReasoning: false,             // Include LLM reasoning
+  providers: getAvailableProviders(), // Auto-detect from env
+  timeout: 60000, // 60 seconds
+  maxRetries: 3, // Retry failed indicators
+  batchSize: 5, // Indicators per batch
+  includeReasoning: false, // Include LLM reasoning
   minConfidence: 0.0,
   maxConfidence: 1.0,
 };
 
 export const testThresholds = {
-  schemaValidation: 0.95,        // 95% pass rate
-  classificationAccuracy: 0.85,  // 85% accuracy
-  temporalAccuracy: 0.90,        // 90% temporal detection
-  confidenceCorrelation: 0.70,   // 70% confidence correlation
-  providerConsistency: 0.80,     // 80% cross-provider agreement
-  retrySuccess: 0.95,            // 95% retry success
+  schemaValidation: 0.95, // 95% pass rate
+  classificationAccuracy: 0.85, // 85% accuracy
+  temporalAccuracy: 0.90, // 90% temporal detection
+  confidenceCorrelation: 0.70, // 70% confidence correlation
+  providerConsistency: 0.80, // 80% cross-provider agreement
+  retrySuccess: 0.95, // 95% retry success
 };
 ```
 
@@ -207,10 +215,10 @@ export const testThresholds = {
 ### Loading Fixtures
 
 ```typescript
-import { loadFixture, loadAllFixtures } from '../utils.ts';
+import { loadAllFixtures, loadFixture } from "../utils.ts";
 
 // Load single fixture
-const fixture = await loadFixture('physical_fundamental.json');
+const fixture = await loadFixture("physical_fundamental.json");
 
 // Load all fixtures
 const fixtures = await loadAllFixtures();
@@ -219,7 +227,7 @@ const fixtures = await loadAllFixtures();
 ### Schema Validation
 
 ```typescript
-import { assertValidSchema } from '../utils.ts';
+import { assertValidSchema } from "../utils.ts";
 
 // Validate classification schema
 assertValidSchema(classification);
@@ -228,18 +236,18 @@ assertValidSchema(classification);
 ### Accuracy Comparison
 
 ```typescript
-import { compareClassification, calculateAccuracy } from '../utils.ts';
+import { calculateAccuracy, compareClassification } from "../utils.ts";
 
 // Compare single classification
 const comparison = compareClassification(actual, expected);
-console.log(comparison.matches);        // true/false
-console.log(comparison.differences);    // Array of differences
-console.log(comparison.accuracy);       // 0.0 - 1.0
+console.log(comparison.matches); // true/false
+console.log(comparison.differences); // Array of differences
+console.log(comparison.accuracy); // 0.0 - 1.0
 
 // Calculate overall accuracy
 const report = calculateAccuracy(results);
-console.log(report.accuracy);           // Overall accuracy
-console.log(report.byField);            // Per-field accuracy
+console.log(report.accuracy); // Overall accuracy
+console.log(report.byField); // Per-field accuracy
 ```
 
 ## Adding New Test Cases
@@ -315,7 +323,8 @@ Per-field accuracy:
 
 ### Tests Skipped
 
-If you see "Skipping tests: API key not set", ensure environment variables are set:
+If you see "Skipping tests: API key not set", ensure environment variables are
+set:
 
 ```bash
 echo $OPENAI_API_KEY
@@ -336,6 +345,7 @@ If accuracy is below threshold:
 ### Schema Validation Failures
 
 Common causes:
+
 - Missing required fields in LLM response
 - Invalid enum values
 - Category-type mismatch
@@ -345,8 +355,10 @@ Check error messages for specific field issues.
 
 ## Best Practices
 
-1. **Use Real Data**: Fixtures should use real economic indicators from Tellimer database
-2. **Sufficient History**: Include 12-24+ data points for temporal pattern detection
+1. **Use Real Data**: Fixtures should use real economic indicators from Tellimer
+   database
+2. **Sufficient History**: Include 12-24+ data points for temporal pattern
+   detection
 3. **Clear Ground Truth**: Expected classifications should be unambiguous
 4. **Document Edge Cases**: Use `notes` field to explain unusual indicators
 5. **Test All Types**: Ensure coverage across all 26 indicator types
@@ -375,4 +387,3 @@ To run tests in CI/CD:
 - `PROMPT_ENGINEERING.md` - System prompt design
 - `PAIRING_AND_RETRY.md` - ID-based pairing system
 - `IMPLEMENTATION_SUMMARY.md` - Implementation overview
-

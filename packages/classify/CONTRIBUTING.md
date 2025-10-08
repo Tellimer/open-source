@@ -1,6 +1,7 @@
 # Contributing to @tellimer/classify
 
-Thank you for your interest in contributing to @tellimer/classify! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to @tellimer/classify! This document
+provides guidelines and instructions for contributing.
 
 ## Getting Started
 
@@ -78,7 +79,12 @@ To add support for a new LLM provider:
 2. Implement the `LLMProviderInterface`:
 
 ```typescript
-import type { LLMProviderInterface, ClassifiedMetadata, Indicator, LLMConfig } from "../types.ts";
+import type {
+  ClassifiedMetadata,
+  Indicator,
+  LLMConfig,
+  LLMProviderInterface,
+} from "../types.ts";
 
 export class NewProvider implements LLMProviderInterface {
   readonly name = "newprovider" as const;
@@ -87,7 +93,10 @@ export class NewProvider implements LLMProviderInterface {
     // Validate configuration
   }
 
-  async classify(indicators: Indicator[], config: LLMConfig): Promise<ClassifiedMetadata[]> {
+  async classify(
+    indicators: Indicator[],
+    config: LLMConfig,
+  ): Promise<ClassifiedMetadata[]> {
     // Implement classification logic
   }
 }
@@ -134,7 +143,8 @@ Deno.test("Feature - should do something", () => {
 
 ## Commit Messages
 
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+Follow the [Conventional Commits](https://www.conventionalcommits.org/)
+specification:
 
 - `feat:` - New features
 - `fix:` - Bug fixes
@@ -144,6 +154,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 - `chore:` - Maintenance tasks
 
 Examples:
+
 ```
 feat: add support for Azure OpenAI
 fix: handle timeout errors correctly
@@ -168,5 +179,5 @@ test: add tests for batch processing
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
-
+By contributing, you agree that your contributions will be licensed under the
+MIT License.

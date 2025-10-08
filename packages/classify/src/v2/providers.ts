@@ -3,8 +3,8 @@
  * @module
  */
 
-import type { LLMConfig, LLMProviderInterface } from '../types.ts';
-import { getProvider } from '../providers/index.ts';
+import type { LLMConfig, LLMProviderInterface } from "../types.ts";
+import { getProvider } from "../providers/index.ts";
 
 /**
  * Create V2 provider from LLM config

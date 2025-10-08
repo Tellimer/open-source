@@ -4,8 +4,7 @@
  * @module
  */
 
-import * as v from 'valibot';
-import type { IndicatorFamily } from '../types.ts';
+import * as v from "valibot";
 
 /**
  * Single router result schema
@@ -13,25 +12,25 @@ import type { IndicatorFamily } from '../types.ts';
 export const RouterResultSchema = v.object({
   indicator_id: v.pipe(
     v.string(),
-    v.minLength(1, 'Indicator ID must not be empty')
+    v.minLength(1, "Indicator ID must not be empty"),
   ),
   family: v.union([
-    v.literal('physical-fundamental'),
-    v.literal('numeric-measurement'),
-    v.literal('price-value'),
-    v.literal('change-movement'),
-    v.literal('composite-derived'),
-    v.literal('temporal'),
-    v.literal('qualitative'),
-  ], 'Invalid indicator family'),
+    v.literal("physical-fundamental"),
+    v.literal("numeric-measurement"),
+    v.literal("price-value"),
+    v.literal("change-movement"),
+    v.literal("composite-derived"),
+    v.literal("temporal"),
+    v.literal("qualitative"),
+  ], "Invalid indicator family"),
   confidence: v.pipe(
     v.number(),
-    v.minValue(0, 'Confidence must be >= 0'),
-    v.maxValue(1, 'Confidence must be <= 1')
+    v.minValue(0, "Confidence must be >= 0"),
+    v.maxValue(1, "Confidence must be <= 1"),
   ),
   reasoning: v.optional(v.pipe(
     v.string(),
-    v.minLength(1, 'Reasoning must not be empty')
+    v.minLength(1, "Reasoning must not be empty"),
   )),
 });
 
@@ -41,7 +40,7 @@ export const RouterResultSchema = v.object({
 export const RouterBatchSchema = v.object({
   results: v.pipe(
     v.array(RouterResultSchema),
-    v.minLength(1, 'Batch must contain at least one result')
+    v.minLength(1, "Batch must contain at least one result"),
   ),
 });
 

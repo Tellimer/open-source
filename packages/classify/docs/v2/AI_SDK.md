@@ -4,7 +4,8 @@ V2 uses Vercel AI SDK for type-safe structured output with runtime validation.
 
 ## Overview
 
-The V2 pipeline leverages AI SDK's `generateObject()` function with Valibot schemas for:
+The V2 pipeline leverages AI SDK's `generateObject()` function with Valibot
+schemas for:
 
 - **Type-safe responses** - Compile-time and runtime type checking
 - **Automatic validation** - Schema enforcement with detailed errors
@@ -18,14 +19,14 @@ The V2 pipeline leverages AI SDK's `generateObject()` function with Valibot sche
 Valibot provides full type inference:
 
 ```typescript
-import * as v from 'valibot';
+import * as v from "valibot";
 
 // Schema
 const RouterResultSchema = v.object({
   indicator_id: v.pipe(v.string(), v.minLength(1)),
   family: v.union([
-    v.literal('physical-fundamental'),
-    v.literal('numeric-measurement'),
+    v.literal("physical-fundamental"),
+    v.literal("numeric-measurement"),
     // ... 5 more families
   ]),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
@@ -48,7 +49,7 @@ Responses are validated automatically:
 const result = await aiProvider.generateStructured(
   systemPrompt,
   userPrompt,
-  RouterResultSchema
+  RouterResultSchema,
 );
 
 // result.data is fully validated and typed
@@ -70,6 +71,7 @@ ValiError: Invalid family value
 AI SDK handles JSON structure automatically - no need for format instructions:
 
 **Before (V1):**
+
 ```typescript
 const prompt = `
 Classify indicators...
@@ -92,6 +94,7 @@ Example:
 ```
 
 **After (V2 with AI SDK):**
+
 ```typescript
 const prompt = `
 Classify indicators by family:
@@ -115,7 +118,7 @@ const aiProvider = new AiSdkProvider(llmConfig);
 const result = await aiProvider.generateStructured(
   systemPrompt,
   userPrompt,
-  schema
+  schema,
 );
 // Retries up to 3 times with exponential backoff
 ```
@@ -145,13 +148,13 @@ V2 uses Valibot schemas for each stage:
 export const RouterResultSchema = v.object({
   indicator_id: v.pipe(v.string(), v.minLength(1)),
   family: v.union([
-    v.literal('physical-fundamental'),
-    v.literal('numeric-measurement'),
-    v.literal('price-value'),
-    v.literal('change-movement'),
-    v.literal('composite-derived'),
-    v.literal('temporal'),
-    v.literal('qualitative'),
+    v.literal("physical-fundamental"),
+    v.literal("numeric-measurement"),
+    v.literal("price-value"),
+    v.literal("change-movement"),
+    v.literal("composite-derived"),
+    v.literal("temporal"),
+    v.literal("qualitative"),
   ]),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
   reasoning: v.optional(v.string()),
@@ -170,12 +173,12 @@ export const SpecialistResultSchema = v.object({
   indicator_id: v.pipe(v.string(), v.minLength(1)),
   indicator_type: v.string(),
   temporal_aggregation: v.union([
-    v.literal('not-applicable'),
-    v.literal('point-in-time'),
-    v.literal('period-rate'),
-    v.literal('period-cumulative'),
-    v.literal('period-average'),
-    v.literal('period-total'),
+    v.literal("not-applicable"),
+    v.literal("point-in-time"),
+    v.literal("period-rate"),
+    v.literal("period-cumulative"),
+    v.literal("period-average"),
+    v.literal("period-total"),
   ]),
   is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
@@ -194,9 +197,9 @@ export const SpecialistBatchSchema = v.object({
 export const OrientationResultSchema = v.object({
   indicator_id: v.pipe(v.string(), v.minLength(1)),
   heat_map_orientation: v.union([
-    v.literal('higher-is-positive'),
-    v.literal('lower-is-positive'),
-    v.literal('neutral'),
+    v.literal("higher-is-positive"),
+    v.literal("lower-is-positive"),
+    v.literal("neutral"),
   ]),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
   reasoning: v.optional(v.string()),
@@ -214,9 +217,9 @@ export const OrientationBatchSchema = v.object({
 export const ReviewDecisionSchema = v.object({
   indicator_id: v.pipe(v.string(), v.minLength(1)),
   action: v.union([
-    v.literal('confirm'),
-    v.literal('fix'),
-    v.literal('escalate'),
+    v.literal("confirm"),
+    v.literal("fix"),
+    v.literal("escalate"),
   ]),
   diff: v.optional(v.string()),
   reasoning: v.string(),
@@ -233,10 +236,10 @@ V2 wraps AI SDK in a custom provider:
 
 ```typescript
 // src/v2/providers/ai-sdk.ts
-import { generateObject } from 'ai';
-import { openai } from '@ai-sdk/openai';
-import { anthropic } from '@ai-sdk/anthropic';
-import { google } from '@ai-sdk/google';
+import { generateObject } from "ai";
+import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { google } from "@ai-sdk/google";
 
 export class AiSdkProvider {
   constructor(private config: LLMConfig) {}
@@ -244,7 +247,7 @@ export class AiSdkProvider {
   async generateStructured<T>(
     systemPrompt: string,
     userPrompt: string,
-    schema: v.GenericSchema<T>
+    schema: v.GenericSchema<T>,
   ) {
     const model = this.getModel();
     const jsonSchema = this.convertValibotToJsonSchema(schema);
@@ -254,7 +257,7 @@ export class AiSdkProvider {
       system: systemPrompt,
       prompt: userPrompt,
       schema: jsonSchema,
-      schemaName: 'classification',
+      schemaName: "classification",
       temperature: this.config.temperature ?? 0.1,
       maxTokens: this.config.maxTokens ?? 2000,
     });
@@ -274,12 +277,14 @@ export class AiSdkProvider {
 
   private getModel() {
     switch (this.config.provider) {
-      case 'openai':
-        return openai(this.config.model ?? 'gpt-4o');
-      case 'anthropic':
-        return anthropic(this.config.model ?? 'claude-3-5-sonnet-20241022');
-      case 'gemini':
-        return google(this.config.model ?? 'gemini-2.0-flash-thinking-exp-01-21');
+      case "openai":
+        return openai(this.config.model ?? "gpt-4o");
+      case "anthropic":
+        return anthropic(this.config.model ?? "claude-3-5-sonnet-20241022");
+      case "gemini":
+        return google(
+          this.config.model ?? "gemini-2.0-flash-thinking-exp-01-21",
+        );
       default:
         throw new Error(`Unknown provider: ${this.config.provider}`);
     }
@@ -308,11 +313,11 @@ const userPrompt = generateUserPrompt(indicators);
 const aiResult = await aiProvider.generateStructured(
   systemPrompt,
   userPrompt,
-  BatchSchema // Valibot schema
+  BatchSchema, // Valibot schema
 );
 
 // 4. Use validated data
-const results = aiResult.data.classifications.map(cls => ({
+const results = aiResult.data.classifications.map((cls) => ({
   indicatorId: cls.indicator_id,
   // ... fully typed and validated
 }));
@@ -322,13 +327,13 @@ const results = aiResult.data.classifications.map(cls => ({
 
 AI SDK migration significantly reduced code:
 
-| Stage | Before | After | Reduction |
-|-------|--------|-------|-----------|
-| Router | 127 lines | 47 lines | 63% |
-| Specialist | 136 lines | 83 lines | 39% |
-| Orientation | 124 lines | 54 lines | 56% |
-| Review | 66 lines | 48 lines | 27% |
-| **Total** | **453 lines** | **232 lines** | **49%** |
+| Stage       | Before        | After         | Reduction |
+| ----------- | ------------- | ------------- | --------- |
+| Router      | 127 lines     | 47 lines      | 63%       |
+| Specialist  | 136 lines     | 83 lines      | 39%       |
+| Orientation | 124 lines     | 54 lines      | 56%       |
+| Review      | 66 lines      | 48 lines      | 27%       |
+| **Total**   | **453 lines** | **232 lines** | **49%**   |
 
 ### What Was Removed
 

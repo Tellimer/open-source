@@ -3,8 +3,14 @@ name: "econify: test & enforce coverage"
 on:
   push:
     branches: ["**"]
+    paths:
+      - "packages/econify/**"
+      - ".github/workflows/econify-coverage.yml"
   pull_request:
     branches: ["**"]
+    paths:
+      - "packages/econify/**"
+      - ".github/workflows/econify-coverage.yml"
 
 concurrency:
   group: "econify-coverage-${{ github.ref }}"

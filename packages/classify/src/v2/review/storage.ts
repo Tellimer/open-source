@@ -3,15 +3,15 @@
  * @module
  */
 
-import type { V2DatabaseClient } from '../db/client.ts';
-import type { FlaggedIndicator, ReviewDecision } from '../types.ts';
+import type { V2DatabaseClient } from "../db/client.ts";
+import type { FlaggedIndicator, ReviewDecision } from "../types.ts";
 
 /**
  * Write flagging results to database (upsert)
  */
 export function writeFlaggingResults(
   db: V2DatabaseClient,
-  flaggedIndicators: FlaggedIndicator[]
+  flaggedIndicators: FlaggedIndicator[],
 ): void {
   if (flaggedIndicators.length === 0) return;
 
@@ -40,7 +40,7 @@ export function writeFlaggingResults(
         flagged.flag_reason,
         flagged.current_value || null,
         flagged.expected_value || null,
-        flagged.confidence ?? null
+        flagged.confidence ?? null,
       );
     }
   });
@@ -51,7 +51,7 @@ export function writeFlaggingResults(
  */
 export function writeReviewDecisions(
   db: V2DatabaseClient,
-  decisions: ReviewDecision[]
+  decisions: ReviewDecision[],
 ): void {
   if (decisions.length === 0) return;
 
@@ -78,7 +78,7 @@ export function writeReviewDecisions(
         decision.action,
         decision.diff ? JSON.stringify(decision.diff) : null,
         decision.reason,
-        decision.confidence
+        decision.confidence,
       );
     }
 
@@ -96,7 +96,7 @@ export function writeReviewDecisions(
       updateClassifications.run(
         decision.action,
         decision.reason,
-        decision.indicator_id
+        decision.indicator_id,
       );
     }
   });
@@ -109,14 +109,14 @@ export function applyReviewDiff(
   db: V2DatabaseClient,
   indicatorId: string,
   diff: Record<string, any>,
-  reason: string
+  reason: string,
 ): void {
   db.transaction(() => {
     // Build dynamic UPDATE query from diff fields
     const fields = Object.keys(diff);
     if (fields.length === 0) return;
 
-    const setClauses = fields.map((field) => `${field} = ?`).join(', ');
+    const setClauses = fields.map((field) => `${field} = ?`).join(", ");
     const values = fields.map((field) => diff[field]);
 
     const query = `
@@ -139,7 +139,7 @@ export function applyReviewDiff(
  */
 export function readFlaggedIndicators(
   db: V2DatabaseClient,
-  indicatorIds?: string[]
+  indicatorIds?: string[],
 ): Array<FlaggedIndicator & { name: string }> {
   // Get unique indicators with their first flag (aggregating all flag info)
   let query = `
@@ -161,12 +161,12 @@ export function readFlaggedIndicators(
   const params: string[] = [];
 
   if (indicatorIds && indicatorIds.length > 0) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     query += ` AND f.indicator_id IN (${placeholders})`;
     params.push(...indicatorIds);
   }
 
-  query += ' GROUP BY f.indicator_id ORDER BY MIN(f.flagged_at) ASC';
+  query += " GROUP BY f.indicator_id ORDER BY MIN(f.flagged_at) ASC";
 
   const rows = db.prepare(query).all(...params);
 
@@ -187,7 +187,7 @@ export function readFlaggedIndicators(
  */
 export function readReviewDecisions(
   db: V2DatabaseClient,
-  indicatorIds?: string[]
+  indicatorIds?: string[],
 ): ReviewDecision[] {
   let query = `
     SELECT
@@ -202,12 +202,12 @@ export function readReviewDecisions(
   const params: string[] = [];
 
   if (indicatorIds && indicatorIds.length > 0) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     query += ` WHERE indicator_id IN (${placeholders})`;
     params.push(...indicatorIds);
   }
 
-  query += ' ORDER BY reviewed_at ASC';
+  query += " ORDER BY reviewed_at ASC";
 
   const rows = db.prepare(query).all(...params);
 
@@ -225,11 +225,11 @@ export function readReviewDecisions(
  */
 export function isFlagged(
   db: V2DatabaseClient,
-  indicatorId: string
+  indicatorId: string,
 ): boolean {
   const result = db
     .prepare(
-      'SELECT 1 FROM flagging_results WHERE indicator_id = ? LIMIT 1'
+      "SELECT 1 FROM flagging_results WHERE indicator_id = ? LIMIT 1",
     )
     .value(indicatorId);
 
@@ -241,11 +241,11 @@ export function isFlagged(
  */
 export function hasReviewDecision(
   db: V2DatabaseClient,
-  indicatorId: string
+  indicatorId: string,
 ): boolean {
   const result = db
     .prepare(
-      'SELECT 1 FROM review_decisions WHERE indicator_id = ? LIMIT 1'
+      "SELECT 1 FROM review_decisions WHERE indicator_id = ? LIMIT 1",
     )
     .value(indicatorId);
 
@@ -256,7 +256,7 @@ export function hasReviewDecision(
  * Get escalated indicators (require human review)
  */
 export function getEscalatedIndicators(
-  db: V2DatabaseClient
+  db: V2DatabaseClient,
 ): Array<{ indicator_id: string; name: string; reason: string }> {
   const query = `
     SELECT

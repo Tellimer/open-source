@@ -3,23 +3,23 @@
  * @module
  */
 
-import type { LLMConfig } from '../../types.ts';
-import type { V2DatabaseClient } from '../db/client.ts';
+import type { LLMConfig } from "../../types.ts";
+import type { V2DatabaseClient } from "../db/client.ts";
 import type {
-  ReviewDecision,
   ReviewAction,
-  ReviewConfig,
   ReviewBatchResult,
-} from '../types.ts';
-import { AiSdkProvider } from '../providers/ai-sdk.ts';
-import { ReviewBatchSchema } from '../schemas/index.ts';
+  ReviewConfig,
+  ReviewDecision,
+} from "../types.ts";
+import { AiSdkProvider } from "../providers/ai-sdk.ts";
+import { ReviewBatchSchema } from "../schemas/index.ts";
 import {
   generateReviewSystemPrompt,
   generateReviewUserPrompt,
-} from './prompts.ts';
-import { writeReviewDecisions, applyReviewDiff } from './storage.ts';
-import { writeFlaggingResults } from './storage.ts';
-import { Spinner } from '../../utils/spinner.ts';
+} from "./prompts.ts";
+import { applyReviewDiff, writeReviewDecisions } from "./storage.ts";
+import { writeFlaggingResults } from "./storage.ts";
+import { Spinner } from "../../utils/spinner.ts";
 
 interface ClassificationForReview {
   indicator_id: string;
@@ -45,7 +45,7 @@ interface ClassificationForReview {
 async function reviewBatch(
   classifications: ClassificationForReview[],
   llmConfig: LLMConfig,
-  config: ReviewConfig
+  _config: ReviewConfig,
 ): Promise<{
   decisions: ReviewDecision[];
   usage: {
@@ -79,22 +79,22 @@ async function reviewBatch(
         ? `Specialist reasoning: ${c.reasoning_specialist}`
         : null,
       c.heat_map_orientation
-        ? `Orientation: ${
-            c.heat_map_orientation
-          } (conf: ${c.confidence_orient?.toFixed(2)})`
+        ? `Orientation: ${c.heat_map_orientation} (conf: ${
+          c.confidence_orient?.toFixed(2)
+        })`
         : null,
       c.reasoning_orientation
         ? `Orientation reasoning: ${c.reasoning_orientation}`
         : null,
     ]
       .filter(Boolean)
-      .join('; ');
+      .join("; ");
 
     return {
       indicator_id: c.indicator_id,
       name: c.name,
-      flag_type: 'review_all' as const,
-      flag_reason: 'Production review - verify classification correctness',
+      flag_type: "review_all" as const,
+      flag_reason: "Production review - verify classification correctness",
       current_value: currentValue,
       flagged_at: new Date().toISOString(),
     };
@@ -106,7 +106,7 @@ async function reviewBatch(
   const aiResult = await aiProvider.generateStructured(
     systemPrompt,
     userPrompt,
-    ReviewBatchSchema
+    ReviewBatchSchema,
   );
 
   // Map AI SDK result to ReviewDecision format
@@ -130,7 +130,7 @@ async function reviewBatch(
 export async function reviewAllClassifications(
   db: V2DatabaseClient,
   llmConfig: LLMConfig,
-  config: ReviewConfig
+  _config: ReviewConfig,
 ): Promise<ReviewBatchResult> {
   const startTime = Date.now();
 
@@ -162,7 +162,7 @@ export async function reviewAllClassifications(
 
   if (classifications.length === 0) {
     if (!config.quiet) {
-      console.log('✓ No classifications to review');
+      console.log("✓ No classifications to review");
     }
     return {
       reviewed: 0,
@@ -182,7 +182,7 @@ export async function reviewAllClassifications(
 
   if (!config.quiet) {
     console.log(
-      `\n📋 Reviewing ${classifications.length} classified indicators...`
+      `\n📋 Reviewing ${classifications.length} classified indicators...`,
     );
   }
 
@@ -197,7 +197,7 @@ export async function reviewAllClassifications(
     totalTokens: 0,
   };
 
-  const spinner = new Spinner('Processing review batches...');
+  const spinner = new Spinner("Processing review batches...");
   if (!config.quiet) spinner.start();
 
   const batches: ClassificationForReview[][] = [];
@@ -222,12 +222,12 @@ export async function reviewAllClassifications(
         return result.decisions;
       } catch (error) {
         if (config.debug) {
-          console.error('[Review] Batch failed:', error);
+          console.error("[Review] Batch failed:", error);
         }
         // Return escalate decisions for failed batch
         return batch.map((c) => ({
           indicator_id: c.indicator_id,
-          action: 'escalate' as ReviewAction,
+          action: "escalate" as ReviewAction,
           reason: `Review failed: ${
             error instanceof Error ? error.message : String(error)
           }`,
@@ -241,10 +241,12 @@ export async function reviewAllClassifications(
     allDecisions.push(...batchResults.flat());
 
     if (!config.quiet) {
-      spinner.text = `Processed ${Math.min(
-        (i + concurrency) * batchSize,
-        classifications.length
-      )}/${classifications.length}`;
+      spinner.text = `Processed ${
+        Math.min(
+          (i + concurrency) * batchSize,
+          classifications.length,
+        )
+      }/${classifications.length}`;
     }
   }
 
@@ -254,25 +256,25 @@ export async function reviewAllClassifications(
   writeReviewDecisions(db, allDecisions);
 
   // 4. Apply fixes for 'fix' decisions
-  const fixDecisions = allDecisions.filter((d) => d.action === 'fix');
+  const fixDecisions = allDecisions.filter((d) => d.action === "fix");
   for (const decision of fixDecisions) {
     if (decision.diff && Object.keys(decision.diff).length > 0) {
       applyReviewDiff(
         db,
         decision.indicator_id,
         decision.diff,
-        decision.reason
+        decision.reason,
       );
     }
   }
 
   // 5. Create flags ONLY for escalated indicators
   const escalatedDecisions = allDecisions.filter(
-    (d) => d.action === 'escalate'
+    (d) => d.action === "escalate",
   );
   const flagsToWrite = escalatedDecisions.map((decision) => ({
     indicator_id: decision.indicator_id,
-    flag_type: 'review_escalation' as const,
+    flag_type: "review_escalation" as const,
     flag_reason: decision.reason,
     confidence: decision.confidence,
     flagged_at: new Date().toISOString(),
@@ -283,13 +285,13 @@ export async function reviewAllClassifications(
   }
 
   // 6. Calculate statistics
-  const confirmed = allDecisions.filter((d) => d.action === 'confirm').length;
+  const confirmed = allDecisions.filter((d) => d.action === "confirm").length;
   const fixed = fixDecisions.length;
   const escalated = escalatedDecisions.length;
 
   if (!config.quiet) {
     console.log(
-      `\n✓ Review complete: ${confirmed} confirmed, ${fixed} fixed, ${escalated} escalated`
+      `\n✓ Review complete: ${confirmed} confirmed, ${fixed} fixed, ${escalated} escalated`,
     );
   }
 

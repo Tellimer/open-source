@@ -8,25 +8,25 @@ import type {
   Indicator,
   LLMConfig,
   LLMProviderInterface,
-} from '../types.ts';
+} from "../types.ts";
 import {
   ClassificationError,
   DEFAULT_CONFIG,
   DEFAULT_MODELS,
-} from '../types.ts';
+} from "../types.ts";
 import {
   generateSystemPrompt,
   generateUserPrompt,
   parseClassificationResponse,
   postProcessClassifications,
   retryWithBackoff,
-} from './base.ts';
+} from "./base.ts";
 
 /**
  * OpenAI API response types
  */
 interface OpenAIMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -53,7 +53,7 @@ interface OpenAIResponsesResponse {
 }
 
 function extractTextFromAnyOpenAIResponse(
-  data: OpenAIResponse | OpenAIResponsesResponse
+  data: OpenAIResponse | OpenAIResponsesResponse,
 ): string | undefined {
   // New Responses API convenience field
   if ((data as OpenAIResponsesResponse).output_text) {
@@ -62,23 +62,23 @@ function extractTextFromAnyOpenAIResponse(
   // Responses API nested content
   const resp = data as OpenAIResponsesResponse;
   if (resp.response?.content && resp.response.content.length > 0) {
-    const first = resp.response.content.find((c) => typeof c.text === 'string');
+    const first = resp.response.content.find((c) => typeof c.text === "string");
     if (first?.text) return first.text;
   }
   // GPT-5 Responses API: output array with message type
   if (resp.output && resp.output.length > 0) {
     // Look for the message type output (not reasoning)
-    const messageOutput = resp.output.find((o: any) => o.type === 'message');
+    const messageOutput = resp.output.find((o: any) => o.type === "message");
     if (messageOutput?.content && Array.isArray(messageOutput.content)) {
       const textContent = messageOutput.content.find(
-        (c: any) => c.type === 'output_text' && typeof c.text === 'string'
+        (c: any) => c.type === "output_text" && typeof c.text === "string",
       );
       if (textContent?.text) return textContent.text;
     }
     // Fallback to first output block
     const firstBlock = resp.output[0];
     const firstText = firstBlock.content?.find(
-      (c) => typeof c.text === 'string'
+      (c) => typeof c.text === "string",
     );
     if (firstText?.text) return firstText.text;
   }
@@ -91,17 +91,17 @@ function extractTextFromAnyOpenAIResponse(
  * OpenAI provider for indicator classification
  */
 export class OpenAIProvider implements LLMProviderInterface {
-  readonly name = 'openai' as const;
+  readonly name = "openai" as const;
 
   validateConfig(config: LLMConfig): void {
     if (!config.apiKey) {
-      throw new ClassificationError('OpenAI API key is required', this.name);
+      throw new ClassificationError("OpenAI API key is required", this.name);
     }
   }
 
   async classify(
     indicators: Indicator[],
-    config: LLMConfig
+    config: LLMConfig,
   ): Promise<ClassifiedMetadata[]> {
     this.validateConfig(config);
 
@@ -113,7 +113,7 @@ export class OpenAIProvider implements LLMProviderInterface {
     // If user explicitly set a high value, use it; otherwise use 8000 for GPT-5
     let maxTokens = config.maxTokens ?? DEFAULT_CONFIG.maxTokens;
     if (
-      model.toLowerCase().includes('gpt-5') &&
+      model.toLowerCase().includes("gpt-5") &&
       maxTokens === DEFAULT_CONFIG.maxTokens
     ) {
       maxTokens = 8000;
@@ -125,8 +125,8 @@ export class OpenAIProvider implements LLMProviderInterface {
     const userPrompt = generateUserPrompt(indicators, includeReasoning);
 
     const messages: OpenAIMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ];
 
     try {
@@ -147,16 +147,16 @@ export class OpenAIProvider implements LLMProviderInterface {
 
             try {
               const res = await fetch(
-                'https://api.openai.com/v1/chat/completions',
+                "https://api.openai.com/v1/chat/completions",
                 {
-                  method: 'POST',
+                  method: "POST",
                   headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                     Authorization: `Bearer ${config.apiKey}`,
                   },
                   body: JSON.stringify(chatBody),
                   signal: controller.signal,
-                }
+                },
               );
 
               clearTimeout(timeoutId);
@@ -164,7 +164,7 @@ export class OpenAIProvider implements LLMProviderInterface {
               if (!res.ok) {
                 const errorText = await res.text();
                 throw new Error(
-                  `OpenAI API error (${res.status}): ${errorText}`
+                  `OpenAI API error (${res.status}): ${errorText}`,
                 );
               }
 
@@ -175,15 +175,16 @@ export class OpenAIProvider implements LLMProviderInterface {
             }
           },
           (config.maxRetries ?? DEFAULT_CONFIG.maxRetries) as number,
-          (config.retryDelay ?? DEFAULT_CONFIG.retryDelay) as number
+          (config.retryDelay ?? DEFAULT_CONFIG.retryDelay) as number,
         );
         content = extractTextFromAnyOpenAIResponse(chatResp);
       } catch (chatError) {
-        const msg =
-          chatError instanceof Error ? chatError.message : String(chatError);
+        const msg = chatError instanceof Error
+          ? chatError.message
+          : String(chatError);
         const needsResponsesApi =
           msg.includes("'max_tokens' is not supported") ||
-          msg.toLowerCase().includes('responses api');
+          msg.toLowerCase().includes("responses api");
 
         if (!needsResponsesApi) {
           throw chatError;
@@ -200,7 +201,7 @@ ${userPrompt}`,
         };
 
         // Only add temperature if model supports it (not GPT-5)
-        if (!model.toLowerCase().includes('gpt-5')) {
+        if (!model.toLowerCase().includes("gpt-5")) {
           responsesBody.temperature = temperature;
         }
 
@@ -209,10 +210,10 @@ ${userPrompt}`,
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeout);
             try {
-              const res = await fetch('https://api.openai.com/v1/responses', {
-                method: 'POST',
+              const res = await fetch("https://api.openai.com/v1/responses", {
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                   Authorization: `Bearer ${config.apiKey}`,
                 },
                 body: JSON.stringify(responsesBody),
@@ -222,7 +223,7 @@ ${userPrompt}`,
               if (!res.ok) {
                 const errorText = await res.text();
                 throw new Error(
-                  `OpenAI API error (${res.status}): ${errorText}`
+                  `OpenAI API error (${res.status}): ${errorText}`,
                 );
               }
               return (await res.json()) as OpenAIResponsesResponse;
@@ -232,13 +233,13 @@ ${userPrompt}`,
             }
           },
           (config.maxRetries ?? DEFAULT_CONFIG.maxRetries) as number,
-          (config.retryDelay ?? DEFAULT_CONFIG.retryDelay) as number
+          (config.retryDelay ?? DEFAULT_CONFIG.retryDelay) as number,
         );
         content = extractTextFromAnyOpenAIResponse(responsesResp);
       }
 
-      if (!content || typeof content !== 'string') {
-        throw new Error('No content in OpenAI response');
+      if (!content || typeof content !== "string") {
+        throw new Error("No content in OpenAI response");
       }
 
       const parsed = parseClassificationResponse(content, indicators.length);
@@ -249,7 +250,7 @@ ${userPrompt}`,
           error instanceof Error ? error.message : String(error)
         }`,
         this.name,
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }

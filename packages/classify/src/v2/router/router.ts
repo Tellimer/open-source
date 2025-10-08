@@ -3,12 +3,15 @@
  * @module
  */
 
-import type { Indicator, LLMConfig } from '../../types.ts';
-import type { RouterResult, IndicatorFamily } from '../types.ts';
-import { AiSdkProvider } from '../providers/ai-sdk.ts';
-import { RouterBatchSchema } from '../schemas/index.ts';
-import { generateRouterSystemPrompt, generateRouterUserPrompt } from './prompts.ts';
-import { Spinner } from '@std/cli/unstable-spinner';
+import type { Indicator, LLMConfig } from "../../types.ts";
+import type { IndicatorFamily, RouterResult } from "../types.ts";
+import { AiSdkProvider } from "../providers/ai-sdk.ts";
+import { RouterBatchSchema } from "../schemas/index.ts";
+import {
+  generateRouterSystemPrompt,
+  generateRouterUserPrompt,
+} from "./prompts.ts";
+import { Spinner } from "@std/cli/unstable-spinner";
 
 /**
  * Router configuration
@@ -47,7 +50,7 @@ function mapBatchToRouterResults(
     family: IndicatorFamily;
     confidence: number;
     reasoning?: string;
-  }>
+  }>,
 ): RouterResult[] {
   return batchResults.map((result) => ({
     indicator_id: result.indicator_id,
@@ -63,7 +66,7 @@ function mapBatchToRouterResults(
 async function routeBatchWithRetry(
   indicators: Indicator[],
   config: RouterConfig,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<{
   success: boolean;
   results?: RouterResult[];
@@ -76,7 +79,7 @@ async function routeBatchWithRetry(
   };
 }> {
   const aiProvider = new AiSdkProvider(config.llmConfig);
-  let lastError: string = '';
+  let lastError: string = "";
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -88,7 +91,7 @@ async function routeBatchWithRetry(
       const aiResult = await aiProvider.generateStructured(
         systemPrompt,
         userPrompt,
-        RouterBatchSchema
+        RouterBatchSchema,
       );
 
       // Extract results from wrapped object
@@ -98,14 +101,17 @@ async function routeBatchWithRetry(
         success: true,
         results,
         retries: attempt,
-        usage: aiResult.usage
+        usage: aiResult.usage,
       };
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
-      
+
       if (config.debug) {
-        console.error(`[Router] Attempt ${attempt + 1}/${maxRetries + 1} failed:`, lastError);
-        console.error('[Router] Full error:', error);
+        console.error(
+          `[Router] Attempt ${attempt + 1}/${maxRetries + 1} failed:`,
+          lastError,
+        );
+        console.error("[Router] Full error:", error);
       }
 
       if (attempt < maxRetries) {
@@ -124,7 +130,7 @@ async function routeBatchWithRetry(
  */
 export async function routeIndicators(
   indicators: Indicator[],
-  config: RouterConfig
+  config: RouterConfig,
 ): Promise<RouterBatchResult> {
   const startTime = Date.now();
   const batchSize = config.batchSize ?? 40;
@@ -149,7 +155,7 @@ export async function routeIndicators(
   }
 
   const successful: RouterResult[] = [];
-  const failed: RouterBatchResult['failed'] = [];
+  const failed: RouterBatchResult["failed"] = [];
   let apiCalls = 0;
   let totalRetries = 0;
   let totalUsage = {
@@ -165,21 +171,21 @@ export async function routeIndicators(
   }
 
   if (debug && !quiet) {
-    console.log('\n' + '='.repeat(60));
-    console.log('🧭 ROUTER STAGE - FAMILY CLASSIFICATION');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("🧭 ROUTER STAGE - FAMILY CLASSIFICATION");
+    console.log("=".repeat(60));
     console.log(`Total indicators: ${indicators.length}`);
     console.log(`Batch size: ${batchSize}`);
     console.log(`Concurrency: ${concurrency}`);
     console.log(`Total batches: ${batches.length}`);
-    console.log('='.repeat(60));
+    console.log("=".repeat(60));
   }
 
   let spinner: Spinner | undefined;
   if (!quiet && !debug) {
     spinner = new Spinner({
       message: `Routing ${indicators.length} indicators to families...`,
-      color: 'cyan',
+      color: "cyan",
     });
     spinner.start();
   }
@@ -190,12 +196,14 @@ export async function routeIndicators(
 
     if (debug) {
       console.log(
-        `\n📦 Processing batches ${i + 1}-${i + batchChunk.length} of ${batches.length}`
+        `\n📦 Processing batches ${i + 1}-${
+          i + batchChunk.length
+        } of ${batches.length}`,
       );
     }
 
     const results = await Promise.all(
-      batchChunk.map((batch) => routeBatchWithRetry(batch, config, maxRetries))
+      batchChunk.map((batch) => routeBatchWithRetry(batch, config, maxRetries)),
     );
 
     // Aggregate results
@@ -217,7 +225,9 @@ export async function routeIndicators(
         }
 
         if (debug) {
-          console.log(`   ✓ Batch ${i + j + 1}: ${result.results.length} routed`);
+          console.log(
+            `   ✓ Batch ${i + j + 1}: ${result.results.length} routed`,
+          );
           // Show family distribution for this batch
           const familyCount: Record<string, number> = {};
           for (const r of result.results) {
@@ -230,7 +240,7 @@ export async function routeIndicators(
         for (const indicator of batch) {
           failed.push({
             indicator,
-            error: result.error || 'Unknown error',
+            error: result.error || "Unknown error",
             retries: result.retries,
           });
         }
@@ -256,13 +266,13 @@ export async function routeIndicators(
         (familyDistribution[result.family] || 0) + 1;
     }
 
-    console.log('\n' + '='.repeat(60));
-    console.log('📊 ROUTER SUMMARY');
-    console.log('='.repeat(60));
+    console.log("\n" + "=".repeat(60));
+    console.log("📊 ROUTER SUMMARY");
+    console.log("=".repeat(60));
     console.log(
       `✓ Success: ${successful.length}/${indicators.length} (${
         ((successful.length / indicators.length) * 100).toFixed(1)
-      }%)`
+      }%)`,
     );
     if (failed.length > 0) {
       console.log(`✗ Failed: ${failed.length}/${indicators.length}`);
@@ -270,11 +280,11 @@ export async function routeIndicators(
     console.log(`⏱  Time: ${processingTime}ms`);
     console.log(`🔄 Retries: ${totalRetries}`);
     console.log(`🔌 API Calls: ${apiCalls}`);
-    console.log('\nFamily Distribution:');
+    console.log("\nFamily Distribution:");
     for (const [family, count] of Object.entries(familyDistribution)) {
       console.log(`  • ${family}: ${count}`);
     }
-    console.log('='.repeat(60) + '\n');
+    console.log("=".repeat(60) + "\n");
   }
 
   return {

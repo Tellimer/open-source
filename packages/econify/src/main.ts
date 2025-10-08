@@ -1,21 +1,29 @@
 /**
- * Econ Normalizer — Deno/TypeScript utility for classifying indicators (stock/flow/rate/currency)
- * and normalizing monetary values via exchange rates.
+ * @tellimer/econify — Economic data normalization and conversion utility
  *
- * Usage (Deno):
- *   import {
- *     classifyIndicator,
- *     isStock, isFlow, isRate, isCurrency,
- *     normalizeCurrencyValue,
- *     normalizeMonetary,
- *     normalizeMonetaryFlow,
- *   } from "./deno-econ-normalizer.ts";
+ * Econify focuses on normalization and conversion of economic data:
+ * - Currency conversion (150+ currencies)
+ * - Magnitude scaling (trillions, billions, millions, thousands)
+ * - Time period standardization (yearly, quarterly, monthly, etc.)
+ * - Batch processing for consistent normalization
+ * - Quality assessment and validation
  *
- *   const t = classifyIndicator({ name: "Government debt (EUR)", unit: "EUR bn" });
- *   // => "stock"
+ * For indicator classification (determining if an indicator is stock, flow, ratio, etc.),
+ * see the @tellimer/classify package. Econify accepts classification results via the
+ * `indicator_type` and `is_currency_denominated` fields.
  *
- *   const normalized = normalizeCurrencyValue(125_000_000, "EUR", "USD", { base: "EUR", rates: { USD: 1.1 } });
- *   // => 137_500_000
+ * Usage:
+ *   import { processEconomicData } from "@tellimer/econify";
+ *
+ *   const data = [
+ *     { value: 100, unit: "EUR Million", name: "GDP", indicator_type: "flow" },
+ *   ];
+ *
+ *   const result = await processEconomicData(data, {
+ *     targetCurrency: "USD",
+ *     targetMagnitude: "billions",
+ *     fxFallback: { base: "USD", rates: { EUR: 0.92 } },
+ *   });
  */
 
 // Re-export all types

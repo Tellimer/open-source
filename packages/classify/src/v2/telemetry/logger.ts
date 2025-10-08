@@ -3,12 +3,12 @@
  * @module
  */
 
-import type { V2PipelineStage } from '../types.ts';
+import type { V2PipelineStage } from "../types.ts";
 
 /**
  * Log level
  */
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 /**
  * Structured log entry
@@ -42,7 +42,7 @@ export interface LoggerConfig {
  * Default logger configuration
  */
 const DEFAULT_CONFIG: LoggerConfig = {
-  level: 'info',
+  level: "info",
   console: true,
   timestamps: true,
   prettyPrint: false,
@@ -80,29 +80,45 @@ export class V2Logger {
   /**
    * Log debug message
    */
-  debug(message: string, metadata?: Record<string, unknown>, stage?: V2PipelineStage): void {
-    this.log('debug', message, metadata, stage);
+  debug(
+    message: string,
+    metadata?: Record<string, unknown>,
+    stage?: V2PipelineStage,
+  ): void {
+    this.log("debug", message, metadata, stage);
   }
 
   /**
    * Log info message
    */
-  info(message: string, metadata?: Record<string, unknown>, stage?: V2PipelineStage): void {
-    this.log('info', message, metadata, stage);
+  info(
+    message: string,
+    metadata?: Record<string, unknown>,
+    stage?: V2PipelineStage,
+  ): void {
+    this.log("info", message, metadata, stage);
   }
 
   /**
    * Log warning message
    */
-  warn(message: string, metadata?: Record<string, unknown>, stage?: V2PipelineStage): void {
-    this.log('warn', message, metadata, stage);
+  warn(
+    message: string,
+    metadata?: Record<string, unknown>,
+    stage?: V2PipelineStage,
+  ): void {
+    this.log("warn", message, metadata, stage);
   }
 
   /**
    * Log error message
    */
-  error(message: string, metadata?: Record<string, unknown>, stage?: V2PipelineStage): void {
-    this.log('error', message, metadata, stage);
+  error(
+    message: string,
+    metadata?: Record<string, unknown>,
+    stage?: V2PipelineStage,
+  ): void {
+    this.log("error", message, metadata, stage);
   }
 
   /**
@@ -112,7 +128,7 @@ export class V2Logger {
     level: LogLevel,
     message: string,
     metadata?: Record<string, unknown>,
-    stage?: V2PipelineStage
+    stage?: V2PipelineStage,
   ): void {
     // Filter by log level
     if (LOG_LEVELS[level] < LOG_LEVELS[this.config.level]) {
@@ -150,9 +166,9 @@ export class V2Logger {
     const message = `${prefix}${entry.message}`;
 
     // Choose console method based on level
-    const consoleMethod = entry.level === 'error'
+    const consoleMethod = entry.level === "error"
       ? console.error
-      : entry.level === 'warn'
+      : entry.level === "warn"
       ? console.warn
       : console.log;
 
@@ -186,11 +202,11 @@ export class V2Logger {
     }
 
     if (entry.executionId) {
-      const shortId = entry.executionId.split('-')[0];
+      const shortId = entry.executionId.split("-")[0];
       parts.push(`[${shortId}]`);
     }
 
-    return parts.join(' ') + ' ';
+    return parts.join(" ") + " ";
   }
 
   /**
@@ -198,14 +214,14 @@ export class V2Logger {
    */
   private getLevelIcon(level: LogLevel): string {
     switch (level) {
-      case 'debug':
-        return '🔍';
-      case 'info':
-        return 'ℹ️';
-      case 'warn':
-        return '⚠️';
-      case 'error':
-        return '❌';
+      case "debug":
+        return "🔍";
+      case "info":
+        return "ℹ️";
+      case "warn":
+        return "⚠️";
+      case "error":
+        return "❌";
     }
   }
 
@@ -248,18 +264,22 @@ export class V2Logger {
    * Print log summary
    */
   printSummary(): void {
-    const errors = this.entries.filter((e) => e.level === 'error');
-    const warnings = this.entries.filter((e) => e.level === 'warn');
+    const errors = this.entries.filter((e) => e.level === "error");
+    const warnings = this.entries.filter((e) => e.level === "warn");
 
-    console.log('\n📝 Log Summary');
-    console.log('═'.repeat(60));
+    console.log("\n📝 Log Summary");
+    console.log("═".repeat(60));
     console.log(`Total Entries: ${this.entries.length}`);
     console.log(`  • Errors: ${errors.length}`);
     console.log(`  • Warnings: ${warnings.length}`);
-    console.log(`  • Info: ${this.entries.filter((e) => e.level === 'info').length}`);
-    console.log(`  • Debug: ${this.entries.filter((e) => e.level === 'debug').length}`);
-    console.log('═'.repeat(60));
-    console.log('');
+    console.log(
+      `  • Info: ${this.entries.filter((e) => e.level === "info").length}`,
+    );
+    console.log(
+      `  • Debug: ${this.entries.filter((e) => e.level === "debug").length}`,
+    );
+    console.log("═".repeat(60));
+    console.log("");
   }
 }
 

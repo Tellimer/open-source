@@ -92,6 +92,10 @@ export interface BatchItem {
   scale?: string; // "Millions", "Billions", "Thousands"
   currency_code?: string; // "USD", "SAR", "XOF"
 
+  /** Classification from classify package - when provided, used instead of econify's own classification */
+  indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio", etc.
+  is_currency_denominated?: boolean; // true for currency amounts, false otherwise
+
   metadata?: Record<string, unknown>;
 }
 
@@ -351,8 +355,13 @@ function processItem<T extends BatchItem>(
 
     // Determine if this is count data (e.g., car registrations) to avoid currency parts in unit
     const indicatorName = (item as unknown as { name?: string }).name;
-    const isCountData = isCountIndicator(indicatorName, item.unit) ||
-      isCountUnit(item.unit);
+    const indicatorType = (item as unknown as { indicator_type?: string })
+      .indicator_type;
+
+    // If indicator_type is provided by classify, use it; otherwise fall back to econify's classification
+    const isCountData = indicatorType
+      ? (indicatorType === "count" || indicatorType === "volume")
+      : (isCountIndicator(indicatorName, item.unit) || isCountUnit(item.unit));
 
     // Check custom units if standard parsing returns unknown
     const custom = parseWithCustomUnits(item.unit);
@@ -363,8 +372,15 @@ function processItem<T extends BatchItem>(
 
     // Use explicit fields if provided, otherwise fall back to parsed values
     // Normalize explicit metadata to match expected types
-    const effectiveCurrency = normalizeCurrency(item.currency_code) ||
-      parsed.currency;
+    const isCurrencyDenominated = (item as unknown as {
+      is_currency_denominated?: boolean;
+    }).is_currency_denominated;
+
+    // If is_currency_denominated is explicitly false, skip currency detection
+    // If true or undefined, use currency_code or parsed currency
+    const effectiveCurrency = (isCurrencyDenominated === false)
+      ? null
+      : (normalizeCurrency(item.currency_code) || parsed.currency);
 
     // SPECIAL CASE: If unit text contains "hundred million", prefer parsed scale over database scale
     // This handles Chinese accounting units (亿, yi = 100 million) where database may incorrectly say "Millions"
