@@ -135,20 +135,22 @@ export function applyReviewDiff(
 
 /**
  * Read flagged indicators from database (with indicator names)
+ * Returns one record per unique indicator (deduplicated)
  */
 export function readFlaggedIndicators(
   db: V2DatabaseClient,
   indicatorIds?: string[]
 ): Array<FlaggedIndicator & { name: string }> {
+  // Get unique indicators with their first flag (aggregating all flag info)
   let query = `
     SELECT
       f.indicator_id,
       f.flag_type,
-      f.flag_reason,
+      GROUP_CONCAT(f.flag_reason, '; ') as flag_reason,
       f.current_value,
       f.expected_value,
-      f.confidence,
-      f.flagged_at,
+      MIN(f.confidence) as confidence,
+      MIN(f.flagged_at) as flagged_at,
       c.name
     FROM flagging_results f
     JOIN classifications c ON f.indicator_id = c.indicator_id
@@ -164,7 +166,7 @@ export function readFlaggedIndicators(
     params.push(...indicatorIds);
   }
 
-  query += ' ORDER BY f.flagged_at ASC';
+  query += ' GROUP BY f.indicator_id ORDER BY MIN(f.flagged_at) ASC';
 
   const rows = db.prepare(query).all(...params);
 

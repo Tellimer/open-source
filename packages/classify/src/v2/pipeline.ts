@@ -21,6 +21,8 @@ import { writeRouterResults } from './router/storage.ts';
 import { groupIndicatorsByFamily } from './specialist/grouping.ts';
 import { classifyByFamily } from './specialist/specialist.ts';
 import { writeSpecialistResults } from './specialist/storage.ts';
+import { validateIndicators } from './validation/validation.ts';
+import { writeValidationResults, readValidationResults } from './validation/storage.ts';
 import { classifyOrientations } from './orientation/orientation.ts';
 import { writeOrientationResults } from './orientation/storage.ts';
 import { applyFlaggingRules } from './review/flagging.ts';
@@ -160,9 +162,51 @@ export async function classifyIndicatorsV2(
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // STAGE 3: ORIENTATION - Heat map orientation
+    // STAGE 3: VALIDATION - Time Series Analysis
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('\n🧭 Stage 3: Orientation (Heat Map Direction)');
+    if (!quiet) console.log('\n🔬 Stage 3: Validation (Time Series Analysis)');
+
+    const validationStartTime = Date.now();
+    const validationResults = validateIndicators(
+      indicators,
+      specialistResult.successful,
+      { quiet }
+    );
+    const validationProcessingTime = Date.now() - validationStartTime;
+
+    // Calculate validation metrics
+    const cumulativeCount = validationResults.filter(r => r.is_cumulative).length;
+    const nonCumulativeCount = validationResults.length - cumulativeCount;
+    const avgConfidence = validationResults.length > 0
+      ? validationResults.reduce((sum, r) => sum + r.cumulative_confidence, 0) / validationResults.length
+      : 0;
+
+    // Write validation results to database
+    if (validationResults.length > 0) {
+      writeValidationResults(db, validationResults);
+      if (!quiet) {
+        console.log(
+          `  ✓ Validated ${validationResults.length} indicators, saved to database`
+        );
+      }
+    } else {
+      if (!quiet) {
+        console.log(
+          `  ℹ️  No indicators required validation (all non-cumulable types)`
+        );
+      }
+    }
+
+    if (debug) {
+      console.log(
+        `[Validation] Analyzed ${validationResults.length} indicators in ${validationProcessingTime}ms`
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STAGE 4: ORIENTATION - Heat map orientation
+    // ═══════════════════════════════════════════════════════════════════════
+    if (!quiet) console.log('\n🧭 Stage 4: Orientation (Heat Map Direction)');
 
     // Use in-memory stage outputs for enrichment
     const dbRouterResults = routerResult.successful;
@@ -218,12 +262,16 @@ export async function classifyIndicatorsV2(
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // STAGE 4: FLAGGING - Quality control checks
+    // STAGE 5: FLAGGING - Quality control checks
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log('\n🚩 Stage 4: Flagging (Quality Control)');
+    if (!quiet) console.log('\n🚩 Stage 5: Flagging (Quality Control)');
 
     // Use in-memory stage outputs instead of re-reading DB
     const dbOrientationResults = orientationResult.successful;
+
+    // Read validation results from database
+    const indicatorIds = indicators.map((ind) => ind.id!);
+    const validationResultsMap = readValidationResults(db, indicatorIds);
 
     const allClassificationData: ClassificationData[] = indicators.map(
       (ind) => {
@@ -234,6 +282,7 @@ export async function classifyIndicatorsV2(
         const orientation = dbOrientationResults.find(
           (o) => o.indicator_id === ind.id
         );
+        const validation = validationResultsMap.get(ind.id!);
 
         return {
           indicator_id: ind.id!,
@@ -249,17 +298,33 @@ export async function classifyIndicatorsV2(
           confidence_cls: specialist?.confidence_cls || 0,
           heat_map_orientation: orientation?.heat_map_orientation || 'neutral',
           confidence_orient: orientation?.confidence_orient || 0,
+          validated: validation ? 1 : 0,
+          validation_confidence: validation?.cumulative_confidence,
         };
       }
     );
 
     // Convert to flagging format (requires different structure)
-    const flaggingData = indicators.map((ind) => ({
-      indicator: ind,
-      router: dbRouterResults.find((r) => r.indicator_id === ind.id),
-      specialist: dbSpecialistResults.find((s) => s.indicator_id === ind.id),
-      orientation: dbOrientationResults.find((o) => o.indicator_id === ind.id),
-    }));
+    // Include validation results from database
+    const flaggingData = indicators.map((ind) => {
+      // Extract time series if available from sample_values (fallback for inline analysis)
+      let timeSeries: any[] | undefined;
+      if (ind.sample_values && Array.isArray(ind.sample_values)) {
+        // Check if it's temporal data (has date field)
+        if (ind.sample_values.length > 0 && typeof ind.sample_values[0] === 'object' && 'date' in ind.sample_values[0]) {
+          timeSeries = ind.sample_values as any[];
+        }
+      }
+
+      return {
+        indicator: ind,
+        router: dbRouterResults.find((r) => r.indicator_id === ind.id),
+        specialist: dbSpecialistResults.find((s) => s.indicator_id === ind.id),
+        orientation: dbOrientationResults.find((o) => o.indicator_id === ind.id),
+        validation: validationResultsMap.get(ind.id!),
+        time_series: timeSeries,
+      };
+    });
 
     const flaggedIndicators = flaggingData.flatMap((data) =>
       applyFlaggingRules(data, config.thresholds! as any)
@@ -283,7 +348,7 @@ export async function classifyIndicatorsV2(
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // STAGE 5: REVIEW - LLM-based correction of flagged indicators
+    // STAGE 6: REVIEW - LLM-based correction of flagged indicators
     // ═══════════════════════════════════════════════════════════════════════
     let reviewResult: ReviewBatchResult;
     const shouldReviewAll = Boolean((config as any).reviewAll);
@@ -415,6 +480,13 @@ export async function classifyIndicatorsV2(
           families: groupedByFamily.size,
           apiCalls: specialistResult.apiCalls,
           processingTime: specialistResult.processingTime,
+        },
+        validation: {
+          analyzed: validationResults.length,
+          cumulative: cumulativeCount,
+          nonCumulative: nonCumulativeCount,
+          avgConfidence,
+          processingTime: validationProcessingTime,
         },
         orientation: {
           processed: orientationResult.successful.length,

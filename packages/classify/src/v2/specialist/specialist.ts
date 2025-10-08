@@ -102,7 +102,20 @@ function mapBatchToSpecialistResults(
 
 /**
  * Normalize temporal aggregation for known composite subindices that should be period-average
- * This is a minimal, targeted fix to align with fixture expectations.
+ *
+ * PATTERN-BASED NORMALIZATION (applied automatically after LLM classification):
+ * This function ensures specific diffusion subindices are always classified as period-average,
+ * regardless of LLM output. These are survey-based indices that measure sentiment/diffusion
+ * averaged over the reporting period.
+ *
+ * Patterns matched (case-insensitive):
+ * • "prices paid" OR "prices received" (ISM, Kansas Fed, Philly Fed, Dallas Fed)
+ * • "manufacturing prices" OR "non manufacturing prices" (ISM subindices)
+ * • "inventory costs" (LMI Inventory Costs)
+ *
+ * Only applies if indicator_type === 'index'
+ *
+ * This ensures consistency across the pipeline and reduces flagging false positives.
  */
 function normalizeTemporalForKnownIndices(
   results: SpecialistResult[],

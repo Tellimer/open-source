@@ -16,32 +16,13 @@ export function writeOrientationResults(
   if (results.length === 0) return;
 
   db.transaction(() => {
-    const stmt = db.prepare(`
-      INSERT INTO orientation_results (
-        indicator_id,
-        heat_map_orientation,
-        confidence_orient
-      ) VALUES (?, ?, ?)
-      ON CONFLICT(indicator_id) DO UPDATE SET
-        heat_map_orientation = excluded.heat_map_orientation,
-        confidence_orient = excluded.confidence_orient,
-        created_at = CURRENT_TIMESTAMP
-    `);
-
-    for (const result of results) {
-      stmt.run(
-        result.indicator_id,
-        result.heat_map_orientation,
-        result.confidence_orient
-      );
-    }
-
-    // Also update main classifications table
+    // First update main classifications table (parent table)
     const updateClassifications = db.prepare(`
       UPDATE classifications
       SET
         heat_map_orientation = ?,
         confidence_orient = ?,
+        reasoning_orientation = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE indicator_id = ?
     `);
@@ -50,7 +31,32 @@ export function writeOrientationResults(
       updateClassifications.run(
         result.heat_map_orientation,
         result.confidence_orient,
+        result.reasoning || null,
         result.indicator_id
+      );
+    }
+
+    // Then insert/update orientation_results table (child table with FK to classifications)
+    const stmt = db.prepare(`
+      INSERT INTO orientation_results (
+        indicator_id,
+        heat_map_orientation,
+        confidence_orient,
+        reasoning
+      ) VALUES (?, ?, ?, ?)
+      ON CONFLICT(indicator_id) DO UPDATE SET
+        heat_map_orientation = excluded.heat_map_orientation,
+        confidence_orient = excluded.confidence_orient,
+        reasoning = excluded.reasoning,
+        created_at = CURRENT_TIMESTAMP
+    `);
+
+    for (const result of results) {
+      stmt.run(
+        result.indicator_id,
+        result.heat_map_orientation,
+        result.confidence_orient,
+        result.reasoning || null
       );
     }
   });
@@ -67,7 +73,8 @@ export function readOrientationResults(
     SELECT
       indicator_id,
       heat_map_orientation,
-      confidence_orient
+      confidence_orient,
+      reasoning
     FROM orientation_results
   `;
 
@@ -87,6 +94,7 @@ export function readOrientationResults(
     indicator_id: row.indicator_id,
     heat_map_orientation: row.heat_map_orientation,
     confidence_orient: row.confidence_orient,
+    reasoning: row.reasoning,
   }));
 }
 

@@ -49,12 +49,14 @@ function mapBatchToOrientationResults(
     indicator_id: string;
     heat_map_orientation: HeatMapOrientation;
     confidence: number;
+    reasoning?: string;
   }>
 ): OrientationResult[] {
   return batchResults.map((result) => ({
     indicator_id: result.indicator_id,
     heat_map_orientation: result.heat_map_orientation,
     confidence_orient: result.confidence,
+    reasoning: result.reasoning,
   }));
 }
 

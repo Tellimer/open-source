@@ -57,7 +57,7 @@ Automatically classifies indicators into types:
 ### 3. Metadata Enrichment
 Adds the following metadata to each indicator:
 - `indicator_type` - Classification type
-- `is_monetary` - Boolean flag for monetary values
+- `is_currency_denominated` - Boolean flag for monetary values
 - `is_cumulative` - Boolean flag for cumulative values
 - `heat_map_orientation` - Whether higher or lower values are positive
 - `confidence` - Confidence score (0-1)

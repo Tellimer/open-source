@@ -212,6 +212,7 @@ Each orientation object MUST contain:
 • indicator_id (exact match to input ID)
 • heat_map_orientation (higher-is-positive | lower-is-positive | neutral)
 • confidence (0-1 number)
+• reasoning (1 sentence explaining why this orientation)
 
 Remember: You are determining welfare orientation based on whether HIGHER or LOWER values indicate better economic outcomes.`;
 }

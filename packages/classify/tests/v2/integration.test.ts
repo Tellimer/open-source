@@ -37,6 +37,7 @@ function fixtureToIndicator(fixture: TestIndicatorFixture): Indicator {
     scale: fixture.scale || undefined,
     currency_code: fixture.currency_code || undefined,
     dataset: fixture.dataset || undefined,
+    sample_values: fixture.sample_values, // Include time series for validation
   };
 }
 
@@ -260,6 +261,9 @@ async function testV2IntegrationForProvider(
     );
     console.log(
       `  Specialist:  ${result.stages.specialist.processed} indicators across ${result.stages.specialist.families} families, ${result.stages.specialist.apiCalls} API calls, ${result.stages.specialist.processingTime}ms`
+    );
+    console.log(
+      `  Validation:  ${result.stages.validation.analyzed} analyzed (${result.stages.validation.cumulative} cumulative, ${result.stages.validation.nonCumulative} non-cumulative), avg confidence ${(result.stages.validation.avgConfidence * 100).toFixed(1)}%, ${result.stages.validation.processingTime}ms`
     );
     console.log(
       `  Orientation: ${result.stages.orientation.processed} indicators, ${result.stages.orientation.apiCalls} API calls, ${result.stages.orientation.processingTime}ms`

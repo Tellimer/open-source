@@ -121,7 +121,7 @@ Total Reviewed:        100
 
 1. CPI Trimmed-Mean (CANCPITRI)
    Type: needs_fix
-   Reason: Should be change-movement/rate, not composite-derived/index
+   Reason: Should be change-movement/rate, not index
    Suggested Fix: {"family":"change-movement","indicator_type":"rate"}
    Confidence: 92%
 

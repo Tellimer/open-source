@@ -52,7 +52,7 @@ Each fixture file contains real economic indicators with:
    - `indicator_category`: Expected category
    - `indicator_type`: Expected type
    - `temporal_aggregation`: Expected aggregation
-   - `is_monetary`: Expected monetary status
+   - `is_currency_denominated`: Expected monetary status
    - `heat_map_orientation`: Expected orientation
 
 ### Example Fixture
@@ -82,7 +82,7 @@ Each fixture file contains real economic indicators with:
         "indicator_category": "physical-fundamental",
         "indicator_type": "flow",
         "temporal_aggregation": "period-rate",
-        "is_monetary": true,
+        "is_currency_denominated": true,
         "heat_map_orientation": "higher-is-positive"
       },
       "notes": "Flow indicator - throughput over a period"
@@ -120,7 +120,7 @@ deno test --allow-env --allow-net tests/e2e/schema_validation_test.ts
 - ✓ `indicator_category` matches expected
 - ✓ `indicator_type` matches expected
 - ✓ `temporal_aggregation` matches expected
-- ✓ `is_monetary` matches expected
+- ✓ `is_currency_denominated` matches expected
 - ✓ `heat_map_orientation` matches expected
 
 **Tracks**:
@@ -271,7 +271,7 @@ Example:
     "indicator_category": "physical-fundamental",
     "indicator_type": "stock",
     "temporal_aggregation": "point-in-time",
-    "is_monetary": false,
+    "is_currency_denominated": false,
     "heat_map_orientation": "higher-is-positive"
   },
   "notes": "Optional notes about this indicator"
@@ -306,7 +306,7 @@ Per-field accuracy:
   indicator_category: 24/25 (96.0%)
   indicator_type: 23/25 (92.0%)
   temporal_aggregation: 21/25 (84.0%)
-  is_monetary: 25/25 (100.0%)
+  is_currency_denominated: 25/25 (100.0%)
   heat_map_orientation: 22/25 (88.0%)
 ═══════════════════════════════════════════════════════════════════════════
 ```

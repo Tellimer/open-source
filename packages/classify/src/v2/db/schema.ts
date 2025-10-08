@@ -6,7 +6,7 @@
 /**
  * Database schema version
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 4;
 
 /**
  * SQL schema for V2 pipeline
@@ -20,6 +20,42 @@ CREATE TABLE IF NOT EXISTS schema_version (
 
 -- Insert current schema version
 INSERT OR IGNORE INTO schema_version (version) VALUES (${SCHEMA_VERSION});
+
+-- Source indicators table (mirrors production PostgreSQL)
+CREATE TABLE IF NOT EXISTS source_indicators (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  source_name TEXT,
+  source_url TEXT,
+  long_name TEXT,
+  category_group TEXT,
+  dataset TEXT,
+  aggregation_method TEXT,
+  definition TEXT,
+  units TEXT,
+  scale TEXT,
+  periodicity TEXT,
+  topic TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  currency_code TEXT
+);
+
+-- Source country indicators table (time series data)
+CREATE TABLE IF NOT EXISTS source_country_indicators (
+  id TEXT PRIMARY KEY,
+  country_iso TEXT NOT NULL,
+  indicator_id TEXT NOT NULL,
+  date TEXT NOT NULL,
+  is_forecasted INTEGER NOT NULL,
+  value REAL,
+  source_updated_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  FOREIGN KEY (indicator_id) REFERENCES source_indicators(id) ON DELETE CASCADE
+);
 
 -- Main classifications table (combines all stages)
 CREATE TABLE IF NOT EXISTS classifications (
@@ -40,9 +76,14 @@ CREATE TABLE IF NOT EXISTS classifications (
   confidence_cls REAL,
   reasoning_specialist TEXT,
 
-  -- Stage 3: Orientation
+  -- Stage 3: Validation (time series analysis)
+  validated INTEGER DEFAULT 0,
+  validation_confidence REAL,
+
+  -- Stage 4: Orientation
   heat_map_orientation TEXT,
   confidence_orient REAL,
+  reasoning_orientation TEXT,
 
   -- Review
   review_status TEXT, -- pending|confirmed|corrected|escalated
@@ -80,11 +121,39 @@ CREATE TABLE IF NOT EXISTS specialist_results (
   FOREIGN KEY (indicator_id) REFERENCES classifications(indicator_id) ON DELETE CASCADE
 );
 
--- Orientation results (Stage 3)
+-- Validation results (Stage 3 - Time Series Analysis)
+CREATE TABLE IF NOT EXISTS validation_results (
+  indicator_id TEXT PRIMARY KEY,
+
+  -- Analysis results
+  is_cumulative INTEGER NOT NULL,
+  cumulative_confidence REAL NOT NULL,
+  has_seasonal_reset INTEGER NOT NULL,
+  is_monotonic_within_year INTEGER NOT NULL,
+
+  -- Statistical evidence
+  dec_jan_ratio REAL,
+  within_year_increase_pct REAL,
+  year_boundaries INTEGER,
+  reset_at_boundary_pct REAL,
+
+  -- Suggestions
+  suggested_temporal TEXT,
+  validation_reasoning TEXT,
+
+  -- Metadata
+  data_points_analyzed INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+  -- Note: No foreign key to classifications because validation runs before classifications are written
+);
+
+-- Orientation results (Stage 4)
 CREATE TABLE IF NOT EXISTS orientation_results (
   indicator_id TEXT PRIMARY KEY,
   heat_map_orientation TEXT NOT NULL,
   confidence_orient REAL NOT NULL,
+  reasoning TEXT,
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (indicator_id) REFERENCES classifications(indicator_id) ON DELETE CASCADE
 );
@@ -140,12 +209,21 @@ CREATE INDEX IF NOT EXISTS idx_router_family ON router_results(family);
 CREATE INDEX IF NOT EXISTS idx_specialist_family ON specialist_results(family);
 CREATE INDEX IF NOT EXISTS idx_specialist_type ON specialist_results(indicator_type);
 
+CREATE INDEX IF NOT EXISTS idx_validation_cumulative ON validation_results(is_cumulative);
+CREATE INDEX IF NOT EXISTS idx_validation_confidence ON validation_results(cumulative_confidence);
+
 CREATE INDEX IF NOT EXISTS idx_flagging_indicator ON flagging_results(indicator_id);
 CREATE INDEX IF NOT EXISTS idx_flagging_type ON flagging_results(flag_type);
 
 CREATE INDEX IF NOT EXISTS idx_review_action ON review_decisions(action);
 
 CREATE INDEX IF NOT EXISTS idx_executions_created ON pipeline_executions(created_at DESC);
+
+-- Source table indexes
+CREATE INDEX IF NOT EXISTS idx_source_indicators_name ON source_indicators(name);
+CREATE INDEX IF NOT EXISTS idx_source_country_indicators_indicator ON source_country_indicators(indicator_id);
+CREATE INDEX IF NOT EXISTS idx_source_country_indicators_country ON source_country_indicators(country_iso);
+CREATE INDEX IF NOT EXISTS idx_source_country_indicators_date ON source_country_indicators(date);
 `;
 
 /**

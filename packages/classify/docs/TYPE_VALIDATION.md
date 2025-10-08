@@ -88,7 +88,7 @@ The prompt includes a concrete example showing the exact format expected:
 [
   {
     "indicator_type": "flow",
-    "is_monetary": true,
+    "is_currency_denominated": true,
     "is_cumulative": false,
     "heat_map_orientation": "higher-is-positive",
     "confidence": 0.95
@@ -140,8 +140,8 @@ export function parseClassificationResponse(
     }
     
     // Validate booleans
-    if (typeof classification.is_monetary !== 'boolean') {
-      throw new Error(`Classification ${idx + 1} has invalid is_monetary`);
+    if (typeof classification.is_currency_denominated !== 'boolean') {
+      throw new Error(`Classification ${idx + 1} has invalid is_currency_denominated`);
     }
     
     if (typeof classification.is_cumulative !== 'boolean') {
@@ -188,7 +188,7 @@ Deno.test('parseClassificationResponse - validates indicator_type', () => {
   const response = JSON.stringify([
     {
       indicator_type: 'invalid-type', // Should fail
-      is_monetary: true,
+      is_currency_denominated: true,
       is_cumulative: false,
       heat_map_orientation: 'higher-is-positive',
     },
@@ -205,7 +205,7 @@ Deno.test('parseClassificationResponse - validates heat_map_orientation', () => 
   const response = JSON.stringify([
     {
       indicator_type: 'flow',
-      is_monetary: true,
+      is_currency_denominated: true,
       is_cumulative: false,
       heat_map_orientation: 'invalid-orientation', // Should fail
     },

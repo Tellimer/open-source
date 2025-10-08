@@ -4,15 +4,19 @@
  * @module
  */
 
-import type { Indicator, ClassifiedMetadata } from '../../types.ts';
+import type { Indicator, TemporalDataPoint } from '../../types.ts';
 import type {
   FlaggedIndicator,
-  FlagType,
   RouterResult,
   SpecialistResult,
   OrientationResult,
+  ValidationResult,
 } from '../types.ts';
 import { INDICATOR_TYPE_TO_CATEGORY } from '../../types.ts';
+import {
+  analyzeTimeSeriesPattern,
+  formatAnalysisForLLM,
+} from '../validation/timeSeriesAnalysis.ts';
 
 /**
  * Flagging thresholds
@@ -40,6 +44,8 @@ export interface ClassificationData {
   router?: RouterResult;
   specialist?: SpecialistResult;
   orientation?: OrientationResult;
+  validation?: ValidationResult; // Optional: validation results from database
+  time_series?: TemporalDataPoint[]; // Optional: actual time series data for validation
 }
 
 /**
@@ -142,7 +148,7 @@ function checkTemporalMismatch(
     typesThatShouldBeNA.includes(data.specialist.indicator_type) &&
     data.specialist.temporal_aggregation !== 'not-applicable'
   ) {
-    // Exception: growth rates can be period-rate
+    // Exception 1: growth rates can be period-rate
     const isGrowthRate = containsPattern(data.indicator, [
       'yoy',
       'y/y',
@@ -155,7 +161,13 @@ function checkTemporalMismatch(
       'change',
     ]);
 
-    if (!isGrowthRate) {
+    // Exception 2: per-capita/stock ratios measured at a point in time (e.g., "per 1000 people", "per capita")
+    const units = (data.indicator.units || '').toLowerCase();
+    const isPerCapitaStock =
+      /per \d+ people|per capita|per thousand|per million|per 100/.test(units) ||
+      containsPattern(data.indicator, ['per capita', 'per 1000', 'per million']);
+
+    if (!isGrowthRate && !isPerCapitaStock) {
       return {
         indicator_id: data.indicator.id,
         flag_type: 'temporal_mismatch',
@@ -189,22 +201,82 @@ function checkTemporalMismatch(
   }
 
   // YTD/cumulative → period-cumulative
-  const isCumulative = containsPattern(data.indicator, [
+  // Use validation results from database if available, otherwise fallback to inline analysis
+  const nameIndicatesCumulative = containsPattern(data.indicator, [
     'ytd',
     'year-to-date',
     'cumulative',
   ]);
+
+  let timeSeriesIndicatesCumulative = false;
+  let timeSeriesConfidence = 0;
+  let timeSeriesEvidence = '';
+
+  // Prefer validation results from database (Phase 2)
+  if (data.validation) {
+    timeSeriesIndicatesCumulative = data.validation.is_cumulative;
+    timeSeriesConfidence = data.validation.cumulative_confidence;
+    timeSeriesEvidence = data.validation.validation_reasoning || '';
+  } else {
+    // Fallback to inline analysis (Phase 1) - only for cumulable types
+    const CUMULABLE_TYPES = new Set([
+      'flow',    // GDP YTD, Revenue YTD
+      'volume',  // Exports YTD, Sales YTD
+      'balance', // Trade Balance YTD
+      'count',   // Housing Starts YTD
+    ]);
+
+    const canBeCumulative = CUMULABLE_TYPES.has(data.specialist.indicator_type);
+
+    if (canBeCumulative && data.time_series && data.time_series.length >= 6) {
+      const analysis = analyzeTimeSeriesPattern(data.time_series);
+      timeSeriesIndicatesCumulative = analysis.is_cumulative;
+      timeSeriesConfidence = analysis.cumulative_confidence;
+      timeSeriesEvidence = formatAnalysisForLLM(analysis);
+    }
+  }
+
+  // Flag if EITHER name OR time series indicates cumulative pattern
+  const shouldBeCumulative =
+    nameIndicatesCumulative ||
+    (timeSeriesIndicatesCumulative && timeSeriesConfidence > 0.7);
+
   if (
-    isCumulative &&
+    shouldBeCumulative &&
     data.specialist.temporal_aggregation !== 'period-cumulative'
+  ) {
+    const reason = timeSeriesIndicatesCumulative
+      ? `Time series analysis indicates cumulative (YTD) pattern with ${(
+          timeSeriesConfidence * 100
+        ).toFixed(0)}% confidence. ${timeSeriesEvidence}`
+      : 'Name contains YTD/cumulative but temporal is not period-cumulative';
+
+    return {
+      indicator_id: data.indicator.id,
+      flag_type: 'temporal_mismatch',
+      flag_reason: reason,
+      current_value: data.specialist.temporal_aggregation,
+      expected_value: 'period-cumulative',
+      flagged_at: new Date().toISOString(),
+    };
+  }
+
+  // Also flag FALSE POSITIVES: name doesn't indicate cumulative, but classified as period-cumulative
+  // AND time series shows it's NOT cumulative
+  if (
+    !nameIndicatesCumulative &&
+    data.specialist.temporal_aggregation === 'period-cumulative' &&
+    data.time_series &&
+    data.time_series.length >= 6 &&
+    !timeSeriesIndicatesCumulative &&
+    timeSeriesConfidence > 0.5
   ) {
     return {
       indicator_id: data.indicator.id,
       flag_type: 'temporal_mismatch',
-      flag_reason:
-        'Name contains YTD/cumulative but temporal is not period-cumulative',
-      current_value: data.specialist.temporal_aggregation,
-      expected_value: 'period-cumulative',
+      flag_reason: `Classified as period-cumulative but time series shows non-cumulative pattern. ${timeSeriesEvidence}`,
+      current_value: 'period-cumulative',
+      expected_value: 'period-total or point-in-time',
       flagged_at: new Date().toISOString(),
     };
   }
@@ -360,15 +432,15 @@ function checkDomainRuleViolations(
     });
   }
 
-  // 2) FX or Exchange Rate should be monetary=true
+  // 2) FX or Exchange Rate should be NON-MONETARY (dimensionless ratios)
   if (/exchange rate|fx|parallel fx/.test(name) && specialist) {
-    if (specialist.is_currency_denominated === false) {
+    if (specialist.is_currency_denominated === true) {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',
-        flag_reason: 'FX/Exchange rate should be is_currency_denominated=true',
-        current_value: 'false',
-        expected_value: 'true',
+        flag_reason: 'FX/Exchange rates are dimensionless ratios, should be is_currency_denominated=false',
+        current_value: 'true',
+        expected_value: 'false',
         flagged_at: new Date().toISOString(),
       });
     }
@@ -391,8 +463,9 @@ function checkDomainRuleViolations(
     });
   }
 
-  // 4) Sales/units/starts/claims should be count or volume (suppress if it's clearly a rate/growth)
-  if (/(sales|units|starts|claims|advertisements)/.test(name) && specialist) {
+  // 4) Sales/units/starts should be count or volume (suppress if it's a rate/growth/change)
+  // Note: Employment Change and Claimant Count Change are exceptions (handled in rule 11)
+  if (/(sales|units|starts|advertisements)/.test(name) && specialist) {
     const looksRate = /(yoy|y\/y|qoq|q\/q|mom|m\/m|growth|change)/.test(name);
     const unitsText = (data.indicator.units || '').toLowerCase();
     const looksPercent = unitsText.includes('%') || /percent/.test(unitsText);
@@ -458,7 +531,12 @@ function checkDomainRuleViolations(
   }
 
   // 8) Price change rates (producer prices change, import prices mom, etc.) should be non-monetary
-  if (/(producer.*prices.*change|import.*prices.*mom|export.*prices.*change)/.test(name) && specialist) {
+  if (
+    /(producer.*prices.*change|import.*prices.*mom|export.*prices.*change)/.test(
+      name
+    ) &&
+    specialist
+  ) {
     if (specialist.is_currency_denominated === true) {
       flags.push({
         indicator_id: id,
@@ -472,12 +550,17 @@ function checkDomainRuleViolations(
   }
 
   // 9) ISM/Fed diffusion indices (prices paid/received, manufacturing/non-manufacturing prices) should use period-average
+  // Note: Specialist stage applies automatic normalization for these patterns
   if (/(ism|fed).*prices|inventory costs/.test(name) && specialist) {
-    if (specialist.indicator_type === 'index' && specialist.temporal_aggregation !== 'period-average') {
+    if (
+      specialist.indicator_type === 'index' &&
+      specialist.temporal_aggregation !== 'period-average'
+    ) {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',
-        flag_reason: 'ISM/Fed price diffusion indices should use period-average temporal aggregation',
+        flag_reason:
+          'ISM/Fed price diffusion indices and LMI Inventory Costs should use period-average temporal aggregation (automatic normalization should have been applied in specialist stage)',
         current_value: specialist.temporal_aggregation,
         expected_value: 'period-average',
         flagged_at: new Date().toISOString(),
@@ -499,13 +582,15 @@ function checkDomainRuleViolations(
     }
   }
 
-  // 11) Employment Change (can be negative) should be balance, not count
-  if (/employment change/.test(name) && specialist) {
+  // 11) Employment Change and Claimant Count Change (can be negative) should be balance, not count
+  // These are net changes that can be positive or negative, not simple counts
+  if (/employment change|claimant count change/.test(name) && specialist) {
     if (specialist.indicator_type === 'count') {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',
-        flag_reason: 'Employment Change can be negative, should be balance not count',
+        flag_reason:
+          'Employment/Claimant Count Change can be negative, should be balance not count',
         current_value: specialist.indicator_type,
         expected_value: 'balance',
         flagged_at: new Date().toISOString(),
@@ -514,12 +599,18 @@ function checkDomainRuleViolations(
   }
 
   // 12) X-week/X-month averages should use period-average temporal aggregation
-  if (/(4-week|4 week|12-month|12 month|moving average).*average|average.*(4-week|4 week|12-month|12 month)/.test(name) && specialist) {
+  if (
+    /(4-week|4 week|12-month|12 month|moving average).*average|average.*(4-week|4 week|12-month|12 month)/.test(
+      name
+    ) &&
+    specialist
+  ) {
     if (specialist.temporal_aggregation !== 'period-average') {
       flags.push({
         indicator_id: id,
         flag_type: 'rule_violation',
-        flag_reason: 'X-week/X-month averages should use period-average temporal aggregation',
+        flag_reason:
+          'X-week/X-month averages should use period-average temporal aggregation',
         current_value: specialist.temporal_aggregation,
         expected_value: 'period-average',
         flagged_at: new Date().toISOString(),

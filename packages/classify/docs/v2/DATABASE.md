@@ -36,7 +36,7 @@ CREATE TABLE classifications (
   family TEXT,                      -- From router
   indicator_type TEXT,              -- From specialist
   temporal_aggregation TEXT,        -- From specialist
-  is_monetary INTEGER,              -- From specialist
+  is_currency_denominated INTEGER,              -- From specialist
   heat_map_orientation TEXT,        -- From orientation
   confidence_family REAL,           -- Router confidence
   confidence_cls REAL,              -- Specialist confidence
@@ -69,7 +69,7 @@ CREATE TABLE specialist_results (
   indicator_id TEXT PRIMARY KEY,
   indicator_type TEXT NOT NULL,
   temporal_aggregation TEXT,
-  is_monetary INTEGER,
+  is_currency_denominated INTEGER,
   confidence REAL,
   reasoning TEXT,
   created_at TEXT

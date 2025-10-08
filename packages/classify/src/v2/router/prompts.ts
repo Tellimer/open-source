@@ -151,7 +151,7 @@ FAMILY CLASSIFICATION (CHECK INDICATOR NAME ONLY):
 • Happiness/Well-being/Life Satisfaction Index → composite-derived (composite index), NOT qualitative
 • Names containing "Net", "Balance", "Surplus", "Deficit", "Changes in" → physical-fundamental (balance)
 • "Exchange Rate" / FX rate → price-value (price)
-• "Employment Change" / "Claimant Count Change" → numeric-measurement (count)
+• "Employment Change" / "Claimant Count Change" → numeric-measurement (balance - can be negative, NOT count)
 • "Net Long-term TIC Flows" → physical-fundamental (balance)
 • "Government Spending to GDP" → numeric-measurement (ratio)
 • "Global Dairy Trade" or "GDT" → composite-derived (index, price index)

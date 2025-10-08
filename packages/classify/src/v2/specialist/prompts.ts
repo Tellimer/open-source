@@ -42,6 +42,14 @@ TEMPORAL AGGREGATION (CHECK CAREFULLY):
 • volume → period-total (total quantity: imports, exports, sales)
 • YTD/cumulative → period-cumulative
 
+⚠️ AGGREGATION METHOD FIELD (CRITICAL INDICATOR):
+If "Aggregation Method" is provided, it indicates how the data is measured:
+• "Weekly Change", "Monthly Change", "YoY Change" → period-rate (measuring change over period)
+• "Sum", "Total" → period-total (sum over period)
+• "Average", "Mean" → period-average (average over period)
+• "End of Period", "Point in Time" → point-in-time (snapshot)
+• When Aggregation Method indicates "Change" → temporal_aggregation MUST be "period-rate"
+
 IS_CURRENCY_DENOMINATED (true only if currency-denominated):
 • USD/EUR/currency amount → TRUE (including GDP per capita if in currency)
 • Physical units (Terajoule, barrels, units, tonnes) → FALSE
@@ -54,6 +62,7 @@ GDP current prices (USD) → {"indicator_type":"flow","temporal_aggregation":"pe
 GDP from Manufacturing → {"indicator_type":"flow","temporal_aggregation":"period-total","is_currency_denominated":true}
 Trade Balance (USD) → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":true}
 Changes in Inventories → {"indicator_type":"balance","temporal_aggregation":"period-total","is_currency_denominated":true}
+API Cushing Number (Aggregation: Weekly Change) → {"indicator_type":"balance","temporal_aggregation":"period-rate","is_currency_denominated":false}
 Foreign Reserves (USD) → {"indicator_type":"stock","temporal_aggregation":"point-in-time","is_currency_denominated":true}
 Motorbike Sales (Units) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_currency_denominated":false}
 Exports (Units) → {"indicator_type":"volume","temporal_aggregation":"period-total","is_currency_denominated":false}
@@ -215,8 +224,14 @@ TEMPORAL AGGREGATION (CRITICAL - CHECK UNITS):
 • Business Climate → period-average
 • Business Conditions → point-in-time
 • Ifo Expectations → period-average
-• Prices Paid/Received (Fed/ISM subindices) → period-average (monthly diffusion averaged), monetary TRUE
-  MUST: For any ISM or regional Fed “Prices Paid/Received” or “(Non) Manufacturing Prices” subindex, set temporal_aggregation="period-average".
+• **MUST: Prices Paid/Received subindices → period-average (monthly diffusion averaged)**
+  - For ANY indicator with "Prices Paid", "Prices Received", "Manufacturing Prices", "Non Manufacturing Prices" in name
+  - ISM Manufacturing Prices, ISM Non Manufacturing Prices
+  - Kansas Fed Prices Paid Index
+  - Philly Fed Prices Paid
+  - Dallas Fed Manufacturing Prices Paid Index
+  - LMI Inventory Costs
+  - These are diffusion subindices that MUST be period-average
 • Dallas/Kansas/Philly Fed Services Revenues Index → point-in-time
 • Dallas/Kansas/Philly Fed Employment/Composite readings → point-in-time
 • Industry Index Manufacturing → point-in-time
@@ -237,6 +252,9 @@ Manufacturing PMI → {"indicator_type":"index","temporal_aggregation":"point-in
 Services PMI → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
 Business Climate Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
 Business Conditions Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
+Kansas Fed Prices Paid Index → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+ISM Manufacturing Prices → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
+LMI Inventory Costs → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
 Economic Optimism Index → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 Industry Index Manufacturing → {"indicator_type":"index","temporal_aggregation":"point-in-time","is_currency_denominated":false}
 Industry Index Business Services → {"indicator_type":"index","temporal_aggregation":"period-average","is_currency_denominated":false}
@@ -339,14 +357,25 @@ export function generateSpecialistUserPrompt(
       if (ind.units) parts.push(`- Units: ${ind.units}`);
       if (ind.currency_code) parts.push(`- Currency: ${ind.currency_code}`);
       if (ind.periodicity) parts.push(`- Periodicity: ${ind.periodicity}`);
+      if (ind.aggregation_method)
+        parts.push(`- Aggregation Method: ${ind.aggregation_method}`);
       if (ind.description) parts.push(`- Description: ${ind.description}`);
 
       // Include router decision (family classification from previous stage)
       const extInd = ind as any;
       if (extInd.router_family || extInd.family)
-        parts.push(`- Router Family Decision: ${extInd.router_family || extInd.family}`);
-      if (typeof (extInd.router_confidence || extInd.confidence_family) === 'number')
-        parts.push(`- Router Confidence: ${extInd.router_confidence || extInd.confidence_family}`);
+        parts.push(
+          `- Router Family Decision: ${extInd.router_family || extInd.family}`
+        );
+      if (
+        typeof (extInd.router_confidence || extInd.confidence_family) ===
+        'number'
+      )
+        parts.push(
+          `- Router Confidence: ${
+            extInd.router_confidence || extInd.confidence_family
+          }`
+        );
       if (extInd.router_reasoning)
         parts.push(`- Router Reasoning: ${extInd.router_reasoning}`);
 

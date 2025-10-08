@@ -177,7 +177,7 @@ export const SpecialistResultSchema = v.object({
     v.literal('period-average'),
     v.literal('period-total'),
   ]),
-  is_monetary: v.boolean(),
+  is_currency_denominated: v.boolean(),
   confidence: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
   reasoning: v.optional(v.string()),
 });

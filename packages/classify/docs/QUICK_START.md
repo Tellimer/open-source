@@ -56,7 +56,7 @@ const enriched = await classifyIndicators(indicators, config);
 for (const indicator of enriched) {
   console.log(`${indicator.name}:`);
   console.log(`  Type: ${indicator.classification.indicator_type}`);
-  console.log(`  Monetary: ${indicator.classification.is_monetary}`);
+  console.log(`  Monetary: ${indicator.classification.is_currency_denominated}`);
   console.log(`  Cumulative: ${indicator.classification.is_cumulative}`);
 }
 ```

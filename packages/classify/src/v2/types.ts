@@ -182,6 +182,7 @@ export interface OrientationResult {
   indicator_id: string;
   heat_map_orientation: HeatMapOrientation;
   confidence_orient: number;
+  reasoning?: string;
 }
 
 /**
@@ -256,6 +257,24 @@ export interface ReviewBatchResult {
 }
 
 /**
+ * Validation Result (Stage 3)
+ */
+export interface ValidationResult {
+  indicator_id: string;
+  is_cumulative: boolean;
+  cumulative_confidence: number;
+  has_seasonal_reset: boolean;
+  is_monotonic_within_year: boolean;
+  dec_jan_ratio?: number;
+  within_year_increase_pct?: number;
+  year_boundaries?: number;
+  reset_at_boundary_pct?: number;
+  suggested_temporal?: string;
+  validation_reasoning?: string;
+  data_points_analyzed: number;
+}
+
+/**
  * Combined classification data for intermediate stages
  */
 export interface ClassificationData {
@@ -271,6 +290,8 @@ export interface ClassificationData {
   confidence_cls: number;
   heat_map_orientation: HeatMapOrientation;
   confidence_orient: number;
+  validated?: number;
+  validation_confidence?: number;
   review_status?: ReviewAction;
   review_reason?: string;
 }
@@ -291,6 +312,8 @@ export interface V2Classification {
   is_currency_denominated: boolean;
   confidence_cls: number;
   reasoning_specialist?: string;
+  validated?: number; // 0 or 1 - whether validation was performed
+  validation_confidence?: number; // Confidence from time series validation
   heat_map_orientation: HeatMapOrientation;
   confidence_orient: number;
   review_status?: ReviewAction;
@@ -426,6 +449,13 @@ export interface V2PipelineResult {
       processed: number;
       families: number;
       apiCalls: number;
+      processingTime: number;
+    };
+    validation: {
+      analyzed: number;
+      cumulative: number;
+      nonCumulative: number;
+      avgConfidence: number;
       processingTime: number;
     };
     orientation: {

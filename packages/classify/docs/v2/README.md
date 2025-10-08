@@ -126,7 +126,7 @@ One of V2's key innovations is **context enrichment** - each stage receives full
 {
   indicator_type: 'rate',
   temporal_aggregation: 'period-rate',
-  is_monetary: false,
+  is_currency_denominated: false,
   confidence: 0.95,
   reasoning: 'Inflation measures price growth percentage over period'
 }

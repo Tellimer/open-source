@@ -209,7 +209,7 @@ Dry run generates realistic mock classifications using simple heuristics:
 {
   indicator_type: "flow",
   indicator_category: "physical-fundamental",
-  is_monetary: true,
+  is_currency_denominated: true,
   temporal_aggregation: "period-rate",
   heat_map_orientation: "higher-is-positive",
   confidence: 0.85,
@@ -223,7 +223,7 @@ Dry run generates realistic mock classifications using simple heuristics:
 - Name contains "debt", "stock", "reserve" → `stock`
 - Units contain "%" → `percentage` or `rate`
 - Name contains "index" → `index`
-- Currency code present → `is_monetary: true`
+- Currency code present → `is_currency_denominated: true`
 - Name contains "unemployment", "deficit" → `lower-is-positive`
 
 ## Estimation Accuracy

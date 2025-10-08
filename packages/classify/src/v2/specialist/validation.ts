@@ -5,9 +5,8 @@
  */
 
 import type { IndicatorFamily, SpecialistResult } from '../types.ts';
-import type { IndicatorType } from '../../types.ts';
+import type { IndicatorType, TemporalAggregation } from '../../types.ts';
 import {
-  VALID_INDICATOR_TYPES,
   VALID_TEMPORAL_AGGREGATIONS,
   INDICATOR_TYPE_TO_CATEGORY,
 } from '../../types.ts';
@@ -20,7 +19,11 @@ export interface ValidationError {
   field: string;
   value: unknown;
   expected: string;
-  errorType: 'missing_field' | 'invalid_enum' | 'invalid_type' | 'category_mismatch';
+  errorType:
+    | 'missing_field'
+    | 'invalid_enum'
+    | 'invalid_type'
+    | 'category_mismatch';
 }
 
 /**
@@ -32,8 +35,9 @@ const VALID_TYPES_BY_FAMILY: Record<IndicatorFamily, IndicatorType[]> = {
   'price-value': ['price', 'yield'],
   'change-movement': ['rate', 'volatility', 'gap'],
   'composite-derived': ['index', 'correlation', 'elasticity', 'multiplier'],
-  'temporal': ['duration', 'probability', 'threshold'],
-  'qualitative': ['sentiment', 'allocation'],
+  temporal: ['duration', 'probability', 'threshold'],
+  qualitative: ['sentiment', 'allocation'],
+  other: ['other'],
 };
 
 /**
@@ -158,7 +162,8 @@ export function applyMechanicalFixes(
 
   // 2. Normalize boolean values (if LLM returned string)
   if (typeof fixed.is_currency_denominated === 'string') {
-    fixed.is_currency_denominated = (fixed.is_currency_denominated as string).toLowerCase() === 'true';
+    fixed.is_currency_denominated =
+      (fixed.is_currency_denominated as string).toLowerCase() === 'true';
   } else if (typeof fixed.is_currency_denominated !== 'boolean') {
     // Default to false if invalid
     fixed.is_currency_denominated = false;
@@ -166,13 +171,15 @@ export function applyMechanicalFixes(
 
   // 3. Lowercase and trim enum values
   if (typeof fixed.indicator_type === 'string') {
-    fixed.indicator_type = fixed.indicator_type.toLowerCase().trim() as IndicatorType;
+    fixed.indicator_type = fixed.indicator_type
+      .toLowerCase()
+      .trim() as IndicatorType;
   }
 
   if (typeof fixed.temporal_aggregation === 'string') {
     fixed.temporal_aggregation = fixed.temporal_aggregation
       .toLowerCase()
-      .trim() as any;
+      .trim() as TemporalAggregation;
   }
 
   // NO semantic fixes - if type doesn't match family, let it fail

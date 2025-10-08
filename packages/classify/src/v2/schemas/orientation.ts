@@ -24,6 +24,7 @@ export const OrientationResultSchema = v.object({
     v.minValue(0, 'Confidence must be >= 0'),
     v.maxValue(1, 'Confidence must be <= 1')
   ),
+  reasoning: v.optional(v.string()),
 });
 
 /**

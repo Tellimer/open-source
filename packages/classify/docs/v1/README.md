@@ -163,7 +163,7 @@ V1 classifies each indicator with:
 - **indicator_category** - One of 7 categories (physical-fundamental, numeric-measurement, etc.)
 - **indicator_type** - One of 26 types (stock, flow, count, percentage, index, etc.)
 - **temporal_aggregation** - How values aggregate over time
-- **is_monetary** - Whether the indicator is monetary
+- **is_currency_denominated** - Whether the indicator is monetary
 - **heat_map_orientation** - Visualization direction (higher-is-positive, lower-is-positive, neutral)
 - **confidence** - Classification confidence (0-1)
 - **reasoning** - LLM reasoning (optional)

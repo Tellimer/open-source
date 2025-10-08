@@ -191,7 +191,7 @@ interface SpecialistResult {
   indicator_id: string;
   indicator_type: string; // One of 26 types
   temporal_aggregation: TemporalAggregation;
-  is_monetary: boolean;
+  is_currency_denominated: boolean;
   confidence: number;
   reasoning?: string;
 }
@@ -239,7 +239,7 @@ const enrichedIndicator = {
   // Specialist context
   indicator_type: 'rate',
   temporal_aggregation: 'period-rate',
-  is_monetary: false,
+  is_currency_denominated: false,
   specialist_reasoning: 'Inflation rate measures price growth over period'
 };
 ```
@@ -628,7 +628,7 @@ CREATE TABLE specialist_results (
   indicator_id TEXT PRIMARY KEY,
   indicator_type TEXT NOT NULL,
   temporal_aggregation TEXT,
-  is_monetary INTEGER,
+  is_currency_denominated INTEGER,
   confidence_cls REAL,
   created_at TEXT
 );
@@ -673,7 +673,7 @@ CREATE TABLE classifications (
   indicator_type TEXT,
   indicator_category TEXT,
   temporal_aggregation TEXT,
-  is_monetary INTEGER,
+  is_currency_denominated INTEGER,
   confidence_cls REAL,
 
   -- Stage 3: Orientation
