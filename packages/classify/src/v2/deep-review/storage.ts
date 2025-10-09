@@ -30,9 +30,7 @@ export function readSuggestedFixes(
       c.is_currency_denominated,
       c.heat_map_orientation,
       c.units,
-      c.description,
-      c.source_name,
-      c.long_name
+      c.description
     FROM review_decisions r
     JOIN classifications c ON r.indicator_id = c.indicator_id
     LEFT JOIN deep_review_decisions d ON r.indicator_id = d.indicator_id
@@ -77,8 +75,6 @@ export function readSuggestedFixes(
       indicator_context: {
         units: row.units,
         description: row.description,
-        source_name: row.source_name,
-        long_name: row.long_name,
         sample_values,
       },
     };
