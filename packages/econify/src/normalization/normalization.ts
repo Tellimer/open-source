@@ -11,6 +11,11 @@ import {
   rescaleTime,
 } from "../scale/scale.ts";
 import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
+import {
+  allowsCurrency,
+  allowsMagnitude,
+  allowsTimeDimension,
+} from "./indicator_type_rules.ts";
 
 // ----------------------- Combined Normalization -----------------------
 
@@ -181,6 +186,8 @@ export function normalizeValue(
     indicatorName?: string;
     // Cumulative/YTD detection flag
     isCumulative?: boolean;
+    // indicator_type from @tellimer/classify package
+    indicatorType?: string | null;
   },
 ): number {
   const parsed = parseUnit(unitText);
@@ -198,20 +205,20 @@ export function normalizeValue(
   // Prefer unit time scale over dataset periodicity (reporting frequency)
   const effectiveTimeScale = parsed.timeScale || options?.explicitTimeScale;
 
-  // Count detection removed - this function is deprecated
-  // Use indicator_type from @tellimer/classify package instead
-  const isCountData = false;
+  // Use indicator_type from @tellimer/classify package for normalization decisions
+  // indicator_type is REQUIRED - no fallback to heuristics
+  const shouldAllowMagnitude = allowsMagnitude(options?.indicatorType);
+  const shouldAllowTime = allowsTimeDimension(options?.indicatorType);
+  const shouldAllowCurrency = allowsCurrency(options?.indicatorType);
 
-  // Handle magnitude scaling (skip for percentage and physical units)
-  const isPercentage = parsed.category === "percentage";
-  // Physical units (tonnes, barrels, celsius, etc.) should not have magnitude scaling
-  // Only monetary, count, and composite units should be scaled
+  // Handle magnitude scaling - indicator type must allow it AND unit must have a scale
+  // Physical units (tonnes, barrels, celsius) without explicit scale cannot be scaled
   const isPhysicalUnit = parsed.category === "physical" ||
     parsed.category === "energy" ||
-    parsed.category === "temperature" ||
-    parsed.category === "index";
+    parsed.category === "temperature";
+
   if (
-    !isPercentage &&
+    shouldAllowMagnitude &&
     !isPhysicalUnit &&
     effectiveScale &&
     options?.toMagnitude &&
@@ -220,16 +227,10 @@ export function normalizeValue(
     result = rescaleMagnitude(result, effectiveScale, options.toMagnitude);
   }
 
-  // Handle time scaling
-  if (options?.toTimeScale) {
+  // Handle time scaling - use indicator type rules only
+  if (options?.toTimeScale && shouldAllowTime) {
     // Check if this is cumulative/YTD data (skip time conversion)
     const isCumulative = options?.isCumulative === true;
-
-    // For stock-like count indicators (e.g., Population), skip time conversion entirely
-    const isCountStockLike = /\b(population|inhabitants|residents|people)\b/i
-      .test(
-        options?.indicatorName || "",
-      );
 
     if (isCumulative) {
       // Skip time conversion for cumulative/YTD series
@@ -238,7 +239,7 @@ export function normalizeValue(
           options?.indicatorName || "unknown"
         }"`,
       );
-    } else if (!isCountStockLike) {
+    } else {
       if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
         // Time conversion can be performed
         result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
@@ -252,9 +253,11 @@ export function normalizeValue(
     }
   }
 
-  // Handle currency conversion (skip for count data)
+  // Handle currency conversion - use indicator type rules
+  // Only convert currency for currency-denominated types
+  // Skip for dimensionless types (percentage, ratio, index, etc.)
   if (
-    !isCountData &&
+    shouldAllowCurrency &&
     effectiveCurrency &&
     options?.toCurrency &&
     options.fx &&

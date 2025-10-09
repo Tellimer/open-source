@@ -407,6 +407,7 @@ function processItem<T extends BatchItem>(
       explicitScale: effectiveScale,
       explicitTimeScale: effectiveTimeScale,
       indicatorName,
+      indicatorType, // Pass indicator_type from @tellimer/classify
       isCumulative,
     });
 

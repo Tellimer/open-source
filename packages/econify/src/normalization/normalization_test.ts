@@ -250,6 +250,7 @@ Deno.test("normalizeValue - Population (stock-like count) does not divide by 12"
   const result = normalizeValue(original, "units per year", {
     toTimeScale: "month",
     indicatorName: "Population",
+    indicatorType: "stock", // From @tellimer/classify - prevents time conversion
   });
   assertEquals(result, original);
 });

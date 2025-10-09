@@ -757,6 +757,7 @@ Deno.test("E2E: Cement Production (Kenya, Tonnes, monthly)", async () => {
       scale: undefined,
       periodicity: "Monthly",
       date: "2024-10-31",
+      indicator_type: "flow", // From @tellimer/classify - production flow per period
       metadata: {
         country_iso: "KEN",
         source: "Kenya National Bureau of Statistics",
@@ -770,6 +771,7 @@ Deno.test("E2E: Cement Production (Kenya, Tonnes, monthly)", async () => {
       scale: undefined,
       periodicity: "Monthly",
       date: "2024-11-30",
+      indicator_type: "flow", // From @tellimer/classify - production flow per period
       metadata: {
         country_iso: "KEN",
         source: "Kenya National Bureau of Statistics",
@@ -783,6 +785,7 @@ Deno.test("E2E: Cement Production (Kenya, Tonnes, monthly)", async () => {
       scale: undefined,
       periodicity: "Monthly",
       date: "2024-12-31",
+      indicator_type: "flow", // From @tellimer/classify - production flow per period
       metadata: {
         country_iso: "KEN",
         source: "Kenya National Bureau of Statistics",

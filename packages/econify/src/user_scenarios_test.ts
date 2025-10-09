@@ -278,19 +278,21 @@ Deno.test("User Scenario - Mixed data processing", async () => {
 });
 
 Deno.test("User Scenario - Backwards compatibility", async () => {
-  // Test that existing functionality still works
+  // Test that existing functionality still works with indicator_type required
   const traditionalData = [
     {
       id: "GDP_TEST",
       name: "GDP Test",
       value: 1000,
       unit: "USD Million",
+      indicator_type: "flow", // From @tellimer/classify - GDP is a flow indicator
     },
     {
       id: "INFLATION_TEST",
       name: "Inflation Test",
       value: 3.5,
       unit: "%",
+      indicator_type: "rate", // From @tellimer/classify - Inflation rate is dimensionless
     },
   ];
 

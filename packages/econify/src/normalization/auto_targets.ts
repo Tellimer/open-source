@@ -6,6 +6,7 @@ import type { Scale, TimeScale } from "../types.ts";
 import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 import { parseUnit } from "../units/units.ts";
 import { getScale, parseTimeScale } from "../scale/scale.ts";
+import { allowsTimeDimension } from "./indicator_type_rules.ts";
 
 export type IndicatorKeyResolver =
   | "name"
@@ -219,10 +220,9 @@ export function computeAutoTargets(
       time: {} as Record<string, number>,
     };
 
-    // Use indicator_type from @tellimer/classify package
-    // Stock/Rate indicators should NOT have time dimension auto-targeted
-    const shouldSkipTimeDimension = g.indicatorType === "stock" ||
-      g.indicatorType === "rate";
+    // Use indicator_type from @tellimer/classify package to determine time dimension handling
+    // Use comprehensive rules: stock, balance, capacity, price, percentage, ratio, etc. skip time
+    const shouldSkipTimeDimension = !allowsTimeDimension(g.indicatorType);
 
     const dimsList: ("currency" | "magnitude" | "time")[] = [
       "currency",
@@ -284,9 +284,9 @@ export function computeAutoTargets(
     }
 
     if (dims.has("time")) {
-      // Skip time dimension auto-targeting for stock/rate indicators
-      // Stock indicators (population, debt, reserves) are snapshots, not flows
-      // Rate indicators (CPI, unemployment rate) are dimensionless ratios
+      // Skip time dimension auto-targeting based on indicator type rules
+      // Types like stock, balance, capacity, price, percentage, ratio, rate, index, etc.
+      // represent point-in-time values or dimensionless measures that shouldn't have time conversion
       if (shouldSkipTimeDimension) {
         sel.time = undefined;
         const indicatorTypeMsg = g.indicatorType

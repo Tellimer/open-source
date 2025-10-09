@@ -795,6 +795,7 @@ Deno.test("reportingFrequency is set but NOT used for time conversion for STOCK 
     toTimeScale: "month",
     explicitTimeScale: "quarter",
     indicatorName: "Government Debt", // Stock indicator - should NOT use periodicity for time
+    indicatorType: "stock", // From @tellimer/classify - prevents time conversion
   });
   // For stock indicators, periodicity is just release cadence, not measurement time
   assertEquals(ex.reportingFrequency, "quarter");

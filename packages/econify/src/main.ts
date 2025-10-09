@@ -56,6 +56,17 @@ export {
 
 // Classification removed - use @tellimer/classify package instead
 
+// Re-export indicator type normalization rules
+export {
+  allowsCurrency,
+  allowsMagnitude,
+  allowsTimeDimension,
+  getNormalizationRules,
+  INDICATOR_TYPE_RULES,
+  type IndicatorTypeNormalizationRules,
+  shouldSkipTimeInUnit,
+} from "./normalization/indicator_type_rules.ts";
+
 // Re-export currency functions
 export { normalizeCurrencyValue } from "./currency/currency.ts";
 

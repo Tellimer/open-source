@@ -8,6 +8,10 @@ import { parseTimeScaleFromUnit } from "../time/time-sampling.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 import { PER_YEAR, SCALE_MAP } from "../patterns.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
+import {
+  allowsTimeDimension,
+  shouldSkipTimeInUnit,
+} from "./indicator_type_rules.ts";
 
 /**
  * Build explain metadata for a normalization operation
@@ -41,13 +45,13 @@ export function buildExplainMetadata(
   // Time scale priority:
   // 1. ALWAYS prefer time component extracted from unit string (e.g., "EUR/Month")
   // 2. For FLOW indicators, use periodicity as fallback (it's the measurement period)
-  // 3. For STOCK/INDEX indicators, DON'T use periodicity (it's just release cadence)
+  // 3. For indicators without time dimension, DON'T use periodicity (it's just release cadence)
   let effectiveTimeScale = parsed.timeScale;
   if (!effectiveTimeScale && options.explicitTimeScale) {
-    // Only use periodicity for flow indicators (GDP, sales, trade, etc.)
-    // NOT for stock/index indicators (debt, reserves, corruption index, etc.)
-    // Use indicator_type from @tellimer/classify package
-    if (options.indicatorType === "flow") {
+    // Only use periodicity for indicators that allow time dimension (flow, volume, count)
+    // NOT for point-in-time indicators (stock, balance, price, index, percentage, ratio, etc.)
+    // Use indicator_type rules from @tellimer/classify package
+    if (allowsTimeDimension(options.indicatorType)) {
       effectiveTimeScale = options.explicitTimeScale;
     }
   }
@@ -166,9 +170,9 @@ export function buildExplainMetadata(
   // Detect per-capita indicators for special handling (keep scale as ones; no millions label)
   const isPerCapita = /\bper\s*capita\b/i.test(options.indicatorName ?? "");
 
-  // Use indicator_type from @tellimer/classify package
-  const isStockLikeGlobal = options.indicatorType === "stock" ||
-    options.indicatorType === "rate";
+  // Use indicator_type rules from @tellimer/classify package
+  // Determines if time period should be omitted from unit strings
+  const skipTimeInUnitString = shouldSkipTimeInUnit(options.indicatorType);
 
   if (isNonCurrencyCategory) {
     // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency
@@ -273,8 +277,9 @@ export function buildExplainMetadata(
       ) || normalizedUnitString;
     }
 
-    // Stock-like currency indicators: omit per-time in unit strings
-    if (isStockLikeGlobal) {
+    // Indicators with skipTimeInUnit: omit per-time in unit strings
+    // This includes: stock, balance, capacity, price, percentage, ratio, rate, index, etc.
+    if (skipTimeInUnitString) {
       normalizedUnitString = buildNormalizedUnitString(
         options.toCurrency || effectiveCurrency,
         targetScale,
@@ -356,7 +361,7 @@ export function buildExplainMetadata(
 
   // 4b) Monetary aggregates (money supply, M0/M1/M2, monetary base)
   // Apply only for currency-based indicators; non-currency stock-like (e.g., Gold Reserves) should remain metals/commodity
-  if (!detectedDomain && isStockLikeGlobal && parsed.category === "currency") {
+  if (!detectedDomain && skipTimeInUnitString && parsed.category === "currency") {
     detectedDomain = "monetary_aggregate";
   }
 
@@ -591,9 +596,9 @@ export function buildExplainMetadata(
       normalized: options.toTimeScale,
     };
   }
-  // For stock-like monetary (currency) indicators, suppress timeScale component and rely on reportingFrequency
+  // For indicators that skip time in unit (stock, balance, price, etc.), suppress timeScale component
   if (
-    isStockLikeGlobal && parsed.category === "currency" &&
+    skipTimeInUnitString && parsed.category === "currency" &&
     (explain as { timeScale?: unknown }).timeScale
   ) {
     delete (explain as { timeScale?: unknown }).timeScale;
