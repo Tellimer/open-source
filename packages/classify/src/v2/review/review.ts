@@ -18,10 +18,7 @@ import {
   generateReviewSystemPrompt,
   generateReviewUserPrompt,
 } from "./prompts.ts";
-import {
-  readFlaggedIndicators,
-  writeReviewDecisions,
-} from "./storage.ts";
+import { readFlaggedIndicators, writeReviewDecisions } from "./storage.ts";
 import { Spinner } from "../../utils/spinner.ts";
 
 /**

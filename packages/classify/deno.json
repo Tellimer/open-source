@@ -26,6 +26,7 @@
     "prod:review": "deno run --env --allow-all scripts/production/run_review.ts",
     "prod:sync": "deno run --env --allow-all scripts/production/sync_to_railway.ts",
     "prod:reset": "deno run --env --allow-all scripts/production/reset.ts",
+    "prod:reset-local": "deno run --env --allow-all scripts/production/reset_local.ts",
     "lint": "deno lint",
     "fmt": "deno fmt",
     "review:all": "deno run --env --allow-all src/v2/scripts/review_all.ts",
