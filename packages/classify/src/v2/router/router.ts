@@ -133,7 +133,7 @@ export async function routeIndicators(
   config: RouterConfig,
 ): Promise<RouterBatchResult> {
   const startTime = Date.now();
-  const batchSize = config.batchSize ?? 40;
+  const batchSize = config.batchSize ?? 5;
   const concurrency = config.concurrency ?? 4;
   const maxRetries = config.maxRetries ?? 3;
   const debug = config.debug ?? false;

@@ -133,7 +133,7 @@ export async function classifyOrientations(
   config: OrientationConfig,
 ): Promise<OrientationBatchResult> {
   const startTime = Date.now();
-  const batchSize = config.batchSize ?? 50;
+  const batchSize = config.batchSize ?? 5;
   const concurrency = config.concurrency ?? 4;
   const maxRetries = config.maxRetries ?? 3;
   const debug = config.debug ?? false;

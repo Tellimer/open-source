@@ -86,10 +86,10 @@ export async function classifyIndicatorsV2(
     // ═══════════════════════════════════════════════════════════════════════
     if (!quiet) console.log("📍 Stage 1: Router (Family Assignment)");
 
-    // Use router-specific model if provided, otherwise use default
+    // Use router-specific model if provided, otherwise use GPT-5 thinking
     const routerLlmConfig = config.models?.router
       ? { ...llmConfig, model: config.models.router }
-      : llmConfig;
+      : { ...llmConfig, model: "gpt-5-thinking" };
 
     const routerResult = await routeIndicators(indicators, {
       llmConfig: routerLlmConfig,
@@ -104,7 +104,7 @@ export async function classifyIndicatorsV2(
 
     // Calculate cost for router stage
     const routerCost = calculateCost(
-      routerLlmConfig.model || llmConfig.model || "claude-sonnet-4-5-20250929",
+      routerLlmConfig.model || llmConfig.model || "gpt-5-thinking",
       routerResult.usage.promptTokens,
       routerResult.usage.completionTokens,
     );
@@ -129,10 +129,10 @@ export async function classifyIndicatorsV2(
       routerResult.successful,
     );
 
-    // Use specialist-specific model if provided, otherwise use default
+    // Use specialist-specific model if provided, otherwise use GPT-5 thinking
     const specialistLlmConfig = config.models?.specialist
       ? { ...llmConfig, model: config.models.specialist }
-      : llmConfig;
+      : { ...llmConfig, model: "gpt-5-thinking" };
 
     const specialistResult = await classifyByFamily(
       Array.from(groupedByFamily.values()).flat(),
@@ -153,7 +153,7 @@ export async function classifyIndicatorsV2(
     const specialistCost = calculateCost(
       specialistLlmConfig.model ||
         llmConfig.model ||
-        "claude-sonnet-4-5-20250929",
+        "gpt-5-thinking",
       specialistResult.usage.promptTokens,
       specialistResult.usage.completionTokens,
     );
@@ -238,10 +238,10 @@ export async function classifyIndicatorsV2(
       };
     });
 
-    // Use orientation-specific model if provided, otherwise use default
+    // Use orientation-specific model if provided, otherwise use GPT-5 thinking
     const orientationLlmConfig = config.models?.orientation
       ? { ...llmConfig, model: config.models.orientation }
-      : llmConfig;
+      : { ...llmConfig, model: "gpt-5-thinking" };
 
     const orientationResult = await classifyOrientations(
       enrichedIndicatorsForOrientation as any,
@@ -261,7 +261,7 @@ export async function classifyIndicatorsV2(
     const orientationCost = calculateCost(
       orientationLlmConfig.model ||
         llmConfig.model ||
-        "claude-sonnet-4-5-20250929",
+        "gpt-5-thinking",
       orientationResult.usage.promptTokens,
       orientationResult.usage.completionTokens,
     );
@@ -378,10 +378,10 @@ export async function classifyIndicatorsV2(
         }
       }
 
-      // Use review-specific model if provided, otherwise use default
+      // Use review-specific model if provided, otherwise use GPT-5 thinking
       const reviewLlmConfig = config.models?.review
         ? { ...llmConfig, model: config.models.review }
-        : llmConfig;
+        : { ...llmConfig, model: "gpt-5-thinking" };
 
       reviewResult = await reviewFlaggedIndicators(db, reviewLlmConfig, {
         batchSize: config.batch!.reviewBatchSize!,
@@ -396,7 +396,7 @@ export async function classifyIndicatorsV2(
       const reviewCost = calculateCost(
         reviewLlmConfig.model ||
           llmConfig.model ||
-          "claude-sonnet-4-5-20250929",
+          "gpt-5-thinking",
         reviewResult.usage.promptTokens,
         reviewResult.usage.completionTokens,
       );

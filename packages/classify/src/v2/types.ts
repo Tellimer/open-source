@@ -493,10 +493,10 @@ export const DEFAULT_V2_CONFIG: Required<
   },
   reviewAll: false,
   batch: {
-    routerBatchSize: 40,
-    specialistBatchSize: 25,
-    orientationBatchSize: 50,
-    reviewBatchSize: 20,
+    routerBatchSize: 5,
+    specialistBatchSize: 5,
+    orientationBatchSize: 5,
+    reviewBatchSize: 5,
   },
   concurrency: {
     router: 4,

@@ -50,9 +50,7 @@ describe("V2 Individual Stages", () => {
       const fixture = await loadFixture("physical_fundamental.json");
       const indicators = fixture.indicators.slice(0, 3).map((f) => f.indicator);
 
-
       const result = await routeIndicators(indicators, {
-        
         llmConfig,
         batchSize: 10,
         concurrency: 1,
@@ -80,11 +78,11 @@ describe("V2 Individual Stages", () => {
 
     it("should handle batching", async () => {
       const fixture = await loadFixture("physical_fundamental.json");
-      const indicators = fixture.indicators.slice(0, 10).map((f) => f.indicator);
-
+      const indicators = fixture.indicators.slice(0, 10).map((f) =>
+        f.indicator
+      );
 
       const result = await routeIndicators(indicators, {
-        
         llmConfig,
         batchSize: 3, // Small batch size
         concurrency: 1,
@@ -105,7 +103,6 @@ describe("V2 Individual Stages", () => {
 
       // First route to get families
       const routerResult = await routeIndicators(indicators, {
-        
         llmConfig,
         batchSize: 10,
         concurrency: 1,
@@ -116,12 +113,14 @@ describe("V2 Individual Stages", () => {
       writeRouterResults(db as any, routerResult.successful, indicators);
 
       // Group by family
-      const grouped = groupIndicatorsByFamily(indicators, routerResult.successful);
+      const grouped = groupIndicatorsByFamily(
+        indicators,
+        routerResult.successful,
+      );
 
       // Classify
       const indicatorsWithFamilies = Array.from(grouped.values()).flat();
       const result = await classifyByFamily(indicatorsWithFamilies, {
-        
         llmConfig,
         batchSize: 10,
         concurrency: 1,
@@ -155,9 +154,7 @@ describe("V2 Individual Stages", () => {
       const fixture = await loadFixture("change_movement.json");
       const indicators = fixture.indicators.slice(0, 3).map((f) => f.indicator);
 
-
       const result = await classifyOrientations(indicators, {
-        
         llmConfig,
         batchSize: 10,
         concurrency: 1,
@@ -201,9 +198,7 @@ describe("V2 Individual Stages", () => {
         },
       ];
 
-
       const result = await classifyOrientations(indicators, {
-        
         llmConfig,
         batchSize: 10,
         concurrency: 1,
@@ -360,10 +355,8 @@ describe("V2 Individual Stages", () => {
         VALUES ('test-1', 'Consumer Price Index', 'composite-derived', 'index', 'period-rate', 0, 'neutral')
       `).run();
 
-
       // @ts-expect-error - TODO: Fix provider usage
       const result = await reviewFlaggedIndicators(db as any, provider, {
-        
         // @ts-expect-error - TODO: Fix config type
         llmConfig,
         batchSize: 10,

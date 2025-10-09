@@ -3,7 +3,7 @@
  * @module
  */
 
-import type { Indicator } from "../../types.ts";
+import type { Indicator, TemporalDataPoint } from "../../types.ts";
 
 /**
  * Router system prompt for family classification (comprehensive, water-tight)
@@ -233,6 +233,35 @@ export function generateRouterUserPrompt(indicators: Indicator[]): string {
       if (ind.periodicity) parts.push(`- Periodicity: ${ind.periodicity}`);
       if (ind.source) parts.push(`- Source: ${ind.source}`);
       if (ind.description) parts.push(`- Description: ${ind.description}`);
+
+      // Include time series data if available
+      if (
+        ind.sample_values && Array.isArray(ind.sample_values) &&
+        ind.sample_values.length > 0
+      ) {
+        const isTemporalData = typeof ind.sample_values[0] === "object" &&
+          "date" in ind.sample_values[0];
+
+        if (isTemporalData) {
+          const timeSeries = ind.sample_values as TemporalDataPoint[];
+          const sampleSize = Math.min(5, timeSeries.length);
+          const sample = timeSeries.slice(0, sampleSize);
+          parts.push(
+            `- Time Series Sample (${timeSeries.length} points): ${
+              sample.map((p) => `${p.date}: ${p.value}`).join(", ")
+            }${timeSeries.length > sampleSize ? "..." : ""}`,
+          );
+        } else {
+          const values = ind.sample_values as number[];
+          const sampleSize = Math.min(5, values.length);
+          const sample = values.slice(0, sampleSize);
+          parts.push(
+            `- Sample Values (${values.length} points): ${sample.join(", ")}${
+              values.length > sampleSize ? "..." : ""
+            }`,
+          );
+        }
+      }
 
       return parts.join("\n");
     })
