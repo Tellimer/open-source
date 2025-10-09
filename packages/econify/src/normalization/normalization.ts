@@ -11,7 +11,6 @@ import {
   rescaleTime,
 } from "../scale/scale.ts";
 import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
-import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 
 // ----------------------- Combined Normalization -----------------------
 
@@ -199,9 +198,9 @@ export function normalizeValue(
   // Prefer unit time scale over dataset periodicity (reporting frequency)
   const effectiveTimeScale = parsed.timeScale || options?.explicitTimeScale;
 
-  // Check if this is count data that should not have currency conversion
-  const isCountData = isCountIndicator(options?.indicatorName, unitText) ||
-    isCountUnit(unitText);
+  // Count detection removed - this function is deprecated
+  // Use indicator_type from @tellimer/classify package instead
+  const isCountData = false;
 
   // Handle magnitude scaling (skip for percentage and physical units)
   const isPercentage = parsed.category === "percentage";

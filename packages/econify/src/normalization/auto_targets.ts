@@ -6,7 +6,6 @@ import type { Scale, TimeScale } from "../types.ts";
 import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 import { parseUnit } from "../units/units.ts";
 import { getScale, parseTimeScale } from "../scale/scale.ts";
-import { classifyIndicator } from "../classification/classification.ts";
 
 export type IndicatorKeyResolver =
   | "name"
@@ -147,6 +146,7 @@ export function computeAutoTargets(
     magnitude: Record<string, number>;
     time: Record<string, number>;
     size: number;
+    indicatorType?: string; // Track indicator_type from @tellimer/classify
   }>();
 
   for (const item of data) {
@@ -179,6 +179,15 @@ export function computeAutoTargets(
     const g = groups.get(key) ??
       { currency: {}, magnitude: {}, time: {}, size: 0 };
 
+    // Store indicator_type from first item in group (from @tellimer/classify)
+    if (
+      !g.indicatorType &&
+      (item as unknown as { indicator_type?: string }).indicator_type
+    ) {
+      g.indicatorType =
+        (item as unknown as { indicator_type?: string }).indicator_type;
+    }
+
     // Prefer explicit metadata
     let currency = item.currency_code?.toUpperCase() ??
       parseUnit(item.unit).currency;
@@ -210,11 +219,10 @@ export function computeAutoTargets(
       time: {} as Record<string, number>,
     };
 
-    // Classify the indicator to determine if time dimension should be auto-targeted
+    // Use indicator_type from @tellimer/classify package
     // Stock/Rate indicators should NOT have time dimension auto-targeted
-    const classification = classifyIndicator({ name: key });
-    const shouldSkipTimeDimension = classification.type === "stock" ||
-      classification.type === "rate";
+    const shouldSkipTimeDimension = g.indicatorType === "stock" ||
+      g.indicatorType === "rate";
 
     const dimsList: ("currency" | "magnitude" | "time")[] = [
       "currency",
@@ -281,8 +289,11 @@ export function computeAutoTargets(
       // Rate indicators (CPI, unemployment rate) are dimensionless ratios
       if (shouldSkipTimeDimension) {
         sel.time = undefined;
+        const indicatorTypeMsg = g.indicatorType
+          ? `${g.indicatorType} indicator`
+          : "no time dimension";
         reasonParts.push(
-          `time=skipped(${classification.type} indicator, no time dimension)`,
+          `time=skipped(${indicatorTypeMsg})`,
         );
       } else {
         const { key: topKey, share } = topWithShare(g.time, g.size);

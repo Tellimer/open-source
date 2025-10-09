@@ -4,28 +4,12 @@
 
 import { assertEquals } from "@std/assert";
 import {
-  classifyIndicator,
   type FXTable,
-  type IndicatorInput,
-  type IndicatorType,
   normalizeCurrencyValue,
   normalizeMonetaryFlow,
 } from "./main.ts";
 
-Deno.test("classifyIndicator - basic classification", () => {
-  const samples: Array<[IndicatorInput, IndicatorType]> = [
-    [{ name: "Public debt", unit: "USD bn" }, "stock"],
-    [{ name: "Goods exports", unit: "USD" }, "flow"],
-    [{ name: "CPI inflation", unit: "%" }, "rate"],
-    [{ name: "Unemployment rate", unit: "%" }, "rate"],
-    ["Foreign exchange rate, USD/EUR", "currency"], // FX rates are classified as currency
-  ];
-
-  for (const [inp, expected] of samples) {
-    const c = classifyIndicator(inp);
-    assertEquals(c.type, expected, `Failed for input: ${JSON.stringify(inp)}`);
-  }
-});
+// Classification tests removed - use @tellimer/classify package instead
 
 Deno.test("normalizeCurrencyValue - basic conversion", () => {
   const fx: FXTable = { base: "EUR", rates: { USD: 1.1, GBP: 0.85 } };
@@ -61,21 +45,9 @@ Deno.test("normalizeMonetaryFlow - complex normalization", () => {
 if (import.meta.main) {
   console.log("=== Econify Demo ===\n");
 
-  const samples: Array<[IndicatorInput, IndicatorType]> = [
-    [{ name: "Public debt", unit: "USD bn" }, "stock"],
-    [{ name: "Goods exports", unit: "USD" }, "flow"],
-    [{ name: "CPI inflation", unit: "%" }, "rate"],
-    [{ name: "Unemployment rate", unit: "%" }, "rate"],
-    ["Foreign exchange rate, USD/EUR", "rate"],
-  ];
+  // Classification examples removed - use @tellimer/classify package
 
-  console.log("Classification examples:");
-  for (const [inp, _expected] of samples) {
-    const c = classifyIndicator(inp);
-    console.log(inp, "=>", c.type, c.confidence.toFixed(2), c.signals);
-  }
-
-  console.log("\nCurrency conversion examples:");
+  console.log("Currency conversion examples:");
   const fx: FXTable = { base: "EUR", rates: { USD: 1.1, GBP: 0.85 } };
   console.log(
     "100 EUR -> USD =",

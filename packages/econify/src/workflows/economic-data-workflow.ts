@@ -23,8 +23,6 @@ import { filterExemptions } from "../exemptions/exemptions.ts";
 import { computeAutoTargets } from "../normalization/auto_targets.ts";
 import type { IndicatorKeyResolver } from "../normalization/auto_targets.ts";
 
-import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
-
 import {
   loadDomainUnits,
   parseWithCustomUnits,
@@ -242,8 +240,8 @@ export const pipelineMachine = setup({
           if (override.indicatorNames && item.name) {
             const nameLower = item.name.toLowerCase();
             if (
-              override.indicatorNames.some((name) =>
-                name.toLowerCase() === nameLower
+              override.indicatorNames.some(
+                (name) => name.toLowerCase() === nameLower,
               )
             ) {
               return override;
@@ -256,7 +254,7 @@ export const pipelineMachine = setup({
 
       for (const item of rawData) {
         // Coerce numeric strings to numbers to avoid skipping normalization
-        const coercedValue = (typeof item.value === "string")
+        const coercedValue = typeof item.value === "string"
           ? Number(item.value)
           : item.value;
 
@@ -401,7 +399,9 @@ export const pipelineMachine = setup({
           // Wages-like: only when indicator name explicitly mentions wage/salary/earnings/compensation/pay
           const wageLike =
             /\bwage\b|\bwages\b|\bminimum\s*wage\b|\bsalary\b|\bearnings\b|\bcompensation\b|\bpay\b/i
-              .test(name);
+              .test(
+                name,
+              );
           if (wageLike) {
             wages.push(entry);
             continue;
@@ -420,7 +420,9 @@ export const pipelineMachine = setup({
           // Energy (GWh, TJ, MW, MMBtu, BTU, etc.)
           const isEnergy = parsed.category === "energy" ||
             /(gwh|\bmegawatts?\b|\bmw\b|\bterajoules?\b|\btj\b|\bmmbtu\b|\bbtu\b)/i
-              .test(unitLower);
+              .test(
+                unitLower,
+              );
           if (isEnergy) {
             energy.push(entry);
             continue;
@@ -455,26 +457,15 @@ export const pipelineMachine = setup({
             (custom as unknown as { category?: string }).category ===
               "metals") ||
             /silver\s+oz|silver\s+troy\s+ounces?|copper\s+tonnes?|steel\s+tonnes?/i
-              .test(unitLower + " " + name);
+              .test(
+                unitLower + " " + name,
+              );
           if (isMetals) {
             metals.push(entry);
             continue;
           }
 
-          // Counts
-          if (
-            isCountIndicator(item.name, item.unit) ||
-            isCountUnit(item.unit || "")
-          ) {
-            console.log(
-              "DEBUG classified as counts:",
-              item.id,
-              item.name,
-              item.unit,
-            );
-            counts.push(entry);
-            continue;
-          }
+          // Counts classification removed - now handled by indicator_type from @tellimer/classify
 
           // Percentages
           if (parsed.category === "percentage") {
@@ -595,17 +586,21 @@ export const pipelineMachine = setup({
             >();
             for (const entry of counts) {
               const item = entry.item;
-              let key = (typeof config.indicatorKey === "function")
+              let key = typeof config.indicatorKey === "function"
                 ? (config.indicatorKey as (d: ParsedData) => string)(item)
                 : String(
                   item.name ??
-                    (item.metadata as Record<string, unknown> | undefined)
-                      ?.["indicator_name"] ??
-                    (item.metadata as Record<string, unknown> | undefined)
-                      ?.["indicatorId"] ??
-                    (item.metadata as Record<string, unknown> | undefined)
-                      ?.["indicator_id"] ??
-                    (item.id ?? ""),
+                    (
+                      item.metadata as Record<string, unknown> | undefined
+                    )?.["indicator_name"] ??
+                    (
+                      item.metadata as Record<string, unknown> | undefined
+                    )?.["indicatorId"] ??
+                    (
+                      item.metadata as Record<string, unknown> | undefined
+                    )?.["indicator_id"] ??
+                    item.id ??
+                    "",
                 );
 
               // Normalize the key to match the normalization in computeAutoTargets
@@ -627,7 +622,8 @@ export const pipelineMachine = setup({
                 toCurrency: undefined, // Counts don't need currency conversion
                 // Explicit targets take precedence over auto-targeting
                 toMagnitude: batchOptions.toMagnitude ??
-                  (sel?.magnitude as Scale | undefined) ?? "ones",
+                  (sel?.magnitude as Scale | undefined) ??
+                  "ones",
                 toTimeScale: batchOptions.toTimeScale ?? sel?.time,
               });
               const merged = mergeByKey(group, res.successful);
@@ -636,7 +632,8 @@ export const pipelineMachine = setup({
                 merged.forEach((m, idx) => {
                   // Use actual values (explicit takes precedence over auto-targeted)
                   const actualMagnitude = batchOptions.toMagnitude ??
-                    (sel.magnitude as Scale | undefined) ?? "ones";
+                    (sel.magnitude as Scale | undefined) ??
+                    "ones";
                   const actualTime = batchOptions.toTimeScale ?? sel.time;
 
                   const ts: NonNullable<
@@ -664,12 +661,18 @@ export const pipelineMachine = setup({
             }
           } else {
             // No auto-targeting, process all counts together
-            const res = await processBatch(counts.map((c) => c.item), {
-              ...batchOptions,
-              toCurrency: undefined, // Counts don't need currency conversion
-              toMagnitude: "ones",
-            });
-            console.log("DEBUG counts items:", res.successful.map((x) => x.id));
+            const res = await processBatch(
+              counts.map((c) => c.item),
+              {
+                ...batchOptions,
+                toCurrency: undefined, // Counts don't need currency conversion
+                toMagnitude: "ones",
+              },
+            );
+            console.log(
+              "DEBUG counts items:",
+              res.successful.map((x) => x.id),
+            );
             const merged = mergeByKey(counts, res.successful);
             merged.forEach((it, i) =>
               processed.push({ item: it, idx: counts[i].idx })
@@ -696,12 +699,15 @@ export const pipelineMachine = setup({
         }
 
         if (emissions.length > 0) {
-          const res = await processBatch(emissions.map((e) => e.item), {
-            ...batchOptions,
-            toCurrency: undefined,
-            toMagnitude: undefined,
-            toTimeScale: undefined,
-          });
+          const res = await processBatch(
+            emissions.map((e) => e.item),
+            {
+              ...batchOptions,
+              toCurrency: undefined,
+              toMagnitude: undefined,
+              toTimeScale: undefined,
+            },
+          );
           console.log(
             "DEBUG emissions items:",
             res.successful.map((x) => x.id),
@@ -713,13 +719,19 @@ export const pipelineMachine = setup({
         }
 
         if (energy.length > 0) {
-          const res = await processBatch(energy.map((e) => e.item), {
-            ...batchOptions,
-            toCurrency: undefined,
-            toMagnitude: undefined,
-            toTimeScale: undefined,
-          });
-          console.log("DEBUG energy items:", res.successful.map((x) => x.id));
+          const res = await processBatch(
+            energy.map((e) => e.item),
+            {
+              ...batchOptions,
+              toCurrency: undefined,
+              toMagnitude: undefined,
+              toTimeScale: undefined,
+            },
+          );
+          console.log(
+            "DEBUG energy items:",
+            res.successful.map((x) => x.id),
+          );
           const merged = mergeByKey(energy, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: energy[i].idx })
@@ -727,12 +739,15 @@ export const pipelineMachine = setup({
         }
 
         if (commodities.length > 0) {
-          const res = await processBatch(commodities.map((c) => c.item), {
-            ...batchOptions,
-            toCurrency: undefined,
-            toMagnitude: undefined,
-            toTimeScale: undefined,
-          });
+          const res = await processBatch(
+            commodities.map((c) => c.item),
+            {
+              ...batchOptions,
+              toCurrency: undefined,
+              toMagnitude: undefined,
+              toTimeScale: undefined,
+            },
+          );
           const merged = mergeByKey(commodities, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: commodities[i].idx })
@@ -740,12 +755,15 @@ export const pipelineMachine = setup({
         }
 
         if (agriculture.length > 0) {
-          const res = await processBatch(agriculture.map((a) => a.item), {
-            ...batchOptions,
-            toCurrency: undefined,
-            toMagnitude: undefined,
-            toTimeScale: undefined,
-          });
+          const res = await processBatch(
+            agriculture.map((a) => a.item),
+            {
+              ...batchOptions,
+              toCurrency: undefined,
+              toMagnitude: undefined,
+              toTimeScale: undefined,
+            },
+          );
           console.log(
             "DEBUG agriculture items:",
             res.successful.map((x) => x.id),
@@ -757,13 +775,19 @@ export const pipelineMachine = setup({
         }
 
         if (metals.length > 0) {
-          const res = await processBatch(metals.map((m) => m.item), {
-            ...batchOptions,
-            toCurrency: undefined,
-            toMagnitude: undefined,
-            toTimeScale: undefined,
-          });
-          console.log("DEBUG metals items:", res.successful.map((x) => x.id));
+          const res = await processBatch(
+            metals.map((m) => m.item),
+            {
+              ...batchOptions,
+              toCurrency: undefined,
+              toMagnitude: undefined,
+              toTimeScale: undefined,
+            },
+          );
+          console.log(
+            "DEBUG metals items:",
+            res.successful.map((x) => x.id),
+          );
           const merged = mergeByKey(metals, res.successful);
           merged.forEach((it, i) =>
             processed.push({ item: it, idx: metals[i].idx })
@@ -789,17 +813,21 @@ export const pipelineMachine = setup({
             >();
             for (const entry of defaults) {
               const item = entry.item;
-              let key = (typeof config.indicatorKey === "function")
+              let key = typeof config.indicatorKey === "function"
                 ? (config.indicatorKey as (d: ParsedData) => string)(item)
                 : String(
                   item.name ??
-                    (item.metadata as Record<string, unknown> | undefined)
-                      ?.["indicator_name"] ??
-                    (item.metadata as Record<string, unknown> | undefined)
-                      ?.["indicatorId"] ??
-                    (item.metadata as Record<string, unknown> | undefined)
-                      ?.["indicator_id"] ??
-                    (item.id ?? ""),
+                    (
+                      item.metadata as Record<string, unknown> | undefined
+                    )?.["indicator_name"] ??
+                    (
+                      item.metadata as Record<string, unknown> | undefined
+                    )?.["indicatorId"] ??
+                    (
+                      item.metadata as Record<string, unknown> | undefined
+                    )?.["indicator_id"] ??
+                    item.id ??
+                    "",
                 );
 
               // Normalize the key to match the normalization in computeAutoTargets

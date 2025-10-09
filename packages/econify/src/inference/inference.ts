@@ -3,7 +3,6 @@
  */
 
 import { parseUnit } from "../units/units.ts";
-import { classifyIndicator } from "../classification/classification.ts";
 import type { Scale } from "../types.ts";
 
 /** Company metadata used to improve unit inference. */
@@ -247,11 +246,8 @@ function inferFromIndicatorName(name: string): string | null {
   // Check for currency indicators
   const currencyMatch = name.match(/\b([A-Z]{3})\b/);
   if (currencyMatch) {
-    // Try to determine scale from indicator
-    const classification = classifyIndicator({ name });
-    if (classification.type === "flow") {
-      return `${currencyMatch[1]} Million per year`;
-    }
+    // Classification removed - always return basic million without time
+    // Use @tellimer/classify package to determine flow vs stock
     return `${currencyMatch[1]} Million`;
   }
 

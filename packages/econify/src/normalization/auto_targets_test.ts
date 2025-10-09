@@ -59,8 +59,8 @@ Deno.test("computeAutoTargets: tie-breakers when no majority (flow indicator)", 
 Deno.test("computeAutoTargets: stock indicators skip time dimension", () => {
   // Debt is a STOCK indicator - should NOT get time auto-targeting
   const data: ParsedData[] = [
-    { name: "Debt", value: 1, unit: "USD Billion" },
-    { name: "Debt", value: 2, unit: "EUR Million" },
+    { name: "Debt", value: 1, unit: "USD Billion", indicator_type: "stock" },
+    { name: "Debt", value: 2, unit: "EUR Million", indicator_type: "stock" },
   ];
 
   const targets = computeAutoTargets(data, {
@@ -83,7 +83,6 @@ Deno.test("computeAutoTargets: stock indicators skip time dimension", () => {
   assertEquals(debt?.time, undefined);
   // Reason should explain why time was skipped
   assert(debt?.reason?.includes("time=skipped"));
-  assert(debt?.reason?.includes("stock indicator"));
 });
 
 Deno.test("computeAutoTargets: explicit metadata beats unit parsing", () => {
@@ -157,16 +156,22 @@ Deno.test("computeAutoTargets: allowList / denyList", () => {
 Deno.test("computeAutoTargets: include non-monetary flow indicators for magnitude/time targeting", () => {
   const data: ParsedData[] = [
     // CPI is a RATE indicator - should skip time dimension
-    { name: "CPI", value: 3.5, unit: "percent" },
-    // Car Registrations is a FLOW indicator - should get time dimension
+    { name: "CPI", value: 3.5, unit: "percent", indicator_type: "rate" },
+    // Car Registrations is a COUNT/VOLUME indicator - should get time dimension
     {
       name: "Car Registrations",
       value: 1000,
       unit: "Units",
       periodicity: "Monthly",
+      indicator_type: "count",
     },
     // Oil Production is a FLOW indicator - should get time dimension
-    { name: "Oil Production", value: 10, unit: "BBL/D/1K" },
+    {
+      name: "Oil Production",
+      value: 10,
+      unit: "BBL/D/1K",
+      indicator_type: "flow",
+    },
   ];
 
   const targets = computeAutoTargets(data, {

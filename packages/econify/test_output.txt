@@ -1,0 +1,101 @@
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/aggregations/aggregations_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/algebra/algebra_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/batch_magnitude_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/batch_session_api_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/batch_session_e2e_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/batch_session_integration_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/batch_session_non_monetary_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/compute_auto_targets_api_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/api/pipeline_api_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/batch/all_indicator_types_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/batch/batch_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/batch/classify_integration_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/batch/comprehensive_indicator_types_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/cache/cache_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/currency/currency_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/custom/custom_units_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/exemptions/exemptions_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/fx/fx-validation_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/fx/live_fx_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/inference/inference_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/integration_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/main_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/auto_targets_big_mock_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/auto_targets_shares_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/auto_targets_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/name_variation_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/normalization_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/patterns_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/quality/quality_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/scale/scale_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/seasonal/seasonal_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/services/wages-service_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/time/time-sampling_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/units/units_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/user_scenarios_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/wages/wages_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/workflows/e2e_comprehensive_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/workflows/economic-data-workflow_test.ts
+[0m[32mCheck[0m file:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/workflows/special_handling_test.ts
+[0m[1mTS2367 [0m[ERROR]: This comparison appears to be unintentional because the types '"other"' and '"flow"' have no overlap.
+    if (classification.type === "flow") {
+[0m[31m        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/inference/inference.ts[0m:[0m[33m252[0m:[0m[33m9[0m
+
+[0m[1mTS2339 [0m[ERROR]: Property 'skip' does not exist on type 'DenoTest'.
+Deno.test.skip("classifyIndicator - basic classification", () => {
+[0m[31m          ~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/main_test.ts[0m:[0m[33m15[0m:[0m[33m11[0m
+
+[0m[1mTS2304 [0m[ERROR]: Cannot find name 'classifyIndicator'.
+    const c = classifyIndicator(inp);
+[0m[31m              ~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/main_test.ts[0m:[0m[33m25[0m:[0m[33m15[0m
+
+[0m[1mTS2304 [0m[ERROR]: Cannot find name 'classifyIndicator'.
+    const c = classifyIndicator(inp);
+[0m[31m              ~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/main_test.ts[0m:[0m[33m74[0m:[0m[33m15[0m
+
+[0m[1mTS2367 [0m[ERROR]: This comparison appears to be unintentional because the types '"other"' and '"stock"' have no overlap.
+    const shouldSkipTimeDimension = classification.type === "stock" ||
+[0m[31m                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/auto_targets.ts[0m:[0m[33m216[0m:[0m[33m37[0m
+
+[0m[1mTS2367 [0m[ERROR]: This comparison appears to be unintentional because the types '"other"' and '"rate"' have no overlap.
+      classification.type === "rate";
+[0m[31m      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/auto_targets.ts[0m:[0m[33m217[0m:[0m[33m7[0m
+
+[0m[1mTS2367 [0m[ERROR]: This comparison appears to be unintentional because the types '"other"' and '"flow"' have no overlap.
+    if (classification.type === "flow") {
+[0m[31m        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain.ts[0m:[0m[33m50[0m:[0m[33m9[0m
+
+[0m[1mTS2367 [0m[ERROR]: This comparison appears to be unintentional because the types '"other"' and '"stock"' have no overlap.
+  const isStockLikeGlobal = classification.type === "stock" ||
+[0m[31m                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain.ts[0m:[0m[33m171[0m:[0m[33m29[0m
+
+[0m[1mTS2367 [0m[ERROR]: This comparison appears to be unintentional because the types '"other"' and '"rate"' have no overlap.
+    classification.type === "rate";
+[0m[31m    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain.ts[0m:[0m[33m172[0m:[0m[33m5[0m
+
+[0m[1mTS2304 [0m[ERROR]: Cannot find name 'isCountIndicator'.
+    (isCountIndicator(options.indicatorName ?? undefined, originalUnit) ||
+[0m[31m     ~~~~~~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain.ts[0m:[0m[33m347[0m:[0m[33m6[0m
+
+[0m[1mTS2304 [0m[ERROR]: Cannot find name 'isCountUnit'.
+      isCountUnit(originalUnit))
+[0m[31m      ~~~~~~~~~~~[0m
+    at [0m[36mfile:///Users/seanknowles/Projects/tellimer/open-source/packages/econify/src/normalization/explain.ts[0m:[0m[33m348[0m:[0m[33m7[0m
+
+Found 11 errors.
+
+[0m[1m[31merror[0m: Type checking failed.
+
+  [33minfo:[39m The program failed type-checking, but it still might work correctly.
+  [36mhint:[39m Re-run with [4m--no-check[24m to skip type-checking.

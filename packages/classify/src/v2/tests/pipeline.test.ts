@@ -41,10 +41,10 @@ describe("V2 Pipeline", () => {
 
   describe("Full Pipeline Flow", () => {
     it("should process physical-fundamental indicators", async () => {
-      const fixture = fixtures.find((f) => f.family === "physical-fundamental");
+      const fixture = fixtures.find((f) => f.category === "Physical/Fundamental");
       assertExists(fixture, "Physical fundamental fixture should exist");
 
-      const indicators = fixture.indicators.slice(0, 3); // Test with first 3
+      const indicators = fixture.indicators.slice(0, 3).map((f) => f.indicator); // Test with first 3
 
       const llmConfig: LLMConfig = {
         provider: "anthropic",
@@ -110,7 +110,7 @@ describe("V2 Pipeline", () => {
       // Mix indicators from different families
       const indicators = [];
       for (const fixture of fixtures.slice(0, 3)) {
-        indicators.push(...fixture.indicators.slice(0, 2));
+        indicators.push(...fixture.indicators.slice(0, 2).map((f) => f.indicator));
       }
 
       const llmConfig: LLMConfig = {
@@ -143,7 +143,7 @@ describe("V2 Pipeline", () => {
   describe("Flagging and Review", () => {
     it("should flag low confidence indicators", async () => {
       const fixture = fixtures[0];
-      const indicators = fixture.indicators.slice(0, 5);
+      const indicators = fixture.indicators.slice(0, 5).map((f) => f.indicator);
 
       const llmConfig: LLMConfig = {
         provider: "anthropic",
@@ -183,7 +183,7 @@ describe("V2 Pipeline", () => {
   describe("Database Persistence", () => {
     it("should persist all stage results", async () => {
       const fixture = fixtures[0];
-      const indicators = fixture.indicators.slice(0, 3);
+      const indicators = fixture.indicators.slice(0, 3).map((f) => f.indicator);
 
       const llmConfig: LLMConfig = {
         provider: "anthropic",
@@ -231,7 +231,7 @@ describe("V2 Pipeline", () => {
 
     it("should support upsert behavior", async () => {
       const fixture = fixtures[0];
-      const indicators = fixture.indicators.slice(0, 2);
+      const indicators = fixture.indicators.slice(0, 2).map((f) => f.indicator);
 
       const llmConfig: LLMConfig = {
         provider: "anthropic",
@@ -271,7 +271,7 @@ describe("V2 Pipeline", () => {
   describe("Performance and Metrics", () => {
     it("should track token usage and costs", async () => {
       const fixture = fixtures[0];
-      const indicators = fixture.indicators.slice(0, 3);
+      const indicators = fixture.indicators.slice(0, 3).map((f) => f.indicator);
 
       const llmConfig: LLMConfig = {
         provider: "anthropic",
@@ -302,7 +302,7 @@ describe("V2 Pipeline", () => {
 
     it("should complete within reasonable time", async () => {
       const fixture = fixtures[0];
-      const indicators = fixture.indicators.slice(0, 5);
+      const indicators = fixture.indicators.slice(0, 5).map((f) => f.indicator);
 
       const llmConfig: LLMConfig = {
         provider: "anthropic",

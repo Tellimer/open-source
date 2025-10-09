@@ -12,6 +12,7 @@ const testData: BatchItem[] = [
     periodicity: "Quarterly", // 🆕 Explicit periodicity
     scale: "Billions", // 🆕 Explicit scale
     currency_code: "XOF", // 🆕 Explicit currency
+    indicator_type: "flow", // From @tellimer/classify - enables periodicity conversion
   },
   {
     id: "BGD_TRADE",
@@ -21,6 +22,7 @@ const testData: BatchItem[] = [
     periodicity: "Monthly", // 🆕 Explicit periodicity
     scale: "Billions", // 🆕 Explicit scale
     currency_code: "BDT", // 🆕 Explicit currency
+    indicator_type: "flow", // From @tellimer/classify - enables periodicity conversion
   },
   {
     id: "BHR_TRADE",
@@ -30,6 +32,7 @@ const testData: BatchItem[] = [
     periodicity: "Yearly", // 🆕 Explicit periodicity
     scale: "Millions", // 🆕 Explicit scale
     currency_code: "BHD", // 🆕 Explicit currency
+    indicator_type: "flow", // From @tellimer/classify - enables periodicity conversion
   },
 ];
 

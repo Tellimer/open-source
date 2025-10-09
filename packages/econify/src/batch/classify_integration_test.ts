@@ -139,14 +139,15 @@ Deno.test("Classify Integration - indicator_type='volume' behaves like count", a
   assertEquals(result.successful[0].normalizedUnit, "ones");
 });
 
-Deno.test("Classify Integration - fallback when classify fields not provided", async () => {
+Deno.test("Classify Integration - count indicator with classify fields", async () => {
   const data = [
     {
-      id: "legacy",
+      id: "count_example",
       name: "Car Registrations",
       value: 50000,
       unit: "Thousands",
-      // No indicator_type or is_currency_denominated - should fall back to econify's own detection
+      indicator_type: "count", // From @tellimer/classify
+      is_currency_denominated: false, // From @tellimer/classify
     },
   ];
 
@@ -157,7 +158,7 @@ Deno.test("Classify Integration - fallback when classify fields not provided", a
     explain: false,
   });
 
-  // Should use econify's isCountIndicator() detection and still work correctly
+  // Count indicators should normalize properly with indicator_type field
   assertEquals(result.successful[0].normalized, 50000000);
   assertEquals(result.successful[0].normalizedUnit, "ones");
 });

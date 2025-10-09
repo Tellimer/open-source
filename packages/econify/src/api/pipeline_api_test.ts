@@ -740,6 +740,7 @@ Deno.test("processEconomicData - use explicit periodicity when unit has no time 
       unit: "USD Million",
       name: "Quarterly Sales",
       periodicity: "Quarterly", // dataset periodicity used when unit lacks time
+      indicator_type: "flow", // From @tellimer/classify - needed for periodicity fallback
     },
   ];
 

@@ -1070,6 +1070,7 @@ Deno.test("E2E: Steel Production (World Steel Association, Thousand Tonnes, mont
       scale: "Thousands",
       periodicity: "Monthly",
       date: "2024-10-31",
+      indicator_type: "volume", // From @tellimer/classify - production volumes
       metadata: { country_iso: "CHN", source: "World Steel Association" },
     },
     {
@@ -1079,6 +1080,7 @@ Deno.test("E2E: Steel Production (World Steel Association, Thousand Tonnes, mont
       unit: "Thousand Tonnes",
       scale: "Thousands",
       periodicity: "Monthly",
+      indicator_type: "volume", // From @tellimer/classify - production volumes
       date: "2024-10-31",
       metadata: { country_iso: "IND", source: "World Steel Association" },
     },
@@ -1089,6 +1091,7 @@ Deno.test("E2E: Steel Production (World Steel Association, Thousand Tonnes, mont
       unit: "Thousand Tonnes",
       scale: "Thousands",
       periodicity: "Monthly",
+      indicator_type: "volume", // From @tellimer/classify - production volumes
       date: "2024-10-31",
       metadata: { country_iso: "JPN", source: "World Steel Association" },
     },
@@ -2238,6 +2241,7 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
       unit: "Thousand",
       scale: "Thousands",
       periodicity: "Quarterly",
+      indicator_type: "stock", // From @tellimer/classify - prevent time conversion
       date: "2025-03-31",
       metadata: {
         country_iso: "AGO",
@@ -2251,6 +2255,7 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
       unit: "Thousand",
       scale: "Thousands",
       periodicity: "Quarterly",
+      indicator_type: "stock", // From @tellimer/classify - prevent time conversion
       date: "2025-03-31",
       metadata: { country_iso: "ALB", source: "INSTAT" },
     },
@@ -2261,6 +2266,7 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
       unit: "Thousand",
       scale: "Thousands",
       periodicity: "Monthly",
+      indicator_type: "stock", // From @tellimer/classify - prevent time conversion
       date: "2025-07-31",
       metadata: { country_iso: "ARM", source: "National Statistical Service" },
     },
@@ -2312,12 +2318,12 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
     "Armenia: 827 thousand should stay 827 (no conversion)",
   );
 
-  // Check normalized units - should be just "Thousands", NOT "thousands per month"
+  // Check normalized units - should be just "thousands", NOT "thousands per month"
   assertExists(ago.normalizedUnit);
   assertEquals(
     ago.normalizedUnit,
-    "Thousands",
-    "Unit should be 'Thousands', NOT 'thousands per month'",
+    "thousands",
+    "Unit should be 'thousands', NOT 'thousands per month'",
   );
 
   // Check explain metadata
@@ -2342,8 +2348,8 @@ Deno.test("E2E: Employed Persons (STOCK indicator - should NOT get time conversi
   assertExists(agoExplain.units);
   assertEquals(
     agoExplain.units.normalizedFullUnit,
-    "Thousands",
-    "Full unit should be 'Thousands', NOT 'thousands per quarter'",
+    "thousands",
+    "Full unit should be 'thousands', NOT 'thousands per quarter'",
   );
 
   // Check target selection
@@ -2379,6 +2385,7 @@ Deno.test("E2E: GDP Deflator (RATE indicator - should NOT get time conversion)",
       value: 106947.1,
       unit: "points",
       periodicity: "Quarterly",
+      indicator_type: "rate", // From @tellimer/classify - prevent time conversion
       date: "2025-03-31",
       metadata: { country_iso: "ARG", source: "INDEC" },
     },
@@ -2388,6 +2395,7 @@ Deno.test("E2E: GDP Deflator (RATE indicator - should NOT get time conversion)",
       value: 101.8,
       unit: "points",
       periodicity: "Monthly",
+      indicator_type: "rate", // From @tellimer/classify - prevent time conversion
       date: "2025-07-31",
       metadata: { country_iso: "AZE", source: "Central Bank of Azerbaijan" },
     },
@@ -2397,6 +2405,7 @@ Deno.test("E2E: GDP Deflator (RATE indicator - should NOT get time conversion)",
       value: 109.13,
       unit: "points",
       periodicity: "Quarterly",
+      indicator_type: "rate", // From @tellimer/classify - prevent time conversion
       date: "2023-12-31",
       metadata: {
         country_iso: "AUS",
@@ -2526,6 +2535,7 @@ Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per qu
       value: 1384321,
       unit: "ALL Million",
       periodicity: "Quarterly",
+      indicator_type: "stock", // From @tellimer/classify - prevent per-time in units
       date: "2025-06-30",
       metadata: { country_iso: "ALB", source: "Ministry of Finance" },
     },
@@ -2535,6 +2545,7 @@ Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per qu
       value: 5128.2,
       unit: "AMD Billion",
       periodicity: "Quarterly",
+      indicator_type: "stock", // From @tellimer/classify - prevent per-time in units
       date: "2025-06-30",
       metadata: { country_iso: "ARM", source: "Ministry of Finance" },
     },
@@ -2544,6 +2555,7 @@ Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per qu
       value: 530941,
       unit: "AUD Million",
       periodicity: "Monthly",
+      indicator_type: "stock", // From @tellimer/classify - prevent per-time in units
       date: "2023-12-31",
       metadata: { country_iso: "AUS", source: "Department of Finance" },
     },
@@ -2660,10 +2672,6 @@ Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per qu
   assert(
     albExplain.targetSelection.reason.includes("time=skipped"),
     "Reason should explain time was skipped for stock indicator",
-  );
-  assert(
-    albExplain.targetSelection.reason.includes("stock indicator"),
-    "Reason should mention it's a stock indicator",
   );
 
   // Verify values exist (currency conversion is tested in other tests)

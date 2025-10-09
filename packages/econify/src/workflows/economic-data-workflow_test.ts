@@ -517,10 +517,35 @@ Deno.test("Pipeline - time resampling with targetTimeScale", async () => {
 
 Deno.test("Workflow Router - partitions mixed dataset and preserves order", async () => {
   const data: ParsedData[] = [
-    { id: "w1", value: 3000, unit: "USD per month", name: "Average Wage" },
-    { id: "c1", value: 12, unit: "Thousands", name: "Car Registrations" },
-    { id: "p1", value: 2.5, unit: "percent", name: "Inflation Rate" },
-    { id: "w2", value: 48000, unit: "EUR per year", name: "Median Salary" },
+    {
+      id: "w1",
+      value: 3000,
+      unit: "USD per month",
+      name: "Average Wage",
+      indicator_type: "flow",
+    },
+    {
+      id: "c1",
+      value: 12,
+      unit: "Thousands",
+      name: "Car Registrations",
+      indicator_type: "count",
+      is_currency_denominated: false,
+    },
+    {
+      id: "p1",
+      value: 2.5,
+      unit: "percent",
+      name: "Inflation Rate",
+      indicator_type: "rate",
+    },
+    {
+      id: "w2",
+      value: 48000,
+      unit: "EUR per year",
+      name: "Median Salary",
+      indicator_type: "flow",
+    },
   ];
 
   const config: PipelineConfig = {
@@ -551,12 +576,54 @@ Deno.test("Workflow Router - partitions mixed dataset and preserves order", asyn
 
 Deno.test("Workflow Router - routes energy/commodities/emissions and preserves order without per <time>", async () => {
   const data: ParsedData[] = [
-    { id: "w", value: 2000, unit: "USD per month", name: "Wage" },
-    { id: "en", value: 150, unit: "GWh", name: "Electricity production" },
-    { id: "co", value: 10, unit: "barrel", name: "Crude output" },
-    { id: "em", value: 25, unit: "CO2 tonnes", name: "CO2 emissions" },
-    { id: "pc", value: 4.2, unit: "%", name: "Inflation" },
-    { id: "ct", value: 2, unit: "Thousands", name: "Car registrations" },
+    {
+      id: "w",
+      value: 2000,
+      unit: "USD per month",
+      name: "Wage",
+      indicator_type: "flow",
+      is_currency_denominated: true,
+    },
+    {
+      id: "en",
+      value: 150,
+      unit: "GWh",
+      name: "Electricity production",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "co",
+      value: 10,
+      unit: "barrel",
+      name: "Crude output",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "em",
+      value: 25,
+      unit: "CO2 tonnes",
+      name: "CO2 emissions",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "pc",
+      value: 4.2,
+      unit: "%",
+      name: "Inflation",
+      indicator_type: "rate",
+      is_currency_denominated: false,
+    },
+    {
+      id: "ct",
+      value: 2,
+      unit: "Thousands",
+      name: "Car registrations",
+      indicator_type: "count",
+      is_currency_denominated: false,
+    },
   ];
 
   const config: PipelineConfig = {
@@ -587,10 +654,38 @@ Deno.test("Workflow Router - routes energy/commodities/emissions and preserves o
 
 Deno.test("Workflow Router - routes agriculture/metals without currency/time and preserves order", async () => {
   const data: ParsedData[] = [
-    { id: "w", value: 2500, unit: "USD per month", name: "Wage" },
-    { id: "ag", value: 700, unit: "metric tonnes", name: "Wheat production" },
-    { id: "me", value: 120, unit: "copper tonnes", name: "Copper production" },
-    { id: "ct", value: 3, unit: "Thousands", name: "Car registrations" },
+    {
+      id: "w",
+      value: 2500,
+      unit: "USD per month",
+      name: "Wage",
+      indicator_type: "flow",
+      is_currency_denominated: true,
+    },
+    {
+      id: "ag",
+      value: 700,
+      unit: "metric tonnes",
+      name: "Wheat production",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "me",
+      value: 120,
+      unit: "copper tonnes",
+      name: "Copper production",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "ct",
+      value: 3,
+      unit: "Thousands",
+      name: "Car registrations",
+      indicator_type: "count",
+      is_currency_denominated: false,
+    },
   ];
 
   const config: PipelineConfig = {
@@ -655,23 +750,114 @@ Deno.test("Workflow Router - non-monetary categories ignore targetCurrency and t
 Deno.test("Workflow Router - stress test with diverse dataset", async () => {
   const data: ParsedData[] = [
     // Wages (various time bases)
-    { id: "w_hr", value: 30, unit: "CAD/Hour", name: "Average Hourly Wage" },
-    { id: "w_wk", value: 1500, unit: "EUR/Week", name: "Average Weekly Wage" },
-    { id: "w_yr", value: 60000, unit: "GBP/Year", name: "Average Salary" },
-    { id: "w_mo", value: 3200, unit: "USD/Month", name: "Median Salary" },
+    {
+      id: "w_hr",
+      value: 30,
+      unit: "CAD/Hour",
+      name: "Average Hourly Wage",
+      indicator_type: "flow",
+      is_currency_denominated: true,
+    },
+    {
+      id: "w_wk",
+      value: 1500,
+      unit: "EUR/Week",
+      name: "Average Weekly Wage",
+      indicator_type: "flow",
+      is_currency_denominated: true,
+    },
+    {
+      id: "w_yr",
+      value: 60000,
+      unit: "GBP/Year",
+      name: "Average Salary",
+      indicator_type: "flow",
+      is_currency_denominated: true,
+    },
+    {
+      id: "w_mo",
+      value: 3200,
+      unit: "USD/Month",
+      name: "Median Salary",
+      indicator_type: "flow",
+      is_currency_denominated: true,
+    },
     // Counts
-    { id: "cnt_k", value: 12, unit: "Thousands", name: "Car Registrations" },
-    { id: "cnt_u", value: 850, unit: "Units", name: "Licenses Issued" },
+    {
+      id: "cnt_k",
+      value: 12,
+      unit: "Thousands",
+      name: "Car Registrations",
+      indicator_type: "count",
+      is_currency_denominated: false,
+    },
+    {
+      id: "cnt_u",
+      value: 850,
+      unit: "Units",
+      name: "Licenses Issued",
+      indicator_type: "count",
+      is_currency_denominated: false,
+    },
     // Percentage
-    { id: "pct", value: 3.2, unit: "%", name: "Inflation Rate" },
-    // Physical/non-monetary domains
-    { id: "en", value: 150, unit: "GWh", name: "Electricity production" },
-    { id: "co", value: 10, unit: "barrel", name: "Crude output" },
-    { id: "em", value: 25, unit: "CO2 tonnes", name: "CO2 emissions" },
-    { id: "ag", value: 700, unit: "metric tonnes", name: "Wheat production" },
-    { id: "me", value: 120, unit: "copper tonnes", name: "Copper production" },
+    {
+      id: "pct",
+      value: 3.2,
+      unit: "%",
+      name: "Inflation Rate",
+      indicator_type: "rate",
+      is_currency_denominated: false,
+    },
+    // Physical/non-monetary domains - production is flow
+    {
+      id: "en",
+      value: 150,
+      unit: "GWh",
+      name: "Electricity production",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "co",
+      value: 10,
+      unit: "barrel",
+      name: "Crude output",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "em",
+      value: 25,
+      unit: "CO2 tonnes",
+      name: "CO2 emissions",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "ag",
+      value: 700,
+      unit: "metric tonnes",
+      name: "Wheat production",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
+    {
+      id: "me",
+      value: 120,
+      unit: "copper tonnes",
+      name: "Copper production",
+      indicator_type: "flow",
+      is_currency_denominated: false,
+    },
     // Inference/unknown
-    { id: "unk", value: 2.5, unit: "", name: "Interest Rate" },
+    {
+      id: "unk",
+      value: 2.5,
+      unit: "",
+      name: "Interest Rate",
+      indicator_type: "rate",
+      is_currency_denominated: false,
+    },
   ];
 
   const config: PipelineConfig = {

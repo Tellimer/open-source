@@ -17,6 +17,7 @@ const carRegistrationUserData = [
   {
     indicator_id: "CAR_REGISTRATIONS",
     indicator_name: "Car Registrations",
+    indicator_type: "count", // From @tellimer/classify
     countries: {
       ARG: {
         value: 50186.0,
@@ -57,6 +58,7 @@ const minimumWagesUserData = [
   {
     indicator_id: "MINIMUM_WAGES",
     indicator_name: "Minimum Wages",
+    indicator_type: "flow", // From @tellimer/classify - wages are flow
     countries: {
       AGO: {
         value: 32181.15,
@@ -120,7 +122,8 @@ function convertUserDataToEconifyFormat(
         unit: data.unit as string,
         currency: tooltip.currency as string | null | undefined,
         periodicity: tooltip.periodicity as string | null | undefined,
-        indicator_type: (indicator as { indicator_id: string }).indicator_id,
+        indicator_type:
+          (indicator as { indicator_type?: string }).indicator_type,
       });
     }
   }

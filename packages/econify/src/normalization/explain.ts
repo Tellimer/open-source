@@ -8,8 +8,6 @@ import { parseTimeScaleFromUnit } from "../time/time-sampling.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 import { PER_YEAR, SCALE_MAP } from "../patterns.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
-import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
-import { classifyIndicator } from "../classification/classification.ts";
 
 /**
  * Build explain metadata for a normalization operation
@@ -29,6 +27,8 @@ export function buildExplainMetadata(
     explicitTimeScale?: TimeScale | null;
     /** Optional indicator name to improve domain detection */
     indicatorName?: string | null;
+    /** indicator_type from @tellimer/classify package */
+    indicatorType?: string | null;
   },
 ): Explain {
   const parsed = parseUnit(originalUnit);
@@ -44,14 +44,10 @@ export function buildExplainMetadata(
   // 3. For STOCK/INDEX indicators, DON'T use periodicity (it's just release cadence)
   let effectiveTimeScale = parsed.timeScale;
   if (!effectiveTimeScale && options.explicitTimeScale) {
-    // Classify the indicator to determine if periodicity should be used
-    const classification = classifyIndicator({
-      name: options.indicatorName || "",
-      unit: originalUnit,
-    });
     // Only use periodicity for flow indicators (GDP, sales, trade, etc.)
     // NOT for stock/index indicators (debt, reserves, corruption index, etc.)
-    if (classification.type === "flow") {
+    // Use indicator_type from @tellimer/classify package
+    if (options.indicatorType === "flow") {
       effectiveTimeScale = options.explicitTimeScale;
     }
   }
@@ -170,14 +166,9 @@ export function buildExplainMetadata(
   // Detect per-capita indicators for special handling (keep scale as ones; no millions label)
   const isPerCapita = /\bper\s*capita\b/i.test(options.indicatorName ?? "");
 
-  // Detect stock-like indicators using classification
-  // Stock indicators (debt, reserves, population, etc.) should NOT have time dimension in units
-  // Use indicator name only (not unit) to avoid circular logic where "/Month" in unit makes it flow
-  const classification = classifyIndicator({
-    name: options.indicatorName || "",
-  });
-  const isStockLikeGlobal = classification.type === "stock" ||
-    classification.type === "rate";
+  // Use indicator_type from @tellimer/classify package
+  const isStockLikeGlobal = options.indicatorType === "stock" ||
+    options.indicatorType === "rate";
 
   if (isNonCurrencyCategory) {
     // Use base unit label (e.g., "units", "GWh", "CO2 tonnes") and avoid currency
@@ -350,10 +341,10 @@ export function buildExplainMetadata(
   if (!detectedDomain && parsed.category === "percentage") {
     detectedDomain = "percentage";
   }
+  // Use indicator_type from @tellimer/classify for count/volume detection
   if (
     !detectedDomain &&
-    (isCountIndicator(options.indicatorName ?? undefined, originalUnit) ||
-      isCountUnit(originalUnit))
+    (options.indicatorType === "count" || options.indicatorType === "volume")
   ) {
     detectedDomain = "count";
   }

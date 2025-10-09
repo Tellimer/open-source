@@ -124,6 +124,7 @@ export function generateMockClassification(
     indicator_type: indicatorType,
     temporal_aggregation: temporalAggregation,
     is_monetary: isMonetary,
+    is_currency_denominated: isMonetary,
     heat_map_orientation: heatMapOrientation,
     confidence: 0.85, // Mock confidence
     reasoning:

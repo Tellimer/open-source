@@ -13,13 +13,15 @@
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 [![Deno](https://img.shields.io/badge/deno-2.0+-green)](https://deno.land)
 
-A comprehensive Deno/TypeScript package for **economic data normalization and conversion** with
-advanced features for currency conversion, magnitude scaling, time period standardization,
-quality assessment, and batch processing. Perfect for financial institutions, economic research,
-data pipelines, and quantitative analysis.
+A comprehensive Deno/TypeScript package for **economic data normalization and
+conversion** with advanced features for currency conversion, magnitude scaling,
+time period standardization, quality assessment, and batch processing. Perfect
+for financial institutions, economic research, data pipelines, and quantitative
+analysis.
 
-**Note:** For indicator classification (determining if an indicator is a stock, flow, ratio, etc.),
-see the separate [@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify focuses
+**Note:** For indicator classification (determining if an indicator is a stock,
+flow, ratio, etc.), see the separate
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify focuses
 solely on normalization and conversion once you know the indicator type.
 
 **✅ Production Ready** • **239 Tests Passing** • **100% Reliability** • **Zero
@@ -41,8 +43,9 @@ assessment, error handling, and interactive control flow._
 - 🎯 **Smart Auto-Targeting** — Intelligently skip time dimension for stock/rate
   indicators (e.g., Population, Debt, CPI) while applying it to flows (GDP,
   Exports) — prevents incorrect conversions like "12,814 employed persons" ÷ 3 →
-  "4,271 per month". Accepts `indicator_type` from [@tellimer/classify](https://jsr.io/@tellimer/classify)
-  package to make normalization decisions
+  "4,271 per month". Accepts `indicator_type` from
+  [@tellimer/classify](https://jsr.io/@tellimer/classify) package to make
+  normalization decisions
 - 🌍 **150+ Currency Support** — Convert values between currencies using FX
   tables (USD, EUR, GBP, JPY, NGN, KES, and more)
 - 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions,
@@ -413,10 +416,14 @@ currency, magnitude and time basis per indicator series (e.g., per indicator
 name) and normalizes minority values to match.
 
 **Smart Time Normalization**: Auto-targeting respects the `indicator_type` field
-from [@tellimer/classify](https://jsr.io/@tellimer/classify) to make intelligent decisions:
+from [@tellimer/classify](https://jsr.io/@tellimer/classify) to make intelligent
+decisions:
+
 - `indicator_type: "flow"` → Time normalization applied (e.g., GDP, exports)
-- `indicator_type: "stock"` → Time normalization skipped (e.g., population, debt)
-- `indicator_type: "count"` → Currency conversion skipped (e.g., car registrations)
+- `indicator_type: "stock"` → Time normalization skipped (e.g., population,
+  debt)
+- `indicator_type: "count"` → Currency conversion skipped (e.g., car
+  registrations)
 
 For transparency, the explain metadata includes a `targetSelection` section with
 the chosen targets, observed shares, and rationale.
@@ -470,8 +477,9 @@ Notes:
   - `majority(X,share)` if the top share ≥ `minMajorityShare`
   - `tie-break(rule)` if no majority and a tie-breaker preference was applied
   - `none` if neither condition was met
-- Auto-targeting uses `indicator_type` from [@tellimer/classify](https://jsr.io/@tellimer/classify)
-  to intelligently skip time normalization for stocks/rates and currency conversion for counts
+- Auto-targeting uses `indicator_type` from
+  [@tellimer/classify](https://jsr.io/@tellimer/classify) to intelligently skip
+  time normalization for stocks/rates and currency conversion for counts
 - Monetary domains (GDP, debt, trade, etc.) are auto‑targeted. Percentages,
   counts, and physical/commodity domains are left unchanged.
 - You can control inclusion via `allowList`/`denyList` to force specific
@@ -479,7 +487,8 @@ Notes:
 
 #### Example with Indicator Classification
 
-Auto-targeting works best when you provide `indicator_type` from the classify package:
+Auto-targeting works best when you provide `indicator_type` from the classify
+package:
 
 ```ts
 import { processEconomicData } from "@tellimer/econify";
@@ -512,7 +521,8 @@ const result = await processEconomicData(data, {
 // Population (stock): Time normalization skipped ✓
 ```
 
-See a runnable example: [examples/auto_targets_example.ts](./examples/auto_targets_example.ts)
+See a runnable example:
+[examples/auto_targets_example.ts](./examples/auto_targets_example.ts)
 
 #### Batch/Streaming note
 
@@ -1166,8 +1176,9 @@ extractTimeScale("USD/month"); // "month"
 
 ### Using Classification from @tellimer/classify
 
-Econify accepts indicator classification from the [@tellimer/classify](https://jsr.io/@tellimer/classify)
-package to make smart normalization decisions:
+Econify accepts indicator classification from the
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package to make smart
+normalization decisions:
 
 ```ts
 import { processEconomicData } from "jsr:@tellimer/econify";
@@ -1199,9 +1210,10 @@ const result = await processEconomicData(data, {
 // Employed Persons (stock): time normalization skipped (correct!)
 ```
 
-**Note:** For indicator classification, use the [@tellimer/classify](https://jsr.io/@tellimer/classify) package.
-Econify has legacy classification for backward compatibility, but it's recommended to use classify for
-accurate indicator type detection.
+**Note:** For indicator classification, use the
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify has
+legacy classification for backward compatibility, but it's recommended to use
+classify for accurate indicator type detection.
 
 ### Currency Conversion
 

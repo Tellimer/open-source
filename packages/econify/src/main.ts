@@ -54,14 +54,7 @@ export {
   TIME_UNIT_PATTERNS,
 } from "./patterns.ts";
 
-// Re-export classification functions
-export {
-  classifyIndicator,
-  isCurrency,
-  isFlow,
-  isRate,
-  isStock,
-} from "./classification/classification.ts";
+// Classification removed - use @tellimer/classify package instead
 
 // Re-export currency functions
 export { normalizeCurrencyValue } from "./currency/currency.ts";
@@ -245,16 +238,7 @@ export type {
   UnitOverride,
 } from "./workflows/index.ts";
 
-// Re-export count normalization utilities
-export {
-  type CountDataPoint,
-  type CountNormalizationOptions,
-  detectCountData,
-  isCountIndicator,
-  isCountUnit,
-  normalizeCountData,
-  type NormalizedCountData,
-} from "./count/count-normalization.ts";
+// Count normalization removed - use indicator_type from @tellimer/classify instead
 
 // Re-export exemption utilities
 export {

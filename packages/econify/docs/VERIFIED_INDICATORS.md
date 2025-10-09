@@ -3,10 +3,10 @@
 This document lists all economic indicators that have been verified to work
 correctly with econify's smart auto-targeting and normalization system.
 
-**Note:** Indicator classification (stock, flow, ratio, etc.) should come from the
-[@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify accepts
-these classifications via `indicator_type` and `is_currency_denominated` fields
-and uses them to make smart normalization decisions.
+**Note:** Indicator classification (stock, flow, ratio, etc.) should come from
+the [@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify
+accepts these classifications via `indicator_type` and `is_currency_denominated`
+fields and uses them to make smart normalization decisions.
 
 **Last Updated:** 2025-09-30\
 **Econify Version:** 1.2.0+
@@ -278,12 +278,12 @@ When adding new indicators, verify:
 
 ## 📝 Notes
 
-- **Smart Auto-Targeting** (v1.2.0+) uses indicator type (from `indicator_type` field)
-  to skip time dimension for stock/rate indicators
+- **Smart Auto-Targeting** (v1.2.0+) uses indicator type (from `indicator_type`
+  field) to skip time dimension for stock/rate indicators
 - **Per-indicator normalization** allows different indicators to have different
   target dimensions
-- **Classification** should be provided via `indicator_type` field from @tellimer/classify
-  package for best results
+- **Classification** should be provided via `indicator_type` field from
+  @tellimer/classify package for best results
 - **Legacy classification** exists in econify for backward compatibility but is
   deprecated
 
@@ -292,6 +292,7 @@ When adding new indicators, verify:
 ## 🔗 Related Documentation
 
 - [Per-Indicator Normalization Guide](./guides/per-indicator-normalization.md)
-- [@tellimer/classify Package](https://jsr.io/@tellimer/classify) - For indicator classification
+- [@tellimer/classify Package](https://jsr.io/@tellimer/classify) - For
+  indicator classification
 - [Pattern Definitions](../src/patterns.ts)
 - [CHANGELOG](../CHANGELOG.md)

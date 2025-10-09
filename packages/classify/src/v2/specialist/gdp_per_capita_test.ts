@@ -54,7 +54,6 @@ Deno.test("GDP per capita indicators should be classified as 'flow' not 'ratio'"
         walMode: true,
         autoMigrate: true,
       },
-      quiet: false,
     };
 
     const result = await classifyIndicatorsV2(indicators, llmConfig, v2Config);

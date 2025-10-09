@@ -5,11 +5,11 @@ normalization across all items of an indicator. This is critical when processing
 data for multiple countries or regions that should be normalized to consistent
 units.
 
-**Smart Normalization with Classification**: Batch processing works best when you
-provide `indicator_type` and `is_currency_denominated` fields from the
-[@tellimer/classify](https://jsr.io/@tellimer/classify) package. These fields enable
-intelligent decisions like skipping time normalization for stock indicators or
-currency conversion for count indicators.
+**Smart Normalization with Classification**: Batch processing works best when
+you provide `indicator_type` and `is_currency_denominated` fields from the
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package. These fields
+enable intelligent decisions like skipping time normalization for stock
+indicators or currency conversion for count indicators.
 
 ## The Problem
 

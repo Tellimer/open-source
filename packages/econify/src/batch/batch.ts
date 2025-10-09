@@ -5,7 +5,6 @@
 import { normalizeValue } from "../normalization/normalization.ts";
 import { buildExplainMetadata } from "../normalization/explain.ts";
 import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
-import { isCountIndicator, isCountUnit } from "../count/count-normalization.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import { getScale } from "../scale/scale.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
@@ -354,14 +353,13 @@ function processItem<T extends BatchItem>(
     const parsed = parseUnit(item.unit);
 
     // Determine if this is count data (e.g., car registrations) to avoid currency parts in unit
+    // indicator_type must be provided from @tellimer/classify package
     const indicatorName = (item as unknown as { name?: string }).name;
     const indicatorType = (item as unknown as { indicator_type?: string })
       .indicator_type;
 
-    // If indicator_type is provided by classify, use it; otherwise fall back to econify's classification
-    const isCountData = indicatorType
-      ? (indicatorType === "count" || indicatorType === "volume")
-      : (isCountIndicator(indicatorName, item.unit) || isCountUnit(item.unit));
+    // Use indicator_type from classify package to determine count data
+    const isCountData = indicatorType === "count" || indicatorType === "volume";
 
     // Check custom units if standard parsing returns unknown
     const custom = parseWithCustomUnits(item.unit);
@@ -425,6 +423,7 @@ function processItem<T extends BatchItem>(
         explicitScale: effectiveScale,
         explicitTimeScale: effectiveTimeScale,
         indicatorName,
+        indicatorType, // Pass indicator_type from @tellimer/classify
       });
 
       // Enhance with FX source information if available

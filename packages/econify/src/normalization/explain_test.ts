@@ -635,6 +635,7 @@ Deno.test("domain detection - percentage", () => {
 Deno.test("domain detection - count by name and unit", () => {
   const ex = buildExplainMetadata(502, "Units Thousands", 502000, {
     indicatorName: "Car registrations",
+    indicatorType: "count", // From @tellimer/classify
   });
   assertEquals(ex.domain, "count");
 });
@@ -724,6 +725,7 @@ Deno.test("currency stock-like (Money Supply M0) - omit per-time in unit strings
     toMagnitude: "millions",
     toTimeScale: "month",
     indicatorName: "Money Supply M0",
+    indicatorType: "stock", // From @tellimer/classify - money supply is a stock
     fx: { base: "USD", rates: { AED: 3.6733 } },
   });
   if (!ex.units) throw new Error("units missing");
@@ -779,6 +781,7 @@ Deno.test("reportingFrequency is set when unit has no time (fallback to dataset 
     toTimeScale: "month",
     explicitTimeScale: "quarter",
     indicatorName: "Quarterly Sales", // Flow indicator - should use periodicity
+    indicatorType: "flow", // From @tellimer/classify - enables periodicity fallback
   });
   // For flow indicators, periodicity is used as time scale when unit has no time
   assertEquals(ex.reportingFrequency, "quarter");
