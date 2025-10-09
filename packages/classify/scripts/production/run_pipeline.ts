@@ -24,10 +24,10 @@ async function runProductionPipeline() {
   console.log("=".repeat(60));
 
   // Get API key
-  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const openaiKey = Deno.env.get("OPENAI_API_KEY");
 
-  if (!anthropicKey) {
-    console.error("❌ ERROR: ANTHROPIC_API_KEY not set");
+  if (!openaiKey) {
+    console.error("❌ ERROR: OPENAI_API_KEY not set");
     Deno.exit(1);
   }
 
@@ -35,7 +35,7 @@ async function runProductionPipeline() {
   console.log(
     `🗄️  Source: Local data files (data/indicators.ts, data/country_indicators.ts)`,
   );
-  console.log(`🤖 AI Provider: Anthropic (Claude)`);
+  console.log(`🤖 AI Provider: OpenAI (GPT-5)`);
   console.log("");
 
   try {
@@ -99,9 +99,9 @@ async function runProductionPipeline() {
     const result = await classifyIndicatorsV2(
       indicators,
       {
-        provider: "anthropic",
-        model: "claude-sonnet-4-5-20250929",
-        apiKey: anthropicKey,
+        provider: "openai",
+        model: "gpt-5",
+        apiKey: Deno.env.get("OPENAI_API_KEY")!,
         temperature: 0.3,
         // Enable full logging for production runs
         quiet: false,
