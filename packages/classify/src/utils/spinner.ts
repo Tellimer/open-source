@@ -22,6 +22,14 @@ export class Spinner {
     this.isRunning = false;
   }
 
+  succeed(): void {
+    this.isRunning = false;
+  }
+
+  fail(): void {
+    this.isRunning = false;
+  }
+
   set text(value: string) {
     this._text = value;
     if (this.isRunning && value) {
