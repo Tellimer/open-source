@@ -64,6 +64,18 @@ CREATE TABLE IF NOT EXISTS classifications (
   units TEXT,
   description TEXT,
 
+  -- Source metadata (from original indicator data)
+  source_name TEXT,
+  long_name TEXT,
+  category_group TEXT,
+  dataset TEXT,
+  topic TEXT,
+  scale TEXT,
+  periodicity TEXT,
+  aggregation_method TEXT,
+  currency_code TEXT,
+  sample_values TEXT, -- JSON array
+
   -- Stage 1: Router
   family TEXT,
   confidence_family REAL,

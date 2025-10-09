@@ -303,6 +303,19 @@ export async function classifyIndicatorsV2(
           name: ind.name,
           units: ind.units,
           description: ind.description,
+
+          // Source metadata
+          source_name: (ind as any).source_name,
+          long_name: (ind as any).long_name,
+          category_group: ind.category_group,
+          dataset: (ind as any).dataset,
+          topic: ind.topic,
+          scale: (ind as any).scale,
+          periodicity: ind.periodicity,
+          aggregation_method: ind.aggregation_method,
+          currency_code: (ind as any).currency_code,
+          sample_values: ind.sample_values,
+
           family: router?.family || "qualitative",
           confidence_family: router?.confidence_family || 0,
           indicator_type: specialist?.indicator_type || "other",

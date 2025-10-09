@@ -30,7 +30,10 @@ export function readSuggestedFixes(
       c.is_currency_denominated,
       c.heat_map_orientation,
       c.units,
-      c.description
+      c.description,
+      c.source_name,
+      c.long_name,
+      c.sample_values
     FROM review_decisions r
     JOIN classifications c ON r.indicator_id = c.indicator_id
     LEFT JOIN deep_review_decisions d ON r.indicator_id = d.indicator_id
@@ -54,15 +57,8 @@ export function readSuggestedFixes(
       ? JSON.parse(row.suggested_diff_json)
       : {};
 
-    // Fetch sample values for this indicator
-    const sampleQuery = `
-      SELECT sample_values
-      FROM classifications
-      WHERE indicator_id = ?
-    `;
-    const sampleRow: any = db.prepare(sampleQuery).get(row.indicator_id);
-    const sample_values = sampleRow?.sample_values
-      ? JSON.parse(sampleRow.sample_values)
+    const sample_values = row.sample_values
+      ? JSON.parse(row.sample_values)
       : undefined;
 
     return {
@@ -75,6 +71,8 @@ export function readSuggestedFixes(
       indicator_context: {
         units: row.units,
         description: row.description,
+        source_name: row.source_name,
+        long_name: row.long_name,
         sample_values,
       },
     };

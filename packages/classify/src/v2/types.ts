@@ -345,6 +345,19 @@ export interface ClassificationData {
   name: string;
   units?: string;
   description?: string;
+
+  // Source metadata
+  source_name?: string;
+  long_name?: string;
+  category_group?: string;
+  dataset?: string;
+  topic?: string;
+  scale?: string;
+  periodicity?: string;
+  aggregation_method?: string;
+  currency_code?: string;
+  sample_values?: unknown[];
+
   family: IndicatorFamily;
   confidence_family: number;
   indicator_type: IndicatorType;
