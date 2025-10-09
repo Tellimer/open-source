@@ -55,7 +55,25 @@ async function runProductionPipeline() {
       description: row.definition || undefined,
     }));
 
-    console.log(`✅ Loaded ${indicators.length} indicators\n`);
+    // Check for sample size argument (e.g., deno task prod:run --20)
+    const sampleSizeArg = Deno.args.find((arg) => arg.startsWith("--"));
+    let sampledIndicators = indicators;
+
+    if (sampleSizeArg) {
+      const sampleSize = parseInt(sampleSizeArg.replace("--", ""));
+      if (!isNaN(sampleSize) && sampleSize > 0) {
+        // Shuffle indicators for random sampling
+        const shuffled = [...indicators].sort(() => Math.random() - 0.5);
+        sampledIndicators = shuffled.slice(0, sampleSize);
+        console.log(
+          `🎲 Randomly sampled ${sampledIndicators.length} of ${indicators.length} indicators\n`,
+        );
+      } else {
+        console.log(`✅ Loaded ${indicators.length} indicators\n`);
+      }
+    } else {
+      console.log(`✅ Loaded ${indicators.length} indicators\n`);
+    }
 
     // Load time series data from local file
     console.log("📥 Loading time series data...");
@@ -81,8 +99,8 @@ async function runProductionPipeline() {
       `✅ Loaded time series for ${timeSeriesByIndicator.size} indicators\n`,
     );
 
-    // Add sample_values to indicators
-    for (const indicator of indicators) {
+    // Add sample_values to sampled indicators
+    for (const indicator of sampledIndicators) {
       if (!indicator.id) continue;
       const timeSeries = timeSeriesByIndicator.get(indicator.id);
       if (timeSeries && timeSeries.length > 0) {
@@ -97,7 +115,7 @@ async function runProductionPipeline() {
     const localDbPath = "./data/classify_production_v2.db";
 
     const result = await classifyIndicatorsV2(
-      indicators,
+      sampledIndicators,
       {
         provider: "openai",
         model: "gpt-5",
