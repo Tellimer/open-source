@@ -228,10 +228,17 @@ export function generateRouterUserPrompt(indicators: Indicator[]): string {
         `- Name: ${ind.name}`,
       ];
 
+      if (ind.long_name) parts.push(`- Long Name: ${ind.long_name}`);
       if (ind.units) parts.push(`- Units: ${ind.units}`);
+      if (ind.scale) parts.push(`- Scale: ${ind.scale}`);
       if (ind.currency_code) parts.push(`- Currency: ${ind.currency_code}`);
       if (ind.periodicity) parts.push(`- Periodicity: ${ind.periodicity}`);
-      if (ind.source) parts.push(`- Source: ${ind.source}`);
+      if (ind.source_name) parts.push(`- Source: ${ind.source_name}`);
+      if (ind.dataset) parts.push(`- Dataset: ${ind.dataset}`);
+      if (ind.category_group) {
+        parts.push(`- Category Group: ${ind.category_group}`);
+      }
+      if (ind.topic) parts.push(`- Topic: ${ind.topic}`);
       if (ind.description) parts.push(`- Description: ${ind.description}`);
 
       // Include time series data if available

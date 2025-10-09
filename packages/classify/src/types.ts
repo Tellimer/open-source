@@ -274,6 +274,20 @@ export interface Indicator {
    * - Growth trends
    */
   sample_values?: number[] | TemporalDataPoint[];
+  /** Source name (e.g., World Bank, IMF, OECD) */
+  source_name?: string;
+  /** Full descriptive long name */
+  long_name?: string;
+  /** Pre-existing category grouping */
+  category_group?: string;
+  /** Dataset the indicator belongs to */
+  dataset?: string;
+  /** Aggregation method (Sum, Average, End of Period, etc.) */
+  aggregation_method?: string;
+  /** Magnitude scale (thousands, millions, billions, etc.) */
+  scale?: string;
+  /** Thematic topic classification */
+  topic?: string;
   /** Any additional metadata fields */
   [key: string]: unknown;
 }
