@@ -31,9 +31,9 @@ export interface FlaggingThresholds {
  * Default thresholds
  */
 export const DEFAULT_THRESHOLDS: FlaggingThresholds = {
-  confidenceFamilyMin: 0.90,
-  confidenceClsMin: 0.90,
-  confidenceOrientMin: 0.90,
+  confidenceFamilyMin: 1.0,
+  confidenceClsMin: 1.0,
+  confidenceOrientMin: 1.0,
 };
 
 /**
