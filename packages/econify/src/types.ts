@@ -58,12 +58,7 @@ export type IndicatorInput =
   | string
   | { name?: string; description?: string; unit?: string; notes?: string };
 
-export interface Classification {
-  type: IndicatorType;
-  confidence: number;
-  signals: string[];
-  detectedCurrency?: string | null;
-}
+// Classification interface removed - use @tellimer/classify package instead
 
 export interface FXTable {
   base: string;

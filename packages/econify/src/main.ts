@@ -28,7 +28,6 @@
 
 // Re-export all types
 export type {
-  Classification,
   Explain,
   FXTable,
   IndicatorInput,
@@ -42,14 +41,10 @@ export type {
 export {
   CURRENCY_SYMBOLS,
   CURRENCY_WORDS,
-  FLOW_PATTERNS,
   ISO_CODES,
   PER_YEAR,
-  RATE_PATTERNS,
-  RATE_UNIT_PATTERNS,
   SCALE_MAP,
   SCALE_TOKENS,
-  STOCK_PATTERNS,
   TIME_TOKENS,
   TIME_UNIT_PATTERNS,
 } from "./patterns.ts";

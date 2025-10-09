@@ -57,13 +57,14 @@ issues** affecting non-IMF indicators.
 
 - `result.data` is EMPTY (`[]`)
 - All population records are dropped during processing
-- Console shows:
-  `DEBUG classified as counts: SP.POP.TOTLCHN2023 Population, total Number`
 
 **Root Cause:**
 
-- Count indicators are being classified correctly
-- But somewhere in the pipeline they're being filtered out or not returned
+> **NOTE**: This issue references legacy classification system. Econify now uses
+> `indicator_type` from @tellimer/classify package.
+
+- Population should have `indicator_type: "stock"` from classify package
+- Stock indicators should skip time normalization but remain in pipeline
 
 **Impact:** CRITICAL
 
@@ -88,25 +89,28 @@ issues** affecting non-IMF indicators.
 
 **Actual Behavior:**
 
-- Classified as counts: `DEBUG classified as non-monetary -> counts`
 - Normalized unit does NOT contain "index"
 - Test assertion fails: `unitLower.includes("index")` returns `false`
 
 **Root Cause:**
 
-- Unit "Index, 2010=100" is being parsed but "index" classification is lost
-- Routed to counts bucket instead of a dedicated index bucket
+> **NOTE**: This issue references legacy classification system. Econify now uses
+> `indicator_type` from @tellimer/classify package.
+
+- Unit "Index, 2010=100" should have `indicator_type: "index"` from classify
+- Index indicators should be exempt from normalization or handled specially
 
 **Impact:** MEDIUM
 
 - Index indicators lose their semantic meaning
-- Makes it unclear that values are index points vs counts
+- Makes it unclear that values are index points vs other dimensionless values
 
 **Recommendation:**
 
-- Add dedicated index classification and routing
+- Use @tellimer/classify to identify index indicators
 - Preserve "index" in normalized unit string
 - Consider adding base year to metadata (e.g., "2010=100")
+- Use exemptions to skip normalization for index indicators
 
 ---
 

@@ -1,42 +1,23 @@
 /**
  * Tests for pattern definitions and constants
+ *
+ * Note: Classification pattern tests removed - use @tellimer/classify package instead.
+ * These tests focus on normalization patterns (currency, magnitude, time).
  */
 
 import { assertEquals, assertExists } from "@std/assert";
 import {
   CURRENCY_SYMBOLS,
   CURRENCY_WORDS,
-  FLOW_PATTERNS,
   ISO_CODES,
-  RATE_PATTERNS,
-  RATE_UNIT_PATTERNS,
   SCALE_MAP,
   SCALE_TOKENS,
-  STOCK_PATTERNS,
   TIME_TOKENS,
   TIME_UNIT_PATTERNS,
 } from "./patterns.ts";
 
-Deno.test("STOCK_PATTERNS - contains expected patterns", () => {
-  assertEquals(STOCK_PATTERNS.includes("debt"), true);
-  assertEquals(STOCK_PATTERNS.includes("reserves"), true);
-  assertEquals(STOCK_PATTERNS.includes("outstanding"), true);
-  assertEquals(STOCK_PATTERNS.includes("population"), true);
-});
-
-Deno.test("FLOW_PATTERNS - contains expected patterns", () => {
-  assertEquals(FLOW_PATTERNS.includes("exports"), true);
-  assertEquals(FLOW_PATTERNS.includes("imports"), true);
-  assertEquals(FLOW_PATTERNS.includes("revenue"), true);
-  assertEquals(FLOW_PATTERNS.includes("registrations"), true); // Added for car registrations
-});
-
-Deno.test("RATE_PATTERNS - contains expected patterns", () => {
-  assertEquals(RATE_PATTERNS.includes("rate"), true);
-  assertEquals(RATE_PATTERNS.includes("ratio"), true);
-  assertEquals(RATE_PATTERNS.includes("percent"), true);
-  assertEquals(RATE_PATTERNS.includes("inflation"), true);
-});
+// Classification pattern tests removed - STOCK_PATTERNS, FLOW_PATTERNS, RATE_PATTERNS
+// Use @tellimer/classify package for indicator type classification
 
 Deno.test("CURRENCY_SYMBOLS - contains major currency symbols", () => {
   const allSymbols = Object.values(CURRENCY_SYMBOLS).flat();
@@ -101,13 +82,7 @@ Deno.test("TIME_UNIT_PATTERNS - contains time unit patterns", () => {
   assertEquals(TIME_UNIT_PATTERNS.includes("/month"), true);
 });
 
-Deno.test("RATE_UNIT_PATTERNS - contains rate unit patterns", () => {
-  assertEquals(RATE_UNIT_PATTERNS.length > 0, true);
-  assertEquals(RATE_UNIT_PATTERNS.includes("%"), true);
-  assertEquals(RATE_UNIT_PATTERNS.includes("percent"), true);
-  assertEquals(RATE_UNIT_PATTERNS.includes("percentage"), true);
-  assertEquals(RATE_UNIT_PATTERNS.includes("bps"), true);
-});
+// RATE_UNIT_PATTERNS tests removed - use units/units.ts for percentage detection
 
 Deno.test("Pattern consistency - no duplicates in arrays", () => {
   // Check for duplicates in pattern arrays (arrays only)
@@ -120,17 +95,8 @@ Deno.test("Pattern consistency - no duplicates in arrays", () => {
     );
   };
 
-  checkNoDuplicates(STOCK_PATTERNS, "STOCK_PATTERNS");
-  checkNoDuplicates(FLOW_PATTERNS, "FLOW_PATTERNS");
-  checkNoDuplicates(RATE_PATTERNS, "RATE_PATTERNS");
-  checkNoDuplicates(RATE_UNIT_PATTERNS, "RATE_UNIT_PATTERNS");
   checkNoDuplicates(TIME_UNIT_PATTERNS, "TIME_UNIT_PATTERNS");
   checkNoDuplicates(CURRENCY_WORDS, "CURRENCY_WORDS");
-});
-
-Deno.test("Car registration patterns - registrations in FLOW_PATTERNS", () => {
-  // Verify that "registrations" was added to FLOW_PATTERNS for car registration fix
-  assertEquals(FLOW_PATTERNS.includes("registrations"), true);
 });
 
 Deno.test("Hundreds scale support - in SCALE_MAP and SCALE_TOKENS", () => {

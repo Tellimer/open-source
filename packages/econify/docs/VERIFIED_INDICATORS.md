@@ -213,29 +213,36 @@ them as flow, but since 100% of data is annual, no conversion occurs.
 
 ---
 
-## 🔧 Recent Fixes
+## 🔧 Historical Fixes (Legacy Classification System)
+
+> **DEPRECATED:** The fixes below reference econify's legacy classification
+> system which has been removed. All indicator classification is now handled by
+> the [@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify
+> receives `indicator_type` from classify and uses it for normalization
+> decisions.
 
 ### 1. GDP Deflator Misclassification (Fixed: 2025-09-30)
 
 **Issue:** GDP Deflator was classified as FLOW (80%) because it contains "GDP"\
-**Fix:** Added "deflator" and "gdp deflator" to RATE_PATTERNS with priority
-detection\
-**Result:** GDP Deflator now correctly classified as RATE (90%)
+**Fix:** ~~Added "deflator" and "gdp deflator" to RATE_PATTERNS~~ Now handled by
+@tellimer/classify\
+**Result:** GDP Deflator correctly classified as "rate" type
 
 ### 2. Stock/Rate Indicator Unit Labeling (Fixed: 2025-09-30)
 
 **Issue:** Stock indicators showing "USD millions per quarter" instead of "USD
 millions"\
-**Fix:** Use classification system to detect stock/rate indicators and omit time
-dimension from units\
-**Result:** Stock/rate indicators now show clean units without time dimension
+**Fix:** ~~Use classification system~~ Now uses `indicator_type` from
+@tellimer/classify to detect stock/rate indicators and omit time dimension from
+units\
+**Result:** Stock/rate indicators show clean units without time dimension
 
 ### 3. Government Revenues Misclassification (Fixed: 2025-09-30)
 
 **Issue:** "Government Revenues" (plural) classified as STOCK instead of FLOW\
-**Fix:** Added plural forms ("government revenues", "tax revenues") to
-FLOW_PATTERNS\
-**Result:** Government Revenues now correctly classified as FLOW (80%)
+**Fix:** ~~Added plural forms to FLOW_PATTERNS~~ Now handled by
+@tellimer/classify\
+**Result:** Government Revenues correctly classified as "flow" type
 
 ---
 

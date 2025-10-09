@@ -49,7 +49,10 @@ export interface IndicatorTypeNormalizationRules {
 /**
  * Comprehensive normalization rules for all 25 indicator types
  */
-export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRules> = {
+export const INDICATOR_TYPE_RULES: Record<
+  string,
+  IndicatorTypeNormalizationRules
+> = {
   // ============================================================================
   // Physical/Fundamental: Real-world quantities and their dynamics
   // ============================================================================
@@ -59,7 +62,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: true,
-    description: "Absolute levels at a point in time (debt, reserves, wealth, population)",
+    description:
+      "Absolute levels at a point in time (debt, reserves, wealth, population)",
   },
 
   "flow": {
@@ -67,7 +71,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: false,
-    description: "Throughput over time period (GDP, income, spending, production)",
+    description:
+      "Throughput over time period (GDP, income, spending, production)",
   },
 
   "balance": {
@@ -75,7 +80,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: true,
-    description: "Net positions that can be negative (trade balance, budget deficit)",
+    description:
+      "Net positions that can be negative (trade balance, budget deficit)",
   },
 
   "capacity": {
@@ -83,7 +89,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: true,
-    description: "Maximum potential levels (potential GDP, production capacity)",
+    description:
+      "Maximum potential levels (potential GDP, production capacity)",
   },
 
   "volume": {
@@ -91,7 +98,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: false,
-    description: "Transaction quantities over time (contract volumes, trade volumes)",
+    description:
+      "Transaction quantities over time (contract volumes, trade volumes)",
   },
 
   // ============================================================================
@@ -103,7 +111,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: false,
     skipTimeInUnit: false,
-    description: "Discrete units per period (jobs, housing starts, claims, registrations)",
+    description:
+      "Discrete units per period (jobs, housing starts, claims, registrations)",
   },
 
   "percentage": {
@@ -111,7 +120,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "0-100% bounded values (unemployment rate, capacity utilization)",
+    description:
+      "0-100% bounded values (unemployment rate, capacity utilization)",
   },
 
   "ratio": {
@@ -147,7 +157,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: true,
-    description: "Market-clearing levels (interest rates, FX rates, commodity prices)",
+    description:
+      "Market-clearing levels (interest rates, FX rates, commodity prices)",
   },
 
   "yield": {
@@ -175,7 +186,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "Statistical dispersion (VIX, price volatility, standard deviation)",
+    description:
+      "Statistical dispersion (VIX, price volatility, standard deviation)",
   },
 
   "gap": {
@@ -183,7 +195,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: true,
     allowCurrency: true,
     skipTimeInUnit: true,
-    description: "Deviation from potential/trend (output gap, unemployment gap)",
+    description:
+      "Deviation from potential/trend (output gap, unemployment gap)",
   },
 
   // ============================================================================
@@ -195,7 +208,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "Composite indicators with base period (CPI, PMI, confidence indices)",
+    description:
+      "Composite indicators with base period (CPI, PMI, confidence indices)",
   },
 
   "correlation": {
@@ -219,7 +233,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "Causal transmission coefficients (fiscal multiplier, money multiplier)",
+    description:
+      "Causal transmission coefficients (fiscal multiplier, money multiplier)",
   },
 
   // ============================================================================
@@ -239,7 +254,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "Statistical likelihood 0-1 (recession probability, default probability)",
+    description:
+      "Statistical likelihood 0-1 (recession probability, default probability)",
   },
 
   "threshold": {
@@ -259,7 +275,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "Categorical/ordinal measures (consumer confidence, business sentiment)",
+    description:
+      "Categorical/ordinal measures (consumer confidence, business sentiment)",
   },
 
   "allocation": {
@@ -267,7 +284,8 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
     allowMagnitude: false,
     allowCurrency: false,
     skipTimeInUnit: true,
-    description: "Portfolio/resource composition (asset allocation, budget allocation)",
+    description:
+      "Portfolio/resource composition (asset allocation, budget allocation)",
   },
 
   // ============================================================================
@@ -288,7 +306,7 @@ export const INDICATOR_TYPE_RULES: Record<string, IndicatorTypeNormalizationRule
  * Falls back to "other" if type is unknown, undefined, or null
  */
 export function getNormalizationRules(
-  indicatorType: string | null | undefined
+  indicatorType: string | null | undefined,
 ): IndicatorTypeNormalizationRules {
   if (!indicatorType) {
     return INDICATOR_TYPE_RULES["other"];
@@ -300,27 +318,35 @@ export function getNormalizationRules(
 /**
  * Check if indicator type allows time dimension conversion/targeting
  */
-export function allowsTimeDimension(indicatorType: string | null | undefined): boolean {
+export function allowsTimeDimension(
+  indicatorType: string | null | undefined,
+): boolean {
   return getNormalizationRules(indicatorType).allowTimeDimension;
 }
 
 /**
  * Check if indicator type should skip time in unit strings
  */
-export function shouldSkipTimeInUnit(indicatorType: string | null | undefined): boolean {
+export function shouldSkipTimeInUnit(
+  indicatorType: string | null | undefined,
+): boolean {
   return getNormalizationRules(indicatorType).skipTimeInUnit;
 }
 
 /**
  * Check if indicator type allows magnitude scaling
  */
-export function allowsMagnitude(indicatorType: string | null | undefined): boolean {
+export function allowsMagnitude(
+  indicatorType: string | null | undefined,
+): boolean {
   return getNormalizationRules(indicatorType).allowMagnitude;
 }
 
 /**
  * Check if indicator type allows currency conversion
  */
-export function allowsCurrency(indicatorType: string | null | undefined): boolean {
+export function allowsCurrency(
+  indicatorType: string | null | undefined,
+): boolean {
   return getNormalizationRules(indicatorType).allowCurrency;
 }

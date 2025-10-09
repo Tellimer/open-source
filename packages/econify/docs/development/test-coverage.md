@@ -2,9 +2,10 @@
 
 ## Overview
 
-This document outlines the comprehensive test coverage for the econify package,
-with special focus on the recent fixes for car registration normalization and
-wages explain metadata.
+This document outlines the comprehensive test coverage for the econify package.
+Econify focuses on normalization and conversion of economic data, using
+`indicator_type` from @tellimer/classify to make smart decisions about currency,
+magnitude, and time normalization.
 
 ## Test Structure
 
@@ -27,10 +28,6 @@ src/
 │   └── batch_test.ts
 ├── cache/
 │   └── cache_test.ts
-├── classification/
-│   └── classification_test.ts
-├── count/
-│   └── count-normalization_test.ts  # NEW: Count data tests
 ├── currency/
 │   └── currency_test.ts
 ├── custom/
@@ -116,21 +113,21 @@ deno coverage coverage --lcov --exclude="src/io/|src/historical/|src/fx/live_fx.
 deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
 ```
 
-### 1. Car Registration Normalization (Fixed in v0.2.8)
+### 1. Indicator Type Integration
 
 **Test Files:**
 
-- `src/count/count-normalization_test.ts`
+- `src/normalization/normalization_test.ts`
+- `src/normalization/auto_targets_test.ts`
 - `src/user_scenarios_test.ts`
-- `src/patterns_test.ts`
 
 **Coverage:**
 
-- ✅ Scale detection for "hundreds"
-- ✅ Count indicator classification as "flow"
-- ✅ No currency conversion for count data
-- ✅ Proper scale normalization (Thousands → 50,186,000 ones)
-- ✅ Context-aware unit handling ("Units" vs currency units)
+- ✅ Stock indicators skip time normalization (Population, Debt)
+- ✅ Flow indicators apply time normalization (GDP, Exports)
+- ✅ Indicator type rules for all 25 types from @tellimer/classify
+- ✅ Physical units protected from magnitude scaling (Tonnes, Barrels)
+- ✅ Smart auto-targeting with indicator type awareness
 
 ### 2. Wages Explain Metadata (Fixed in v0.2.8)
 
@@ -167,15 +164,16 @@ deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
 
 **Test Files:**
 
-- `src/patterns_test.ts` (new)
+- `src/patterns_test.ts`
 
 **Coverage:**
 
-- ✅ FLOW_PATTERNS includes "registrations"
+- ✅ ~~FLOW_PATTERNS includes "registrations"~~ (DEPRECATED - use
+  @tellimer/classify)
 - ✅ SCALE_MAP completeness
 - ✅ Currency symbols and ISO codes
-- ✅ Time and rate patterns
-- ✅ No duplicate entries
+- ✅ Time unit patterns
+- ✅ No duplicate entries in normalization patterns
 
 ### 5. Integration Tests
 
@@ -188,7 +186,7 @@ deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
 **Coverage:**
 
 - ✅ End-to-end processing pipeline
-- ✅ Mixed data types (count + currency)
+- ✅ Mixed data types with different indicator types
 - ✅ Backwards compatibility
 - ✅ Real-world data scenarios
 
@@ -203,12 +201,13 @@ deno run --allow-read scripts/check_coverage.ts coverage/lcov.info 80
 
 ### Critical Paths Tested
 
-1. ✅ Car registration data processing
+1. ✅ Indicator type-based normalization (stock/flow/rate)
 2. ✅ Minimum wages normalization with explain metadata
 3. ✅ Scale detection and conversion
-4. ✅ Currency vs count data classification
+4. ✅ Auto-targeting with indicator type rules
 5. ✅ FX rate application and metadata generation
 6. ✅ Pipeline integration and error handling
+7. ✅ Physical unit protection from magnitude scaling
 
 ## Verification Commands
 

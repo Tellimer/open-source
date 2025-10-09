@@ -9,7 +9,7 @@
 [![JSR](https://img.shields.io/jsr/v/%40tellimer/econify?label=JSR&logo=deno&style=flat)](https://jsr.io/@tellimer/econify)
 [![codecov](https://codecov.io/github/Tellimer/open-source/graph/badge.svg?token=FFHUVGQA4T&flag=econify)](https://codecov.io/github/Tellimer/open-source)
 
-[![Test Coverage](https://img.shields.io/badge/tests-237%20passing-brightgreen)](https://github.com/Tellimer/open-source)
+[![Test Coverage](https://img.shields.io/badge/tests-428%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 [![Deno](https://img.shields.io/badge/deno-2.0+-green)](https://deno.land)
 
@@ -20,11 +20,12 @@ for financial institutions, economic research, data pipelines, and quantitative
 analysis.
 
 **Note:** For indicator classification (determining if an indicator is a stock,
-flow, ratio, etc.), see the separate
+flow, ratio, etc.), use the separate
 [@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify focuses
-solely on normalization and conversion once you know the indicator type.
+solely on normalization and conversion, using the `indicator_type` field from
+classify to make smart normalization decisions.
 
-**✅ Production Ready** • **239 Tests Passing** • **100% Reliability** • **Zero
+**✅ Production Ready** • **428 Tests Passing** • **100% Reliability** • **Zero
 Linting Issues** • **Enhanced Explain Metadata** • **Type Safe**
 
 ## 🌊 XState Pipeline Architecture
@@ -65,9 +66,6 @@ assessment, error handling, and interactive control flow._
   for external consumers
 - 💼 **Wages Data Normalization** — Specialized handling for mixed wage/salary
   data with different currencies and time periods
-- 🚗 **Count Data Normalization** — Specialized handling for count-based
-  indicators like car registrations, births, licenses (scale-only, no currency
-  conversion)
 - 🚫 **Normalization Exemptions** — Skip normalization for specific indicators,
   categories, or name patterns (e.g., IMF WEO, credit ratings, custom indices)
 - ⏰ **Advanced Time Sampling** — Comprehensive upsampling and downsampling for
@@ -115,12 +113,6 @@ import {
 
 // Wages processing (automatic detection in main API)
 import { normalizeWagesData } from "jsr:@tellimer/econify/wages";
-
-// Count data processing
-import {
-  isCountIndicator,
-  normalizeCountData,
-} from "jsr:@tellimer/econify/count";
 
 // Time sampling
 import {
@@ -1211,9 +1203,8 @@ const result = await processEconomicData(data, {
 ```
 
 **Note:** For indicator classification, use the
-[@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify has
-legacy classification for backward compatibility, but it's recommended to use
-classify for accurate indicator type detection.
+[@tellimer/classify](https://jsr.io/@tellimer/classify) package. Econify uses
+the `indicator_type` field from classify to make normalization decisions.
 
 ### Currency Conversion
 
@@ -1452,70 +1443,6 @@ Value range: $1,427 - $15,931 USD/month (comparable!)
 | `step`          | Fixed wage periods       | Quarterly bonus → monthly allocation |
 | `end_of_period` | Latest wage rate         | Use most recent wage data            |
 
-## 🚗 Count Data Normalization
-
-### Problem Solved
-
-Count-based indicators like car registrations, births, licenses, and permits
-should be normalized by scale only, without currency conversion. Previously,
-these were incorrectly treated as rate indicators with inappropriate FX
-conversion.
-
-```ts
-// Before: Incorrect currency conversion applied
-// Car registrations: 16,245 Units → 25,462.38 USD (wrong!)
-
-// After: Proper count normalization
-// Car registrations: 16,245 Units → 16,245 ones (correct!)
-```
-
-### Key Features
-
-- **Automatic Detection**: Recognizes car registrations, vehicle licenses,
-  births, etc.
-- **Scale-Only Normalization**: Converts between thousands, hundreds, units
-  without currency
-- **Context-Aware Units**: "Units" in count context ≠ "Units" in index context
-- **Flow Classification**: Count indicators properly classified as flow, not
-  rate
-
-### Usage
-
-```ts
-import {
-  isCountIndicator,
-  normalizeCountData,
-} from "jsr:@tellimer/econify/count";
-
-// Car registration data (real-world example)
-const carData = [
-  { country: "ARG", value: 50186, unit: "Thousand" },
-  { country: "AUS", value: 16245, unit: "Units" },
-  { country: "BHR", value: 338.02, unit: "Hundreds" },
-];
-
-// Normalize to common scale
-const normalized = normalizeCountData(carData, { targetScale: "ones" });
-
-console.log(normalized);
-// [
-//   { country: "ARG", normalizedValue: 50186000, normalizedUnit: "ones" },
-//   { country: "AUS", normalizedValue: 16245, normalizedUnit: "ones" },
-//   { country: "BHR", normalizedValue: 33802, normalizedUnit: "ones" }
-// ]
-
-// Detection
-isCountIndicator("Car Registrations", "Units"); // true
-isCountIndicator("GDP", "USD Millions"); // false
-```
-
-### Supported Count Indicators
-
-- **Vehicle Data**: Car registrations, vehicle licenses, permits
-- **Demographics**: Births, deaths, arrivals, departures
-- **Administrative**: Licenses, permits, applications
-- **Any indicator with count-like units**: Units, Thousands, Hundreds, Millions
-
 ## 💰 Wages Normalization with Explain Metadata
 
 ### Problem Solved
@@ -1611,12 +1538,12 @@ deno test --coverage=coverage
 
 ### Production Metrics
 
-- **Test Coverage**: 199 comprehensive tests with 100% pass rate
-- **Execution Speed**: Complete test suite runs in ~4 seconds
+- **Test Coverage**: 428 comprehensive tests with 100% pass rate
+- **Execution Speed**: Complete test suite runs in ~7 seconds
 - **Memory Safety**: Zero memory leaks, proper async cleanup
 - **Error Handling**: Robust error recovery with graceful degradation
 - **Type Safety**: Full TypeScript coverage with strict mode
-- **Code Quality**: Zero linting issues across 68 files with strict standards
+- **Code Quality**: Zero linting issues across 98 files with strict standards
 
 ### Performance Optimizations
 
@@ -1632,9 +1559,9 @@ deno test --coverage=coverage
 
 ### Comprehensive Test Suite
 
-- **199 Tests**: Complete coverage across all modules and edge cases
+- **428 Tests**: Complete coverage across all modules and edge cases
 - **100% Pass Rate**: All tests passing with zero failures
-- **Fast Execution**: Full suite completes in ~4 seconds
+- **Fast Execution**: Full suite completes in ~7 seconds
 - **Reliable**: No flaky tests, proper async handling
 
 ### Test Categories
@@ -1644,20 +1571,23 @@ deno test --coverage=coverage
 - **Edge Case Tests**: Boundary conditions and error scenarios
 - **Performance Tests**: Caching, memory usage, and speed validation
 - **Quality Tests**: Data quality assessment validation
+- **Indicator Type Tests**: Integration with @tellimer/classify indicator types
 
 ### Module Coverage
 
-- ✅ **Aggregations**: 12/12 tests (statistical operations)
-- ✅ **Algebra**: 17/17 tests (unit mathematics)
-- ✅ **Cache**: 8/8 tests (smart caching system)
-- ✅ **Classification**: 6/6 tests (indicator classification)
-- ✅ **Currency**: 6/6 tests (FX operations)
-- ✅ **Custom Units**: 13/13 tests (domain-specific units)
-- ✅ **FX**: 6/6 tests (live exchange rates)
-- ✅ **Inference**: 10/10 tests (unit inference)
-- ✅ **Quality**: 14/14 tests (data quality assessment)
-- ✅ **Wages**: 15/15 tests (wages processing)
-- ✅ **Workflows**: 26/26 tests (pipeline operations)
+- ✅ **Normalization**: Unit value normalization with indicator type rules
+- ✅ **Auto-Targeting**: Smart auto-targeting with indicator type awareness
+- ✅ **Batch Processing**: Consistent multi-country normalization
+- ✅ **Aggregations**: Statistical operations
+- ✅ **Algebra**: Unit mathematics
+- ✅ **Cache**: Smart caching system
+- ✅ **Currency**: FX operations
+- ✅ **Custom Units**: Domain-specific units
+- ✅ **FX**: Live exchange rates
+- ✅ **Inference**: Unit inference
+- ✅ **Quality**: Data quality assessment
+- ✅ **Wages**: Wages processing
+- ✅ **Workflows**: Pipeline operations
 - ✅ **All Other Modules**: 100% coverage
 
 ## 📚 Documentation
@@ -1736,7 +1666,7 @@ MIT © 2025
 ## 🙏 Acknowledgments
 
 Built with ❤️ for economists, data analysts, financial engineers, and anyone
-working with economic data. **Production-ready with 199 comprehensive tests**
+working with economic data. **Production-ready with 428 comprehensive tests**
 ensuring reliability and quality for mission-critical applications.
 
 Special thanks to:

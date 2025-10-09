@@ -27,9 +27,10 @@ base (e.g., 2010=100).
 
 ### Current Behavior
 
-- Index/points values are classified as "counts" (non-monetary)
+- Index/points values can be identified using `indicator_type` from
+  @tellimer/classify
 - Values are processed without normalization
-- No automatic exclusion of index values in general pipeline
+- Exemptions can be used to exclude specific index indicators
 
 ### Recommended Fixes
 

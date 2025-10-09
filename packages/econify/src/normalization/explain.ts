@@ -361,7 +361,9 @@ export function buildExplainMetadata(
 
   // 4b) Monetary aggregates (money supply, M0/M1/M2, monetary base)
   // Apply only for currency-based indicators; non-currency stock-like (e.g., Gold Reserves) should remain metals/commodity
-  if (!detectedDomain && skipTimeInUnitString && parsed.category === "currency") {
+  if (
+    !detectedDomain && skipTimeInUnitString && parsed.category === "currency"
+  ) {
     detectedDomain = "monetary_aggregate";
   }
 
