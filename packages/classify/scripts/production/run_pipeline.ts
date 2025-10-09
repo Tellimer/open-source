@@ -115,10 +115,10 @@ async function runProductionPipeline() {
           walMode: true,
         },
         batch: {
-          routerBatchSize: 20,
-          specialistBatchSize: 20,
-          orientationBatchSize: 20,
-          reviewBatchSize: 20,
+          routerBatchSize: 5,
+          specialistBatchSize: 5,
+          orientationBatchSize: 5,
+          reviewBatchSize: 5,
         },
         concurrency: {
           router: 1,
