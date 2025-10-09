@@ -213,9 +213,14 @@ export interface FlaggedIndicator {
 }
 
 /**
- * Review Action
+ * Review Action (first-pass triage)
  */
-export type ReviewAction = "confirm" | "fix" | "escalate";
+export type ReviewAction = "confirm" | "suggest-fix" | "escalate";
+
+/**
+ * Deep Review Action (second-pass on suggested fixes)
+ */
+export type DeepReviewAction = "accept-fix" | "reject-fix" | "escalate";
 
 /**
  * Review Decision
@@ -244,9 +249,67 @@ export interface ReviewConfig {
 export interface ReviewBatchResult {
   reviewed: number;
   confirmed: number;
-  fixed: number;
+  suggestedFixes: number;
   escalated: number;
   decisions: ReviewDecision[];
+  processingTime: number;
+  apiCalls: number;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+}
+
+/**
+ * Suggested Fix (from review stage)
+ */
+export interface SuggestedFix {
+  indicator_id: string;
+  original_classification: ClassifiedMetadata;
+  suggested_diff: Partial<ClassifiedMetadata>;
+  review_reason: string;
+  review_confidence: number;
+  indicator_name: string;
+  indicator_context?: {
+    units?: string;
+    description?: string;
+    source_name?: string;
+    long_name?: string;
+    sample_values?: unknown[];
+  };
+}
+
+/**
+ * Deep Review Decision
+ */
+export interface DeepReviewDecision {
+  indicator_id: string;
+  action: DeepReviewAction;
+  reason: string;
+  confidence: number;
+  final_diff?: Partial<ClassifiedMetadata>;
+}
+
+/**
+ * Deep Review Configuration
+ */
+export interface DeepReviewConfig {
+  batchSize?: number;
+  concurrency?: number;
+  debug?: boolean;
+  quiet?: boolean;
+}
+
+/**
+ * Deep Review Batch Result
+ */
+export interface DeepReviewBatchResult {
+  reviewed: number;
+  accepted: number;
+  rejected: number;
+  escalated: number;
+  decisions: DeepReviewDecision[];
   processingTime: number;
   apiCalls: number;
   usage: {
@@ -469,7 +532,15 @@ export interface V2PipelineResult {
     review: {
       reviewed: number;
       confirmed: number;
-      fixed: number;
+      suggestedFixes: number;
+      escalated: number;
+      apiCalls: number;
+      processingTime: number;
+    };
+    deepReview: {
+      reviewed: number;
+      accepted: number;
+      rejected: number;
       escalated: number;
       apiCalls: number;
       processingTime: number;

@@ -9,12 +9,12 @@ import type { FlaggedIndicator } from "../types.ts";
  * Review system prompt (optimized)
  */
 export function generateReviewSystemPrompt(): string {
-  return `You are reviewing economic indicator classifications. Verify each classification is correct and choose an action:
+  return `You are reviewing economic indicator classifications for FIRST-PASS TRIAGE. Verify each classification and choose an action:
 
 **ACTIONS:**
 • **confirm**: Classification is CORRECT - no changes needed
-• **fix**: Classification has minor error - provide corrections in diff (auto-applied)
-• **escalate**: Classification is unclear/ambiguous - needs human review
+• **suggest-fix**: Classification may have errors - provide suggested corrections in diff (will go to deep review)
+• **escalate**: Classification is fundamentally unclear/ambiguous - needs immediate human review
 
 **YOUR TASK:**
 Carefully review EACH indicator's classification against the taxonomy rules. Check:
@@ -24,7 +24,7 @@ Carefully review EACH indicator's classification against the taxonomy rules. Che
 4. Is heat_map_orientation correct (higher-is-positive vs lower-is-positive vs neutral)?
 5. Does the reasoning make sense and support the classification?
 
-**DIFF FORMAT** (for "fix" action only):
+**DIFF FORMAT** (for "suggest-fix" action only):
 {"family"?: "...", "indicator_type"?: "...", "temporal_aggregation"?: "...", "is_currency_denominated"?: true|false, "heat_map_orientation"?: "..."}
 
 **TAXONOMY RULES:**
@@ -66,7 +66,7 @@ Don't just confirm everything - actively look for misclassifications:
 • Ensure is_currency_denominated is only true for actual currency amounts
 • Confirm indicator_type matches the indicator's nature (can it be negative? is it a count?)
 
-OUTPUT: JSON array. Each: {"indicator_id":"...","action":"confirm|fix|escalate","diff":{...},"reason":"...","confidence":0-1}`;
+OUTPUT: JSON array. Each: {"indicator_id":"...","action":"confirm|suggest-fix|escalate","diff":{...},"reason":"...","confidence":0-1}`;
 }
 
 /**
@@ -94,5 +94,5 @@ ${flaggedList}
 IMPORTANT: Return exactly ${flaggedIndicators.length} results in the SAME ORDER as above.
 For each result, copy the EXACT indicator_id shown in parentheses above.
 
-Return JSON array: [{"indicator_id":"<copy exact ID>","action":"confirm|fix|escalate","diff":{...},"reason":"...","confidence":0-1}]`;
+Return JSON array: [{"indicator_id":"<copy exact ID>","action":"confirm|suggest-fix|escalate","diff":{...},"reason":"...","confidence":0-1}]`;
 }

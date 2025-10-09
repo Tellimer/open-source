@@ -1,12 +1,13 @@
 /**
  * V2 Pipeline Orchestrator
- * Coordinates: Router → Specialist → Orientation → Flagging → Review → Output
+ * Coordinates: Router → Specialist → Orientation → Flagging → Review → Deep Review → Output
  * @module
  */
 
 import type { Indicator, LLMConfig } from "../types.ts";
 import type {
   ClassificationData,
+  DeepReviewBatchResult,
   PipelineExecutionRecord,
   ReviewBatchResult,
   V2Config,
@@ -31,6 +32,7 @@ import { writeOrientationResults } from "./orientation/storage.ts";
 import { applyFlaggingRules } from "./review/flagging.ts";
 import { writeFlaggingResults } from "./review/storage.ts";
 import { reviewFlaggedIndicators } from "./review/review.ts";
+import { deepReviewSuggestedFixes } from "./deep-review/deep-review.ts";
 import { readClassifications, writeClassifications } from "./output/storage.ts";
 import { calculateCost } from "./utils/pricing.ts";
 
@@ -433,7 +435,7 @@ export async function classifyIndicatorsV2(
       reviewResult = {
         reviewed: 0,
         confirmed: 0,
-        fixed: 0,
+        suggestedFixes: 0,
         escalated: 0,
         decisions: [],
         processingTime: 0,
@@ -447,9 +449,73 @@ export async function classifyIndicatorsV2(
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // STAGE 6: OUTPUT - Fetch final classifications
+    // STAGE 6: DEEP REVIEW (Second Opinion on Suggested Fixes using Claude Sonnet 4.5)
     // ═══════════════════════════════════════════════════════════════════════
-    if (!quiet) console.log("\n📤 Stage 6: Output Assembly");
+    let deepReviewResult: DeepReviewBatchResult;
+    if (reviewResult.suggestedFixes > 0) {
+      if (!quiet) {
+        console.log("\n🔍 Stage 6: Deep Review (Second Opinion)");
+        console.log("  Using model: claude-sonnet-4-5-20250929");
+      }
+
+      // Always use Claude Sonnet 4.5 for deep review
+      const deepReviewLlmConfig: LLMConfig = {
+        provider: "anthropic",
+        model: "claude-sonnet-4-5-20250929",
+        apiKey: Deno.env.get("ANTHROPIC_API_KEY")!,
+        temperature: llmConfig.temperature || 0.3,
+      };
+
+      deepReviewResult = await deepReviewSuggestedFixes(
+        db,
+        deepReviewLlmConfig,
+        {
+          batchSize: config.batch?.reviewBatchSize || 5,
+          concurrency: 1,
+          debug,
+          quiet,
+        },
+      );
+
+      totalApiCalls += deepReviewResult.apiCalls;
+
+      // Calculate cost for deep review stage
+      const deepReviewCost = calculateCost(
+        "claude-sonnet-4-5-20250929",
+        deepReviewResult.usage.promptTokens,
+        deepReviewResult.usage.completionTokens,
+      );
+      totalCost += deepReviewCost;
+
+      if (debug) {
+        console.log(
+          `[Deep Review] Reviewed ${deepReviewResult.reviewed} suggested fixes in ${deepReviewResult.processingTime}ms`,
+        );
+      }
+    } else {
+      if (!quiet) {
+        console.log("\n✓ Stage 6: Deep Review - Skipped (no suggested fixes)");
+      }
+      deepReviewResult = {
+        reviewed: 0,
+        accepted: 0,
+        rejected: 0,
+        escalated: 0,
+        decisions: [],
+        processingTime: 0,
+        apiCalls: 0,
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
+        },
+      };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STAGE 7: OUTPUT - Fetch final classifications
+    // ═══════════════════════════════════════════════════════════════════════
+    if (!quiet) console.log("\n📤 Stage 7: Output Assembly");
 
     const finalClassifications = readClassifications(
       db,
@@ -467,8 +533,9 @@ export async function classifyIndicatorsV2(
     execution.total_cost = totalCost;
     execution.total_flagged = flaggedIndicators.length;
     execution.total_reviewed = reviewResult.reviewed;
-    execution.total_fixed = reviewResult.fixed;
-    execution.total_escalated = reviewResult.escalated;
+    execution.total_fixed = deepReviewResult.accepted;
+    execution.total_escalated = reviewResult.escalated +
+      deepReviewResult.escalated;
     execution.processing_time_ms = processingTime;
     execution.status = "completed";
 
@@ -484,8 +551,8 @@ export async function classifyIndicatorsV2(
         failed,
         flagged: flaggedIndicators.length,
         reviewed: reviewResult.reviewed,
-        fixed: reviewResult.fixed,
-        escalated: reviewResult.escalated,
+        fixed: deepReviewResult.accepted,
+        escalated: reviewResult.escalated + deepReviewResult.escalated,
       },
       stages: {
         router: {
@@ -517,10 +584,18 @@ export async function classifyIndicatorsV2(
         review: {
           reviewed: reviewResult.reviewed,
           confirmed: reviewResult.confirmed,
-          fixed: reviewResult.fixed,
+          suggestedFixes: reviewResult.suggestedFixes,
           escalated: reviewResult.escalated,
           apiCalls: reviewResult.apiCalls,
           processingTime: reviewResult.processingTime,
+        },
+        deepReview: {
+          reviewed: deepReviewResult.reviewed,
+          accepted: deepReviewResult.accepted,
+          rejected: deepReviewResult.rejected,
+          escalated: deepReviewResult.escalated,
+          apiCalls: deepReviewResult.apiCalls,
+          processingTime: deepReviewResult.processingTime,
         },
       },
       processingTime,

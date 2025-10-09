@@ -42,3 +42,11 @@ export {
   type ReviewDecision,
   ReviewDecisionSchema,
 } from "./review.ts";
+
+// Deep Review schemas
+export {
+  type DeepReviewBatch,
+  DeepReviewBatchSchema,
+  type DeepReviewDecision,
+  DeepReviewDecisionSchema,
+} from "./deep-review.ts";

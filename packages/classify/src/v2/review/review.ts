@@ -19,7 +19,6 @@ import {
   generateReviewUserPrompt,
 } from "./prompts.ts";
 import {
-  applyReviewDiff,
   readFlaggedIndicators,
   writeReviewDecisions,
 } from "./storage.ts";
@@ -173,30 +172,19 @@ export async function reviewFlaggedIndicators(
   // 3. Write decisions to database
   writeReviewDecisions(db, allDecisions);
 
-  // 4. Apply fixes to classifications table
-  const fixedDecisions = allDecisions.filter(
-    (d) => d.action === "fix" && d.diff,
-  );
-  for (const decision of fixedDecisions) {
-    if (decision.diff) {
-      applyReviewDiff(
-        db,
-        decision.indicator_id,
-        decision.diff,
-        decision.reason,
-      );
-    }
-  }
+  // 4. NO LONGER APPLYING FIXES - they go to deep-review stage first
+  // (Fixes will be applied after deep-review second opinion)
 
   // 5. Calculate summary stats
   const confirmed = allDecisions.filter((d) => d.action === "confirm").length;
-  const fixed = allDecisions.filter((d) => d.action === "fix").length;
+  const suggestedFixes = allDecisions.filter((d) => d.action === "suggest-fix")
+    .length;
   const escalated = allDecisions.filter((d) => d.action === "escalate").length;
 
   const result: ReviewBatchResult = {
     reviewed: allDecisions.length,
     confirmed,
-    fixed,
+    suggestedFixes,
     escalated,
     decisions: allDecisions,
     processingTime: Date.now() - startTime,
@@ -216,7 +204,12 @@ export async function reviewFlaggedIndicators(
       }%)`,
     );
     console.log(
-      `  • Fixed: ${fixed} (${((fixed / result.reviewed) * 100).toFixed(1)}%)`,
+      `  • Suggested Fixes: ${suggestedFixes} (${
+        (
+          (suggestedFixes / result.reviewed) *
+          100
+        ).toFixed(1)
+      }%) → will go to deep review`,
     );
     console.log(
       `  • Escalated: ${escalated} (${

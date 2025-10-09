@@ -1,12 +1,12 @@
 /**
- * Review Stage Valibot Schema
- * Validates review decision outputs
+ * Deep Review Stage Valibot Schema
+ * Validates deep review decision outputs (second-pass on suggested fixes)
  * @module
  */
 
 import * as v from "valibot";
 
-// Provider-friendly diff schema (avoid v.record/v.unknown for OpenAI JSON schema)
+// Reuse common schemas
 const FamilySchema = v.union([
   v.literal("physical-fundamental"),
   v.literal("numeric-measurement"),
@@ -33,7 +33,7 @@ const OrientationSchema = v.union([
 ]);
 
 // Only allow specific diff keys with explicit types
-const ReviewDiffSchema = v.object({
+const DeepReviewDiffSchema = v.object({
   family: v.optional(FamilySchema),
   indicator_type: v.optional(v.string()),
   temporal_aggregation: v.optional(TemporalAggregationSchema),
@@ -42,37 +42,37 @@ const ReviewDiffSchema = v.object({
 });
 
 /**
- * Review action schema (first-pass triage)
+ * Deep review action schema (second-pass on suggested fixes)
  */
-const ReviewActionSchema = v.union(
-  [v.literal("confirm"), v.literal("suggest-fix"), v.literal("escalate")],
-  "Invalid review action",
+const DeepReviewActionSchema = v.union(
+  [v.literal("accept-fix"), v.literal("reject-fix"), v.literal("escalate")],
+  "Invalid deep review action",
 );
 
 /**
- * Single review decision schema
+ * Single deep review decision schema
  */
-export const ReviewDecisionSchema = v.object({
+export const DeepReviewDecisionSchema = v.object({
   indicator_id: v.pipe(
     v.string(),
     v.minLength(1, "Indicator ID must not be empty"),
   ),
-  action: ReviewActionSchema,
-  diff: v.optional(ReviewDiffSchema),
+  action: DeepReviewActionSchema,
   reason: v.pipe(v.string(), v.minLength(1, "Reason must not be empty")),
   confidence: v.pipe(
     v.number(),
     v.minValue(0, "Confidence must be >= 0"),
     v.maxValue(1, "Confidence must be <= 1"),
   ),
+  final_diff: v.optional(DeepReviewDiffSchema),
 });
 
 /**
- * Review batch result schema (wrapped in object for Anthropic compatibility)
+ * Deep review batch result schema
  */
-export const ReviewBatchSchema = v.object({
+export const DeepReviewBatchSchema = v.object({
   results: v.pipe(
-    v.array(ReviewDecisionSchema),
+    v.array(DeepReviewDecisionSchema),
     v.minLength(1, "Batch must contain at least one result"),
   ),
 });
@@ -80,5 +80,7 @@ export const ReviewBatchSchema = v.object({
 /**
  * TypeScript types
  */
-export type ReviewDecision = v.InferOutput<typeof ReviewDecisionSchema>;
-export type ReviewBatch = v.InferOutput<typeof ReviewBatchSchema>;
+export type DeepReviewDecision = v.InferOutput<
+  typeof DeepReviewDecisionSchema
+>;
+export type DeepReviewBatch = v.InferOutput<typeof DeepReviewBatchSchema>;

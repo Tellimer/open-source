@@ -103,34 +103,20 @@ export function writeReviewDecisions(
 }
 
 /**
- * Apply review diff to classifications table
+ * DEPRECATED: No longer immediately applying review diffs
+ * Now using deep-review stage before applying fixes
+ * This function is kept for backward compatibility but should not be used
  */
 export function applyReviewDiff(
-  db: V2DatabaseClient,
-  indicatorId: string,
-  diff: Record<string, any>,
-  reason: string,
+  _db: V2DatabaseClient,
+  _indicatorId: string,
+  _diff: Record<string, any>,
+  _reason: string,
 ): void {
-  db.transaction(() => {
-    // Build dynamic UPDATE query from diff fields
-    const fields = Object.keys(diff);
-    if (fields.length === 0) return;
-
-    const setClauses = fields.map((field) => `${field} = ?`).join(", ");
-    const values = fields.map((field) => diff[field]);
-
-    const query = `
-      UPDATE classifications
-      SET
-        ${setClauses},
-        review_status = 'fix',
-        review_reason = ?,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE indicator_id = ?
-    `;
-
-    db.prepare(query).run(...values, reason, indicatorId);
-  });
+  // No-op: Fixes are now applied in deep-review stage after second opinion
+  console.warn(
+    "applyReviewDiff is deprecated - use deep-review stage instead",
+  );
 }
 
 /**

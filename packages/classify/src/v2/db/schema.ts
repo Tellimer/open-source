@@ -172,14 +172,25 @@ CREATE TABLE IF NOT EXISTS flagging_results (
   UNIQUE(indicator_id, flag_type)
 );
 
--- Review decisions
+-- Review decisions (first-pass triage)
 CREATE TABLE IF NOT EXISTS review_decisions (
   indicator_id TEXT PRIMARY KEY,
-  action TEXT NOT NULL, -- confirm|fix|escalate
-  diff_json TEXT, -- JSON string of ClassificationDiff
+  action TEXT NOT NULL, -- confirm|suggest-fix|escalate
+  diff_json TEXT, -- JSON string of suggested diff
   reason TEXT NOT NULL,
   confidence REAL NOT NULL,
   reviewed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (indicator_id) REFERENCES classifications(indicator_id) ON DELETE CASCADE
+);
+
+-- Deep review decisions (second-pass on suggested fixes)
+CREATE TABLE IF NOT EXISTS deep_review_decisions (
+  indicator_id TEXT PRIMARY KEY,
+  action TEXT NOT NULL, -- accept-fix|reject-fix|escalate
+  reason TEXT NOT NULL,
+  confidence REAL NOT NULL,
+  final_diff_json TEXT, -- JSON string of final diff (only for accept-fix)
+  deep_reviewed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (indicator_id) REFERENCES classifications(indicator_id) ON DELETE CASCADE
 );
 
