@@ -2,6 +2,141 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.3.0] - 2025-01-10
+
+### BREAKING CHANGES
+
+- **Classification System Removed**: All indicator classification code has been
+  removed from econify
+  - Econify now exclusively uses `indicator_type` from
+    [@tellimer/classify](https://jsr.io/@tellimer/classify)
+  - Removed internal classification patterns (STOCK_PATTERNS, FLOW_PATTERNS,
+    RATE_PATTERNS, RATE_UNIT_PATTERNS)
+  - Removed `Classification` interface and classification functions
+  - **Migration**: Use @tellimer/classify package to determine indicator types,
+    then pass `indicator_type` field to econify
+
+- **Count Data Module Removed**: Specialized count data normalization module has
+  been removed
+  - Count indicators (car registrations, births, etc.) should use
+    `indicator_type: "count"` from @tellimer/classify
+  - Standard normalization handles count data appropriately when indicator_type
+    is provided
+  - Removed exports: `isCountIndicator`, `normalizeCountData`
+
+### Added
+
+- **Comprehensive Indicator Type Rules**: Created `indicator_type_rules.ts`
+  module with normalization rules for all 25 indicator types from
+  @tellimer/classify
+  - `allowTimeDimension`: Whether to apply time period conversion
+  - `allowMagnitude`: Whether to allow magnitude scaling
+  - `allowCurrency`: Whether to allow currency conversion
+  - `skipTimeInUnit`: Whether to omit time dimension from unit strings
+  - Covers: stock, flow, balance, capacity, volume, count, percentage, ratio,
+    spread, share, price, yield, rate, volatility, gap, index, correlation,
+    elasticity, multiplier, duration, probability, threshold, sentiment,
+    allocation, other
+
+- **Physical Unit Protection**: Physical units without explicit scale (Tonnes,
+  Barrels, Celsius) are now protected from magnitude scaling
+  - Prevents incorrect conversions like "805,234 Tonnes" → "805.234 thousands"
+  - Smart detection of physical, energy, and temperature units
+
+### Changed
+
+- **Normalization Logic**: Updated `normalizeValue()` to use indicator type
+  rules exclusively
+  - Removed all heuristic fallbacks for time/magnitude/currency decisions
+  - `indicator_type` parameter now effectively required for proper normalization
+  - Applied to both auto-targeting track and direct normalization track
+
+- **Auto-Targeting**: Updated `computeAutoTargets()` to use
+  `allowsTimeDimension()` from indicator type rules
+  - Stock, balance, capacity, price, percentage, ratio indicators skip time
+    dimension
+  - Flow, volume, count indicators include time dimension normalization
+
+- **Explain Metadata**: Updated `explainNormalization()` to use
+  `shouldSkipTimeInUnit()` for clean unit strings
+
+- **Pattern Definitions**: Removed classification patterns from `patterns.ts`
+  - Retained normalization-focused patterns: CURRENCY_SYMBOLS, SCALE_MAP,
+    TIME_UNIT_PATTERNS
+  - Added comments directing to @tellimer/classify for classification
+
+### Removed
+
+- **Classification Module**: Deleted `/src/classification/` directory
+  - `classification.ts` (250+ lines of classification logic)
+  - `classification_test.ts` (6 tests)
+
+- **Count Module**: Deleted `/src/count/` directory
+  - `count-normalization.ts`
+  - `count-normalization_test.ts`
+
+- **Pattern Exports**: Removed from `main.ts`
+  - STOCK_PATTERNS, FLOW_PATTERNS, RATE_PATTERNS, RATE_UNIT_PATTERNS
+  - Classification interface
+
+### Documentation
+
+- **README.md**: Comprehensive updates
+  - Test count corrected: 237/199 → **428 tests**
+  - Removed count data normalization section (63 lines)
+  - Updated module coverage to reflect indicator type integration
+  - Clarified @tellimer/classify as required dependency
+  - Performance metrics updated: 98 files, 7s test time
+
+- **VERIFIED_INDICATORS.md**: Added deprecation notices for legacy
+  classification references
+- **test-coverage.md**: Updated test categories and module coverage
+- **known-data-issues.md**: Updated to reference @tellimer/classify
+- **e2e-test-findings.md**: Added deprecation notes on legacy classification
+  issues
+
+### Tests
+
+- **428 tests passing** (down from 433 due to removed classification/count
+  tests)
+- Updated test fixtures to provide `indicator_type` field
+- Fixed tests for Population, GDP, Inflation, Cement Production to use indicator
+  types
+- Pattern tests updated to focus on normalization patterns only
+
+### Migration Guide
+
+**Before (v1.2.x):**
+
+```typescript
+// Econify had built-in classification
+const result = await processEconomicData(data, {
+  targetCurrency: "USD",
+  targetTimeScale: "month",
+});
+// Classification happened automatically (but was inaccurate)
+```
+
+**After (v1.3.0):**
+
+```typescript
+import { classifyIndicator } from "@tellimer/classify";
+
+// Get classification from classify package
+const classification = classifyIndicator(indicatorName);
+
+const result = await processEconomicData([{
+  value: 100,
+  unit: "USD Million",
+  name: indicatorName,
+  indicator_type: classification.indicator_type, // Required!
+  is_currency_denominated: classification.is_currency_denominated,
+}], {
+  targetCurrency: "USD",
+  targetTimeScale: "month",
+});
+```
+
 ## [1.2.1] - 2025-01-30
 
 ### Fixed
