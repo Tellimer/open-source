@@ -9,6 +9,7 @@ import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 import { PER_YEAR, SCALE_MAP } from "../patterns.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
 import {
+  allowsTimeConversion,
   allowsTimeDimension,
   shouldSkipTimeInUnit,
 } from "./indicator_type_rules.ts";
@@ -115,37 +116,56 @@ export function buildExplainMetadata(
     originalTimeScale && targetTimeScale &&
     originalTimeScale !== targetTimeScale
   ) {
-    // Using PER_YEAR imported from patterns.ts
+    // Check if time conversion is actually allowed for this indicator type + temporal aggregation
+    const isTimeConversionAllowed = allowsTimeConversion(
+      options.indicatorType || undefined,
+      options.temporalAggregation || undefined,
+    );
 
-    const factor = PER_YEAR[originalTimeScale] / PER_YEAR[targetTimeScale];
-    const direction = PER_YEAR[originalTimeScale] < PER_YEAR[targetTimeScale]
-      ? "upsample"
-      : "downsample";
+    if (isTimeConversionAllowed) {
+      // Using PER_YEAR imported from patterns.ts
 
-    // Create clear description with intuitive conversion factors
-    let description: string;
-    if (direction === "upsample") {
-      // Going to more frequent time scale (e.g., year → month)
-      const divisionFactor = PER_YEAR[targetTimeScale] /
-        PER_YEAR[originalTimeScale];
-      description =
-        `${originalTimeScale} → ${targetTimeScale} (÷${divisionFactor})`;
+      const factor = PER_YEAR[originalTimeScale] / PER_YEAR[targetTimeScale];
+      const direction = PER_YEAR[originalTimeScale] < PER_YEAR[targetTimeScale]
+        ? "upsample"
+        : "downsample";
+
+      // Create clear description with intuitive conversion factors
+      let description: string;
+      if (direction === "upsample") {
+        // Going to more frequent time scale (e.g., year → month)
+        const divisionFactor = PER_YEAR[targetTimeScale] /
+          PER_YEAR[originalTimeScale];
+        description =
+          `${originalTimeScale} → ${targetTimeScale} (÷${divisionFactor})`;
+      } else {
+        // Going to less frequent time scale (e.g., month → year)
+        const multiplicationFactor = PER_YEAR[originalTimeScale] /
+          PER_YEAR[targetTimeScale];
+        description =
+          `${originalTimeScale} → ${targetTimeScale} (×${multiplicationFactor})`;
+      }
+
+      explain.periodicity = {
+        original: originalTimeScale,
+        target: targetTimeScale,
+        adjusted: true,
+        factor,
+        direction,
+        description,
+      };
     } else {
-      // Going to less frequent time scale (e.g., month → year)
-      const multiplicationFactor = PER_YEAR[originalTimeScale] /
-        PER_YEAR[targetTimeScale];
-      description =
-        `${originalTimeScale} → ${targetTimeScale} (×${multiplicationFactor})`;
+      // Time conversion blocked by indicator type + temporal aggregation rules
+      explain.periodicity = {
+        original: originalTimeScale,
+        target: targetTimeScale,
+        adjusted: false,
+        factor: 1,
+        direction: "none",
+        description:
+          `Time conversion blocked (${options.indicatorType} with ${options.temporalAggregation})`,
+      };
     }
-
-    explain.periodicity = {
-      original: originalTimeScale,
-      target: targetTimeScale,
-      adjusted: true,
-      factor,
-      direction,
-      description,
-    };
   } else if (targetTimeScale && originalTimeScale) {
     // Only create periodicity object if we have BOTH original and target time scales
     // Don't create it for stock indicators that have no time dimension
