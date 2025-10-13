@@ -2,6 +2,71 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.3.3] - 2025-10-13
+
+### Fixed
+
+- **BREAKING: Count Indicators Time Conversion**: Count indicators with `period-total` temporal aggregation now correctly allow time conversion
+  - **Problem**: Tourist Arrivals showed absurd comparisons - Armenia 520M tourists vs Brazil 6.8M (Armenia appeared to have 76x more tourists!)
+  - **Root Cause**: `period-total` logic blocked time conversion for ALL discrete types (count, volume, stock, index), treating them as point-in-time levels
+  - **Solution**: Changed blocking to only apply to true level indicators (stock, index). Count/volume represent flows over time and CAN be time-converted
+  - **Impact**:
+    - ✅ Armenia: 520K quarterly ÷ 3 = **173K per month**
+    - ✅ Brazil: 6.8K yearly ÷ 12 = **565 per month**
+    - Now properly comparable across countries!
+  - **Example**: Tourist Arrivals, Housing Starts, Job Claims now correctly convert time dimensions
+
+- **Unit String Time Dimension Display**: Normalized unit strings now correctly show time dimension when time conversion happens
+  - **Problem**: When original unit had no time ("Thousands") but time conversion occurred, normalized unit didn't show "per month"
+  - **Solution**: Show time dimension if (1) time was converted OR (2) original had time dimension
+  - **Impact**: "Thousands" (quarterly) → "ones per month" (time dimension now visible)
+
+- **Count Indicator Magnitude Readability**: Auto-target now prefers thousands/millions over "ones" for count indicators
+  - **Problem**: Tourist Arrivals normalized to "ones" creating huge unreadable numbers (173,465,000)
+  - **Solution**: For count/volume indicators, avoid "ones" and select next most common scale (thousands/millions)
+  - **Logic**:
+    1. If "ones" is majority for count indicator → look for alternative scale
+    2. If alternative exists (even <50%) → use it for readability
+    3. If no alternative → fallback to "ones" (only option)
+  - **Impact**:
+    - ✅ **Before**: 173,465,000 ones per month (hard to parse)
+    - ✅ **After**: 173,465 thousands per month (readable!)
+    - Or: 173.5 millions per month
+
+### Changed
+
+- **indicator_type_rules.ts**: Modified `period-total` case to only block `stock` and `index`, allowing `count` and `volume` to time-convert
+- **explain.ts**: Enhanced unit string generation to show time dimension when conversion happens, even if original lacked time
+- **auto_targets.ts**: Added special handling for count/volume indicators to prefer readable magnitude scales over "ones"
+
+### Added
+
+- **New Tests**: Added 4 comprehensive tests covering:
+  - Count + period-total time conversion (both with and without time in original unit)
+  - Count indicators preferring thousands over ones (majority and edge cases)
+- **Test Results**: All 463 tests passing (up from 461)
+
+### Technical Details
+
+- Count indicators (Tourist Arrivals, Housing Starts, Claims, Registrations) represent **flows over time**, not point-in-time stocks
+- The comment "100 tourists in Q1 ≠ 33.33 tourists per month" was flawed reasoning - when dealing with thousands/millions, fractional values are meaningful
+- Monthly values represent average rates during the period, not literal fractional events
+- Stock indicators (Employed Persons, Debt, Population levels) correctly still block time conversion as they represent point-in-time snapshots
+
+### Migration Notes
+
+- **If you have count indicators** (Tourist Arrivals, Housing Starts, etc.) classified as `count + period-total`:
+  - They will now correctly time-convert (e.g., quarterly → monthly by ÷3)
+  - Magnitude will prefer thousands/millions over ones for readability
+  - Update your expectations if you were working around the previous blocking behavior
+- **Stock indicators** (Employed Persons, Debt levels) still correctly block time conversion
+- **Production classify DB** shows Tourist Arrivals as `count + period-total` - this fix makes that classification work correctly
+
+### References
+
+- Commits: e3f6a08, 206f162, d47eae7
+- Related: Classification system in @tellimer/classify production database
+
 ## [1.3.2] - 2025-10-13
 
 ### Fixed
