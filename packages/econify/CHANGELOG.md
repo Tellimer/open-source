@@ -6,19 +6,28 @@ All notable changes to the econify package will be documented in this file.
 
 ### Fixed
 
-- **Period-Total Time Normalization for Discrete Types**: Fixed incorrect time normalization of count indicators with `period-total` temporal aggregation
-  - Tourist Arrivals and other count indicators no longer incorrectly time-normalized
-  - Example: 520,394 tourists in Q2 now correctly stays as 520,394, not divided by 3 to get 173,465 tourists/month
-  - Discrete types (count, volume, stock, index) with `period-total` now block time conversion
-  - Flow-like types (flow, balance, rate) with `period-total` still allow time conversion (GDP, exports, etc.)
-  - Added smart logic in `allowsTimeConversion()` to check indicator type when temporal_aggregation is `period-total`
+- **Period-Total Time Normalization for Discrete Types**: Fixed incorrect time
+  normalization of count indicators with `period-total` temporal aggregation
+  - Tourist Arrivals and other count indicators no longer incorrectly
+    time-normalized
+  - Example: 520,394 tourists in Q2 now correctly stays as 520,394, not divided
+    by 3 to get 173,465 tourists/month
+  - Discrete types (count, volume, stock, index) with `period-total` now block
+    time conversion
+  - Flow-like types (flow, balance, rate) with `period-total` still allow time
+    conversion (GDP, exports, etc.)
+  - Added smart logic in `allowsTimeConversion()` to check indicator type when
+    temporal_aggregation is `period-total`
 
 ### Technical Details
 
 - Modified `packages/econify/src/normalization/indicator_type_rules.ts`
-- Updated `allowsTimeConversion()` function's `period-total` case to check if indicator type is discrete
-- Discrete types: ["count", "volume", "stock", "index"] → block time conversion for period-totals
-- Flow-like indicators still allow conversion as their totals represent rates over time
+- Updated `allowsTimeConversion()` function's `period-total` case to check if
+  indicator type is discrete
+- Discrete types: ["count", "volume", "stock", "index"] → block time conversion
+  for period-totals
+- Flow-like indicators still allow conversion as their totals represent rates
+  over time
 
 ## [1.3.0] - 2025-01-10
 
