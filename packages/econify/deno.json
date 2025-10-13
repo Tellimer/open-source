@@ -1,6 +1,6 @@
 {
   "name": "@tellimer/econify",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "tasks": {
     "dev": "deno run --watch src/helpers/sample_usage.ts",
     "test": "deno test --parallel",
@@ -34,19 +34,11 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "recommended"
-      ]
+      "tags": ["recommended"]
     }
   },
   "publish": {
-    "include": [
-      "src/",
-      "mod.ts",
-      "README.md",
-      "deno.json",
-      "assets/"
-    ]
+    "include": ["src/", "mod.ts", "README.md", "deno.json", "assets/"]
   },
   "repository": {
     "type": "git",

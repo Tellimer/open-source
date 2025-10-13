@@ -439,7 +439,16 @@ export function allowsTimeConversion(
         // Flow rates during period - can convert (e.g., GDP quarterly → annual)
         return true;
       case "period-total":
-        // Sum over period - can convert (e.g., total transactions monthly → annual)
+        // Sum over period - BUT depends on indicator type
+        // Discrete counts/stocks cannot be meaningfully divided across time periods
+        // Example: 100 tourists in Q1 ≠ 33.33 tourists per month
+        // But: $1000M GDP in Q1 = $333M per month (it's a flow rate)
+        const discreteTypes = ["count", "volume", "stock", "index"];
+        if (discreteTypes.includes(indicatorType || "")) {
+          // Discrete totals - these are cumulative event counts, not rates
+          return false;
+        }
+        // Flow-like totals - safe to convert (GDP, exports, spending, etc.)
         return true;
       case "period-average":
         // Average over period - can convert (e.g., avg temperature monthly → annual)
