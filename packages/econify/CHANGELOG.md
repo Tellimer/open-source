@@ -43,6 +43,23 @@ All notable changes to the econify package will be documented in this file.
   - Prevents incorrect conversions like "805,234 Tonnes" → "805.234 thousands"
   - Smart detection of physical, energy, and temperature units
 
+- **🆕 Classification Field Support in ParsedData**: Added optional
+  `indicator_type` and `temporal_aggregation` fields
+  - `indicator_type`: e.g., "stock", "flow", "balance", "rate", "ratio", "index"
+  - `temporal_aggregation`: e.g., "point-in-time", "period-total",
+    "period-average", "period-rate"
+  - Fields flow through to normalized output for frontend consumption
+  - Enables smart exemptions based on classification metadata
+
+- **🆕 Smart Exemptions by Classification**: New exemption options in
+  `PipelineOptions`
+  - `exemptions.temporalAggregations`: Exempt by temporal type
+    (e.g., `["point-in-time"]` to skip stocks/snapshots)
+  - `exemptions.indicatorTypes`: Exempt by indicator type
+    (e.g., `["stock", "balance"]`)
+  - Automatic handling without manual indicator name lists
+  - Works alongside existing `indicatorNames` and `indicatorIds` exemptions
+
 ### Changed
 
 - **Normalization Logic**: Updated `normalizeValue()` to use indicator type
@@ -64,6 +81,10 @@ All notable changes to the econify package will be documented in this file.
   - Retained normalization-focused patterns: CURRENCY_SYMBOLS, SCALE_MAP,
     TIME_UNIT_PATTERNS
   - Added comments directing to @tellimer/classify for classification
+
+- **🆕 Enhanced Output**: Classification fields preserved in `NormalizedData`
+  - `indicator_type` and `temporal_aggregation` flow through to output
+  - Enables frontend to access classification context in tooltips/metadata
 
 ### Removed
 
@@ -87,6 +108,8 @@ All notable changes to the econify package will be documented in this file.
   - Updated module coverage to reflect indicator type integration
   - Clarified @tellimer/classify as required dependency
   - Performance metrics updated: 98 files, 7s test time
+  - 🆕 Added Classification Field Integration section
+  - 🆕 Added Smart Exemptions examples
 
 - **VERIFIED_INDICATORS.md**: Added deprecation notices for legacy
   classification references
@@ -125,16 +148,27 @@ import { classifyIndicator } from "@tellimer/classify";
 // Get classification from classify package
 const classification = classifyIndicator(indicatorName);
 
-const result = await processEconomicData([{
-  value: 100,
-  unit: "USD Million",
-  name: indicatorName,
-  indicator_type: classification.indicator_type, // Required!
-  is_currency_denominated: classification.is_currency_denominated,
-}], {
-  targetCurrency: "USD",
-  targetTimeScale: "month",
-});
+const result = await processEconomicData(
+  [
+    {
+      value: 100,
+      unit: "USD Million",
+      name: indicatorName,
+      indicator_type: classification.indicator_type, // Required!
+      temporal_aggregation: classification.temporal_aggregation, // 🆕 Optional
+      is_currency_denominated: classification.is_currency_denominated,
+    },
+  ],
+  {
+    targetCurrency: "USD",
+    targetTimeScale: "month",
+    // 🆕 Smart exemptions by classification
+    exemptions: {
+      temporalAggregations: ["point-in-time"], // Auto-exempt all stocks
+      indicatorNames: ["Car Registrations"], // Manual exemptions still work
+    },
+  },
+);
 ```
 
 ## [1.2.1] - 2025-01-30
@@ -165,7 +199,7 @@ const result = await processEconomicData([{
     per month"
   - Explain metadata shows clear reasoning:
     `time=skipped(stock indicator, no
-    time dimension)`
+time dimension)`
 
 ### Fixed
 
