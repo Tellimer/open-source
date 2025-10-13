@@ -57,8 +57,9 @@ Deno.test("Batch: period-total allows time conversion", async () => {
   assertEquals(item.normalizedUnit, "USD millions per year");
 });
 
-Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count)", async () => {
-  // Tourist Arrivals scenario: count + period-total should NOT be time-converted
+Deno.test("Batch: period-total ALLOWS time conversion for count (flow over time)", async () => {
+  // Tourist Arrivals scenario: count + period-total SHOULD be time-converted
+  // Counts represent flows over time (arrivals, starts, claims), not point-in-time levels
   const items: BatchItem[] = [
     {
       id: "TOURIST_ARRIVALS",
@@ -66,7 +67,7 @@ Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count)
       value: 520394,
       unit: "Thousands",
       periodicity: "Quarterly",
-      indicator_type: "count", // Discrete type
+      indicator_type: "count", // Flow type - arrivals over time
       temporal_aggregation: "period-total", // Total over quarter
     },
   ];
@@ -80,24 +81,22 @@ Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count)
   assertEquals(result.successful.length, 1);
   const item = result.successful[0];
 
-  // Should ONLY apply magnitude scaling (thousands -> ones)
-  // Should NOT divide by 3 (quarter -> month)
-  assertEquals(item.normalized, 520394000); // 520394 * 1000, NOT ÷ 3
-  assertEquals(item.normalizedUnit, "ones");
+  // Should apply BOTH magnitude scaling AND time conversion
+  // 520394 thousands * 1000 (to ones) / 3 (quarter to month) = 173,464,666.67
+  assertEquals(Math.round(item.normalized), 173464667); // Rounded
+  assertEquals(item.normalizedUnit, "ones per month");
 
-  // Explain metadata should show adjusted=false
+  // Explain metadata should show adjusted=true
   assertExists(item.explain);
   assertExists(item.explain.periodicity);
-  assertEquals(item.explain.periodicity.adjusted, false);
-  assertEquals(item.explain.periodicity.factor, 1);
-  assertEquals(
-    item.explain.periodicity.description,
-    "Time conversion blocked (count with period-total)",
-  );
+  assertEquals(item.explain.periodicity.adjusted, true);
+  assertEquals(item.explain.periodicity.factor, 1 / 3);
+  assertEquals(item.explain.periodicity.description, "quarter → month (÷3)");
 });
 
-Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count) - with time in unit", async () => {
-  // Armenia scenario: count + period-total with explicit time in unit should keep original time
+Deno.test("Batch: period-total ALLOWS time conversion for count - with time in unit", async () => {
+  // Armenia scenario: count + period-total with explicit time in unit
+  // Should convert the time dimension (quarter → month)
   const items: BatchItem[] = [
     {
       id: "ARMENIA_TOURISTS",
@@ -105,7 +104,7 @@ Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count)
       value: 520394,
       unit: "Thousands per quarter",
       periodicity: "Quarterly",
-      indicator_type: "count", // Discrete type
+      indicator_type: "count", // Flow type
       temporal_aggregation: "period-total", // Total over quarter
     },
   ];
@@ -119,21 +118,18 @@ Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count)
   assertEquals(result.successful.length, 1);
   const item = result.successful[0];
 
-  // Should ONLY apply magnitude scaling (thousands -> ones)
-  // Should NOT divide by 3 (quarter -> month)
-  assertEquals(item.normalized, 520394000); // 520394 * 1000, NOT ÷ 3
-  // Should keep original time dimension since conversion was blocked
-  assertEquals(item.normalizedUnit, "ones per quarter"); // Keep "per quarter", not "per month"!
+  // Should apply BOTH magnitude scaling AND time conversion
+  // 520394 thousands * 1000 (to ones) / 3 (quarter to month) = 173,464,666.67
+  assertEquals(Math.round(item.normalized), 173464667); // Rounded
+  // Should change time dimension to target: "per month"
+  assertEquals(item.normalizedUnit, "ones per month");
 
-  // Explain metadata should show adjusted=false
+  // Explain metadata should show adjusted=true
   assertExists(item.explain);
   assertExists(item.explain.periodicity);
-  assertEquals(item.explain.periodicity.adjusted, false);
-  assertEquals(item.explain.periodicity.factor, 1);
-  assertEquals(
-    item.explain.periodicity.description,
-    "Time conversion blocked (count with period-total)",
-  );
+  assertEquals(item.explain.periodicity.adjusted, true);
+  assertEquals(item.explain.periodicity.factor, 1 / 3);
+  assertEquals(item.explain.periodicity.description, "quarter → month (÷3)");
 });
 
 Deno.test("Batch: period-rate allows time conversion", async () => {

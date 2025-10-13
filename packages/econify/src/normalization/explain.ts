@@ -482,17 +482,21 @@ export function buildExplainMetadata(
         ? origLabel
         : `${origLabel} per ${parsed.timeScale}`;
 
-      // For normalized unit: use target time scale unless conversion was explicitly blocked
+      // For normalized unit: add time scale if conversion happened OR if original had time
       // Check if time conversion was blocked (not just "no conversion needed")
       const timeWasBlocked = explain.periodicity?.adjusted === false &&
         explain.periodicity?.description?.includes("blocked");
+      const timeWasConverted = explain.periodicity?.adjusted === true;
       const effectiveNormalizedTime = timeWasBlocked
         ? parsed.timeScale
         : (options.toTimeScale || parsed.timeScale);
 
-      normalizedUnitString = isStockLike || !unitHadTimeScale
-        ? normLabel
-        : `${normLabel} per ${effectiveNormalizedTime}`;
+      // Show time dimension if: (1) time was converted, OR (2) original had time dimension
+      const shouldShowTime = !isStockLike &&
+        (timeWasConverted || unitHadTimeScale);
+      normalizedUnitString = shouldShowTime && effectiveNormalizedTime
+        ? `${normLabel} per ${effectiveNormalizedTime}`
+        : normLabel;
       originalFullUnit = originalUnitString;
       normalizedFullUnit = normalizedUnitString;
     } else {
