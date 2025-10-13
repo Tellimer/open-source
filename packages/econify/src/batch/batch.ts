@@ -8,6 +8,7 @@ import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
 import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import { getScale } from "../scale/scale.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
+import { allowsTimeConversion } from "../normalization/indicator_type_rules.ts";
 import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
 
 /**
@@ -94,6 +95,8 @@ export interface BatchItem {
   /** Classification from classify package - when provided, used instead of econify's own classification */
   indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio", etc.
   is_currency_denominated?: boolean; // true for currency amounts, false otherwise
+  /** Temporal aggregation from @tellimer/classify - how values accumulate over time */
+  temporal_aggregation?: string; // "point-in-time" | "period-rate" | "period-cumulative" | "period-average" | "period-total" | "not-applicable"
 
   metadata?: Record<string, unknown>;
 }
@@ -160,8 +163,14 @@ export async function processBatch<T extends BatchItem>(
     concurrency = 10,
     progressCallback,
     qualityThreshold = 70,
-    ...normalizationOptions
+    ...restOptions
   } = options;
+
+  // Include handleErrors in normalization options for error handling
+  const normalizationOptions = {
+    ...restOptions,
+    handleErrors,
+  };
 
   const startTime = Date.now();
   const result: BatchResult<T> = {
@@ -284,28 +293,51 @@ async function processInParallel<T extends BatchItem>(
   let processed = 0;
 
   for (const chunk of chunks) {
-    const promises = chunk.map((item) => processItem(item, options));
-    const results = await Promise.allSettled(promises);
+    const promises = chunk.map((item) =>
+      Promise.resolve().then(() => processItem(item, options))
+    );
 
-    results.forEach((res, idx) => {
-      const item = chunk[idx];
+    // For handleErrors: "throw", use Promise.all to fail fast
+    // For other modes, use Promise.allSettled to collect all results
+    if (options.handleErrors === "throw") {
+      const results = await Promise.all(promises);
+      results.forEach((value, idx) => {
+        const item = chunk[idx];
+        if (value) {
+          result.successful.push({
+            ...item,
+            normalized: value.normalized,
+            normalizedUnit: value.normalizedUnit,
+            ...(value.explain && { explain: value.explain }),
+          });
+        }
+        processed++;
+        if (progressCallback) {
+          progressCallback((processed / items.length) * 100);
+        }
+      });
+    } else {
+      const results = await Promise.allSettled(promises);
+      results.forEach((res, idx) => {
+        const item = chunk[idx];
 
-      if (res.status === "fulfilled" && res.value) {
-        result.successful.push({
-          ...item,
-          normalized: res.value.normalized,
-          normalizedUnit: res.value.normalizedUnit,
-          ...(res.value.explain && { explain: res.value.explain }),
-        });
-      } else if (res.status === "rejected") {
-        handleItemError(item, res.reason, options, result);
-      }
+        if (res.status === "fulfilled" && res.value) {
+          result.successful.push({
+            ...item,
+            normalized: res.value.normalized,
+            normalizedUnit: res.value.normalizedUnit,
+            ...(res.value.explain && { explain: res.value.explain }),
+          });
+        } else if (res.status === "rejected") {
+          handleItemError(item, res.reason, options, result);
+        }
 
-      processed++;
-      if (progressCallback) {
-        progressCallback((processed / items.length) * 100);
-      }
-    });
+        processed++;
+        if (progressCallback) {
+          progressCallback((processed / items.length) * 100);
+        }
+      });
+    }
   }
 }
 
@@ -393,8 +425,10 @@ function processItem<T extends BatchItem>(
     const targetMagnitude: Scale | undefined = options.toMagnitude ??
       effectiveScale ?? getScale(item.unit);
 
-    // Check if this is cumulative data
-    const isCumulative = item.metadata?.isCumulative === true;
+    // Get temporal_aggregation from classify package
+    const temporalAggregation = (item as unknown as {
+      temporal_aggregation?: string;
+    }).temporal_aggregation;
 
     // Normalize value using enhanced metadata
     const normalized = normalizeValue(item.value, item.unit, {
@@ -408,7 +442,7 @@ function processItem<T extends BatchItem>(
       explicitTimeScale: effectiveTimeScale,
       indicatorName,
       indicatorType, // Pass indicator_type from @tellimer/classify
-      isCumulative,
+      temporalAggregation, // Pass temporal_aggregation from @tellimer/classify
     });
 
     // Build explain metadata first if requested (to get accurate normalized unit from custom domains)
@@ -425,6 +459,7 @@ function processItem<T extends BatchItem>(
         explicitTimeScale: effectiveTimeScale,
         indicatorName,
         indicatorType, // Pass indicator_type from @tellimer/classify
+        temporalAggregation, // Pass temporal_aggregation from @tellimer/classify
       });
 
       // Enhance with FX source information if available
@@ -459,6 +494,8 @@ function processItem<T extends BatchItem>(
           options.toCurrency,
           targetMagnitude,
           options.toTimeScale,
+          indicatorType,
+          temporalAggregation,
         );
       }
     }
@@ -523,6 +560,8 @@ function buildNormalizedUnit(
   currency?: string,
   magnitude?: Scale,
   timeScale?: TimeScale,
+  indicatorType?: string | null,
+  temporalAggregation?: string | null,
 ): string {
   const parsed = parseUnit(original);
 
@@ -532,6 +571,11 @@ function buildNormalizedUnit(
   const ts = timeScale ?? parsed.timeScale;
 
   const parts: string[] = [];
+
+  // For count data, return magnitude or "ones"
+  if (parsed.category === "count") {
+    return mag && mag !== "ones" ? titleCase(mag) : "ones";
+  }
 
   // For physical/energy/temperature units, preserve the base unit
   if (
@@ -552,7 +596,14 @@ function buildNormalizedUnit(
   }
 
   let out = parts.join(" ");
-  if (ts) out = `${out}${out ? " " : ""}per ${ts}`;
+
+  // Check if time dimension should be included
+  // Use allowsTimeConversion to respect temporal_aggregation
+  const shouldIncludeTime = ts && allowsTimeConversion(indicatorType, temporalAggregation);
+
+  if (shouldIncludeTime) {
+    out = `${out}${out ? " " : ""}per ${ts}`;
+  }
 
   return out || original;
 }

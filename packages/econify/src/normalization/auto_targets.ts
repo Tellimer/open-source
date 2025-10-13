@@ -148,6 +148,7 @@ export function computeAutoTargets(
     time: Record<string, number>;
     size: number;
     indicatorType?: string; // Track indicator_type from @tellimer/classify
+    temporalAggregation?: string; // Track temporal_aggregation from @tellimer/classify
   }>();
 
   for (const item of data) {
@@ -189,6 +190,17 @@ export function computeAutoTargets(
         (item as unknown as { indicator_type?: string }).indicator_type;
     }
 
+    // Store temporal_aggregation from first item in group (from @tellimer/classify)
+    if (
+      !g.temporalAggregation &&
+      (item as unknown as { temporal_aggregation?: string })
+        .temporal_aggregation
+    ) {
+      g.temporalAggregation =
+        (item as unknown as { temporal_aggregation?: string })
+          .temporal_aggregation;
+    }
+
     // Prefer explicit metadata
     let currency = item.currency_code?.toUpperCase() ??
       parseUnit(item.unit).currency;
@@ -220,9 +232,13 @@ export function computeAutoTargets(
       time: {} as Record<string, number>,
     };
 
-    // Use indicator_type from @tellimer/classify package to determine time dimension handling
-    // Use comprehensive rules: stock, balance, capacity, price, percentage, ratio, etc. skip time
-    const shouldSkipTimeDimension = !allowsTimeDimension(g.indicatorType);
+    // Use temporal_aggregation (priority 1) or indicator_type (priority 2) from @tellimer/classify
+    // to determine time dimension handling with precise control
+    const shouldSkipTimeDimension = g.temporalAggregation
+      ? (g.temporalAggregation === "point-in-time" ||
+        g.temporalAggregation === "not-applicable" ||
+        g.temporalAggregation === "period-cumulative")
+      : !allowsTimeDimension(g.indicatorType);
 
     const dimsList: ("currency" | "magnitude" | "time")[] = [
       "currency",
@@ -289,12 +305,12 @@ export function computeAutoTargets(
       // represent point-in-time values or dimensionless measures that shouldn't have time conversion
       if (shouldSkipTimeDimension) {
         sel.time = undefined;
-        const indicatorTypeMsg = g.indicatorType
-          ? `${g.indicatorType} indicator`
-          : "no time dimension";
-        reasonParts.push(
-          `time=skipped(${indicatorTypeMsg})`,
-        );
+        const reasonMsg = g.temporalAggregation
+          ? `temporal=${g.temporalAggregation}`
+          : (g.indicatorType
+            ? `${g.indicatorType} indicator`
+            : "no time dimension");
+        reasonParts.push(`time=skipped(${reasonMsg})`);
       } else {
         const { key: topKey, share } = topWithShare(g.time, g.size);
         const chosen = (topKey && share >= minShare)

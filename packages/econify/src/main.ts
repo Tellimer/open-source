@@ -55,6 +55,7 @@ export {
 export {
   allowsCurrency,
   allowsMagnitude,
+  allowsTimeConversion,
   allowsTimeDimension,
   getNormalizationRules,
   INDICATOR_TYPE_RULES,
@@ -222,6 +223,13 @@ export {
   detectSeasonality,
   type SeasonalOptions,
 } from "./seasonal/seasonal.ts";
+
+// Re-export temporal aggregation utilities
+export {
+  aggregateByTemporalType,
+  allowsResampling,
+  describeAggregation,
+} from "./time/temporal-aggregation.ts";
 
 // Re-export API for data pipeline processing
 export {

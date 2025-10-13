@@ -9,7 +9,7 @@
 [![JSR](https://img.shields.io/jsr/v/%40tellimer/econify?label=JSR&logo=deno&style=flat)](https://jsr.io/@tellimer/econify)
 [![codecov](https://codecov.io/github/Tellimer/open-source/graph/badge.svg?token=FFHUVGQA4T&flag=econify)](https://codecov.io/github/Tellimer/open-source)
 
-[![Test Coverage](https://img.shields.io/badge/tests-428%20passing-brightgreen)](https://github.com/Tellimer/open-source)
+[![Test Coverage](https://img.shields.io/badge/tests-459%20passing-brightgreen)](https://github.com/Tellimer/open-source)
 [![Quality](https://img.shields.io/badge/quality-production%20ready-blue)](https://github.com/Tellimer/open-source)
 [![Deno](https://img.shields.io/badge/deno-2.0+-green)](https://deno.land)
 
@@ -25,7 +25,7 @@ flow, ratio, etc.), use the separate
 solely on normalization and conversion, using the `indicator_type` field from
 classify to make smart normalization decisions.
 
-**✅ Production Ready** • **428 Tests Passing** • **100% Reliability** • **Zero
+**✅ Production Ready** • **459 Tests Passing** • **100% Reliability** • **Zero
 Linting Issues** • **Enhanced Explain Metadata** • **Type Safe**
 
 ## 🌊 XState Pipeline Architecture
@@ -44,9 +44,13 @@ assessment, error handling, and interactive control flow._
 - 🎯 **Smart Auto-Targeting** — Intelligently skip time dimension for stock/rate
   indicators (e.g., Population, Debt, CPI) while applying it to flows (GDP,
   Exports) — prevents incorrect conversions like "12,814 employed persons" ÷ 3 →
-  "4,271 per month". Accepts `indicator_type` from
+  "4,271 per month". Accepts `indicator_type` and `temporal_aggregation` from
   [@tellimer/classify](https://jsr.io/@tellimer/classify) package to make
   normalization decisions
+- 🛡️ **Temporal Aggregation Validation** — Dual validation using both
+  `indicator_type` and `temporal_aggregation` to detect economically nonsensical
+  combinations (e.g., stock+period-rate) and prevent incorrect conversions with
+  clear warnings
 - 🌍 **150+ Currency Support** — Convert values between currencies using FX
   tables (USD, EUR, GBP, JPY, NGN, KES, and more)
 - 📊 **Magnitude Scaling** — Seamlessly convert between trillions, billions,
@@ -515,6 +519,380 @@ const result = await processEconomicData(data, {
 
 See a runnable example:
 [examples/auto_targets_example.ts](./examples/auto_targets_example.ts)
+
+### Temporal Aggregation & Validation
+
+Econify uses **dual validation** with both `indicator_type` and `temporal_aggregation` from [@tellimer/classify](https://jsr.io/@tellimer/classify) to ensure economically correct normalizations.
+
+#### The Three Normalization Dimensions
+
+Econify normalizes data across three independent dimensions:
+
+1. **Magnitude** (scale): thousands → millions → billions
+2. **Time Scale**: daily → monthly → quarterly → annual
+3. **Currency**: EUR → USD, NGN → USD, etc.
+
+#### Temporal Aggregation Types
+
+The `temporal_aggregation` field from [@tellimer/classify](https://jsr.io/@tellimer/classify) tells econify **how values accumulate over time**, which is critical for determining if time conversions are valid:
+
+| Type | Description | Time Conversion | Example |
+|------|-------------|-----------------|---------|
+| `point-in-time` | Snapshot at a moment | ❌ **Blocked** | Debt level, CPI index |
+| `period-cumulative` | Running total (YTD) | ❌ **Blocked** | YTD revenue, cumulative GDP |
+| `not-applicable` | Dimensionless | ❌ **Blocked** | Ratios, percentages |
+| `period-rate` | Flow rate during period | ✅ **Allowed** | GDP quarterly → annual |
+| `period-total` | Sum over period | ✅ **Allowed** | Total transactions |
+| `period-average` | Average over period | ✅ **Allowed** | Avg temperature |
+
+#### Understanding Time Scale Normalization: Upscaling vs Downscaling
+
+Time scale normalization converts values between different time periods (daily, monthly, quarterly, annual). The operation type depends on the direction of conversion:
+
+##### Downscaling (Making Periods Smaller)
+
+**Definition**: Converting from a **larger** time period to a **smaller** one by **dividing**.
+
+When you downscale, you're asking: *"If this is the total for a year, what's the rate per month?"*
+
+**Mathematical Operation**: Division by the period ratio
+
+**Examples:**
+
+```typescript
+// Annual → Monthly (Downscaling)
+// Annual GDP: $1,200 billion per year → Monthly GDP: $100 billion per month
+$1,200 billion/year ÷ 12 = $100 billion/month
+
+// Quarterly → Monthly (Downscaling)
+// Quarterly exports: $300 million per quarter → Monthly exports: $100 million per month
+$300 million/quarter ÷ 3 = $100 million/month
+
+// Weekly → Daily (Downscaling)
+// Weekly production: $700k per week → Daily production: $100k per day
+$700k/week ÷ 7 = $100k/day
+```
+
+**When Downscaling Works:**
+- ✅ `period-rate`: Flow rates can be divided (GDP annual → monthly)
+- ✅ `period-total`: Totals can be divided to get per-period amounts
+- ✅ `period-average`: Averages can be divided assuming uniform distribution
+
+**When Downscaling FAILS:**
+- ❌ `point-in-time`: Can't divide a snapshot (Debt level has no time dimension)
+- ❌ `period-cumulative`: Can't divide YTD totals (December YTD ÷ 12 ≠ monthly rate)
+- ❌ `not-applicable`: Can't divide dimensionless values (Ratio × time = nonsense)
+
+##### Upscaling (Making Periods Larger)
+
+**Definition**: Converting from a **smaller** time period to a **larger** one by **multiplying**.
+
+When you upscale, you're asking: *"If this is the rate per month, what's the total for a year?"*
+
+**Mathematical Operation**: Multiplication by the period ratio
+
+**Examples:**
+
+```typescript
+// Monthly → Annual (Upscaling)
+// Monthly GDP: $100 billion per month → Annual GDP: $1,200 billion per year
+$100 billion/month × 12 = $1,200 billion/year
+
+// Monthly → Quarterly (Upscaling)
+// Monthly imports: $50 million per month → Quarterly imports: $150 million per quarter
+$50 million/month × 3 = $150 million/quarter
+
+// Daily → Weekly (Upscaling)
+// Daily sales: $10k per day → Weekly sales: $70k per week
+$10k/day × 7 = $70k/week
+```
+
+**When Upscaling Works:**
+- ✅ `period-rate`: Flow rates can be multiplied (GDP monthly → annual)
+- ✅ `period-total`: Totals can be summed across periods
+- ✅ `period-average`: Averages can be scaled assuming uniform distribution
+
+**When Upscaling FAILS:**
+- ❌ `point-in-time`: Can't multiply a snapshot (Debt × 12 = nonsense)
+- ❌ `period-cumulative`: Can't multiply YTD totals (Q1 YTD × 4 ≠ annual total)
+- ❌ `not-applicable`: Can't multiply dimensionless values (Ratio × 12 = nonsense)
+
+##### Complete Normalization: All Three Dimensions
+
+Econify normalizes across **three independent dimensions** in a specific order for accuracy:
+
+**Order of Operations:**
+1. **Magnitude scaling** (thousands ↔ millions ↔ billions)
+2. **Time scale conversion** (daily ↔ monthly ↔ quarterly ↔ annual)
+3. **Currency conversion** (EUR → USD, NGN → USD, etc.)
+
+**Why This Order Matters:**
+
+Time conversion must happen before currency conversion for wages and hourly rates. For example:
+- ✅ Correct: Convert CAD/Hour → CAD/Month (time), then CAD/Month → USD/Month (currency)
+- ❌ Wrong: Convert CAD/Hour → USD/Hour (currency), then try to convert to monthly
+
+**Real-World Example: Complete Normalization**
+
+```typescript
+// Original data from database
+{
+  name: "Bangladesh Balance of Trade",
+  value: -181.83,
+  unit: "BDT Billion",
+  periodicity: "Monthly",
+  currency_code: "BDT",
+  scale: "Billions",
+  indicator_type: "flow",
+  temporal_aggregation: "period-rate"
+}
+
+// Target: USD Millions per Year
+
+// Step 1: Magnitude scaling (Billions → Millions)
+// Operation: Upscale by multiplying × 1,000
+-181.83 billion × 1,000 = -181,830 million
+// Result: -181,830 BDT millions per month
+
+// Step 2: Time conversion (Monthly → Annual)
+// Operation: Upscale by multiplying × 12
+// Valid because temporal_aggregation = "period-rate" (flow rate)
+-181,830 million/month × 12 = -2,181,960 million/year
+// Result: -2,181,960 BDT millions per year
+
+// Step 3: Currency conversion (BDT → USD)
+// Operation: Divide by exchange rate (121.61 BDT per USD)
+-2,181,960 million ÷ 121.61 = -17,945.23 million
+// Result: -17,945.23 USD millions per year
+
+// Final normalized value
+{
+  normalized: -17945.23,
+  normalizedUnit: "USD millions per year",
+  explain: {
+    conversion: {
+      summary: "BDT billions per month → USD millions per year",
+      totalFactor: 98.6842, // Combined: ×1000 ×12 ÷121.61
+      steps: [
+        "Magnitude: billions → millions (×1,000)",
+        "Time: month → year (×12)",
+        "Currency: BDT → USD (÷121.61)"
+      ]
+    },
+    magnitude: {
+      original: "billions",
+      normalized: "millions",
+      factor: 1000,
+      direction: "upscale",
+      description: "billions → millions (×1,000)"
+    },
+    periodicity: {
+      original: "month",
+      target: "year",
+      factor: 12,
+      direction: "upsample",
+      description: "month → year (×12)"
+    },
+    fx: {
+      currency: "BDT",
+      base: "USD",
+      rate: 121.61,
+      source: "fallback"
+    }
+  }
+}
+```
+
+##### Why Period-Cumulative and Point-in-Time Block Conversion
+
+**Problem with Period-Cumulative (YTD totals):**
+
+```typescript
+// WRONG: Multiplying YTD values
+{
+  name: "YTD Revenue (as of March)",
+  value: 1000, // $1,000M accumulated Jan-Mar
+  temporal_aggregation: "period-cumulative"
+}
+
+// ❌ INCORRECT: Multiply by 12 to get annual?
+1000 × 12 = 12,000 // This assumes March YTD × 12 = Annual total (WRONG!)
+
+// ✅ CORRECT: Skip conversion, warn user
+"⚠️ Skipping time conversion for period-cumulative indicator.
+ YTD/running totals cannot be annualized by simple multiplication."
+
+// Why it's wrong:
+// - YTD is cumulative: Jan ($100) + Feb ($150) + Mar ($200) = $450
+// - March YTD ($450) × 12 = $5,400 (nonsense!)
+// - Actual annual = sum of all 12 months, not YTD × 12
+```
+
+**Problem with Point-in-Time (Snapshots):**
+
+```typescript
+// WRONG: Converting snapshot values
+{
+  name: "National Debt (end of quarter)",
+  value: 25000, // $25 trillion at a specific moment
+  temporal_aggregation: "point-in-time"
+}
+
+// ❌ INCORRECT: Convert quarterly to annual?
+25,000 × 4 = 100,000 // Multiplying a debt snapshot makes no sense
+
+// ✅ CORRECT: Skip conversion, warn user
+"⚠️ Skipping time conversion for point-in-time indicator.
+ Snapshot values are not cross-comparable across time periods."
+
+// Why it's wrong:
+// - Debt is a stock measured at one moment in time
+// - Q1 debt level × 4 ≠ anything meaningful
+// - Time dimension doesn't apply to snapshot values
+```
+
+##### Understanding Magnitude Scaling
+
+Magnitude scaling converts between different numerical scales (thousands, millions, billions):
+
+**Upscaling (Making Numbers Smaller by Using Larger Units):**
+
+```typescript
+// Thousands → Millions (Divide by 1,000)
+5,000 thousand ÷ 1,000 = 5 million
+
+// Millions → Billions (Divide by 1,000)
+5,000 million ÷ 1,000 = 5 billion
+
+// Ones → Thousands (Divide by 1,000)
+5,000 ones ÷ 1,000 = 5 thousand
+```
+
+**Downscaling (Making Numbers Larger by Using Smaller Units):**
+
+```typescript
+// Billions → Millions (Multiply by 1,000)
+5 billion × 1,000 = 5,000 million
+
+// Millions → Thousands (Multiply by 1,000)
+5 million × 1,000 = 5,000 thousand
+
+// Thousands → Ones (Multiply by 1,000)
+5 thousand × 1,000 = 5,000 ones
+```
+
+**Complete Example with All Three Dimensions:**
+
+```typescript
+// Original: German GDP
+{
+  value: 0.99,
+  unit: "EUR Trillion per quarter",
+  indicator_type: "flow",
+  temporal_aggregation: "period-rate"
+}
+
+// Target: USD Millions per month
+
+// Step 1: Magnitude (Trillion → Million)
+// Trillions are bigger than millions, so we multiply
+0.99 trillion × 1,000,000 = 990,000 million
+// Direction: "downscale" (larger numbers, smaller unit)
+
+// Step 2: Time (Quarter → Month)
+// Quarter is bigger than month, so we divide
+990,000 million/quarter ÷ 3 = 330,000 million/month
+// Direction: "downsample" (smaller period)
+
+// Step 3: Currency (EUR → USD at rate 1.10)
+330,000 million × 1.10 = 363,000 million
+// Result: $363,000 million per month (or $363 billion/month)
+
+// Total conversion factor: ×1,000,000 ÷3 ×1.10 = ×366,666.67
+```
+
+#### Dual Validation Logic
+
+Econify validates compatibility between `indicator_type` and `temporal_aggregation` to catch economically nonsensical combinations:
+
+**Incompatible Combinations (blocked with warnings):**
+- `stock` + `period-rate` — Stocks are levels, not flows
+- `stock` + `period-total` — Stocks don't accumulate over time
+- `price` + `period-rate` — Prices are snapshots, not flows
+- `ratio` + `period-cumulative` — Ratios don't accumulate
+- `flow` + `not-applicable` — Flows measure activity over time
+- `volume` + `not-applicable` — Volumes measure activity over time
+- `count` + `not-applicable` — Counts measure activity over time
+
+**Example with Validation:**
+
+```ts
+import { processEconomicData } from "@tellimer/econify";
+
+// Data with indicator_type and temporal_aggregation from classify
+const data = [
+  {
+    name: "GDP",
+    value: 5000,
+    unit: "USD Million",
+    periodicity: "Quarterly",
+    indicator_type: "flow", // From classify
+    temporal_aggregation: "period-rate", // From classify
+    // ✅ Compatible: flow + period-rate is economically valid
+  },
+  {
+    name: "National Debt",
+    value: 1000000,
+    unit: "USD Million",
+    periodicity: "Monthly",
+    indicator_type: "stock", // From classify
+    temporal_aggregation: "point-in-time", // From classify
+    // ✅ Compatible: stock + point-in-time is economically valid
+  },
+  {
+    name: "YTD Revenue",
+    value: 12000,
+    unit: "USD Million",
+    periodicity: "Monthly",
+    indicator_type: "flow", // From classify
+    temporal_aggregation: "period-cumulative", // From classify
+    // ✅ Valid but blocks time conversion (can't annualize YTD totals)
+  },
+];
+
+const result = await processEconomicData(data, {
+  targetTimeScale: "year",
+  targetCurrency: "USD",
+  fxFallback: { base: "USD", rates: {} },
+});
+
+// GDP (flow + period-rate): Converted quarterly → annual (×4) ✓
+// National Debt (stock + point-in-time): Time conversion skipped ✓
+// YTD Revenue (period-cumulative): Time conversion blocked with warning ✓
+```
+
+#### Warning Messages
+
+When incompatible conversions are attempted, econify logs warnings and skips the conversion:
+
+```
+⚠️ Skipping time conversion for period-cumulative indicator from month to year.
+   YTD/running totals cannot be annualized by simple multiplication. Value unchanged.
+
+⚠️ Skipping time conversion for point-in-time indicator from month to year.
+   Snapshot values are not cross-comparable across time periods. Value unchanged.
+
+⚠️ stock indicator with period-rate temporal aggregation is incompatible.
+   This combination doesn't make economic sense. Blocking time conversion to be conservative.
+```
+
+#### Benefits of Dual Validation
+
+1. **Prevents Incorrect Math**: Blocks conversions like multiplying YTD totals by 12 to get annual totals
+2. **Economic Accuracy**: Ensures indicator types match their temporal behavior (stocks vs flows)
+3. **Clear Warnings**: Explains why conversions are blocked without breaking the pipeline
+4. **Conservative Approach**: When there's conflict, blocks conversion to avoid incorrect data
+5. **Data Flows Through**: Warnings are logged but data continues through pipeline unchanged
 
 #### Batch/Streaming note
 
@@ -1538,12 +1916,13 @@ deno test --coverage=coverage
 
 ### Production Metrics
 
-- **Test Coverage**: 428 comprehensive tests with 100% pass rate
+- **Test Coverage**: 459 comprehensive tests with 100% pass rate
 - **Execution Speed**: Complete test suite runs in ~7 seconds
 - **Memory Safety**: Zero memory leaks, proper async cleanup
 - **Error Handling**: Robust error recovery with graceful degradation
 - **Type Safety**: Full TypeScript coverage with strict mode
 - **Code Quality**: Zero linting issues across 98 files with strict standards
+- **Temporal Validation**: Dual validation with indicator_type and temporal_aggregation
 
 ### Performance Optimizations
 
@@ -1559,10 +1938,11 @@ deno test --coverage=coverage
 
 ### Comprehensive Test Suite
 
-- **428 Tests**: Complete coverage across all modules and edge cases
+- **459 Tests**: Complete coverage across all modules and edge cases
 - **100% Pass Rate**: All tests passing with zero failures
 - **Fast Execution**: Full suite completes in ~7 seconds
 - **Reliable**: No flaky tests, proper async handling
+- **Temporal Aggregation Coverage**: All 6 temporal aggregation types tested across all pipeline paths
 
 ### Test Categories
 
@@ -1572,12 +1952,15 @@ deno test --coverage=coverage
 - **Performance Tests**: Caching, memory usage, and speed validation
 - **Quality Tests**: Data quality assessment validation
 - **Indicator Type Tests**: Integration with @tellimer/classify indicator types
+- **Temporal Aggregation Tests**: Comprehensive coverage of all 6 temporal_aggregation types
+- **Validation Tests**: Dual validation logic for indicator_type + temporal_aggregation compatibility
 
 ### Module Coverage
 
 - ✅ **Normalization**: Unit value normalization with indicator type rules
+- ✅ **Temporal Aggregation**: All 6 temporal_aggregation types with dual validation
 - ✅ **Auto-Targeting**: Smart auto-targeting with indicator type awareness
-- ✅ **Batch Processing**: Consistent multi-country normalization
+- ✅ **Batch Processing**: Consistent multi-country normalization with temporal_aggregation support
 - ✅ **Aggregations**: Statistical operations
 - ✅ **Algebra**: Unit mathematics
 - ✅ **Cache**: Smart caching system
@@ -1666,7 +2049,7 @@ MIT © 2025
 ## 🙏 Acknowledgments
 
 Built with ❤️ for economists, data analysts, financial engineers, and anyone
-working with economic data. **Production-ready with 428 comprehensive tests**
+working with economic data. **Production-ready with 459 comprehensive tests**
 ensuring reliability and quality for mission-critical applications.
 
 Special thanks to:

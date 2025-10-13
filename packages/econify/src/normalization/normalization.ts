@@ -14,6 +14,7 @@ import { CURRENCY_CODES, parseUnit } from "../units/units.ts";
 import {
   allowsCurrency,
   allowsMagnitude,
+  allowsTimeConversion,
   allowsTimeDimension,
 } from "./indicator_type_rules.ts";
 
@@ -29,6 +30,7 @@ import {
  * @param options.unitText Unit text containing scale/time hints
  * @param options.to Optional target time scale
  * @param options.targetMagnitude Optional target magnitude
+ * @param options.temporalAggregation Optional temporal aggregation from @tellimer/classify
  * @returns Normalized numeric value
  */
 export function normalizeFlowValue(
@@ -37,6 +39,7 @@ export function normalizeFlowValue(
     unitText: string;
     to?: TimeScale;
     targetMagnitude?: Scale;
+    temporalAggregation?: string;
   },
 ): number {
   const parsed = parseUnit(options.unitText);
@@ -58,9 +61,14 @@ export function normalizeFlowValue(
     result = rescaleMagnitude(result, parsed.scale, options.targetMagnitude);
   }
 
-  // Handle time scaling
+  // Handle time scaling with temporal aggregation awareness
   if (parsed.timeScale && options.to && parsed.timeScale !== options.to) {
-    result = rescaleTime(result, parsed.timeScale, options.to);
+    result = rescaleTime(
+      result,
+      parsed.timeScale,
+      options.to,
+      options.temporalAggregation,
+    );
   }
 
   return result;
@@ -89,6 +97,7 @@ export function normalizeMonetary(
     toMagnitude?: Scale;
     fromTimeScale?: TimeScale | null;
     toTimeScale: TimeScale;
+    temporalAggregation?: string;
   },
 ): number {
   const fromScale = getScale(opts.unitText);
@@ -102,6 +111,7 @@ export function normalizeMonetary(
     magnitudeNormalized,
     fromBasis,
     opts.toTimeScale,
+    opts.temporalAggregation,
   );
   return normalizeCurrencyValue(
     timeNormalized,
@@ -131,6 +141,7 @@ export function normalizeMonetaryFlow(
     toMagnitude?: Scale;
     fromTimeScale?: TimeScale | null;
     toTimeScale: TimeScale;
+    temporalAggregation?: string;
   },
 ): number {
   // Try enhanced unit parsing first
@@ -150,6 +161,7 @@ export function normalizeMonetaryFlow(
     magnitudeNormalized,
     fromBasis,
     opts.toTimeScale,
+    opts.temporalAggregation,
   );
   return normalizeCurrencyValue(
     timeNormalized,
@@ -184,10 +196,10 @@ export function normalizeValue(
     explicitTimeScale?: TimeScale | null;
     // Context for count detection
     indicatorName?: string;
-    // Cumulative/YTD detection flag
-    isCumulative?: boolean;
     // indicator_type from @tellimer/classify package
     indicatorType?: string | null;
+    // temporal_aggregation from @tellimer/classify package
+    temporalAggregation?: string | null;
   },
 ): number {
   const parsed = parseUnit(unitText);
@@ -205,10 +217,14 @@ export function normalizeValue(
   // Prefer unit time scale over dataset periodicity (reporting frequency)
   const effectiveTimeScale = parsed.timeScale || options?.explicitTimeScale;
 
-  // Use indicator_type from @tellimer/classify package for normalization decisions
-  // indicator_type is REQUIRED - no fallback to heuristics
+  // Use indicator_type + temporal_aggregation from @tellimer/classify package for normalization decisions
+  // temporal_aggregation takes priority over indicator_type for time conversion
+  const temporalAgg = options?.temporalAggregation;
   const shouldAllowMagnitude = allowsMagnitude(options?.indicatorType);
-  const shouldAllowTime = allowsTimeDimension(options?.indicatorType);
+  const shouldAllowTime = allowsTimeConversion(
+    options?.indicatorType,
+    temporalAgg,
+  );
   const shouldAllowCurrency = allowsCurrency(options?.indicatorType);
 
   // Handle magnitude scaling - indicator type must allow it AND unit must have a scale
@@ -227,30 +243,44 @@ export function normalizeValue(
     result = rescaleMagnitude(result, effectiveScale, options.toMagnitude);
   }
 
-  // Handle time scaling - use indicator type rules only
-  if (options?.toTimeScale && shouldAllowTime) {
-    // Check if this is cumulative/YTD data (skip time conversion)
-    const isCumulative = options?.isCumulative === true;
-
-    if (isCumulative) {
-      // Skip time conversion for cumulative/YTD series
-      console.warn(
-        `⚠️ Skipping time conversion for cumulative/YTD data: "${
-          options?.indicatorName || "unknown"
-        }"`,
-      );
-    } else {
-      if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
-        // Time conversion can be performed
-        result = rescaleTime(result, effectiveTimeScale, options.toTimeScale);
-      } else if (!effectiveTimeScale) {
-        // Time conversion requested but no source time scale available
+  // Handle time scaling - use allowsTimeConversion which respects temporal_aggregation
+  if (options?.toTimeScale) {
+    // Special handling for non-convertible temporal aggregation types
+    if (effectiveTimeScale && effectiveTimeScale !== options.toTimeScale) {
+      if (temporalAgg === "period-cumulative") {
+        if (typeof console !== "undefined") {
+          console.warn(
+            `⚠️ Skipping time conversion for period-cumulative indicator from ${effectiveTimeScale} to ${options.toTimeScale}. ` +
+            `YTD/running totals cannot be annualized by simple multiplication. Value unchanged.`,
+          );
+        }
+        // Don't convert - let value pass through unchanged
+      } else if (temporalAgg === "point-in-time") {
+        if (typeof console !== "undefined") {
+          console.warn(
+            `⚠️ Skipping time conversion for point-in-time indicator from ${effectiveTimeScale} to ${options.toTimeScale}. ` +
+            `Snapshot values are not cross-comparable across time periods. Value unchanged.`,
+          );
+        }
+        // Don't convert - let value pass through unchanged
+      } else if (shouldAllowTime) {
+        // Time conversion can be performed - rescaleTime will handle validation
+        result = rescaleTime(
+          result,
+          effectiveTimeScale,
+          options.toTimeScale,
+          temporalAgg,
+        );
+      }
+    } else if (shouldAllowTime && !effectiveTimeScale) {
+      // Time conversion requested but no source time scale available
+      if (typeof console !== "undefined") {
         console.warn(
           `⚠️ Time conversion to ${options.toTimeScale} requested but no source time scale found in unit "${unitText}" or explicit fields. Value unchanged.`,
         );
       }
-      // If effectiveTimeScale === options.toTimeScale, no conversion needed
     }
+    // If effectiveTimeScale === options.toTimeScale, no conversion needed
   }
 
   // Handle currency conversion - use indicator type rules

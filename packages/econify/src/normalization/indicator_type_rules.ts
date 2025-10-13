@@ -350,3 +350,100 @@ export function allowsCurrency(
 ): boolean {
   return getNormalizationRules(indicatorType).allowCurrency;
 }
+
+/**
+ * Check if indicator allows time dimension conversion based on temporal aggregation
+ *
+ * Uses temporal_aggregation from @tellimer/classify for precise control over time conversion.
+ * Falls back to indicator_type rules when temporal_aggregation is not provided.
+ *
+ * CRITICAL: This prevents incorrect conversions like:
+ * - period-cumulative (YTD totals) → annual (would incorrectly multiply)
+ * - point-in-time (stock levels) → annual (meaningless conversion)
+ *
+ * @param indicatorType - The indicator type from classify (flow, stock, etc.)
+ * @param temporalAggregation - How values accumulate over time
+ * @returns true if time conversion is allowed and meaningful
+ */
+/**
+ * Check if indicator_type and temporal_aggregation are compatible
+ * Returns { compatible: boolean, reason?: string }
+ */
+function validateTemporalCompatibility(
+  indicatorType: string | null | undefined,
+  temporalAggregation: string,
+): { compatible: boolean; reason?: string } {
+  if (!indicatorType) return { compatible: true }; // Can't validate without indicator_type
+
+  // Define clear incompatibilities based on economic logic
+  const incompatibleCombinations: Record<string, string[]> = {
+    // Stock/price/ratio indicators should NOT have flow-based aggregations
+    "stock": ["period-rate", "period-total"], // Stocks are levels, not flows
+    "price": ["period-rate", "period-total"], // Prices are snapshots, not flows
+    "ratio": ["period-rate", "period-total", "period-cumulative"], // Ratios don't accumulate
+    "index": ["period-rate", "period-total", "period-cumulative"], // Indexes don't accumulate
+    "percentage": ["period-rate", "period-total", "period-cumulative"], // Percentages don't accumulate
+
+    // Flow/volume/count indicators should have time dimensions
+    "flow": ["not-applicable"], // Flows measure activity over time
+    "volume": ["not-applicable"], // Volumes measure activity over time
+    "count": ["not-applicable"], // Counts measure activity over time (unless point-in-time snapshot)
+  };
+
+  const incompatibleAggs = incompatibleCombinations[indicatorType];
+
+  if (incompatibleAggs && incompatibleAggs.includes(temporalAggregation)) {
+    return {
+      compatible: false,
+      reason: `${indicatorType} indicator with ${temporalAggregation} temporal aggregation is incompatible. ` +
+        `This combination doesn't make economic sense.`,
+    };
+  }
+
+  return { compatible: true };
+}
+
+export function allowsTimeConversion(
+  indicatorType: string | null | undefined,
+  temporalAggregation?: string | null,
+): boolean {
+  // Use temporal_aggregation when available, with validation against indicator_type
+  if (temporalAggregation) {
+    // Validate compatibility between indicator_type and temporal_aggregation
+    const validation = validateTemporalCompatibility(indicatorType, temporalAggregation);
+
+    if (!validation.compatible && typeof console !== "undefined") {
+      console.warn(`⚠️ ${validation.reason} Blocking time conversion to be conservative.`);
+      return false; // Block conversion when there's a conflict
+    }
+
+    // If compatible or can't validate, use temporal_aggregation logic
+    switch (temporalAggregation) {
+      case "point-in-time":
+        // Snapshot values - no time dimension (e.g., debt level, CPI index)
+        return false;
+      case "not-applicable":
+        // Dimensionless values - no time component (e.g., ratios, percentages)
+        return false;
+      case "period-cumulative":
+        // CRITICAL: YTD totals cannot be converted monthly→annual
+        // This would multiply the cumulative value by 12, which is wrong
+        return false;
+      case "period-rate":
+        // Flow rates during period - can convert (e.g., GDP quarterly → annual)
+        return true;
+      case "period-total":
+        // Sum over period - can convert (e.g., total transactions monthly → annual)
+        return true;
+      case "period-average":
+        // Average over period - can convert (e.g., avg temperature monthly → annual)
+        return true;
+      default:
+        // Unknown temporal aggregation - fall back to indicator_type
+        break;
+    }
+  }
+
+  // Fall back to indicator_type rules when temporal_aggregation missing or unknown
+  return getNormalizationRules(indicatorType).allowTimeDimension;
+}

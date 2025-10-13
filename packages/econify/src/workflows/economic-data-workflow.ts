@@ -157,6 +157,8 @@ export interface ParsedData {
   /** Classification from classify package - when provided, used instead of econify's own classification */
   indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio", etc.
   is_currency_denominated?: boolean; // true for currency amounts, false otherwise
+  /** Temporal aggregation from @tellimer/classify - how values accumulate over time */
+  temporal_aggregation?: string; // "point-in-time" | "period-rate" | "period-cumulative" | "period-average" | "period-total" | "not-applicable"
 
   parsedUnit?: ParsedUnit;
   inferredUnit?: string;

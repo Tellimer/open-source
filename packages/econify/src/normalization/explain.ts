@@ -33,6 +33,8 @@ export function buildExplainMetadata(
     indicatorName?: string | null;
     /** indicator_type from @tellimer/classify package */
     indicatorType?: string | null;
+    /** temporal_aggregation from @tellimer/classify package */
+    temporalAggregation?: string | null;
   },
 ): Explain {
   const parsed = parseUnit(originalUnit);
