@@ -395,7 +395,8 @@ function validateTemporalCompatibility(
   if (incompatibleAggs && incompatibleAggs.includes(temporalAggregation)) {
     return {
       compatible: false,
-      reason: `${indicatorType} indicator with ${temporalAggregation} temporal aggregation is incompatible. ` +
+      reason:
+        `${indicatorType} indicator with ${temporalAggregation} temporal aggregation is incompatible. ` +
         `This combination doesn't make economic sense.`,
     };
   }
@@ -410,10 +411,15 @@ export function allowsTimeConversion(
   // Use temporal_aggregation when available, with validation against indicator_type
   if (temporalAggregation) {
     // Validate compatibility between indicator_type and temporal_aggregation
-    const validation = validateTemporalCompatibility(indicatorType, temporalAggregation);
+    const validation = validateTemporalCompatibility(
+      indicatorType,
+      temporalAggregation,
+    );
 
     if (!validation.compatible && typeof console !== "undefined") {
-      console.warn(`⚠️ ${validation.reason} Blocking time conversion to be conservative.`);
+      console.warn(
+        `⚠️ ${validation.reason} Blocking time conversion to be conservative.`,
+      );
       return false; // Block conversion when there's a conflict
     }
 

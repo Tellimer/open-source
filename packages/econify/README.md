@@ -522,7 +522,10 @@ See a runnable example:
 
 ### Temporal Aggregation & Validation
 
-Econify uses **dual validation** with both `indicator_type` and `temporal_aggregation` from [@tellimer/classify](https://jsr.io/@tellimer/classify) to ensure economically correct normalizations.
+Econify uses **dual validation** with both `indicator_type` and
+`temporal_aggregation` from
+[@tellimer/classify](https://jsr.io/@tellimer/classify) to ensure economically
+correct normalizations.
 
 #### The Three Normalization Dimensions
 
@@ -534,26 +537,33 @@ Econify normalizes data across three independent dimensions:
 
 #### Temporal Aggregation Types
 
-The `temporal_aggregation` field from [@tellimer/classify](https://jsr.io/@tellimer/classify) tells econify **how values accumulate over time**, which is critical for determining if time conversions are valid:
+The `temporal_aggregation` field from
+[@tellimer/classify](https://jsr.io/@tellimer/classify) tells econify **how
+values accumulate over time**, which is critical for determining if time
+conversions are valid:
 
-| Type | Description | Time Conversion | Example |
-|------|-------------|-----------------|---------|
-| `point-in-time` | Snapshot at a moment | ❌ **Blocked** | Debt level, CPI index |
-| `period-cumulative` | Running total (YTD) | ❌ **Blocked** | YTD revenue, cumulative GDP |
-| `not-applicable` | Dimensionless | ❌ **Blocked** | Ratios, percentages |
-| `period-rate` | Flow rate during period | ✅ **Allowed** | GDP quarterly → annual |
-| `period-total` | Sum over period | ✅ **Allowed** | Total transactions |
-| `period-average` | Average over period | ✅ **Allowed** | Avg temperature |
+| Type                | Description             | Time Conversion | Example                     |
+| ------------------- | ----------------------- | --------------- | --------------------------- |
+| `point-in-time`     | Snapshot at a moment    | ❌ **Blocked**  | Debt level, CPI index       |
+| `period-cumulative` | Running total (YTD)     | ❌ **Blocked**  | YTD revenue, cumulative GDP |
+| `not-applicable`    | Dimensionless           | ❌ **Blocked**  | Ratios, percentages         |
+| `period-rate`       | Flow rate during period | ✅ **Allowed**  | GDP quarterly → annual      |
+| `period-total`      | Sum over period         | ✅ **Allowed**  | Total transactions          |
+| `period-average`    | Average over period     | ✅ **Allowed**  | Avg temperature             |
 
 #### Understanding Time Scale Normalization: Upscaling vs Downscaling
 
-Time scale normalization converts values between different time periods (daily, monthly, quarterly, annual). The operation type depends on the direction of conversion:
+Time scale normalization converts values between different time periods (daily,
+monthly, quarterly, annual). The operation type depends on the direction of
+conversion:
 
 ##### Downscaling (Making Periods Smaller)
 
-**Definition**: Converting from a **larger** time period to a **smaller** one by **dividing**.
+**Definition**: Converting from a **larger** time period to a **smaller** one by
+**dividing**.
 
-When you downscale, you're asking: *"If this is the total for a year, what's the rate per month?"*
+When you downscale, you're asking: _"If this is the total for a year, what's the
+rate per month?"_
 
 **Mathematical Operation**: Division by the period ratio
 
@@ -574,20 +584,26 @@ $700k/week ÷ 7 = $100k/day
 ```
 
 **When Downscaling Works:**
+
 - ✅ `period-rate`: Flow rates can be divided (GDP annual → monthly)
 - ✅ `period-total`: Totals can be divided to get per-period amounts
 - ✅ `period-average`: Averages can be divided assuming uniform distribution
 
 **When Downscaling FAILS:**
+
 - ❌ `point-in-time`: Can't divide a snapshot (Debt level has no time dimension)
-- ❌ `period-cumulative`: Can't divide YTD totals (December YTD ÷ 12 ≠ monthly rate)
-- ❌ `not-applicable`: Can't divide dimensionless values (Ratio × time = nonsense)
+- ❌ `period-cumulative`: Can't divide YTD totals (December YTD ÷ 12 ≠ monthly
+  rate)
+- ❌ `not-applicable`: Can't divide dimensionless values (Ratio × time =
+  nonsense)
 
 ##### Upscaling (Making Periods Larger)
 
-**Definition**: Converting from a **smaller** time period to a **larger** one by **multiplying**.
+**Definition**: Converting from a **smaller** time period to a **larger** one by
+**multiplying**.
 
-When you upscale, you're asking: *"If this is the rate per month, what's the total for a year?"*
+When you upscale, you're asking: _"If this is the rate per month, what's the
+total for a year?"_
 
 **Mathematical Operation**: Multiplication by the period ratio
 
@@ -608,29 +624,38 @@ $10k/day × 7 = $70k/week
 ```
 
 **When Upscaling Works:**
+
 - ✅ `period-rate`: Flow rates can be multiplied (GDP monthly → annual)
 - ✅ `period-total`: Totals can be summed across periods
 - ✅ `period-average`: Averages can be scaled assuming uniform distribution
 
 **When Upscaling FAILS:**
+
 - ❌ `point-in-time`: Can't multiply a snapshot (Debt × 12 = nonsense)
 - ❌ `period-cumulative`: Can't multiply YTD totals (Q1 YTD × 4 ≠ annual total)
-- ❌ `not-applicable`: Can't multiply dimensionless values (Ratio × 12 = nonsense)
+- ❌ `not-applicable`: Can't multiply dimensionless values (Ratio × 12 =
+  nonsense)
 
 ##### Complete Normalization: All Three Dimensions
 
-Econify normalizes across **three independent dimensions** in a specific order for accuracy:
+Econify normalizes across **three independent dimensions** in a specific order
+for accuracy:
 
 **Order of Operations:**
+
 1. **Magnitude scaling** (thousands ↔ millions ↔ billions)
 2. **Time scale conversion** (daily ↔ monthly ↔ quarterly ↔ annual)
 3. **Currency conversion** (EUR → USD, NGN → USD, etc.)
 
 **Why This Order Matters:**
 
-Time conversion must happen before currency conversion for wages and hourly rates. For example:
-- ✅ Correct: Convert CAD/Hour → CAD/Month (time), then CAD/Month → USD/Month (currency)
-- ❌ Wrong: Convert CAD/Hour → USD/Hour (currency), then try to convert to monthly
+Time conversion must happen before currency conversion for wages and hourly
+rates. For example:
+
+- ✅ Correct: Convert CAD/Hour → CAD/Month (time), then CAD/Month → USD/Month
+  (currency)
+- ❌ Wrong: Convert CAD/Hour → USD/Hour (currency), then try to convert to
+  monthly
 
 **Real-World Example: Complete Normalization**
 
@@ -753,7 +778,8 @@ Time conversion must happen before currency conversion for wages and hourly rate
 
 ##### Understanding Magnitude Scaling
 
-Magnitude scaling converts between different numerical scales (thousands, millions, billions):
+Magnitude scaling converts between different numerical scales (thousands,
+millions, billions):
 
 **Upscaling (Making Numbers Smaller by Using Larger Units):**
 
@@ -813,9 +839,11 @@ Magnitude scaling converts between different numerical scales (thousands, millio
 
 #### Dual Validation Logic
 
-Econify validates compatibility between `indicator_type` and `temporal_aggregation` to catch economically nonsensical combinations:
+Econify validates compatibility between `indicator_type` and
+`temporal_aggregation` to catch economically nonsensical combinations:
 
 **Incompatible Combinations (blocked with warnings):**
+
 - `stock` + `period-rate` — Stocks are levels, not flows
 - `stock` + `period-total` — Stocks don't accumulate over time
 - `price` + `period-rate` — Prices are snapshots, not flows
@@ -873,7 +901,8 @@ const result = await processEconomicData(data, {
 
 #### Warning Messages
 
-When incompatible conversions are attempted, econify logs warnings and skips the conversion:
+When incompatible conversions are attempted, econify logs warnings and skips the
+conversion:
 
 ```
 ⚠️ Skipping time conversion for period-cumulative indicator from month to year.
@@ -888,11 +917,16 @@ When incompatible conversions are attempted, econify logs warnings and skips the
 
 #### Benefits of Dual Validation
 
-1. **Prevents Incorrect Math**: Blocks conversions like multiplying YTD totals by 12 to get annual totals
-2. **Economic Accuracy**: Ensures indicator types match their temporal behavior (stocks vs flows)
-3. **Clear Warnings**: Explains why conversions are blocked without breaking the pipeline
-4. **Conservative Approach**: When there's conflict, blocks conversion to avoid incorrect data
-5. **Data Flows Through**: Warnings are logged but data continues through pipeline unchanged
+1. **Prevents Incorrect Math**: Blocks conversions like multiplying YTD totals
+   by 12 to get annual totals
+2. **Economic Accuracy**: Ensures indicator types match their temporal behavior
+   (stocks vs flows)
+3. **Clear Warnings**: Explains why conversions are blocked without breaking the
+   pipeline
+4. **Conservative Approach**: When there's conflict, blocks conversion to avoid
+   incorrect data
+5. **Data Flows Through**: Warnings are logged but data continues through
+   pipeline unchanged
 
 #### Batch/Streaming note
 
@@ -1922,7 +1956,8 @@ deno test --coverage=coverage
 - **Error Handling**: Robust error recovery with graceful degradation
 - **Type Safety**: Full TypeScript coverage with strict mode
 - **Code Quality**: Zero linting issues across 98 files with strict standards
-- **Temporal Validation**: Dual validation with indicator_type and temporal_aggregation
+- **Temporal Validation**: Dual validation with indicator_type and
+  temporal_aggregation
 
 ### Performance Optimizations
 
@@ -1942,7 +1977,8 @@ deno test --coverage=coverage
 - **100% Pass Rate**: All tests passing with zero failures
 - **Fast Execution**: Full suite completes in ~7 seconds
 - **Reliable**: No flaky tests, proper async handling
-- **Temporal Aggregation Coverage**: All 6 temporal aggregation types tested across all pipeline paths
+- **Temporal Aggregation Coverage**: All 6 temporal aggregation types tested
+  across all pipeline paths
 
 ### Test Categories
 
@@ -1952,15 +1988,19 @@ deno test --coverage=coverage
 - **Performance Tests**: Caching, memory usage, and speed validation
 - **Quality Tests**: Data quality assessment validation
 - **Indicator Type Tests**: Integration with @tellimer/classify indicator types
-- **Temporal Aggregation Tests**: Comprehensive coverage of all 6 temporal_aggregation types
-- **Validation Tests**: Dual validation logic for indicator_type + temporal_aggregation compatibility
+- **Temporal Aggregation Tests**: Comprehensive coverage of all 6
+  temporal_aggregation types
+- **Validation Tests**: Dual validation logic for indicator_type +
+  temporal_aggregation compatibility
 
 ### Module Coverage
 
 - ✅ **Normalization**: Unit value normalization with indicator type rules
-- ✅ **Temporal Aggregation**: All 6 temporal_aggregation types with dual validation
+- ✅ **Temporal Aggregation**: All 6 temporal_aggregation types with dual
+  validation
 - ✅ **Auto-Targeting**: Smart auto-targeting with indicator type awareness
-- ✅ **Batch Processing**: Consistent multi-country normalization with temporal_aggregation support
+- ✅ **Batch Processing**: Consistent multi-country normalization with
+  temporal_aggregation support
 - ✅ **Aggregations**: Statistical operations
 - ✅ **Algebra**: Unit mathematics
 - ✅ **Cache**: Smart caching system

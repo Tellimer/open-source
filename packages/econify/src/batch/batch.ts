@@ -599,7 +599,8 @@ function buildNormalizedUnit(
 
   // Check if time dimension should be included
   // Use allowsTimeConversion to respect temporal_aggregation
-  const shouldIncludeTime = ts && allowsTimeConversion(indicatorType, temporalAggregation);
+  const shouldIncludeTime = ts &&
+    allowsTimeConversion(indicatorType, temporalAggregation);
 
   if (shouldIncludeTime) {
     out = `${out}${out ? " " : ""}per ${ts}`;

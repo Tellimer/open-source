@@ -53,10 +53,10 @@ All notable changes to the econify package will be documented in this file.
 
 - **🆕 Smart Exemptions by Classification**: New exemption options in
   `PipelineOptions`
-  - `exemptions.temporalAggregations`: Exempt by temporal type
-    (e.g., `["point-in-time"]` to skip stocks/snapshots)
-  - `exemptions.indicatorTypes`: Exempt by indicator type
-    (e.g., `["stock", "balance"]`)
+  - `exemptions.temporalAggregations`: Exempt by temporal type (e.g.,
+    `["point-in-time"]` to skip stocks/snapshots)
+  - `exemptions.indicatorTypes`: Exempt by indicator type (e.g.,
+    `["stock", "balance"]`)
   - Automatic handling without manual indicator name lists
   - Works alongside existing `indicatorNames` and `indicatorIds` exemptions
 

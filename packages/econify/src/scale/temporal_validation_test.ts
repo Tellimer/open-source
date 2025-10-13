@@ -13,7 +13,12 @@ Deno.test("rescaleTime - warns but converts for period-cumulative", () => {
   assertEquals(annual, 12000); // Conversion happens with warning
 
   const quarterly = 5000;
-  const annualQ = rescaleTime(quarterly, "quarter", "year", "period-cumulative");
+  const annualQ = rescaleTime(
+    quarterly,
+    "quarter",
+    "year",
+    "period-cumulative",
+  );
   assertEquals(annualQ, 20000); // Conversion happens with warning
 });
 
