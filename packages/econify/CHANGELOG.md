@@ -2,6 +2,23 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [1.3.2] - 2025-10-13
+
+### Fixed
+
+- **Explain Metadata for Blocked Time Conversions**: Fixed explain metadata to correctly reflect when time conversions are blocked
+  - `periodicity.adjusted` now shows `false` when time conversion is blocked by indicator type + temporal aggregation rules
+  - Previously showed `adjusted: true` even when conversion was blocked, causing confusion
+  - Example: Tourist Arrivals (count + period-total) now correctly shows `adjusted: false` with explanation message
+  - Explain metadata now uses `allowsTimeConversion()` to determine if conversion actually occurs
+
+### Technical Details
+
+- Modified `packages/econify/src/normalization/explain.ts`
+- Added `allowsTimeConversion` import and check before setting `adjusted: true`
+- When time conversion is blocked, explain shows: `"Time conversion blocked (count with period-total)"`
+- All 459 tests passing
+
 ## [1.3.1] - 2025-10-13
 
 ### Fixed
