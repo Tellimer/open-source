@@ -219,7 +219,7 @@ export function normalizeValue(
 
   // Use indicator_type + temporal_aggregation from @tellimer/classify package for normalization decisions
   // temporal_aggregation takes priority over indicator_type for time conversion
-  const temporalAgg = options?.temporalAggregation;
+  const temporalAgg = options?.temporalAggregation ?? undefined;
   const shouldAllowMagnitude = allowsMagnitude(options?.indicatorType);
   const shouldAllowTime = allowsTimeConversion(
     options?.indicatorType,
@@ -251,7 +251,7 @@ export function normalizeValue(
         if (typeof console !== "undefined") {
           console.warn(
             `⚠️ Skipping time conversion for period-cumulative indicator from ${effectiveTimeScale} to ${options.toTimeScale}. ` +
-            `YTD/running totals cannot be annualized by simple multiplication. Value unchanged.`,
+              `YTD/running totals cannot be annualized by simple multiplication. Value unchanged.`,
           );
         }
         // Don't convert - let value pass through unchanged
@@ -259,7 +259,7 @@ export function normalizeValue(
         if (typeof console !== "undefined") {
           console.warn(
             `⚠️ Skipping time conversion for point-in-time indicator from ${effectiveTimeScale} to ${options.toTimeScale}. ` +
-            `Snapshot values are not cross-comparable across time periods. Value unchanged.`,
+              `Snapshot values are not cross-comparable across time periods. Value unchanged.`,
           );
         }
         // Don't convert - let value pass through unchanged
