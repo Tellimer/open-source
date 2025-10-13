@@ -285,18 +285,58 @@ export function computeAutoTargets(
 
     if (dims.has("magnitude")) {
       const { key: topKey, share } = topWithShare(g.magnitude, g.size);
-      const chosen = (topKey && share >= minShare)
-        ? (topKey as Scale)
-        : (applyTieBreaker("magnitude", options) as Scale | undefined);
-      sel.magnitude = chosen;
-      if (topKey && share >= minShare && chosen === topKey) {
+
+      // Special handling for count/volume indicators: avoid "ones" for readability
+      // Count indicators (Tourist Arrivals, Housing Starts) with "ones" create huge numbers
+      // Example: 173,465,000 ones vs 173,465 thousands (much more readable)
+      const isCountLike = g.indicatorType === "count" ||
+        g.indicatorType === "volume";
+      const shouldAvoidOnes = isCountLike && topKey === "ones";
+
+      let chosen: Scale | undefined;
+      if (shouldAvoidOnes) {
+        // For count indicators, prefer thousands/millions over ones
+        // Find next most common scale that's not "ones"
+        const magnitudesWithoutOnes = { ...g.magnitude };
+        delete magnitudesWithoutOnes["ones"];
+        const { key: nextKey, share: nextShare } = topWithShare(
+          magnitudesWithoutOnes,
+          g.size,
+        );
+
+        if (nextKey && nextShare >= minShare * 0.3) {
+          // Use next most common if it has at least 30% (relaxed threshold)
+          chosen = nextKey as Scale;
+          reasonParts.push(
+            `magnitude=count-prefers-scale(${nextKey},${nextShare.toFixed(2)})`,
+          );
+        } else if (nextKey) {
+          // Even if below threshold, use it if it exists (better than ones)
+          chosen = nextKey as Scale;
+          reasonParts.push(
+            `magnitude=count-prefers-any-scale(${nextKey},${
+              nextShare.toFixed(2)
+            })`,
+          );
+        } else {
+          // No alternative scale exists, must use "ones" (only option)
+          chosen = "ones";
+          reasonParts.push(`magnitude=count-only-ones-available`);
+        }
+      } else if (topKey && share >= minShare) {
+        chosen = topKey as Scale;
         reasonParts.push(`magnitude=majority(${topKey},${share.toFixed(2)})`);
-      } else if (chosen) {
-        const pref = options.tieBreakers?.magnitude ?? "prefer-millions";
-        reasonParts.push(`magnitude=tie-break(${pref})`);
       } else {
-        reasonParts.push("magnitude=none");
+        chosen = applyTieBreaker("magnitude", options) as Scale | undefined;
+        if (chosen) {
+          const pref = options.tieBreakers?.magnitude ?? "prefer-millions";
+          reasonParts.push(`magnitude=tie-break(${pref})`);
+        } else {
+          reasonParts.push("magnitude=none");
+        }
       }
+
+      sel.magnitude = chosen;
     }
 
     if (dims.has("time")) {

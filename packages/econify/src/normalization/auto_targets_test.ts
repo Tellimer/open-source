@@ -280,3 +280,54 @@ Deno.test("computeAutoTargets: count indicators (non-monetary) participate in ma
     "Month should be majority (3 out of 4 = 75%)",
   );
 });
+
+Deno.test("computeAutoTargets: count indicators prefer thousands over ones", () => {
+  // Simulates Tourist Arrivals where many countries report without explicit scale
+  // (defaults to "ones") but some report as "thousands"
+  const data: ParsedData[] = [
+    { id: "ARM", name: "Tourist Arrivals", value: 520394, unit: "Thousands", indicator_type: "count" },
+    { id: "BRA", name: "Tourist Arrivals", value: 6774, unit: "Thousands", indicator_type: "count" },
+    { id: "SAU", name: "Tourist Arrivals", value: 29.7, unit: "Millions", indicator_type: "count" },
+    { id: "BRN", name: "Tourist Arrivals", value: 268282, unit: "Thousands", indicator_type: "count" },
+    // These countries have no explicit scale, default to "ones"
+    { id: "ALB", name: "Tourist Arrivals", value: 500000, unit: "Tourists", indicator_type: "count" },
+    { id: "AUS", name: "Tourist Arrivals", value: 750000, unit: "Tourists", indicator_type: "count" },
+    { id: "BEL", name: "Tourist Arrivals", value: 850000, unit: "Tourists", indicator_type: "count" },
+  ];
+
+  const targets = computeAutoTargets(data, { indicatorKey: "name" });
+  const touristTargets = targets.get("tourist arrivals");
+
+  assertExists(touristTargets);
+  // Should prefer "thousands" (4/7 = 57%) over "ones" (3/7 = 43%)
+  // Even though "ones" is common, count indicators should avoid it for readability
+  assertEquals(touristTargets.magnitude, "thousands");
+  
+  // Verify the reasoning
+  assertExists(touristTargets.shares.magnitude);
+  assertEquals(touristTargets.shares.magnitude["thousands"] > 0.5, true);
+});
+
+Deno.test("computeAutoTargets: count indicators avoid ones even if majority", () => {
+  // Edge case: "ones" is 70% majority, but should still avoid it for count indicators
+  const data: ParsedData[] = [
+    { id: "ARM", name: "Tourist Arrivals", value: 520394, unit: "Thousands", indicator_type: "count" },
+    { id: "BRA", name: "Tourist Arrivals", value: 6774, unit: "Thousands", indicator_type: "count" },
+    // Many countries default to "ones"
+    { id: "C1", name: "Tourist Arrivals", value: 500000, unit: "Tourists", indicator_type: "count" },
+    { id: "C2", name: "Tourist Arrivals", value: 750000, unit: "Tourists", indicator_type: "count" },
+    { id: "C3", name: "Tourist Arrivals", value: 850000, unit: "Tourists", indicator_type: "count" },
+    { id: "C4", name: "Tourist Arrivals", value: 450000, unit: "Tourists", indicator_type: "count" },
+    { id: "C5", name: "Tourist Arrivals", value: 650000, unit: "Tourists", indicator_type: "count" },
+    { id: "C6", name: "Tourist Arrivals", value: 550000, unit: "Tourists", indicator_type: "count" },
+    { id: "C7", name: "Tourist Arrivals", value: 350000, unit: "Tourists", indicator_type: "count" },
+  ];
+
+  const targets = computeAutoTargets(data, { indicatorKey: "name" });
+  const touristTargets = targets.get("tourist arrivals");
+
+  assertExists(touristTargets);
+  // Even though "ones" is 7/9 = 78%, count indicators should prefer "thousands" (2/9 = 22%)
+  // This avoids huge unreadable numbers like 520,394,000
+  assertEquals(touristTargets.magnitude, "thousands");
+});
