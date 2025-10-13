@@ -264,8 +264,15 @@ export function buildExplainMetadata(
     // For monetary units, only preserve original time scale if it was explicitly in the unit string
     // (not just in metadata periodicity). This prevents adding "per month" to stock indicators.
     const hasTimeInUnit = !!parsed.timeScale;
-    const effectiveTargetTime: TimeScale | undefined = options.toTimeScale ||
-      (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined);
+
+    // Use target time scale unless conversion was explicitly blocked
+    // Check if time conversion was blocked (not just "no conversion needed")
+    const timeWasBlocked = explain.periodicity?.adjusted === false &&
+      explain.periodicity?.description?.includes("blocked");
+    const effectiveTargetTime: TimeScale | undefined = timeWasBlocked
+      ? (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined)
+      : (options.toTimeScale ||
+        (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined));
 
     normalizedUnitString = buildNormalizedUnitString(
       options.toCurrency || effectiveCurrency,
@@ -474,9 +481,18 @@ export function buildExplainMetadata(
       originalUnitString = isStockLike || !unitHadTimeScale
         ? origLabel
         : `${origLabel} per ${parsed.timeScale}`;
+
+      // For normalized unit: use target time scale unless conversion was explicitly blocked
+      // Check if time conversion was blocked (not just "no conversion needed")
+      const timeWasBlocked = explain.periodicity?.adjusted === false &&
+        explain.periodicity?.description?.includes("blocked");
+      const effectiveNormalizedTime = timeWasBlocked
+        ? parsed.timeScale
+        : (options.toTimeScale || parsed.timeScale);
+
       normalizedUnitString = isStockLike || !unitHadTimeScale
         ? normLabel
-        : `${normLabel} per ${options.toTimeScale || parsed.timeScale}`;
+        : `${normLabel} per ${effectiveNormalizedTime}`;
       originalFullUnit = originalUnitString;
       normalizedFullUnit = normalizedUnitString;
     } else {

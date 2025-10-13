@@ -96,6 +96,46 @@ Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count)
   );
 });
 
+Deno.test("Batch: period-total BLOCKS time conversion for discrete types (count) - with time in unit", async () => {
+  // Armenia scenario: count + period-total with explicit time in unit should keep original time
+  const items: BatchItem[] = [
+    {
+      id: "ARMENIA_TOURISTS",
+      name: "Tourist Arrivals",
+      value: 520394,
+      unit: "Thousands per quarter",
+      periodicity: "Quarterly",
+      indicator_type: "count", // Discrete type
+      temporal_aggregation: "period-total", // Total over quarter
+    },
+  ];
+
+  const result = await processBatch(items, {
+    toTimeScale: "month",
+    toMagnitude: "ones",
+    explain: true,
+  });
+
+  assertEquals(result.successful.length, 1);
+  const item = result.successful[0];
+
+  // Should ONLY apply magnitude scaling (thousands -> ones)
+  // Should NOT divide by 3 (quarter -> month)
+  assertEquals(item.normalized, 520394000); // 520394 * 1000, NOT ÷ 3
+  // Should keep original time dimension since conversion was blocked
+  assertEquals(item.normalizedUnit, "ones per quarter"); // Keep "per quarter", not "per month"!
+
+  // Explain metadata should show adjusted=false
+  assertExists(item.explain);
+  assertExists(item.explain.periodicity);
+  assertEquals(item.explain.periodicity.adjusted, false);
+  assertEquals(item.explain.periodicity.factor, 1);
+  assertEquals(
+    item.explain.periodicity.description,
+    "Time conversion blocked (count with period-total)",
+  );
+});
+
 Deno.test("Batch: period-rate allows time conversion", async () => {
   const items: BatchItem[] = [
     {
