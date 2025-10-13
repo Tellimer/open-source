@@ -15,7 +15,6 @@ import {
   allowsCurrency,
   allowsMagnitude,
   allowsTimeConversion,
-  allowsTimeDimension,
 } from "./indicator_type_rules.ts";
 
 // ----------------------- Combined Normalization -----------------------

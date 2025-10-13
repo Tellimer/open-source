@@ -2,21 +2,9 @@
  * Comprehensive tests for temporal aggregation integration in batch processing
  */
 
-import {
-  assertAlmostEquals,
-  assertEquals,
-  assertExists,
-} from "jsr:@std/assert@^1.0.0";
+import { assertEquals, assertExists } from "jsr:@std/assert@^1.0.0";
 import { processBatch } from "./batch.ts";
 import type { BatchItem } from "./batch.ts";
-
-const mockFX = {
-  base: "USD",
-  rates: {
-    EUR: 0.92,
-    GBP: 0.79,
-  },
-};
 
 Deno.test("Batch: period-cumulative BLOCKS time conversion", async () => {
   const items: BatchItem[] = [
