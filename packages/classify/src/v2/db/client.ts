@@ -41,6 +41,9 @@ export class V2DatabaseClient {
         await this.migrate();
       }
 
+      // Enable foreign keys (disabled by default in SQLite)
+      this.db!.exec("PRAGMA foreign_keys = ON;");
+
       // Enable WAL mode for local databases (better concurrency)
       if (this.config.type === "local" && this.config.walMode !== false) {
         this.db!.exec("PRAGMA journal_mode = WAL;");

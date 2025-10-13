@@ -21,10 +21,15 @@
     "prod:setup": "deno run --env --allow-all scripts/production/setup.ts",
     "prod:seed": "deno run --env --allow-all scripts/production/seed.ts",
     "prod:run": "deno run --env --allow-all scripts/production/run_pipeline.ts",
+    "prod:resume-orientation": "deno run --env --allow-all scripts/production/resume_from_orientation.ts",
     "prod:backfill-orientation": "deno run --env --allow-all scripts/production/backfill_orientation_reasoning.ts",
     "prod:flag": "deno run --env --allow-all scripts/production/run_flagging.ts",
     "prod:review": "deno run --env --allow-all scripts/production/run_review.ts",
+    "prod:deep-review": "deno run --env --allow-all scripts/production/run_deep_review.ts",
+    "prod:migrate-schema": "deno run --env --allow-all scripts/production/migrate_railway_schema.ts",
+    "prod:apply-reviews": "deno run --env --allow-all scripts/production/apply_manual_reviews.ts",
     "prod:sync": "deno run --env --allow-all scripts/production/sync_to_railway.ts",
+    "prod:sync-postgres": "deno run --env --allow-all scripts/production/sync_to_postgres.ts",
     "prod:reset": "deno run --env --allow-all scripts/production/reset.ts",
     "prod:reset-local": "deno run --env --allow-all scripts/production/reset_local.ts",
     "lint": "deno lint",
@@ -63,22 +68,12 @@
   },
   "lint": {
     "rules": {
-      "tags": [
-        "recommended"
-      ],
-      "exclude": [
-        "no-explicit-any",
-        "prefer-const"
-      ]
+      "tags": ["recommended"],
+      "exclude": ["no-explicit-any", "prefer-const"]
     }
   },
   "publish": {
-    "include": [
-      "src/",
-      "mod.ts",
-      "README.md",
-      "deno.json"
-    ]
+    "include": ["src/", "mod.ts", "README.md", "deno.json"]
   },
   "repository": {
     "type": "git",
