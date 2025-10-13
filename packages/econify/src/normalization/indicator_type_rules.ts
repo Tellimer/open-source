@@ -438,7 +438,7 @@ export function allowsTimeConversion(
       case "period-rate":
         // Flow rates during period - can convert (e.g., GDP quarterly → annual)
         return true;
-      case "period-total":
+      case "period-total": {
         // Sum over period - BUT depends on indicator type
         // Discrete counts/stocks cannot be meaningfully divided across time periods
         // Example: 100 tourists in Q1 ≠ 33.33 tourists per month
@@ -450,6 +450,7 @@ export function allowsTimeConversion(
         }
         // Flow-like totals - safe to convert (GDP, exports, spending, etc.)
         return true;
+      }
       case "period-average":
         // Average over period - can convert (e.g., avg temperature monthly → annual)
         return true;
