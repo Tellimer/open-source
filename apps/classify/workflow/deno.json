@@ -1,0 +1,75 @@
+{
+  "name": "@tellimer/classify-workflow",
+  "version": "0.1.0",
+  "exports": "./src/index.ts",
+  "imports": {
+    "@db/sqlite": "jsr:@db/sqlite@^0.12.0",
+    "zod": "npm:zod@^3.23",
+    "motia": "npm:motia@^0.8.2-beta.139",
+    "@motiadev/workbench": "npm:@motiadev/workbench@^0.8.2-beta.139",
+    "ai": "npm:ai@^5.0.59",
+    "@ai-sdk/openai": "npm:@ai-sdk/openai@^1.0.9",
+    "@ai-sdk/anthropic": "npm:@ai-sdk/anthropic@^1.0.8",
+    "better-sqlite3": "npm:better-sqlite3@11.7.0",
+    "postgres": "npm:postgres@^3.4.5"
+  },
+  "tasks": {
+    "install": "deno run -A npm:motia install",
+    "dev": "NODE_OPTIONS='--max-old-space-size=8192' deno run -A npm:motia dev",
+    "generate-types": "deno run -A npm:motia generate-types",
+    "build": "deno run -A npm:motia build",
+    "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
+    "seed-db": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --env src/scripts/seed-database.ts",
+    "seed-db:200": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --env src/scripts/seed-database.ts --200",
+    "migrate": "deno run --allow-env --allow-read --allow-write --allow-ffi --env src/scripts/migrate-schema.ts",
+    "run:dev": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --env src/scripts/run-classification.ts",
+    "run:openai": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --env src/scripts/run-classification-openai.ts",
+    "run:random": "deno run --allow-net --allow-env --allow-read --allow-ffi scripts/run-random.ts",
+    "run:all": "deno run --allow-net --allow-env --allow-read --allow-ffi scripts/run-all.ts",
+    "run:resume": "deno run --allow-net --allow-env --allow-read --allow-ffi scripts/run-resume.ts",
+    "run:target": "deno run --allow-net --allow-env --allow-read --allow-ffi scripts/run-target.ts",
+    "run:retry-failed": "deno run --allow-net --allow-env --allow-read --allow-ffi scripts/run-retry-failed.ts",
+    "query": "deno run --allow-read --allow-env --allow-ffi --env src/scripts/query-results.ts",
+    "stats": "deno run --allow-env --allow-read --allow-write --allow-ffi --env src/scripts/view-stats.ts",
+    "view:errors": "deno run --allow-read --allow-env --allow-ffi scripts/view-errors.ts",
+    "reset-results": "deno run --allow-read --allow-write --allow-env --allow-ffi --env scripts/reset-results.ts",
+    "clear-state": "deno run --allow-read --allow-write scripts/clear-motia-state.ts",
+    "example": "deno run --allow-net --allow-env examples/basic-usage.ts",
+    "example:parallel": "deno run --allow-net --allow-env --allow-read --allow-ffi --env examples/parallel-batches.ts",
+    "get:cumalite": "deno run --allow-read --allow-env --allow-ffi scripts/get-cumalite.ts",
+    "init:postgres": "deno run --allow-net --allow-env --env src/scripts/init-postgres.ts",
+    "sync:postgres": "deno run --allow-net --allow-env --allow-read --allow-ffi --allow-sys --env src/scripts/sync-to-postgres.ts",
+    "sync:postgres:dry-run": "deno run --allow-net --allow-env --allow-read --allow-ffi --allow-sys --env src/scripts/sync-to-postgres.ts --dry-run",
+    "seed:libsql": "deno run --allow-net --allow-env --allow-read --allow-ffi --env src/scripts/seed-libsql.ts"
+  },
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "lib": [
+      "deno.window",
+      "dom",
+      "dom.iterable"
+    ],
+    "strict": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve"
+  }
+}

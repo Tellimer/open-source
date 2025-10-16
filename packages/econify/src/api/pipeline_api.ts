@@ -30,6 +30,10 @@ export interface PipelineResult {
     string,
     NonNullable<ParsedData["explain"]>["targetSelection"]
   >;
+  // Outliers removed from data (only populated if detectScaleOutliers + filterOutliers enabled)
+  outliers?: ParsedData[];
+  // Items with incompatible unit types (only populated if detectUnitTypeMismatches + filterIncompatible enabled)
+  incompatibleUnits?: ParsedData[];
 }
 
 /**
@@ -153,6 +157,8 @@ export function processEconomicData(
             recordsFailed: data.length - (state.context.finalData?.length || 0),
             qualityScore: state.context.qualityScore?.overall,
           },
+          outliers: state.context.outliers,
+          incompatibleUnits: state.context.incompatibleUnits,
         };
         clearTimeout(timeout);
         actor.stop();

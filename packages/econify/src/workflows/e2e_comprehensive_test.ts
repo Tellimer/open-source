@@ -2685,3 +2685,308 @@ Deno.test("E2E: Government Debt (STOCK indicator - units should NOT show 'per qu
   // The key test: verify units don't have time dimension for stock indicators
   // This is the main purpose of this test - ensuring stock indicators don't show "per quarter/month"
 });
+
+Deno.test("E2E: Auto-Target with Scale Outlier Detection - Tourist Arrivals", async () => {
+  // Real-world scenario: Armenia stores raw counts, others store in thousands
+  // All labeled as "Thousands" in database
+  // This test verifies outlier detection flags inconsistent scale labeling
+  const data: ParsedData[] = [
+    {
+      id: "ARM",
+      name: "Tourist Arrivals",
+      value: 520394,
+      unit: "Thousands",
+      scale: "Thousands",
+      metadata: { country: "Armenia", source: "NSS Armenia" },
+    },
+    {
+      id: "BRA",
+      name: "Tourist Arrivals",
+      value: 6774,
+      unit: "Thousands",
+      scale: "Thousands",
+      metadata: { country: "Brazil", source: "IBGE" },
+    },
+    {
+      id: "VNM",
+      name: "Tourist Arrivals",
+      value: 1467,
+      unit: "Thousands",
+      scale: "Thousands",
+      metadata: { country: "Vietnam", source: "GSO Vietnam" },
+    },
+    {
+      id: "GRC",
+      name: "Tourist Arrivals",
+      value: 875,
+      unit: "Thousands",
+      scale: "Thousands",
+      metadata: { country: "Greece", source: "Bank of Greece" },
+    },
+    {
+      id: "MEX",
+      name: "Tourist Arrivals",
+      value: 3200,
+      unit: "Thousands",
+      scale: "Thousands",
+      metadata: { country: "Mexico", source: "INEGI" },
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    detectScaleOutliers: true,
+    scaleOutlierOptions: {
+      includeDetails: true,
+    },
+    explain: true,
+  });
+
+  // Armenia should be flagged as outlier
+  const armenia = result.data.find((item) => item.id === "ARM");
+  assertExists(armenia, "Armenia data should exist");
+  assertExists(
+    armenia.explain?.qualityWarnings,
+    "Armenia should have quality warnings",
+  );
+  assertEquals(
+    armenia.explain?.qualityWarnings?.length,
+    1,
+    "Armenia should have exactly one quality warning",
+  );
+  assertEquals(
+    armenia.explain?.qualityWarnings?.[0].type,
+    "scale-outlier",
+    "Warning should be scale-outlier type",
+  );
+  assertEquals(
+    armenia.explain?.qualityWarnings?.[0].severity,
+    "warning",
+    "Warning severity should be warning",
+  );
+
+  // Verify outlier details
+  const warning = armenia.explain?.qualityWarnings?.[0];
+  assertExists(warning?.details, "Warning should have details");
+  assertEquals(
+    warning?.details?.magnitude,
+    5,
+    "Armenia magnitude should be 5 (520,394)",
+  );
+  assertEquals(
+    warning?.details?.dominantMagnitude,
+    3,
+    "Dominant magnitude should be 3",
+  );
+  assertEquals(
+    warning?.details?.magnitudeDifference,
+    2,
+    "Magnitude difference should be 2 (100x)",
+  );
+
+  // Other countries should NOT have warnings
+  const brazil = result.data.find((item) => item.id === "BRA");
+  assertEquals(
+    brazil?.explain?.qualityWarnings,
+    undefined,
+    "Brazil should have no warnings",
+  );
+
+  const vietnam = result.data.find((item) => item.id === "VNM");
+  assertEquals(
+    vietnam?.explain?.qualityWarnings,
+    undefined,
+    "Vietnam should have no warnings",
+  );
+
+  const greece = result.data.find((item) => item.id === "GRC");
+  assertEquals(
+    greece?.explain?.qualityWarnings,
+    undefined,
+    "Greece should have no warnings",
+  );
+
+  const mexico = result.data.find((item) => item.id === "MEX");
+  assertEquals(
+    mexico?.explain?.qualityWarnings,
+    undefined,
+    "Mexico should have no warnings",
+  );
+
+  console.log("\n✅ Scale Outlier Detection Results:");
+  console.log(`Armenia (outlier): ${armenia.normalized?.toLocaleString()}`);
+  console.log(`Brazil: ${brazil?.normalized?.toLocaleString()}`);
+  console.log(`Vietnam: ${vietnam?.normalized?.toLocaleString()}`);
+  console.log(`Greece: ${greece?.normalized?.toLocaleString()}`);
+  console.log(`Mexico: ${mexico?.normalized?.toLocaleString()}`);
+  console.log(
+    `\nWarning: ${warning?.message}`,
+  );
+});
+
+Deno.test("E2E: Auto-Target with Scale Outlier Detection - Multiple Indicator Groups", async () => {
+  // Test outlier detection works independently for each indicator group
+  const data: ParsedData[] = [
+    // Tourist Arrivals group - Armenia is outlier
+    {
+      id: "ARM-TA",
+      name: "Tourist Arrivals",
+      value: 520394,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    {
+      id: "BRA-TA",
+      name: "Tourist Arrivals",
+      value: 6774,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    {
+      id: "VNM-TA",
+      name: "Tourist Arrivals",
+      value: 1467,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    {
+      id: "MEX-TA",
+      name: "Tourist Arrivals",
+      value: 3200,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    // GDP group - no outliers (all similar scale)
+    {
+      id: "ARM-GDP",
+      name: "GDP",
+      value: 15000,
+      unit: "USD Millions",
+      scale: "Millions",
+      currency_code: "USD",
+    },
+    {
+      id: "BRA-GDP",
+      name: "GDP",
+      value: 2000000,
+      unit: "USD Millions",
+      scale: "Millions",
+      currency_code: "USD",
+    },
+    {
+      id: "VNM-GDP",
+      name: "GDP",
+      value: 350000,
+      unit: "USD Millions",
+      scale: "Millions",
+      currency_code: "USD",
+    },
+    {
+      id: "MEX-GDP",
+      name: "GDP",
+      value: 1200000,
+      unit: "USD Millions",
+      scale: "Millions",
+      currency_code: "USD",
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    detectScaleOutliers: true,
+    explain: true,
+  });
+
+  // Tourist Arrivals - Armenia should be marked
+  const armTA = result.data.find((item) => item.id === "ARM-TA");
+  assertExists(
+    armTA?.explain?.qualityWarnings,
+    "Armenia TA should have warning",
+  );
+  assertEquals(
+    armTA.explain?.qualityWarnings?.length,
+    1,
+    "Armenia TA should have one warning",
+  );
+
+  // Tourist Arrivals - others OK
+  const braTA = result.data.find((item) => item.id === "BRA-TA");
+  assertEquals(
+    braTA?.explain?.qualityWarnings,
+    undefined,
+    "Brazil TA should have no warnings",
+  );
+
+  // GDP - all OK (no clear outlier)
+  const armGDP = result.data.find((item) => item.id === "ARM-GDP");
+  assertEquals(
+    armGDP?.explain?.qualityWarnings,
+    undefined,
+    "Armenia GDP should have no warnings",
+  );
+
+  const braGDP = result.data.find((item) => item.id === "BRA-GDP");
+  assertEquals(
+    braGDP?.explain?.qualityWarnings,
+    undefined,
+    "Brazil GDP should have no warnings",
+  );
+
+  console.log("\n✅ Multiple Indicator Groups:");
+  console.log(
+    `Tourist Arrivals with outlier: ${
+      armTA?.explain?.qualityWarnings?.[0].message
+    }`,
+  );
+  console.log(`GDP group: No outliers detected`);
+});
+
+Deno.test("E2E: Auto-Target WITHOUT Outlier Detection - Disabled by Default", async () => {
+  // Verify outlier detection is opt-in (disabled by default)
+  const data: ParsedData[] = [
+    {
+      id: "ARM",
+      name: "Tourist Arrivals",
+      value: 520394,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    {
+      id: "BRA",
+      name: "Tourist Arrivals",
+      value: 6774,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    {
+      id: "VNM",
+      name: "Tourist Arrivals",
+      value: 1467,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+    {
+      id: "MEX",
+      name: "Tourist Arrivals",
+      value: 3200,
+      unit: "Thousands",
+      scale: "Thousands",
+    },
+  ];
+
+  const result = await processEconomicDataByIndicator(data, {
+    autoTargetByIndicator: true,
+    // detectScaleOutliers NOT enabled
+    explain: true,
+  });
+
+  // No warnings should be added
+  const armenia = result.data.find((item) => item.id === "ARM");
+  assertEquals(
+    armenia?.explain?.qualityWarnings,
+    undefined,
+    "Armenia should have no warnings when detection disabled",
+  );
+
+  console.log("\n✅ Outlier detection disabled by default - no warnings added");
+});

@@ -23,6 +23,17 @@ Start here if you're new to Econify:
 
 Step-by-step guides for common use cases:
 
+#### Quality Control (NEW)
+
+- **[Quality Controls Overview](./guides/quality-controls.md)** - ⭐ **NEW**
+  Comprehensive overview of all quality checks
+- **[Unit Type Consistency Detection](./guides/unit-type-consistency.md)** - ⭐
+  **NEW** Detect semantic unit type mismatches (count vs index)
+- **[Scale Outlier Detection](./guides/scale-outlier-detection.md)** - ⭐
+  **NEW** Identify magnitude scale issues (100x differences)
+
+#### Data Processing
+
 - **[Batch Processing](./guides/batch-processing.md)** - Process multiple
   indicators with consistent normalization
 - **[Per-Indicator Normalization](./guides/per-indicator-normalization.md)** -
@@ -79,7 +90,11 @@ Visual documentation and architecture diagrams:
 
 → Read [Batch Processing Guide](./guides/batch-processing.md)
 
-#### Fix data quality issues in my source data
+#### Detect and handle data quality issues
+
+→ Start with [Quality Controls Overview](./guides/quality-controls.md)
+
+#### Fix known data quality issues in my source data
 
 → See [Special Handling Guide](./guides/special-handling.md)
 

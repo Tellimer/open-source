@@ -1,0 +1,27 @@
+{
+  "name": "@tellimer/classify-feeder",
+  "version": "0.1.0",
+  "exports": "./main.ts",
+  "imports": {
+    "@libsql/client": "npm:@libsql/client@^0.14.0",
+    "postgres": "npm:postgres@^3.4.5"
+  },
+  "tasks": {
+    "start": "deno run --allow-net --allow-env --allow-read main.ts start",
+    "resume": "deno run --allow-net --allow-env --allow-read main.ts resume",
+    "status": "deno run --allow-net --allow-env --allow-read main.ts status"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true,
+    "allowJs": true
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 80,
+    "indentWidth": 2,
+    "semiColons": true,
+    "singleQuote": false,
+    "proseWrap": "preserve"
+  }
+}

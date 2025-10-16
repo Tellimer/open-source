@@ -1,0 +1,34 @@
+# Build artifacts
+dist/
+node_modules/
+python_modules/
+.motia/
+.mermaid/
+
+# Database files
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/

@@ -2,6 +2,212 @@
 
 All notable changes to the econify package will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Unit Type Classifier - Complete Database Coverage**: Enhanced unit type
+  classifier to handle all 400+ unique unit patterns from the database
+  - **Comprehensive Currency Support**: Added all world currency codes (100+
+    currencies including USD, EUR, GBP, JPY, CNY, INR, BRL, ZAR, etc.)
+  - **Price/Cost Units**: Added detection for currency-per-unit patterns
+    (USD/Liter, EUR/Month, USD/Hour, EUR/MWh, EUR/SQ. METRE)
+  - **Physical Units**: Expanded to include volume (bushels, cubic feet, cubic
+    meter), area (square km, square metre, sq. metre), and weight (kt, kg)
+  - **Count Scale Variations**: Added all scale words from database (thousands,
+    hundred million, tens of million, hundreds, tens of thousands)
+  - **Special Currency Patterns**: Added detection for database-specific
+    patterns (national currency, purchasing power parity, international dollar,
+    SIPRI TIV, constant/current local currency)
+  - **Case Variations**: Handles all case variations found in database
+    (Thousand/thousands, Percent/percent, Million/million)
+  - **Count Demographics**: Expanded with doses, individuals, dwellings, and all
+    demographic unit variations
+  - **Enhanced Rate Patterns**: Added "per one million" and other rate
+    variations from database
+
+### Fixed
+
+- **Currency Code Matching**: Fixed false positives in currency detection (e.g.,
+  "scr" in "subscribers" no longer matches Seychelles Rupee)
+  - Implemented word boundary checking using regex to ensure currency codes
+    match as standalone words or in compound patterns (usd/liter, million-usd)
+  - Added currency word form detection (dollar, dollars, euro, euros, pound,
+    pounds, yen, yuan, franc, rupee, peso, ruble)
+
+## [1.3.5] - 2025-10-13
+
+### Added
+
+- **Unit Type Consistency Detection**: New quality control feature to detect
+  semantic unit type mismatches within indicator groups
+  - **Problem**: Indicators may have mixed unit types (e.g., 4 items in
+    "Thousands" (count) + 1 item in "Index (2020=100)" (index)) which are
+    semantically incompatible
+  - **Root Cause**: Database units column contains heterogeneous unit types that
+    get grouped together by indicator name
+  - **Solution**: Comprehensive unit type classification system with semantic
+    compatibility checking
+  - **Implementation**:
+    - `classifyUnitType()` - Classifies 100+ unique unit patterns from database
+      into semantic categories:
+      - **Percentage**: %, percent, percent of GDP
+      - **Index**: points, Index, basis points
+      - **Count**: persons, thousand, million, tonnes
+      - **Currency**: USD Million, EUR Billion
+      - **Physical**: celsius, mm, GWh, BBL/D
+      - **Rate**: per 1000 people, per capita
+      - **Ratio**: times, ratio, debt to equity
+      - **Duration**: days, years, months
+    - `areUnitsCompatible()` - Checks semantic compatibility (e.g., count +
+      count ✅, count + index ❌)
+    - `detectUnitTypeInconsistencies()` - Detects minority types within
+      indicator groups
+      - Requires 67% majority for dominant type (configurable)
+      - Flags items incompatible with dominant type
+      - **Two modes**: warnings only (default) or filtering (opt-in)
+  - **Usage**: Enable with `detectUnitTypeMismatches: true` + optional
+    `filterIncompatible: true`
+  - **Impact**:
+    - ✅ Tourism example: 3 counts + 1 index → index item flagged as
+      incompatible
+    - ✅ GDP Growth example: 3 percentages + 1 count → count item flagged
+    - ✅ Compatible scales work fine: "Thousand" + "Million" + "persons" all
+      recognized as compatible counts
+    - ✅ Optional filtering removes incompatible items, preserves in
+      `result.incompatibleUnits`
+  - **Example**:
+    ```ts
+    const result = await processEconomicData(data, {
+      autoTargetByIndicator: true,
+      detectUnitTypeMismatches: true,
+      unitTypeOptions: {
+        dominantTypeThreshold: 0.67, // 67% majority required
+        includeDetails: true,
+        filterIncompatible: true, // Remove incompatible items from results
+      },
+    });
+    // result.data - items with compatible unit types
+    // result.incompatibleUnits - filtered incompatible items
+    ```
+
+- **Works with Scale Outlier Detection**: Both quality checks can run
+  simultaneously
+  - Scale outliers detect magnitude issues (100x difference)
+  - Unit type checks detect semantic incompatibility (count vs index)
+  - Item can have warnings from both checks
+
+### Changed
+
+- **workflows/economic-data-workflow.ts**:
+  - Added `detectUnitTypeMismatches` and `unitTypeOptions` to `PipelineConfig`
+  - Added `incompatibleUnits` field to `PipelineContext`
+  - Integrated unit type detection in `finalizeDataService` (runs after scale
+    outlier detection)
+- **api/pipeline_api.ts**: Added `incompatibleUnits` field to `PipelineResult`
+  interface
+
+### Files Added
+
+- **src/quality/unit_type_classifier.ts**: Core classification logic for 100+
+  unit patterns (9 semantic types)
+- **src/quality/unit_type_classifier_test.ts**: Comprehensive classifier tests
+  (16 test cases covering all categories)
+- **src/quality/unit_type_consistency.ts**: Consistency detection and filtering
+  logic
+- **src/quality/unit_type_consistency_test.ts**: Consistency detection tests (11
+  test cases)
+- **src/api/pipeline_unit_type_test.ts**: Pipeline integration tests (5 test
+  cases)
+
+## [1.3.4] - 2025-10-13
+
+### Added
+
+- **Scale Outlier Detection with Optional Filtering**: New quality control
+  feature to detect and optionally remove values on fundamentally different
+  scales
+  - **Problem**: Database has inconsistent scale labeling - some countries store
+    Tourist Arrivals as raw counts (520,394 persons) while others store in
+    thousands (6,774 thousands), all labeled as "Thousands". After
+    normalization, Armenia shows 520M tourists vs Brazil 6.77M - Armenia appears
+    to have 77x more tourists!
+  - **Root Cause**: Mixed data entry conventions - some countries store actual
+    values, others pre-scaled values, but metadata doesn't distinguish
+  - **Solution**: Magnitude clustering algorithm detects values that are 100x+
+    different from the majority cluster
+  - **Implementation**:
+    - `detectScaleOutliers()` function uses order of magnitude (log10)
+      clustering
+    - Groups values by magnitude, finds dominant cluster (60% threshold)
+    - Flags values 2+ magnitudes away (100x+ different) as outliers
+    - `applyScaleOutlierDetection()` integrates with auto-target workflow
+    - **Two modes**: warnings only (default) or filtering (opt-in)
+    - Adds quality warnings to `explain.qualityWarnings` array
+    - **NEW**: `filterOutliers: true` removes outliers from results and returns
+      them separately in `result.outliers`
+  - **Usage**: Enable with `detectScaleOutliers: true` + optional
+    `filterOutliers: true`
+  - **Impact**:
+    - ✅ Armenia (520M, magnitude 8) flagged as outlier when most countries
+      cluster at magnitude 6 (1-10M range)
+    - ✅ Warnings include magnitude distribution, difference from dominant
+      cluster
+    - ✅ **NEW**: Optional filtering removes outliers from `result.data`,
+      preserves them in `result.outliers`
+    - ✅ Filtered outliers retain full explain metadata for auditability
+    - ✅ Frontend can show warnings OR exclude outliers from visualizations
+  - **Example**:
+    ```ts
+    const result = await processEconomicData(data, {
+      autoTargetByIndicator: true,
+      detectScaleOutliers: true,
+      scaleOutlierOptions: {
+        clusterThreshold: 0.6, // 60% majority required
+        magnitudeDifferenceThreshold: 2, // 100x difference = outlier
+        includeDetails: true, // Include magnitude details
+        filterOutliers: true, // ✅ NEW: Remove outliers from results
+      },
+    });
+    // result.data - clean data (outliers removed)
+    // result.outliers - filtered outliers array
+    ```
+
+- **Quality Warning Type**: Added `qualityWarnings` field to `Explain` interface
+  - Format: `Array<{ type, severity, message, details }>`
+  - Types: `"scale-outlier" | "data-quality" | "normalization-issue"`
+  - Severity: `"warning" | "error" | "info"`
+
+### Changed
+
+- **types.ts**: Added `qualityWarnings` field to `Explain` interface for quality
+  control metadata
+- **auto_targets.ts**:
+  - Added `detectScaleOutliers` and `scaleOutlierOptions` (with
+    `filterOutliers`) to `AutoTargetOptions`
+  - Updated `applyScaleOutlierDetection()` to return `{ data, outliers }`
+    instead of just data array
+  - New `ScaleOutlierDetectionResult` interface for return type
+- **workflows/economic-data-workflow.ts**:
+  - Added `outliers` field to `PipelineContext`
+  - Integrated outlier detection in `finalizeDataService`
+  - Added `filterOutliers` to `PipelineConfig.scaleOutlierOptions`
+- **api/pipeline_api.ts**: Added `outliers` field to `PipelineResult` interface
+
+### Files Added
+
+- **src/quality/scale_outlier_detection.ts**: Core outlier detection logic with
+  magnitude clustering
+- **src/quality/scale_outlier_detection_test.ts**: Comprehensive tests for
+  outlier detection (12 test cases)
+- **src/normalization/auto_targets_outlier_test.ts**: Integration tests for
+  auto-target workflow (8 test cases)
+- **src/api/pipeline_outlier_test.ts**: Pipeline API tests (5 test cases)
+- **src/api/pipeline_outlier_filtering_test.ts**: Filtering functionality tests
+  (5 test cases)
+- **src/workflows/e2e_comprehensive_test.ts**: Added 3 E2E workflow tests for
+  outlier detection
+
 ## [1.3.3] - 2025-10-13
 
 ### Fixed

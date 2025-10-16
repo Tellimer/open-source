@@ -7,6 +7,7 @@ import type { ParsedData } from "../workflows/economic-data-workflow.ts";
 import { parseUnit } from "../units/units.ts";
 import { getScale, parseTimeScale } from "../scale/scale.ts";
 import { allowsTimeDimension } from "./indicator_type_rules.ts";
+import { detectScaleOutliers } from "../quality/scale_outlier_detection.ts";
 
 export type IndicatorKeyResolver =
   | "name"
@@ -26,6 +27,15 @@ export interface AutoTargetOptions {
   targetCurrency?: string; // for tie-breaker context
   allowList?: string[]; // indicator keys forced IN
   denyList?: string[]; // indicator keys forced OUT
+  /** Enable scale outlier detection (default: false) */
+  detectScaleOutliers?: boolean;
+  /** Options for scale outlier detection */
+  scaleOutlierOptions?: {
+    clusterThreshold?: number; // default: 0.6 (60%)
+    magnitudeDifferenceThreshold?: number; // default: 2 (100x)
+    includeDetails?: boolean; // default: false
+    filterOutliers?: boolean; // default: false - only adds warnings
+  };
 }
 
 export interface AutoTargetSelection {
@@ -374,4 +384,137 @@ export function computeAutoTargets(
   }
 
   return result;
+}
+
+export interface ScaleOutlierDetectionResult {
+  /** Clean data (outliers removed if filterOutliers=true) */
+  data: ParsedData[];
+  /** Detected outliers (only populated if filterOutliers=true) */
+  outliers?: ParsedData[];
+}
+
+/**
+ * Apply scale outlier detection to normalized data grouped by indicator
+ *
+ * This function detects values that are on a fundamentally different scale
+ * than the majority within each indicator group, and marks them with quality warnings.
+ * Optionally filters outliers from results.
+ *
+ * Example use case:
+ * - Tourist Arrivals where some countries store raw counts (520,394) while others
+ *   store in thousands (6,774), all labeled as "Thousands"
+ * - After normalization, Armenia shows 520M tourists while Brazil shows 6.77M
+ * - Armenia is flagged as a 100x+ outlier
+ *
+ * @param data Array of normalized data items
+ * @param options Options including outlier detection configuration
+ * @returns Object with data (outliers removed if filterOutliers=true) and optional outliers array
+ */
+export function applyScaleOutlierDetection(
+  data: ParsedData[],
+  options: AutoTargetOptions = {},
+): ScaleOutlierDetectionResult {
+  if (!options.detectScaleOutliers || data.length === 0) {
+    return { data };
+  }
+
+  const indicatorKey = options.indicatorKey ?? "name";
+
+  // Group data by indicator
+  const groups = new Map<string, ParsedData[]>();
+  for (const item of data) {
+    const key = resolveKey(item, indicatorKey);
+    if (!key) continue;
+
+    const group = groups.get(key) ?? [];
+    group.push(item);
+    groups.set(key, group);
+  }
+
+  // Process each indicator group
+  const results: ParsedData[] = [];
+  const outliers: ParsedData[] = [];
+  const shouldFilter = options.scaleOutlierOptions?.filterOutliers ?? false;
+
+  for (const [_key, items] of groups.entries()) {
+    // Prepare items for outlier detection (need id and normalized value)
+    const detectItems = items
+      .filter((item) => item.normalized != null)
+      .map((item) => ({
+        id: String(item.id ?? items.indexOf(item)),
+        normalized: item.normalized!,
+      }));
+
+    if (detectItems.length === 0) {
+      results.push(...items);
+      continue;
+    }
+
+    // Run outlier detection
+    const outlierResult = detectScaleOutliers(
+      detectItems,
+      options.scaleOutlierOptions,
+    );
+
+    // Mark outliers with quality warnings (and optionally filter them)
+    if (outlierResult.hasOutliers) {
+      const outlierIdSet = new Set(outlierResult.outlierIds);
+
+      for (const item of items) {
+        const itemId = String(item.id ?? items.indexOf(item));
+
+        if (outlierIdSet.has(itemId)) {
+          // Find outlier details for this item
+          const details = outlierResult.outlierDetails?.find((d) =>
+            d.id === itemId
+          );
+
+          // Add quality warning to explain object
+          const warning = {
+            type: "scale-outlier" as const,
+            severity: "warning" as const,
+            message: outlierResult.reason,
+            details: details
+              ? {
+                value: details.value,
+                magnitude: details.magnitude,
+                dominantMagnitude: outlierResult.dominantMagnitude,
+                magnitudeDifference: details.magnitudeDifference,
+                distribution: outlierResult.distribution,
+              }
+              : undefined,
+          };
+
+          // Create or update explain object
+          const explain = item.explain ?? {};
+          const qualityWarnings = explain.qualityWarnings ?? [];
+          qualityWarnings.push(warning);
+
+          const markedItem = {
+            ...item,
+            explain: {
+              ...explain,
+              qualityWarnings,
+            },
+          };
+
+          // If filtering is enabled, move to outliers array, otherwise include in results
+          if (shouldFilter) {
+            outliers.push(markedItem);
+          } else {
+            results.push(markedItem);
+          }
+        } else {
+          results.push(item);
+        }
+      }
+    } else {
+      results.push(...items);
+    }
+  }
+
+  return {
+    data: results,
+    outliers: shouldFilter && outliers.length > 0 ? outliers : undefined,
+  };
 }

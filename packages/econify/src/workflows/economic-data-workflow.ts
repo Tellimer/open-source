@@ -20,8 +20,12 @@ import {
 import { processWagesData } from "../services/wages-service.ts";
 import { processBatch } from "../batch/batch.ts";
 import { filterExemptions } from "../exemptions/exemptions.ts";
-import { computeAutoTargets } from "../normalization/auto_targets.ts";
+import {
+  applyScaleOutlierDetection,
+  computeAutoTargets,
+} from "../normalization/auto_targets.ts";
 import type { IndicatorKeyResolver } from "../normalization/auto_targets.ts";
+import { detectUnitTypeInconsistencies } from "../quality/unit_type_consistency.ts";
 
 import {
   loadDomainUnits,
@@ -49,6 +53,8 @@ export interface PipelineContext {
   normalizedData?: ParsedData[];
   adjustedData?: ParsedData[];
   finalData?: ParsedData[];
+  outliers?: ParsedData[];
+  incompatibleUnits?: ParsedData[];
   errors: PipelineError[];
   warnings: string[];
   metrics: {
@@ -132,6 +138,26 @@ export interface PipelineConfig {
   /** Optional allow/deny lists to force in/out certain indicators */
   allowList?: string[];
   denyList?: string[];
+  /** Enable scale outlier detection (default: false) */
+  detectScaleOutliers?: boolean;
+  /** Options for scale outlier detection */
+  scaleOutlierOptions?: {
+    clusterThreshold?: number;
+    magnitudeDifferenceThreshold?: number;
+    includeDetails?: boolean;
+    /** Remove outliers from results (default: false - only adds warnings) */
+    filterOutliers?: boolean;
+  };
+  /** Enable unit type consistency detection (default: false) */
+  detectUnitTypeMismatches?: boolean;
+  /** Options for unit type consistency detection */
+  unitTypeOptions?: {
+    /** Minimum percentage threshold for dominant type (default: 0.67) */
+    dominantTypeThreshold?: number;
+    includeDetails?: boolean;
+    /** Remove incompatible items from results (default: false - only adds warnings) */
+    filterIncompatible?: boolean;
+  };
 
   // Metadata explanation
   /** Include detailed normalization metadata for transparency (default: false) */
@@ -982,7 +1008,40 @@ export const pipelineMachine = setup({
 
     finalizeDataService: fromPromise(
       ({ input }: { input: PipelineContext }) => {
-        const finalData = input.adjustedData || input.normalizedData;
+        let finalData = input.adjustedData || input.normalizedData;
+        let detectedOutliers: ParsedData[] | undefined;
+        let incompatibleUnits: ParsedData[] | undefined;
+
+        // Apply scale outlier detection if enabled and auto-targeting is on
+        if (
+          input.config.detectScaleOutliers &&
+          input.config.autoTargetByIndicator &&
+          finalData
+        ) {
+          const result = applyScaleOutlierDetection(finalData, {
+            indicatorKey: input.config.indicatorKey,
+            detectScaleOutliers: input.config.detectScaleOutliers,
+            scaleOutlierOptions: input.config.scaleOutlierOptions,
+          });
+          finalData = result.data;
+          detectedOutliers = result.outliers;
+        }
+
+        // Apply unit type consistency detection if enabled
+        if (
+          input.config.detectUnitTypeMismatches &&
+          finalData
+        ) {
+          const result = detectUnitTypeInconsistencies(finalData, {
+            dominantTypeThreshold: input.config.unitTypeOptions
+              ?.dominantTypeThreshold,
+            includeDetails: input.config.unitTypeOptions?.includeDetails,
+            filterIncompatible: input.config.unitTypeOptions
+              ?.filterIncompatible,
+          });
+          finalData = result.data;
+          incompatibleUnits = result.incompatible;
+        }
 
         const formatNormalizedUnit = (u?: string): string | undefined => u;
 
@@ -992,17 +1051,21 @@ export const pipelineMachine = setup({
             ? Date.now() - input.metrics.startTime
             : undefined);
 
-        return Promise.resolve(
-          finalData?.map((item) => ({
-            ...item,
-            normalizedUnit: formatNormalizedUnit(item.normalizedUnit),
-            pipeline: {
-              qualityScore: input.qualityScore?.overall,
-              processingTime: computedProcessingTime,
-              inferredUnit: item.inferredUnit,
-            },
-          })),
-        );
+        const processedFinalData = finalData?.map((item) => ({
+          ...item,
+          normalizedUnit: formatNormalizedUnit(item.normalizedUnit),
+          pipeline: {
+            qualityScore: input.qualityScore?.overall,
+            processingTime: computedProcessingTime,
+            inferredUnit: item.inferredUnit,
+          },
+        }));
+
+        return Promise.resolve({
+          finalData: processedFinalData,
+          outliers: detectedOutliers,
+          incompatibleUnits,
+        });
       },
     ),
   },
@@ -1293,7 +1356,9 @@ export const pipelineMachine = setup({
         onDone: {
           target: "success",
           actions: assign({
-            finalData: ({ event }) => event.output,
+            finalData: ({ event }) => event.output.finalData,
+            outliers: ({ event }) => event.output.outliers,
+            incompatibleUnits: ({ event }) => event.output.incompatibleUnits,
             metrics: ({ context }) => ({
               ...context.metrics,
               endTime: Date.now(),

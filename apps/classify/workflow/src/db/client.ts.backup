@@ -1,0 +1,111 @@
+/**
+ * SQLite Database Client with WAL mode
+ * @module
+ */
+
+import Database from 'better-sqlite3';
+import { CLASSIFY_WORKFLOW_SCHEMA } from './schema.ts';
+
+let dbInstance: Database.Database | null = null;
+let dbPath: string | null = null;
+let isInitialized = false;
+
+/**
+ * Get or create database connection with WAL mode enabled
+ */
+export function getDatabase(path?: string): Database.Database {
+  const requestedPath =
+    path ||
+    process.env.CLASSIFY_DB_LOCAL_DEV ||
+    './data/classify-workflow-local-dev.db';
+
+  // Return existing instance if same path
+  if (dbInstance && dbPath === requestedPath) {
+    return dbInstance;
+  }
+
+  // Close existing connection if path changed
+  if (dbInstance && dbPath !== requestedPath) {
+    console.log(`[DB] Switching database from ${dbPath} to ${requestedPath}`);
+    dbInstance.close();
+    dbInstance = null;
+    isInitialized = false;
+  }
+
+  // Create new connection
+  if (!isInitialized) {
+    console.log(`[DB] Opening database: ${requestedPath}`);
+  }
+
+  dbPath = requestedPath;
+  dbInstance = new Database(requestedPath);
+
+  // Enable WAL mode optimizations for better-sqlite3
+  dbInstance.pragma('journal_mode = WAL');
+  dbInstance.pragma('synchronous = NORMAL'); // Balance between safety and speed
+  dbInstance.pragma('busy_timeout = 15000'); // 15s timeout for high concurrency
+  dbInstance.pragma('wal_autocheckpoint = 500'); // Prevent WAL bloat
+  dbInstance.pragma('journal_size_limit = 67108864'); // 64MB WAL cap
+
+  if (!isInitialized) {
+    console.log('[DB] WAL mode enabled with optimized settings');
+    isInitialized = true;
+  }
+
+  return dbInstance;
+}
+
+/**
+ * Initialize database schema
+ */
+export function initializeSchema(db: Database.Database): void {
+  console.log('[DB] Initializing schema...');
+
+  // Split schema by semicolons and execute each statement
+  const statements = CLASSIFY_WORKFLOW_SCHEMA.split(';').filter(
+    (stmt) => stmt.trim().length > 0
+  );
+
+  for (const statement of statements) {
+    const trimmed = statement.trim();
+    if (trimmed.length > 0) {
+      try {
+        db.exec(trimmed);
+      } catch (error) {
+        console.error(`[DB] Error executing statement: ${trimmed}`, error);
+        throw error;
+      }
+    }
+  }
+
+  console.log('[DB] Schema initialized successfully');
+}
+
+/**
+ * Close database connection
+ */
+export function closeDatabase(): void {
+  if (dbInstance) {
+    dbInstance.close();
+    dbInstance = null;
+    console.log('[DB] Database closed');
+  }
+}
+
+/**
+ * Transaction helper
+ */
+export async function withTransaction<T>(
+  db: Database.Database,
+  fn: () => T | Promise<T>
+): Promise<T> {
+  db.exec('BEGIN TRANSACTION');
+  try {
+    const result = await fn();
+    db.exec('COMMIT');
+    return result;
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}

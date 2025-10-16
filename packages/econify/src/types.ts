@@ -218,4 +218,12 @@ export interface Explain {
     };
     reason?: string;
   };
+
+  /** Quality warnings (e.g., scale outliers, data quality issues) */
+  qualityWarnings?: Array<{
+    type: "scale-outlier" | "data-quality" | "normalization-issue";
+    severity: "warning" | "error" | "info";
+    message: string;
+    details?: Record<string, unknown>;
+  }>;
 }

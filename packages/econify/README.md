@@ -83,6 +83,10 @@ assessment, error handling, and interactive control flow._
 - 🏆 **Data Quality Assessment** — Comprehensive quality scoring across 6
   dimensions with outlier detection, completeness analysis, and actionable
   recommendations
+- 🛡️ **Unit Type Consistency Detection** — Detect semantic unit type mismatches
+  (count vs index) within indicator groups
+- 📊 **Scale Outlier Detection** — Identify magnitude scale issues (100x
+  differences) from inconsistent labeling
 - ⚡ **Batch Processing** — Process large datasets efficiently with validation
   and error recovery
 - 🔌 **Custom Units** — Define domain-specific units (emissions, crypto,
@@ -308,19 +312,24 @@ Get comprehensive transparency into all normalization decisions with the
 enhanced explain metadata system:
 
 ```ts
-const result = await processEconomicData([{
-  value: -6798.401,
-  unit: "USD Million",
-  periodicity: "Yearly",
-  scale: "Millions",
-  currency_code: "USD",
-  name: "Afghanistan Balance of Trade",
-}], {
-  targetCurrency: "USD",
-  targetMagnitude: "millions",
-  targetTimeScale: "month",
-  explain: true, // 🔍 Enable enhanced explain metadata
-});
+const result = await processEconomicData(
+  [
+    {
+      value: -6798.401,
+      unit: "USD Million",
+      periodicity: "Yearly",
+      scale: "Millions",
+      currency_code: "USD",
+      name: "Afghanistan Balance of Trade",
+    },
+  ],
+  {
+    targetCurrency: "USD",
+    targetMagnitude: "millions",
+    targetTimeScale: "month",
+    explain: true, // 🔍 Enable enhanced explain metadata
+  },
+);
 
 const item = result.data[0];
 console.log("Enhanced Explain Metadata:");
@@ -975,9 +984,7 @@ import {
   validateEconomicData,
 } from "jsr:@tellimer/econify";
 
-const data = [
-  { value: 100, unit: "USD", name: "Valid Data" },
-];
+const data = [{ value: 100, unit: "USD", name: "Valid Data" }];
 
 // Validate first
 const validation = await validateEconomicData(data);
@@ -1146,7 +1153,9 @@ result.data.forEach((item) => {
   if (item.normalized) {
     console.log(
       `${item.metadata.country}: $${
-        Math.round(item.normalized).toLocaleString()
+        Math.round(
+          item.normalized,
+        ).toLocaleString()
       }`,
     );
   }
@@ -1546,6 +1555,637 @@ interface SamplingOptions {
 }
 ```
 
+## 📖 Complete API Reference
+
+### `processEconomicData()`
+
+Main function for processing economic data through the complete pipeline.
+
+```typescript
+async function processEconomicData(
+  data: ParsedData[],
+  options?: ProcessingOptions,
+): Promise<PipelineResult>;
+```
+
+#### Input: `ParsedData`
+
+```typescript
+interface ParsedData {
+  // Required fields
+  value: number; // The numeric value
+  unit: string; // Unit string (e.g., "USD Million", "percent")
+
+  // Recommended fields
+  id?: string | number; // Unique identifier
+  name?: string; // Indicator name (used for grouping with autoTargetByIndicator)
+
+  // Optional metadata
+  year?: number; // Year for the data point
+  date?: string | Date; // Date for the data point
+  description?: string; // Description text
+  context?: string; // Additional context
+
+  // Explicit metadata (preferred over concatenated units)
+  // These take precedence over unit string parsing when provided
+  periodicity?: string; // "Quarterly", "Monthly", "Yearly"
+  scale?: string; // "Millions", "Billions", "Thousands"
+  currency_code?: string; // ISO currency code (e.g., "USD", "EUR", "SAR")
+
+  // Classification metadata (from @tellimer/classify package)
+  // When provided, these are used instead of econify's internal classification
+  indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio"
+  is_currency_denominated?: boolean; // true for currency amounts
+  temporal_aggregation?: string; // "point-in-time" | "period-rate" | "period-cumulative" | "period-average" | "period-total" | "not-applicable"
+
+  // Additional metadata
+  metadata?: Record<string, unknown>; // Custom metadata
+
+  // Output fields (added by pipeline)
+  normalized?: number; // Normalized value
+  normalizedUnit?: string; // Normalized unit string
+  parsedUnit?: ParsedUnit; // Parsed unit details
+  inferredUnit?: string; // Inferred unit (if inferUnits enabled)
+  realValue?: number; // Inflation-adjusted value
+  explain?: Explain; // Detailed normalization metadata (if explain enabled)
+  pipeline?: {
+    // Pipeline metadata
+    qualityScore?: number;
+    processingTime?: number;
+    inferredUnit?: string;
+  };
+}
+```
+
+#### Options: `ProcessingOptions`
+
+```typescript
+interface ProcessingOptions {
+  // ═══════════════════════════════════════════════════════════
+  // NORMALIZATION TARGETS
+  // ═══════════════════════════════════════════════════════════
+
+  /** Target currency for conversion (e.g., "USD", "EUR") */
+  targetCurrency?: string;
+
+  /** Target magnitude scale */
+  targetMagnitude?:
+    | "ones"
+    | "thousands"
+    | "millions"
+    | "billions"
+    | "trillions";
+
+  /** Target time scale for flow indicators */
+  targetTimeScale?: "year" | "quarter" | "month" | "week" | "day" | "hour";
+
+  // ═══════════════════════════════════════════════════════════
+  // AUTO-TARGETING (Smart Normalization)
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Enable auto-targeting per indicator group
+   * Automatically determines appropriate normalization targets
+   * based on the most common units in each indicator group
+   */
+  autoTargetByIndicator?: boolean;
+
+  /**
+   * Which dimensions to auto-target
+   * Default: ["magnitude", "currency", "time"]
+   */
+  autoTargetDimensions?: Array<"magnitude" | "currency" | "time">;
+
+  /**
+   * Minimum share required to select a majority value
+   * Default: 0.5 (50% of items must share a unit)
+   */
+  minMajorityShare?: number;
+
+  /**
+   * Grouping key for indicator series
+   * Default: 'name' (groups by the 'name' field)
+   * Can also provide a resolver function to derive the key from the row
+   */
+  indicatorKey?: string | ((item: ParsedData) => string);
+
+  /**
+   * Tie-breaker preferences when no majority exists
+   */
+  tieBreakers?: {
+    currency?: "prefer-targetCurrency" | "prefer-USD" | "none";
+    magnitude?: "prefer-millions" | "none";
+    time?: "prefer-month" | "none";
+  };
+
+  /**
+   * Optional allow/deny lists to force in/out certain indicators
+   */
+  allowList?: string[];
+  denyList?: string[];
+
+  // ═══════════════════════════════════════════════════════════
+  // QUALITY CONTROLS (NEW)
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Enable unit type consistency detection
+   * Detects semantic unit type mismatches (count vs index vs percentage)
+   */
+  detectUnitTypeMismatches?: boolean;
+
+  /**
+   * Unit type consistency options
+   */
+  unitTypeOptions?: {
+    /** Threshold for dominant type (default: 0.67 = 67% majority) */
+    dominantTypeThreshold?: number;
+
+    /** Include detailed type distribution statistics */
+    includeDetails?: boolean;
+
+    /** Remove incompatible items from results */
+    filterIncompatible?: boolean;
+  };
+
+  /**
+   * Enable scale outlier detection
+   * Detects magnitude scale issues (100x+ differences)
+   */
+  detectScaleOutliers?: boolean;
+
+  /**
+   * Scale outlier detection options
+   */
+  scaleOutlierOptions?: {
+    /** Minimum cluster size for majority (default: 0.67 = 67%) */
+    clusterThreshold?: number;
+
+    /** Magnitude difference threshold in log10 units
+     * 1.0 = 10x, 2.0 = 100x (default), 3.0 = 1000x */
+    magnitudeDifferenceThreshold?: number;
+
+    /** Include detailed cluster distribution */
+    includeDetails?: boolean;
+
+    /** Remove outlier items from results */
+    filterOutliers?: boolean;
+  };
+
+  /** Minimum overall quality score (0-100) for data to pass */
+  minQualityScore?: number;
+
+  // ═══════════════════════════════════════════════════════════
+  // FX RATES
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Fallback FX rates table
+   * Used when live rates are unavailable
+   */
+  fxFallback?: {
+    base: string; // Base currency (e.g., "USD")
+    rates: Record<string, number>; // Currency rates
+    dates?: Record<string, string>; // When each rate was last updated
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // EXEMPTIONS (Skip Normalization)
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Skip normalization for specific indicators
+   */
+  exemptions?: {
+    /** Indicator IDs to exempt (e.g., ['TEL_CCR', 'CUSTOM_INDEX']) */
+    indicatorIds?: string[];
+
+    /** Category groups to exempt (e.g., ['IMF WEO', 'Tellimer']) */
+    categoryGroups?: string[];
+
+    /** Indicator names to exempt (e.g., ['Credit Rating', 'Index']) */
+    indicatorNames?: string[];
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // SPECIAL HANDLING (Data Quality Issues)
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * Special handling for indicators with known data quality issues
+   * Override units/scales for specific indicators
+   */
+  specialHandling?: {
+    unitOverrides?: Array<{
+      /** Indicator IDs to apply override to */
+      indicatorIds?: string[];
+      /** Indicator names to apply override to (case-insensitive) */
+      indicatorNames?: string[];
+      /** Override the unit field (e.g., "Units" instead of "Thousand") */
+      overrideUnit?: string;
+      /** Override the scale field (e.g., null to prevent scaling) */
+      overrideScale?: string | null;
+      /** Reason for the override (for documentation/logging) */
+      reason?: string;
+    }>;
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // ADVANCED OPTIONS
+  // ═══════════════════════════════════════════════════════════
+
+  /** Automatically infer units from context */
+  inferUnits?: boolean;
+
+  /** Adjust for inflation using CPI data */
+  adjustInflation?: boolean;
+
+  /** Remove seasonal patterns from time series */
+  removeSeasonality?: boolean;
+
+  /** Use live FX rates (fetched from external sources) */
+  useLiveFX?: boolean;
+
+  /** Validate schema with required fields */
+  validateSchema?: boolean;
+
+  /** Required fields for validation */
+  requiredFields?: string[];
+
+  /** Output format for results */
+  outputFormat?: "json" | "csv" | "parquet";
+
+  /** Include detailed normalization metadata (default: false) */
+  explain?: boolean;
+
+  // ═══════════════════════════════════════════════════════════
+  // WAGES-SPECIFIC OPTIONS
+  // ═══════════════════════════════════════════════════════════
+
+  /** Exclude index values from wages data */
+  excludeIndexValues?: boolean;
+
+  /** Include wage-specific metadata in results */
+  includeWageMetadata?: boolean;
+
+  // ═══════════════════════════════════════════════════════════
+  // CALLBACKS
+  // ═══════════════════════════════════════════════════════════
+
+  /** Progress callback (step name, progress 0-1) */
+  onProgress?: (step: string, progress: number) => void;
+
+  /** Warning callback */
+  onWarning?: (warning: string) => void;
+
+  /** Error callback */
+  onError?: (error: Error) => void;
+}
+```
+
+#### Output: `PipelineResult`
+
+```typescript
+interface PipelineResult {
+  /** Processed data (all items if no filtering, or only passed items) */
+  data: ParsedData[];
+
+  /** Items filtered due to incompatible unit types (if filterIncompatible=true) */
+  incompatibleUnits?: ParsedData[];
+
+  /** Items filtered as scale outliers (if filterOutliers=true) */
+  outliers?: ParsedData[];
+
+  /** Warning messages */
+  warnings: string[];
+
+  /** Error messages */
+  errors: Error[];
+
+  /** Processing metrics */
+  metrics: {
+    processingTime: number; // Time in milliseconds
+    recordsProcessed: number; // Total records processed
+    recordsFailed: number; // Records that failed
+    qualityScore?: number; // Overall quality score (0-100)
+  };
+
+  /** Per-indicator target selections (when autoTargetByIndicator is enabled) */
+  targetSelectionsByIndicator?: Record<
+    string,
+    {
+      currency?: string;
+      magnitude?: string;
+      timeScale?: string;
+    }
+  >;
+}
+```
+
+Each item in `data` will have an `explain` field with normalization details:
+
+```typescript
+interface ExplainMetadata {
+  // Original values
+  originalValue: number;
+  originalUnit: string;
+
+  // Normalized values
+  normalizedValue: number;
+  normalizedUnit: string;
+
+  // Conversions applied
+  conversions: {
+    currency?: { from: string; to: string; rate: number };
+    magnitude?: { from: string; to: string; factor: number };
+    time?: { from: string; to: string; factor: number };
+  };
+
+  // Quality warnings (if any)
+  qualityWarnings?: Array<{
+    type: "unit-type-mismatch" | "scale-outlier" | "quality-issue";
+    severity: "low" | "medium" | "high";
+    message: string;
+    context?: any;
+  }>;
+
+  // Auto-targeting info (if enabled)
+  autoTarget?: {
+    dimension: "currency" | "magnitude" | "time";
+    target: string;
+    confidence: number;
+  };
+}
+```
+
+### Complete Usage Examples
+
+#### Basic Normalization
+
+```typescript
+const result = await processEconomicData(data, {
+  targetCurrency: "USD",
+  targetMagnitude: "billions",
+});
+
+console.log(result.data[0].normalized); // Normalized value
+console.log(result.data[0].explain); // Detailed conversion info
+```
+
+#### Auto-Targeting (Recommended)
+
+```typescript
+// Automatically determine best targets per indicator group
+const result = await processEconomicData(data, {
+  autoTargetByIndicator: true,
+  autoTargetDimensions: ["magnitude", "currency", "time"],
+});
+
+// Each indicator group normalized to its most common unit
+result.data.forEach((item) => {
+  console.log(item.explain?.autoTarget); // Shows what target was chosen
+});
+```
+
+#### Quality Controls
+
+```typescript
+// Development mode - warnings only
+const devResult = await processEconomicData(data, {
+  detectUnitTypeMismatches: true,
+  unitTypeOptions: {
+    filterIncompatible: false, // Keep all data
+    includeDetails: true, // Get statistics
+  },
+  detectScaleOutliers: true,
+  scaleOutlierOptions: {
+    filterOutliers: false, // Keep all data
+    includeDetails: true, // Get cluster info
+  },
+});
+
+// Review warnings
+devResult.data.forEach((item) => {
+  item.explain?.qualityWarnings?.forEach((warning) => {
+    console.log(`⚠️ ${item.id}: ${warning.type} - ${warning.message}`);
+  });
+});
+
+// Production mode - automatic filtering
+const prodResult = await processEconomicData(data, {
+  detectUnitTypeMismatches: true,
+  unitTypeOptions: {
+    filterIncompatible: true, // Auto-remove
+  },
+  detectScaleOutliers: true,
+  scaleOutlierOptions: {
+    filterOutliers: true, // Auto-remove
+  },
+});
+
+console.log("Clean data:", prodResult.data.length);
+console.log("Filtered incompatible:", prodResult.incompatibleUnits?.length);
+console.log("Filtered outliers:", prodResult.outliers?.length);
+```
+
+#### Comprehensive Configuration
+
+```typescript
+const result = await processEconomicData(data, {
+  // Targets
+  targetCurrency: "EUR",
+  targetMagnitude: "millions",
+  targetTimeScale: "month",
+
+  // Auto-targeting
+  autoTargetByIndicator: true,
+  autoTargetDimensions: ["magnitude", "currency"],
+  autoTargetThreshold: 0.67,
+
+  // Quality controls
+  detectUnitTypeMismatches: true,
+  unitTypeOptions: {
+    dominantTypeThreshold: 0.67,
+    filterIncompatible: true,
+    includeDetails: true,
+  },
+  detectScaleOutliers: true,
+  scaleOutlierOptions: {
+    clusterThreshold: 0.67,
+    magnitudeDifferenceThreshold: 2.0, // 100x
+    filterOutliers: true,
+    includeDetails: true,
+  },
+  minQualityScore: 70,
+
+  // FX rates
+  fxFallback: {
+    base: "USD",
+    rates: {
+      EUR: 0.92,
+      GBP: 0.79,
+      JPY: 149.5,
+    },
+    dates: {
+      EUR: "2025-01-10",
+      GBP: "2025-01-10",
+      JPY: "2025-01-10",
+    },
+  },
+
+  // Exemptions
+  exemptions: {
+    indicatorIds: ["TEL_CCR"],
+    categoryGroups: ["IMF WEO"],
+    indicatorNames: ["Credit Rating", "Risk Index"],
+  },
+
+  // Callbacks
+  onProgress: (step, progress) => {
+    console.log(`${step}: ${(progress * 100).toFixed(0)}%`);
+  },
+  onWarning: (warning) => {
+    console.warn("⚠️", warning);
+  },
+  onError: (error) => {
+    console.error("❌", error.message);
+  },
+});
+```
+
+### Batch Processing API
+
+For processing multiple indicators with consistent normalization:
+
+```typescript
+import { EconifyBatchSession } from "@tellimer/econify";
+
+// Create session
+const session = new EconifyBatchSession({
+  targetCurrency: "USD",
+  autoTargetByIndicator: true,
+  detectUnitTypeMismatches: true,
+  detectScaleOutliers: true,
+});
+
+// Add data points
+data.forEach((item) => session.addDataPoint(item));
+
+// Process all together
+const result = await session.process();
+
+// Access results
+console.log("Processed:", result.data);
+console.log("Warnings:", result.warnings);
+console.log("Quality filtered:", result.incompatibleUnits, result.outliers);
+```
+
+See [Batch Processing Guide](./docs/guides/batch-processing.md) for detailed
+documentation.
+
+### Quality Control APIs
+
+#### Unit Type Classification
+
+```typescript
+import {
+  areUnitsCompatible,
+  classifyUnitType,
+} from "@tellimer/econify/quality";
+
+// Classify a unit
+const result = classifyUnitType("USD Million");
+// → { type: "currency-amount", confidence: 1.0, matchedPattern: "..." }
+
+// Check compatibility
+const compatible = areUnitsCompatible("count", "count"); // → true
+const incompatible = areUnitsCompatible("count", "index"); // → false
+```
+
+**Unit Types:**
+
+- `percentage` - %, percent, percent of GDP
+- `index` - points, Index (2020=100), basis points
+- `count` - persons, thousand, million, billion
+- `currency-amount` - USD Million, EUR Billion
+- `physical` - celsius, mm, GWh, BBL/D
+- `rate` - per 1000 people, per capita
+- `ratio` - times, ratio, debt to equity
+- `duration` - days, years, months
+- `unknown` - Unrecognized patterns
+
+See [Unit Type Consistency Guide](./docs/guides/unit-type-consistency.md) for
+details.
+
+#### Scale Outlier Detection
+
+```typescript
+import { detectScaleOutliers } from "@tellimer/econify/quality";
+
+const result = detectScaleOutliers(data, {
+  clusterThreshold: 0.67, // 67% majority required
+  magnitudeDifferenceThreshold: 2.0, // 100x difference
+  includeDetails: true,
+});
+
+// Items with outlier warnings
+result.data.forEach((item) => {
+  const warning = item.explain?.qualityWarnings?.find(
+    (w) => w.type === "scale-outlier",
+  );
+  if (warning) {
+    console.log(`Outlier: ${item.id}`);
+    console.log(`Magnitude: ${warning.context.itemMagnitude}`);
+    console.log(`Difference: ${warning.context.magnitudeDifference} log units`);
+  }
+});
+```
+
+See [Scale Outlier Detection Guide](./docs/guides/scale-outlier-detection.md)
+for details.
+
+### Validation API
+
+```typescript
+import { validateEconomicData } from "@tellimer/econify";
+
+// Validate before processing
+const validation = await validateEconomicData(data, {
+  requiredFields: ["value", "units", "indicator"],
+});
+
+if (!validation.isValid) {
+  console.error("Validation errors:", validation.errors);
+  validation.errors.forEach((error) => {
+    console.log(`- Item ${error.itemIndex}: ${error.message}`);
+  });
+}
+```
+
+### Time Sampling API
+
+```typescript
+import { resampleTimeSeries } from "@tellimer/econify/time";
+
+// Upsample or downsample time series
+const resampled = resampleTimeSeries(timeSeries, "month", {
+  method: "linear", // Interpolation method
+  fillMissing: true, // Fill missing values
+  preserveSeasonality: true,
+});
+```
+
+**Resampling Methods:**
+
+- `linear` - Linear interpolation
+- `step` - Step function (last value carries forward)
+- `average` - Average over period
+- `sum` - Sum over period
+- `end_of_period` - Use end value
+- `start_of_period` - Use start value
+
+See [Time Sampling Guide](./docs/guides/time-sampling.md) for details.
+
 ## 📚 Core Features
 
 ### Unit Parsing Engine
@@ -1902,7 +2542,6 @@ type Scale =
   | "hundreds"
   | "ones";
 type TimeScale = "year" | "quarter" | "month" | "week" | "day" | "hour";
-type IndicatorType = "stock" | "flow" | "rate" | "currency" | "unknown";
 
 interface FXTable {
   base: string;
@@ -2025,6 +2664,12 @@ Comprehensive documentation is available in the [`docs/`](./docs/) directory:
 
 ### 📖 Guides
 
+- **[Quality Controls](./docs/guides/quality-controls.md)** - **⭐ NEW**
+  Comprehensive overview of data quality checks
+- **[Unit Type Consistency](./docs/guides/unit-type-consistency.md)** - **⭐
+  NEW** Detect semantic unit type mismatches
+- **[Scale Outlier Detection](./docs/guides/scale-outlier-detection.md)** - **⭐
+  NEW** Identify magnitude scale issues
 - **[Batch Processing](./docs/guides/batch-processing.md)** - Process multiple
   indicators consistently
 - **[Per-Indicator Normalization](./docs/guides/per-indicator-normalization.md)** -
