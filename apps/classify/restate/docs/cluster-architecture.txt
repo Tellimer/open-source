@@ -1,0 +1,62 @@
+Restate Cluster Architecture
+=============================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                   Restate 3-Node Cluster                         │
+│                                                                   │
+│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
+│  │  Node 1     │   │  Node 2     │   │  Node 3     │           │
+│  │  :8080      │   │  :28080     │   │  :38080     │           │
+│  │  :9070 UI   │   │  :29070 UI  │   │  :39070 UI  │           │
+│  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
+│         │                 │                 │                    │
+│         │    Shared Metadata & State        │                    │
+│         └─────────┬───────┴─────────┬───────┘                   │
+│                   │                 │                            │
+│         ┌─────────▼─────────────────▼─────────┐                 │
+│         │  MinIO (S3-compatible storage)       │                 │
+│         │  - Cluster metadata                  │                 │
+│         │  - Workflow snapshots                │                 │
+│         │  - Replication: 2 nodes minimum      │                 │
+│         └──────────────────────────────────────┘                 │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+          ┌───────────────────┼───────────────────┐
+          │                   │                   │
+   Batch 1,4,7...      Batch 2,5,8...      Batch 3,6,9...
+   (Round-robin load distribution)
+          │                   │                   │
+          └───────────────────┼───────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │ Classification    │
+                    │ Service (x1)      │
+                    │ :9080             │
+                    │                   │
+                    │ 6 LLM Services:   │
+                    │ - normalization   │
+                    │ - time-inference  │
+                    │ - family-assign   │
+                    │ - type-classify   │
+                    │ - boolean-review  │
+                    │ - final-review    │
+                    └─────────┬─────────┘
+                              │
+                              │ All writes go to same DB
+                              │
+                    ┌─────────▼──────────┐
+                    │   TimescaleDB      │
+                    │   localhost:5432   │
+                    │   classify DB      │
+                    │                    │
+                    │ Tables:            │
+                    │ - source_indicators│
+                    │ - classifications  │
+                    │ - 6 result tables  │
+                    └────────────────────┘
+
+Key Insights:
+- 3 Restate nodes = 3x workflow execution capacity
+- 1 Service instance = All nodes call same service
+- 1 Database = All results in one place
+- Result: 3x throughput without 3x infrastructure
