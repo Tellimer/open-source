@@ -6,19 +6,59 @@
   "module": "src/index.ts",
   "scripts": {
     "dev": "bun run src/index.ts",
+    "dev:watch": "bun --watch src/index.ts",
+    "dev:local": "npm-run-all --parallel dev restate:server:delayed dev:register",
+    "dev:local:ultra": "ulimit -n 10240 && npm-run-all --parallel dev:watch restate:server:delayed dev:register",
+    "restate:server": "RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT=5m RESTATE_WORKER__INVOKER__ABORT_TIMEOUT=5m restate-server --config-file restate.toml",
+    "restate:server:delayed": "sleep 2 && RESTATE_WORKER__INVOKER__INACTIVITY_TIMEOUT=5m RESTATE_WORKER__INVOKER__ABORT_TIMEOUT=5m restate-server --config-file restate.toml",
+    "dev:register": "sleep 5 && curl -X POST http://localhost:9070/deployments -H 'content-type: application/json' -d '{\"uri\": \"http://localhost:9080\"}'",
+    "reregister": "curl -X POST http://localhost:9070/deployments -H 'content-type: application/json' -d '{\"uri\": \"http://localhost:9080\"}'",
     "start": "bun run src/index.ts",
     "test": "bun test",
-    "db:migrate": "bun run src/db/migrations/run.ts"
+    "db:migrate": "bun run src/db/migrations/run.ts",
+    "db:init": "bun run src/db/init.ts",
+    "db:seed": "bun run src/scripts/seed-database.ts",
+    "classify": "bun run src/scripts/classify-indicators.ts",
+    "classify:safe": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 150",
+    "classify:fast": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 300",
+    "classify:max": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 480",
+    "classify:ultra": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 5000",
+    "classify:turbo": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 10000",
+    "classify:cluster": "bun run src/scripts/classify-cluster.ts --openai --rpm=400",
+    "classify:cluster:fast": "bun run src/scripts/classify-cluster.ts --openai --rpm=400",
+    "classify:cluster:max": "bun run src/scripts/classify-cluster.ts --openai --rpm=600",
+    "classify:cluster:ultra": "bun run src/scripts/classify-cluster.ts --openai --rpm=800",
+    "reclassify:safe": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 150 --force",
+    "reclassify:fast": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 300 --force",
+    "reclassify:ultra": "bun run src/scripts/classify-indicators-throttled.ts --openai --rpm 5000 --force",
+    "stats": "bun run src/scripts/batch-stats.ts",
+    "stats:30m": "bun run src/scripts/batch-stats.ts --minutes 30",
+    "stats:today": "bun run src/scripts/batch-stats.ts --minutes 1440",
+    "queue": "bun run src/scripts/check-queue.ts",
+    "kill": "bun run src/scripts/kill-all.ts",
+    "clean": "bun run src/scripts/kill-all.ts --clean",
+    "cluster:start": "bun run src/scripts/start-cluster.ts start",
+    "cluster:stop": "bun run src/scripts/start-cluster.ts stop",
+    "cluster:clean": "bun run src/scripts/start-cluster.ts clean",
+    "cluster:logs": "docker-compose -f docker-compose.cluster.yml logs -f",
+    "cluster:ps": "docker-compose -f docker-compose.cluster.yml ps",
+    "all-in-one": "bun run src/scripts/cluster-all-in-one.ts --rpm=400",
+    "all-in-one:fast": "bun run src/scripts/cluster-all-in-one.ts --rpm=400",
+    "all-in-one:max": "bun run src/scripts/cluster-all-in-one.ts --rpm=600",
+    "all-in-one:ultra": "bun run src/scripts/cluster-all-in-one.ts --rpm=900"
   },
   "dependencies": {
     "@restatedev/restate-sdk": "^1.4.1",
     "zod": "^3.23.8",
-    "pg": "^8.11.3"
+    "ai": "^4.0.0",
+    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/anthropic": "^1.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/pg": "^8.11.0",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@restatedev/restate-server": "^1.1.1",
+    "npm-run-all": "^4.1.5"
   },
   "peerDependencies": {
     "typescript": "^5"

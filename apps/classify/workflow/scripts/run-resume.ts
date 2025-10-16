@@ -123,8 +123,8 @@ async function waitForBatchCompletion(
 async function classifyIndicatorsBatch(
   indicators: SourceIndicator[],
   llmProvider: string = 'openai',
-  batchSize: number = 10,
-  concurrentBatches: number = 10,
+  batchSize: number = 5,
+  concurrentBatches: number = 2,
   db: Database
 ) {
   const baseUrl = Deno.env.get('MOTIA_API_URL') || 'http://localhost:3000';
@@ -230,9 +230,9 @@ async function classifyIndicatorsBatch(
     results.push(...groupResults);
 
     console.log(
-      `   ✅ Group ${Math.floor(i / concurrentBatches) + 1} batches submitted! (${
-        groupIndicatorIds.length
-      } indicators queued)\n`
+      `   ✅ Group ${
+        Math.floor(i / concurrentBatches) + 1
+      } batches submitted! (${groupIndicatorIds.length} indicators queued)\n`
     );
 
     // Wait for THIS GROUP to complete before moving to next group
