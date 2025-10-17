@@ -1,0 +1,39 @@
+# Service Templates
+# This file defines reusable service templates
+
+x-restate-node: &restate-node
+  image: docker.restate.dev/restatedev/restate:latest
+  restart: unless-stopped
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  volumes:
+    - restate-data:/restate-data
+  networks:
+    - restate-cluster
+  depends_on:
+    - minio
+
+x-classify-service: &classify-service
+  build:
+    context: .
+    dockerfile: Dockerfile.service
+  environment:
+    PORT: 9080
+    HOST: 0.0.0.0
+    POSTGRES_HOST: ${POSTGRES_HOST:-timescaledb}
+    POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    POSTGRES_DB: ${POSTGRES_DB:-classify}
+    POSTGRES_USER: ${POSTGRES_USER:-classify}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classify}
+    OPENAI_API_KEY: ${OPENAI_API_KEY}
+    OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  networks:
+    - restate-cluster
+  labels:
+    - "traefik.enable=true"
+    - "traefik.http.services.classify.loadbalancer.server.port=9080"
+    - "traefik.http.services.classify.loadbalancer.server.scheme=h2c"

@@ -42,10 +42,22 @@
     "cluster:clean": "bun run src/scripts/start-cluster.ts clean",
     "cluster:logs": "docker-compose -f docker-compose.cluster.yml logs -f",
     "cluster:ps": "docker-compose -f docker-compose.cluster.yml ps",
-    "all-in-one": "bun run src/scripts/cluster-all-in-one.ts --rpm=400",
-    "all-in-one:fast": "bun run src/scripts/cluster-all-in-one.ts --rpm=400",
-    "all-in-one:max": "bun run src/scripts/cluster-all-in-one.ts --rpm=600",
-    "all-in-one:ultra": "bun run src/scripts/cluster-all-in-one.ts --rpm=900"
+    "all-in-one": "bun run src/scripts/cluster-all-in-one.ts --rpm=1000",
+    "all-in-one:conservative": "bun run src/scripts/cluster-all-in-one.ts --rpm=750",
+    "all-in-one:normal": "bun run src/scripts/cluster-all-in-one.ts --rpm=1000",
+    "all-in-one:fast": "bun run src/scripts/cluster-all-in-one.ts --rpm=1250",
+    "all-in-one:ultra": "bun run src/scripts/cluster-all-in-one.ts --rpm=1500",
+    "cluster:5node": "docker-compose -f docker-compose.cluster.yml up -d",
+    "generate:cluster": "bun run scripts/generate-compose.ts",
+    "generate:cluster:10": "bun run scripts/generate-compose.ts --nodes=5 --services=10",
+    "generate:cluster:20": "bun run scripts/generate-compose.ts --nodes=5 --services=20",
+    "generate:cluster:mega": "bun run scripts/generate-compose.ts --nodes=10 --services=20",
+    "cluster:start:10": "bun run generate:cluster:10 && bun run cluster:start",
+    "cluster:start:20": "bun run generate:cluster:20 && bun run cluster:start",
+    "cluster:start:mega": "bun run generate:cluster:mega && bun run cluster:start",
+    "all-in-one:10": "bun run generate:cluster:10 && bun run all-in-one",
+    "all-in-one:20": "bun run generate:cluster:20 && bun run all-in-one",
+    "all-in-one:mega": "bun run generate:cluster:mega && bun run all-in-one"
   },
   "dependencies": {
     "@restatedev/restate-sdk": "^1.4.1",
@@ -55,9 +67,11 @@
     "@ai-sdk/anthropic": "^1.0.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "bun-types": "latest",
     "@restatedev/restate-server": "^1.1.1",
+    "@types/bun": "latest",
+    "@types/js-yaml": "^4.0.9",
+    "bun-types": "latest",
+    "js-yaml": "^4.1.0",
     "npm-run-all": "^4.1.5"
   },
   "peerDependencies": {

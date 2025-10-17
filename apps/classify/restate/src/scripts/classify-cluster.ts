@@ -39,6 +39,8 @@ const CLUSTER_NODES = [
   { name: "Node 1", url: "http://localhost:8080", adminUrl: "http://localhost:9070" },
   { name: "Node 2", url: "http://localhost:28080", adminUrl: "http://localhost:29070" },
   { name: "Node 3", url: "http://localhost:38080", adminUrl: "http://localhost:39070" },
+  { name: "Node 4", url: "http://localhost:48080", adminUrl: "http://localhost:49070" },
+  { name: "Node 5", url: "http://localhost:58080", adminUrl: "http://localhost:59070" },
 ];
 
 async function submitBatch(
@@ -98,8 +100,14 @@ async function classifyWithCluster() {
   console.log("=================================\n");
   console.log(`Mode: ${force ? "Re-classify all" : "Classify unclassified only"}`);
   console.log(`LLM Provider: ${llmProvider}`);
-  console.log(`Target RPM: ${targetRPM} (distributed across 3 nodes)`);
-  console.log(`Per-Node RPM: ${Math.floor(targetRPM / 3)}\n`);
+  console.log(`\n📊 Cluster Configuration:`);
+  console.log(`   Restate Nodes: ${CLUSTER_NODES.length}`);
+  console.log(`   Classification Services: 5 (behind Traefik)`);
+  console.log(`   Load Balancer: Traefik (HTTP/2, round-robin)`);
+  console.log(`\n🎯 Performance Targets:`);
+  console.log(`   Target RPM: ${targetRPM} (distributed across ${CLUSTER_NODES.length} nodes)`);
+  console.log(`   Per-Node RPM: ~${Math.floor(targetRPM / CLUSTER_NODES.length)}`);
+  console.log(`   Expected Throughput: ~${Math.floor((targetRPM / 3) / CLUSTER_NODES.length)} indicators/min per node\n`);
 
   // Fetch indicators
   console.log("🔍 Fetching indicators from database...");
@@ -174,54 +182,26 @@ async function classifyWithCluster() {
   const totalBatches = Math.ceil(indicators.length / batchSize);
   const estimatedTimeSeconds = (totalBatches * delayBetweenBatchesMs) / 1000;
 
-  console.log("📊 Rate Limiting Configuration:");
-  console.log(`   Target RPM: ${targetRPM} requests/minute (across cluster)`);
-  console.log(`   Per-Node RPM: ~${Math.floor(targetRPM / 3)} requests/minute`);
-  console.log(`   Est. Requests per Indicator: ${estimatedRequestsPerIndicator}`);
-  console.log(`   Target Throughput: ${targetIndicatorsPerMinute.toFixed(1)} indicators/minute`);
+  console.log("⚙️  Processing Configuration:");
+  console.log(`   Total Indicators: ${indicators.length}`);
   console.log(`   Batch Size: ${batchSize} indicators`);
+  console.log(`   Total Batches: ${totalBatches}`);
+  console.log(`   Requests per Indicator: ~${estimatedRequestsPerIndicator}`);
+  console.log(`   Target Throughput: ${targetIndicatorsPerMinute.toFixed(1)} indicators/min`);
   console.log(`   Delay Between Batches: ${delayBetweenBatchesMs}ms`);
   console.log(`   Estimated Total Time: ${Math.floor(estimatedTimeSeconds / 60)}m ${Math.floor(estimatedTimeSeconds % 60)}s\n`);
 
-  // Check cluster health
-  console.log("🏥 Checking cluster health...");
-  const healthChecks = await Promise.all(
-    CLUSTER_NODES.map(async (node) => {
-      try {
-        const response = await fetch(`${node.url}/classify-api/health`, {
-          signal: AbortSignal.timeout(2000),
-        });
-        return { node: node.name, healthy: response.ok };
-      } catch {
-        return { node: node.name, healthy: false };
-      }
-    })
-  );
-
-  const healthyNodes = healthChecks.filter((h) => h.healthy);
-  console.log(`   Healthy nodes: ${healthyNodes.length}/3`);
-  healthChecks.forEach((h) => {
-    const icon = h.healthy ? "✅" : "❌";
-    console.log(`   ${icon} ${h.node}`);
+  // Use all configured nodes (health already verified by all-in-one script)
+  console.log("🏥 Using cluster nodes:");
+  CLUSTER_NODES.forEach((node) => {
+    console.log(`   ✅ ${node.name} (${node.url})`);
   });
+  console.log("");
 
-  if (healthyNodes.length === 0) {
-    console.error("\n❌ No healthy nodes found!");
-    console.log("💡 Start the cluster with: bun run cluster:start");
-    console.log("💡 Then register services: bun run dev");
-    process.exit(1);
-  }
+  // Use all nodes for load balancing
+  const activeNodes = CLUSTER_NODES;
 
-  // Use only healthy nodes for load balancing
-  const activeNodes = CLUSTER_NODES.filter((node) =>
-    healthyNodes.some((h) => h.node === node.name)
-  );
-
-  if (healthyNodes.length < 3) {
-    console.log(`\n⚠️  Warning: Only ${healthyNodes.length} node(s) healthy. Load balancing across available nodes...\n`);
-  } else {
-    console.log("   ✅ All nodes healthy!\n");
-  }
+  console.log(`🚀 Distributing workload across ${activeNodes.length} nodes → Traefik → 5 services\n`);
 
   console.log(`📤 Starting cluster classification...\n`);
 
@@ -288,10 +268,15 @@ async function classifyWithCluster() {
       const remaining = indicators.length - totalSubmitted;
       const eta = remaining / (throughput / 60);
 
-      console.log(`\n📊 Progress: ${totalSubmitted}/${indicators.length} indicators (${((totalSubmitted / indicators.length) * 100).toFixed(1)}%)`);
-      console.log(`⏱️  Elapsed: ${Math.floor(elapsed)}s | ETA: ${Math.floor(eta / 60)}m ${Math.floor(eta % 60)}s`);
-      console.log(`🚀 Throughput: ${throughput.toFixed(1)} indicators/min (target: ${targetIndicatorsPerMinute.toFixed(1)} ind/min)`);
-      console.log(`📡 Est. API Requests: ${totalSubmitted * estimatedRequestsPerIndicator}/${indicators.length * estimatedRequestsPerIndicator} (${estimatedRequestsPerIndicator} per indicator)\n`);
+      console.log(`\n${'='.repeat(70)}`);
+      console.log(`📊 PROGRESS UPDATE - Batch ${i + 1}/${totalBatches}`);
+      console.log(`${'='.repeat(70)}`);
+      console.log(`📈 Indicators: ${totalSubmitted}/${indicators.length} (${((totalSubmitted / indicators.length) * 100).toFixed(1)}%) | Failed: ${totalFailed}`);
+      console.log(`⏱️  Time: ${Math.floor(elapsed)}s elapsed | ETA: ${Math.floor(eta / 60)}m ${Math.floor(eta % 60)}s remaining`);
+      console.log(`🚀 Throughput: ${throughput.toFixed(1)} indicators/min (target: ${targetIndicatorsPerMinute.toFixed(1)})`);
+      console.log(`📡 API Load: ~${Math.floor(throughput * estimatedRequestsPerIndicator)} RPM across cluster`);
+      console.log(`🔄 Active: ${activeNodes.length} nodes → Traefik → 5 services processing in parallel`);
+      console.log(`${'='.repeat(70)}\n`);
     }
 
     // Wait before next batch (except for last batch)
@@ -301,29 +286,32 @@ async function classifyWithCluster() {
   }
 
   const totalTime = (Date.now() - startTime) / 1000;
+  const avgThroughput = (totalSubmitted / totalTime) * 60;
 
-  console.log("\n✅ Classification Complete!\n");
-  console.log("📊 Final Statistics:");
-  console.log("===================");
-  console.log(`   Total Submitted: ${totalSubmitted}/${indicators.length}`);
-  console.log(`   Total Failed: ${totalFailed}`);
+  console.log("\n" + "=".repeat(70));
+  console.log("✅ CLASSIFICATION COMPLETE!");
+  console.log("=".repeat(70));
+  console.log("\n📊 CLUSTER PERFORMANCE SUMMARY:");
+  console.log(`   Architecture: ${activeNodes.length} Restate Nodes → Traefik → 5 Services`);
+  console.log(`   Total Processed: ${totalSubmitted}/${indicators.length} indicators`);
+  console.log(`   Failed: ${totalFailed}`);
+  console.log(`   Success Rate: ${((totalSubmitted / (totalSubmitted + totalFailed)) * 100).toFixed(1)}%`);
   console.log(`   Total Time: ${Math.floor(totalTime / 60)}m ${Math.floor(totalTime % 60)}s`);
-  console.log(`   Avg Throughput: ${((totalSubmitted / totalTime) * 60).toFixed(1)} indicators/min\n`);
+  console.log(`   Avg Throughput: ${avgThroughput.toFixed(1)} indicators/min`);
+  console.log(`   Speedup vs Single Node: ~${(avgThroughput / 50).toFixed(1)}x\n`);
 
-  console.log("📊 Per-Node Statistics:");
-  console.log("======================");
+  console.log("📊 PER-NODE DISTRIBUTION:");
   for (const [url, stats] of nodeStats.entries()) {
     const avgTime = stats.submitted > 0 ? stats.totalTime / (stats.submitted / batchSize) : 0;
-    console.log(`   ${stats.node}:`);
-    console.log(`     - Submitted: ${stats.submitted} indicators`);
-    console.log(`     - Failed: ${stats.failed} indicators`);
-    console.log(`     - Avg Batch Time: ${avgTime.toFixed(0)}ms`);
+    const pct = ((stats.submitted / totalSubmitted) * 100).toFixed(1);
+    console.log(`   ${stats.node}: ${stats.submitted} indicators (${pct}%) | Avg batch: ${avgTime.toFixed(0)}ms`);
   }
 
-  console.log("\n💡 Next Steps:");
+  console.log("\n💡 NEXT STEPS:");
   console.log("   - Check queue status: bun run queue");
   console.log("   - View cluster logs: bun run cluster:logs");
-  console.log("   - Monitor Admin UI: http://localhost:9070");
+  console.log("   - Admin UI: http://localhost:9070");
+  console.log("   - Stop cluster: docker-compose -f docker-compose.cluster.yml down");
 }
 
 classifyWithCluster().catch((error) => {

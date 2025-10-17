@@ -62,7 +62,7 @@ async function main() {
   // Create endpoint
   const endpoint = createRestateEndpoint();
 
-  // Start HTTP server
+  // Start HTTP server (Restate SDK binds to 0.0.0.0 by default when only port is specified)
   await endpoint.listen(PORT);
 
   console.log(`✅ Restate endpoint listening on http://${HOST}:${PORT}`);

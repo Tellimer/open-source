@@ -1,113 +1,282 @@
-x-defaults: &defaults
+x-defaults:
   image: docker.restate.dev/restatedev/restate:latest
   restart: unless-stopped
   extra_hosts:
-    - "host.docker.internal:host-gateway"
+    - host.docker.internal:host-gateway
   volumes:
     - restate-data:/restate-data
-
-x-common-env: &common-env
-  RESTATE_CLUSTER_NAME: "restate-cluster"
-  RESTATE_LOG_FILTER: "restate=info"
-  RESTATE_DEFAULT_REPLICATION: 2  # We require minimum of 2 nodes to accept writes
-  # The addresses where nodes can reach each other over the "internal" Docker Compose network
-  RESTATE_METADATA_CLIENT__ADDRESSES: '["http://restate-1:5122","http://restate-2:5122","http://restate-3:5122"]'
-  # Partition snapshotting
-  RESTATE_WORKER__SNAPSHOTS__DESTINATION: "s3://restate/snapshots"
-  RESTATE_WORKER__SNAPSHOTS__SNAPSHOT_INTERVAL_NUM_RECORDS: "1000"
-  RESTATE_WORKER__SNAPSHOTS__AWS_REGION: "local"
-  RESTATE_WORKER__SNAPSHOTS__AWS_ENDPOINT_URL: "http://minio:9000"
+x-common-env:
+  RESTATE_CLUSTER_NAME: restate-cluster
+  RESTATE_LOG_FILTER: restate=info
+  RESTATE_DEFAULT_REPLICATION: 2
+  RESTATE_METADATA_CLIENT__ADDRESSES: '["http://restate-1:5122","http://restate-2:5122","http://restate-3:5122","http://restate-4:5122","http://restate-5:5122"]'
+  RESTATE_WORKER__SNAPSHOTS__DESTINATION: s3://restate/snapshots
+  RESTATE_WORKER__SNAPSHOTS__SNAPSHOT_INTERVAL_NUM_RECORDS: '1000'
+  RESTATE_WORKER__SNAPSHOTS__AWS_REGION: local
+  RESTATE_WORKER__SNAPSHOTS__AWS_ENDPOINT_URL: http://minio:9000
   RESTATE_WORKER__SNAPSHOTS__AWS_ALLOW_HTTP: true
-  RESTATE_WORKER__SNAPSHOTS__AWS_ACCESS_KEY_ID: "minioadmin"
-  RESTATE_WORKER__SNAPSHOTS__AWS_SECRET_ACCESS_KEY: "minioadmin"
-
+  RESTATE_WORKER__SNAPSHOTS__AWS_ACCESS_KEY_ID: minioadmin
+  RESTATE_WORKER__SNAPSHOTS__AWS_SECRET_ACCESS_KEY: minioadmin
 services:
   restate-1:
-    <<: *defaults
+    '<<': '*defaults'
     ports:
-      - "8080:8080" # Ingress
-      - "9070:9070" # Admin
-      - "5122:5122" # Node-to-node communication
+      - '8080:8080'
+      - '9070:9070'
+      - '5122:5122'
     environment:
-      <<: *common-env
+      '<<': '*common-env'
       RESTATE_NODE_NAME: restate-1
       RESTATE_FORCE_NODE_ID: 1
-      RESTATE_ADVERTISED_ADDRESS: "http://restate-1:5122" # Other Restate nodes must be able to reach us using this address
-      RESTATE_AUTO_PROVISION: "true" # Only the first node provisions the cluster
+      RESTATE_ADVERTISED_ADDRESS: http://restate-1:5122
+      RESTATE_AUTO_PROVISION: 'true'
     networks:
       - restate-cluster
     depends_on:
       - minio
-
   restate-2:
-    <<: *defaults
+    '<<': '*defaults'
     ports:
-      - "25122:5122"
-      - "29070:9070"
-      - "28080:8080"
+      - '18080:8080'
+      - '19070:9070'
+      - '15122:5122'
     environment:
-      <<: *common-env
+      '<<': '*common-env'
       RESTATE_NODE_NAME: restate-2
       RESTATE_FORCE_NODE_ID: 2
-      RESTATE_ADVERTISED_ADDRESS: "http://restate-2:5122"
-      RESTATE_AUTO_PROVISION: "false"
+      RESTATE_ADVERTISED_ADDRESS: http://restate-2:5122
+      RESTATE_AUTO_PROVISION: 'false'
     networks:
       - restate-cluster
     depends_on:
       - minio
       - restate-1
-
   restate-3:
-    <<: *defaults
+    '<<': '*defaults'
     ports:
-      - "35122:5122"
-      - "39070:9070"
-      - "38080:8080"
+      - '28080:8080'
+      - '29070:9070'
+      - '25122:5122'
     environment:
-      <<: *common-env
+      '<<': '*common-env'
       RESTATE_NODE_NAME: restate-3
       RESTATE_FORCE_NODE_ID: 3
-      RESTATE_ADVERTISED_ADDRESS: "http://restate-3:5122"
-      RESTATE_AUTO_PROVISION: "false"
+      RESTATE_ADVERTISED_ADDRESS: http://restate-3:5122
+      RESTATE_AUTO_PROVISION: 'false'
     networks:
       - restate-cluster
     depends_on:
       - minio
       - restate-1
-
-  minio:
-    image: quay.io/minio/minio
-    entrypoint: "/bin/sh"
-    # Ensure a bucket called "restate" exists on startup:
-    command: "-c 'mkdir -p /data/restate && /usr/bin/minio server --quiet /data'"
+  restate-4:
+    '<<': '*defaults'
     ports:
-      - "9000:9000"
+      - '38080:8080'
+      - '39070:9070'
+      - '35122:5122'
+    environment:
+      '<<': '*common-env'
+      RESTATE_NODE_NAME: restate-4
+      RESTATE_FORCE_NODE_ID: 4
+      RESTATE_ADVERTISED_ADDRESS: http://restate-4:5122
+      RESTATE_AUTO_PROVISION: 'false'
     networks:
       - restate-cluster
-
-  # timescaledb:
-  #   image: timescale/timescaledb:latest-pg16
-  #   environment:
-  #     POSTGRES_USER: classify
-  #     POSTGRES_PASSWORD: classify
-  #     POSTGRES_DB: classify
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - timescale-data:/var/lib/postgresql/data
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U classify"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   command: postgres -c shared_preload_libraries=timescaledb
-
-# We create a volume to persist data across container starts; delete it via `docker volume rm restate-data` if you want to start a fresh cluster
+    depends_on:
+      - minio
+      - restate-1
+  restate-5:
+    '<<': '*defaults'
+    ports:
+      - '48080:8080'
+      - '49070:9070'
+      - '45122:5122'
+    environment:
+      '<<': '*common-env'
+      RESTATE_NODE_NAME: restate-5
+      RESTATE_FORCE_NODE_ID: 5
+      RESTATE_ADVERTISED_ADDRESS: http://restate-5:5122
+      RESTATE_AUTO_PROVISION: 'false'
+    networks:
+      - restate-cluster
+    depends_on:
+      - minio
+      - restate-1
+  classify-service-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    environment:
+      PORT: 9080
+      HOST: 0.0.0.0
+      POSTGRES_HOST: ${POSTGRES_HOST:-timescaledb}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-classify}
+      POSTGRES_USER: ${POSTGRES_USER:-classify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - restate-cluster
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.classify.loadbalancer.server.port=9080
+      - traefik.http.services.classify.loadbalancer.server.scheme=h2c
+      - traefik.http.routers.discover.rule=PathPrefix(`/discover`)
+      - traefik.http.routers.discover.priority=100
+      - traefik.http.routers.discover.service=discover-service
+      - traefik.http.services.discover-service.loadbalancer.server.port=9080
+      - traefik.http.services.discover-service.loadbalancer.server.scheme=h2c
+      - traefik.http.routers.classify.rule=PathPrefix(`/`)
+      - traefik.http.routers.classify.priority=1
+      - traefik.http.routers.classify.service=classify
+  classify-service-2:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    environment:
+      PORT: 9080
+      HOST: 0.0.0.0
+      POSTGRES_HOST: ${POSTGRES_HOST:-timescaledb}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-classify}
+      POSTGRES_USER: ${POSTGRES_USER:-classify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - restate-cluster
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.classify.loadbalancer.server.port=9080
+      - traefik.http.services.classify.loadbalancer.server.scheme=h2c
+  classify-service-3:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    environment:
+      PORT: 9080
+      HOST: 0.0.0.0
+      POSTGRES_HOST: ${POSTGRES_HOST:-timescaledb}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-classify}
+      POSTGRES_USER: ${POSTGRES_USER:-classify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - restate-cluster
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.classify.loadbalancer.server.port=9080
+      - traefik.http.services.classify.loadbalancer.server.scheme=h2c
+  classify-service-4:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    environment:
+      PORT: 9080
+      HOST: 0.0.0.0
+      POSTGRES_HOST: ${POSTGRES_HOST:-timescaledb}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-classify}
+      POSTGRES_USER: ${POSTGRES_USER:-classify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - restate-cluster
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.classify.loadbalancer.server.port=9080
+      - traefik.http.services.classify.loadbalancer.server.scheme=h2c
+  classify-service-5:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    environment:
+      PORT: 9080
+      HOST: 0.0.0.0
+      POSTGRES_HOST: ${POSTGRES_HOST:-timescaledb}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-classify}
+      POSTGRES_USER: ${POSTGRES_USER:-classify}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-classify}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-20241022}
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - restate-cluster
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.classify.loadbalancer.server.port=9080
+      - traefik.http.services.classify.loadbalancer.server.scheme=h2c
+  traefik:
+    image: traefik:v2.10
+    ports:
+      - '9080:9080'
+      - '8081:8080'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+    networks:
+      - restate-cluster
+    depends_on:
+      - classify-service-1
+      - classify-service-2
+      - classify-service-3
+      - classify-service-4
+      - classify-service-5
+  minio:
+    image: quay.io/minio/minio
+    entrypoint: /bin/sh
+    command: '-c ''mkdir -p /data/restate && /usr/bin/minio server --quiet /data'''
+    ports:
+      - '9000:9000'
+    networks:
+      - restate-cluster
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: classify
+      POSTGRES_PASSWORD: classify
+      POSTGRES_DB: classify
+    ports:
+      - '5432:5432'
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U classify
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: postgres -c shared_preload_libraries=timescaledb -c max_connections=2000
+    networks:
+      - restate-cluster
 volumes:
-  restate-data:
-  # timescale-data:
-
-# Dedicated network for cluster communication
+  restate-data: null
+  timescale-data: null
 networks:
   restate-cluster:
     driver: bridge

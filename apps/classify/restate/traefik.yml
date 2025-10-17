@@ -1,0 +1,25 @@
+# Traefik Static Configuration
+# Enables Docker provider and HTTP/2 support
+
+api:
+  dashboard: true
+  insecure: true
+
+entryPoints:
+  web:
+    address: ":9080"
+    # Enable HTTP/2
+    http2:
+      maxConcurrentStreams: 250
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: restate-cluster
+
+log:
+  level: INFO
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"

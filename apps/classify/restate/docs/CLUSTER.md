@@ -1,6 +1,6 @@
 # Restate Cluster Guide
 
-Complete guide to running a 3-node Restate cluster for 3x classification throughput.
+Complete guide to running multi-node Restate clusters with dynamic scaling from 5 to 20+ services.
 
 ## Table of Contents
 
