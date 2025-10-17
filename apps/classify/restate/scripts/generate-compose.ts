@@ -18,28 +18,24 @@ const SERVICES = getArg('services', 5);
 
 console.log(`🔧 Generating docker-compose.cluster.yml with ${NODES} nodes and ${SERVICES} services...`);
 
+// Common environment variables for all Restate nodes
+const commonEnv = {
+  RESTATE_CLUSTER_NAME: 'restate-cluster',
+  RESTATE_LOG_FILTER: 'restate=info',
+  RESTATE_DEFAULT_REPLICATION: 2,
+  RESTATE_METADATA_CLIENT__ADDRESSES: JSON.stringify(
+    Array.from({ length: NODES }, (_, i) => `http://restate-${i + 1}:5122`)
+  ),
+  RESTATE_WORKER__SNAPSHOTS__DESTINATION: 's3://restate/snapshots',
+  RESTATE_WORKER__SNAPSHOTS__SNAPSHOT_INTERVAL_NUM_RECORDS: '1000',
+  RESTATE_WORKER__SNAPSHOTS__AWS_REGION: 'local',
+  RESTATE_WORKER__SNAPSHOTS__AWS_ENDPOINT_URL: 'http://minio:9000',
+  RESTATE_WORKER__SNAPSHOTS__AWS_ALLOW_HTTP: true,
+  RESTATE_WORKER__SNAPSHOTS__AWS_ACCESS_KEY_ID: 'minioadmin',
+  RESTATE_WORKER__SNAPSHOTS__AWS_SECRET_ACCESS_KEY: 'minioadmin'
+};
+
 const config = {
-  'x-defaults': {
-    image: 'docker.restate.dev/restatedev/restate:latest',
-    restart: 'unless-stopped',
-    'extra_hosts': ['host.docker.internal:host-gateway'],
-    volumes: ['restate-data:/restate-data']
-  },
-  'x-common-env': {
-    RESTATE_CLUSTER_NAME: 'restate-cluster',
-    RESTATE_LOG_FILTER: 'restate=info',
-    RESTATE_DEFAULT_REPLICATION: 2,
-    RESTATE_METADATA_CLIENT__ADDRESSES: JSON.stringify(
-      Array.from({ length: NODES }, (_, i) => `http://restate-${i + 1}:5122`)
-    ),
-    RESTATE_WORKER__SNAPSHOTS__DESTINATION: 's3://restate/snapshots',
-    RESTATE_WORKER__SNAPSHOTS__SNAPSHOT_INTERVAL_NUM_RECORDS: '1000',
-    RESTATE_WORKER__SNAPSHOTS__AWS_REGION: 'local',
-    RESTATE_WORKER__SNAPSHOTS__AWS_ENDPOINT_URL: 'http://minio:9000',
-    RESTATE_WORKER__SNAPSHOTS__AWS_ALLOW_HTTP: true,
-    RESTATE_WORKER__SNAPSHOTS__AWS_ACCESS_KEY_ID: 'minioadmin',
-    RESTATE_WORKER__SNAPSHOTS__AWS_SECRET_ACCESS_KEY: 'minioadmin'
-  },
   services: {} as any,
   volumes: {
     'restate-data': null,
@@ -56,14 +52,17 @@ const config = {
 for (let i = 1; i <= NODES; i++) {
   const portOffset = (i - 1) * 10000;
   config.services[`restate-${i}`] = {
-    '<<': '*defaults',
+    image: 'docker.restate.dev/restatedev/restate:latest',
+    restart: 'unless-stopped',
+    extra_hosts: ['host.docker.internal:host-gateway'],
+    volumes: ['restate-data:/restate-data'],
     ports: [
       `${8080 + portOffset}:8080`,  // Ingress
       `${9070 + portOffset}:9070`,  // Admin
       `${5122 + portOffset}:5122`   // Node-to-node
     ],
     environment: {
-      '<<': '*common-env',
+      ...commonEnv,
       RESTATE_NODE_NAME: `restate-${i}`,
       RESTATE_FORCE_NODE_ID: i,
       RESTATE_ADVERTISED_ADDRESS: `http://restate-${i}:5122`,
@@ -103,14 +102,16 @@ for (let i = 1; i <= SERVICES; i++) {
       context: '.',
       dockerfile: 'Dockerfile.service'
     },
+    env_file: ['.env.docker'],
     environment: {
       PORT: 9080,
       HOST: '0.0.0.0',
-      POSTGRES_HOST: '${POSTGRES_HOST:-timescaledb}',
-      POSTGRES_PORT: '${POSTGRES_PORT:-5432}',
-      POSTGRES_DB: '${POSTGRES_DB:-classify}',
-      POSTGRES_USER: '${POSTGRES_USER:-classify}',
-      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:-classify}',
+      // Override with Docker service names (ignores .env file)
+      POSTGRES_HOST: 'timescaledb',
+      POSTGRES_PORT: 5432,
+      POSTGRES_DB: 'classify',
+      POSTGRES_USER: 'classify',
+      POSTGRES_PASSWORD: 'classify',
       OPENAI_API_KEY: '${OPENAI_API_KEY}',
       OPENAI_MODEL: '${OPENAI_MODEL:-gpt-4o-mini}',
       ANTHROPIC_API_KEY: '${ANTHROPIC_API_KEY:-}',

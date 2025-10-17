@@ -55,9 +55,9 @@
     "cluster:start:10": "bun run generate:cluster:10 && bun run cluster:start",
     "cluster:start:20": "bun run generate:cluster:20 && bun run cluster:start",
     "cluster:start:mega": "bun run generate:cluster:mega && bun run cluster:start",
-    "all-in-one:10": "bun run generate:cluster:10 && bun run all-in-one",
-    "all-in-one:20": "bun run generate:cluster:20 && bun run all-in-one",
-    "all-in-one:mega": "bun run generate:cluster:mega && bun run all-in-one"
+    "all-in-one:10": "bun run generate:cluster:10 && bun run src/scripts/cluster-all-in-one.ts",
+    "all-in-one:20": "bun run generate:cluster:20 && bun run src/scripts/cluster-all-in-one.ts",
+    "all-in-one:mega": "bun run generate:cluster:mega && bun run src/scripts/cluster-all-in-one.ts"
   },
   "dependencies": {
     "@restatedev/restate-sdk": "^1.4.1",

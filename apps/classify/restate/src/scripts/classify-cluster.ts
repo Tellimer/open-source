@@ -34,14 +34,49 @@ interface SubmissionStats {
   totalTime: number;
 }
 
+interface TraefikService {
+  name: string;
+  loadBalancer?: {
+    servers: Array<{ url: string }>;
+  };
+}
+
 // Cluster node endpoints (shared-state Restate cluster)
 const CLUSTER_NODES = [
   { name: "Node 1", url: "http://localhost:8080", adminUrl: "http://localhost:9070" },
-  { name: "Node 2", url: "http://localhost:28080", adminUrl: "http://localhost:29070" },
-  { name: "Node 3", url: "http://localhost:38080", adminUrl: "http://localhost:39070" },
-  { name: "Node 4", url: "http://localhost:48080", adminUrl: "http://localhost:49070" },
-  { name: "Node 5", url: "http://localhost:58080", adminUrl: "http://localhost:59070" },
+  { name: "Node 2", url: "http://localhost:18080", adminUrl: "http://localhost:19070" },
+  { name: "Node 3", url: "http://localhost:28080", adminUrl: "http://localhost:29070" },
+  { name: "Node 4", url: "http://localhost:38080", adminUrl: "http://localhost:39070" },
+  { name: "Node 5", url: "http://localhost:48080", adminUrl: "http://localhost:49070" },
 ];
+
+/**
+ * Detect number of services behind Traefik load balancer
+ */
+async function detectServiceCount(): Promise<number> {
+  try {
+    const response = await fetch("http://localhost:8081/api/http/services");
+    if (!response.ok) return 5; // Default fallback
+
+    const services = await response.json();
+
+    // Traefik API returns an array of services
+    // Find the "classify@docker" service and count its load balancer servers
+    if (Array.isArray(services)) {
+      const classifyService = services.find((s: TraefikService) =>
+        s.name === 'classify@docker'
+      );
+
+      if (classifyService?.loadBalancer?.servers) {
+        return classifyService.loadBalancer.servers.length;
+      }
+    }
+
+    return 5; // Default fallback
+  } catch (error) {
+    return 5; // Default fallback on error
+  }
+}
 
 async function submitBatch(
   nodeUrl: string,
@@ -91,8 +126,29 @@ async function classifyWithCluster() {
     ? "local"
     : "openai";
 
+  // Each indicator goes through 7 stages (normalize, time, cumulative, family, type, orientation, save)
+  const estimatedRequestsPerIndicator = 7;
+
+  // Support both --ipm (indicators per minute) and --rpm (requests per minute)
+  const ipmArg = args.find((arg) => arg.startsWith("--ipm="));
   const rpmArg = args.find((arg) => arg.startsWith("--rpm="));
-  const targetRPM = rpmArg ? parseInt(rpmArg.split("=")[1]) : 450; // 3x 150 RPM default
+
+  let targetRPM: number;
+  let targetIndicatorsPerMin: number;
+
+  if (ipmArg) {
+    // User specified indicators per minute - calculate RPM
+    targetIndicatorsPerMin = parseInt(ipmArg.split("=")[1]);
+    targetRPM = targetIndicatorsPerMin * estimatedRequestsPerIndicator;
+  } else if (rpmArg) {
+    // User specified RPM - calculate indicators per minute
+    targetRPM = parseInt(rpmArg.split("=")[1]);
+    targetIndicatorsPerMin = targetRPM / estimatedRequestsPerIndicator;
+  } else {
+    // Default: 450 indicators/min
+    targetIndicatorsPerMin = 450;
+    targetRPM = targetIndicatorsPerMin * estimatedRequestsPerIndicator;
+  }
 
   const force = args.includes("--force");
 
@@ -100,14 +156,18 @@ async function classifyWithCluster() {
   console.log("=================================\n");
   console.log(`Mode: ${force ? "Re-classify all" : "Classify unclassified only"}`);
   console.log(`LLM Provider: ${llmProvider}`);
+
+  // Detect service count
+  const serviceCount = await detectServiceCount();
+
   console.log(`\n📊 Cluster Configuration:`);
   console.log(`   Restate Nodes: ${CLUSTER_NODES.length}`);
-  console.log(`   Classification Services: 5 (behind Traefik)`);
+  console.log(`   Classification Services: ${serviceCount} (behind Traefik)`);
   console.log(`   Load Balancer: Traefik (HTTP/2, round-robin)`);
   console.log(`\n🎯 Performance Targets:`);
-  console.log(`   Target RPM: ${targetRPM} (distributed across ${CLUSTER_NODES.length} nodes)`);
-  console.log(`   Per-Node RPM: ~${Math.floor(targetRPM / CLUSTER_NODES.length)}`);
-  console.log(`   Expected Throughput: ~${Math.floor((targetRPM / 3) / CLUSTER_NODES.length)} indicators/min per node\n`);
+  console.log(`   Target Throughput: ${Math.round(targetIndicatorsPerMin)} indicators/min`);
+  console.log(`   API Rate: ${targetRPM} RPM (${estimatedRequestsPerIndicator} requests per indicator)`);
+  console.log(`   Per-Node Load: ~${Math.floor(targetRPM / CLUSTER_NODES.length)} RPM, ~${Math.floor(targetIndicatorsPerMin / CLUSTER_NODES.length)} indicators/min\n`);
 
   // Fetch indicators
   console.log("🔍 Fetching indicators from database...");
@@ -172,12 +232,10 @@ async function classifyWithCluster() {
   }
 
   // Calculate batching parameters
-  const estimatedRequestsPerIndicator = 3;
-  const targetIndicatorsPerMinute = targetRPM / estimatedRequestsPerIndicator;
   const batchSize = 5;
   const delayBetweenBatchesMs = Math.max(
     100,
-    (batchSize / targetIndicatorsPerMinute) * 60000
+    (batchSize / targetIndicatorsPerMin) * 60000
   );
   const totalBatches = Math.ceil(indicators.length / batchSize);
   const estimatedTimeSeconds = (totalBatches * delayBetweenBatchesMs) / 1000;
@@ -186,9 +244,8 @@ async function classifyWithCluster() {
   console.log(`   Total Indicators: ${indicators.length}`);
   console.log(`   Batch Size: ${batchSize} indicators`);
   console.log(`   Total Batches: ${totalBatches}`);
-  console.log(`   Requests per Indicator: ~${estimatedRequestsPerIndicator}`);
-  console.log(`   Target Throughput: ${targetIndicatorsPerMinute.toFixed(1)} indicators/min`);
-  console.log(`   Delay Between Batches: ${delayBetweenBatchesMs}ms`);
+  console.log(`   Target Throughput: ${Math.round(targetIndicatorsPerMin)} indicators/min`);
+  console.log(`   Delay Between Batches: ${Math.round(delayBetweenBatchesMs)}ms`);
   console.log(`   Estimated Total Time: ${Math.floor(estimatedTimeSeconds / 60)}m ${Math.floor(estimatedTimeSeconds % 60)}s\n`);
 
   // Use all configured nodes (health already verified by all-in-one script)
@@ -201,7 +258,7 @@ async function classifyWithCluster() {
   // Use all nodes for load balancing
   const activeNodes = CLUSTER_NODES;
 
-  console.log(`🚀 Distributing workload across ${activeNodes.length} nodes → Traefik → 5 services\n`);
+  console.log(`🚀 Distributing workload across ${activeNodes.length} nodes → Traefik → ${serviceCount} services\n`);
 
   console.log(`📤 Starting cluster classification...\n`);
 
@@ -273,9 +330,9 @@ async function classifyWithCluster() {
       console.log(`${'='.repeat(70)}`);
       console.log(`📈 Indicators: ${totalSubmitted}/${indicators.length} (${((totalSubmitted / indicators.length) * 100).toFixed(1)}%) | Failed: ${totalFailed}`);
       console.log(`⏱️  Time: ${Math.floor(elapsed)}s elapsed | ETA: ${Math.floor(eta / 60)}m ${Math.floor(eta % 60)}s remaining`);
-      console.log(`🚀 Throughput: ${throughput.toFixed(1)} indicators/min (target: ${targetIndicatorsPerMinute.toFixed(1)})`);
+      console.log(`🚀 Throughput: ${throughput.toFixed(1)} indicators/min (target: ${Math.round(targetIndicatorsPerMin)})`);
       console.log(`📡 API Load: ~${Math.floor(throughput * estimatedRequestsPerIndicator)} RPM across cluster`);
-      console.log(`🔄 Active: ${activeNodes.length} nodes → Traefik → 5 services processing in parallel`);
+      console.log(`🔄 Active: ${activeNodes.length} nodes → Traefik → ${serviceCount} services processing in parallel`);
       console.log(`${'='.repeat(70)}\n`);
     }
 

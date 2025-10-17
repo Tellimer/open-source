@@ -90,9 +90,28 @@ function detectClusterSize(): { nodes: number; services: number } {
 
 async function main() {
   const args = process.argv.slice(2);
+
+  // Support both --ipm and --rpm arguments
+  const ipmArg = args.find(a => a.startsWith('--ipm='));
   const rpmArg = args.find(a => a.startsWith('--rpm='));
-  const rpm = rpmArg ? rpmArg.split('=')[1] : '1000';
   const force = args.includes('--force');
+
+  // Each indicator requires 7 stages
+  const stagesPerIndicator = 7;
+
+  let rpm: string;
+  let ipm: number;
+
+  if (ipmArg) {
+    ipm = parseInt(ipmArg.split('=')[1]);
+    rpm = String(ipm * stagesPerIndicator);
+  } else if (rpmArg) {
+    rpm = rpmArg.split('=')[1];
+    ipm = Math.round(parseInt(rpm) / stagesPerIndicator);
+  } else {
+    ipm = 450; // Default
+    rpm = String(ipm * stagesPerIndicator);
+  }
 
   // Detect cluster size
   const { nodes: nodeCount, services: serviceCount } = detectClusterSize();
@@ -103,7 +122,7 @@ async function main() {
   console.log(`   - ${nodeCount} Restate Nodes (orchestration)`);
   console.log(`   - ${serviceCount} Classification Services (processing)`);
   console.log('   - Traefik Load Balancer (HTTP/2, round-robin)\n');
-  console.log(`Target RPM: ${rpm}`);
+  console.log(`Target Throughput: ${ipm} indicators/min (${rpm} RPM)`);
   console.log(`Mode: ${force ? 'Re-classify all' : 'Classify unclassified only'}\n`);
 
   // Step 1: Start cluster (includes nodes, services, and Traefik)
@@ -150,7 +169,7 @@ async function main() {
     cleanup();
     return;
   }
-  console.log('   ✅ Traefik ready (5 services behind load balancer)\n');
+  console.log(`   ✅ Traefik ready (${serviceCount} services behind load balancer)\n`);
 
   // Register Traefik endpoint with cluster
   console.log('🔗 Step 3/3: Registering services with cluster');
