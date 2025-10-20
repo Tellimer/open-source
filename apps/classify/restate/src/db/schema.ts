@@ -592,4 +592,73 @@ CREATE INDEX IF NOT EXISTS idx_consensus_outliers_is_valid_outlier
   ON consensus_outliers(is_valid_outlier);
 CREATE INDEX IF NOT EXISTS idx_consensus_outliers_recommended_action
   ON consensus_outliers(recommended_action);
+
+--
+-- ============================================================================
+-- FINAL INDICATORS TABLE (Production-Ready Export)
+-- ============================================================================
+--
+
+CREATE TABLE IF NOT EXISTS final_indicators (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  source_name TEXT,
+  source_url TEXT,
+  long_name TEXT,
+  category_group TEXT,
+  dataset TEXT,
+  aggregation_method TEXT,
+  definition TEXT,
+  original_units TEXT,
+  original_scale TEXT,
+  original_periodicity TEXT,
+  original_topic TEXT,
+  original_currency_code TEXT,
+  validated_units TEXT NOT NULL,
+  validated_scale TEXT NOT NULL,
+  validated_frequency TEXT NOT NULL,
+  validated_currency TEXT,
+  indicator_type TEXT NOT NULL,
+  temporal_aggregation TEXT NOT NULL,
+  heat_map_orientation TEXT NOT NULL,
+  is_cumulative BOOLEAN NOT NULL DEFAULT false,
+  time_basis TEXT NOT NULL,
+  classification_confidence REAL NOT NULL CHECK (classification_confidence >= 0 AND classification_confidence <= 1),
+  quality_score REAL NOT NULL DEFAULT 0 CHECK (quality_score >= 0 AND quality_score <= 100),
+  quality_status TEXT NOT NULL,
+  usability_verdict TEXT NOT NULL,
+  has_data_quality_issues BOOLEAN NOT NULL DEFAULT false,
+  has_staleness_issues BOOLEAN NOT NULL DEFAULT false,
+  has_magnitude_anomalies BOOLEAN NOT NULL DEFAULT false,
+  has_false_readings BOOLEAN NOT NULL DEFAULT false,
+  has_unit_changes BOOLEAN NOT NULL DEFAULT false,
+  has_consistency_issues BOOLEAN NOT NULL DEFAULT false,
+  quality_flags_count INTEGER NOT NULL DEFAULT 0,
+  quality_critical_count INTEGER NOT NULL DEFAULT 0,
+  last_quality_check TIMESTAMP,
+  is_consensus_outlier BOOLEAN NOT NULL DEFAULT false,
+  consensus_outlier_dimensions TEXT[],
+  consensus_deviation_severity TEXT,
+  requires_standardization BOOLEAN NOT NULL DEFAULT false,
+  indicator_group_size INTEGER,
+  consensus_status TEXT,
+  pipeline_status TEXT NOT NULL DEFAULT 'pending',
+  pipeline_version TEXT,
+  classified_at TIMESTAMP,
+  quality_checked_at TIMESTAMP,
+  consensus_analyzed_at TIMESTAMP,
+  last_processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  overall_confidence REAL CHECK (overall_confidence >= 0 AND overall_confidence <= 1),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP,
+  FOREIGN KEY (id) REFERENCES source_indicators(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_final_indicators_name ON final_indicators(name);
+CREATE INDEX IF NOT EXISTS idx_final_indicators_source ON final_indicators(source_name);
+CREATE INDEX IF NOT EXISTS idx_final_indicators_type ON final_indicators(indicator_type);
+CREATE INDEX IF NOT EXISTS idx_final_indicators_quality_score ON final_indicators(quality_score);
+CREATE INDEX IF NOT EXISTS idx_final_indicators_quality_status ON final_indicators(quality_status);
+CREATE INDEX IF NOT EXISTS idx_final_indicators_pipeline_status ON final_indicators(pipeline_status);
 `;
