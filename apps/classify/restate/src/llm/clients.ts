@@ -150,7 +150,19 @@ class OpenAIClient implements LLMClient {
         // Prompt caching is automatic for gpt-4.1 models when system prompts >1024 tokens
       });
 
-      console.log(`[OpenAIClient] Success!`);
+      // Log usage information including cached tokens
+      if (result.usage) {
+        // OpenAI returns cachedTokens in the usage object (not part of standard AI SDK type)
+        const usage = result.usage as typeof result.usage & { cachedTokens?: number };
+        const cachedTokens = usage.cachedTokens || 0;
+        const promptTokens = result.usage.promptTokens || 0;
+        const completionTokens = result.usage.completionTokens || 0;
+        const cacheHitRate = promptTokens > 0 ? ((cachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
+
+        // biome-ignore lint: console is needed for LLM client logging outside Restate context
+        console.log(`[OpenAIClient] Usage: prompt=${promptTokens} (cached=${cachedTokens}, ${cacheHitRate}%), completion=${completionTokens}, total=${result.usage.totalTokens}`);
+      }
+
       return result.object as T;
     } catch (error) {
       console.error(`[OpenAIClient] Error:`, error);
