@@ -136,22 +136,45 @@ const dataQualityWorkflow = restate.workflow({
               );
             }
 
-            // Fetch time series data
-            const timeSeriesRows = await repo.query<{
-              date: string;
-              value: number;
+            // Fetch time series data from source_indicators.sample_values (JSON)
+            const sourceData = await repo.queryOne<{
+              sample_values: string;
             }>(
-              `SELECT date, value FROM time_series_data
-               WHERE indicator_id = $1 ORDER BY date ASC`,
+              `SELECT sample_values FROM source_indicators WHERE id = $1`,
               [indicator_id]
             );
 
+            if (!sourceData) {
+              throw new Error(
+                `Indicator ${indicator_id} not found in source_indicators`
+              );
+            }
+
+            // Parse sample_values JSON and filter out invalid dates
+            let timeSeriesData: Array<{ date: string; value: number }> = [];
+            try {
+              const samples = JSON.parse(sourceData.sample_values) as Array<{
+                date: string;
+                value: number;
+              }>;
+
+              // Filter out non-date values (e.g., "last10YearsAvg") and sort by date
+              timeSeriesData = samples
+                .filter((point) => {
+                  const parsedDate = new Date(point.date);
+                  return !isNaN(parsedDate.getTime());
+                })
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            } catch (error) {
+              ctx.console.warn("Failed to parse sample_values", {
+                indicator_id,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+
             return {
               name: classificationData.name,
-              timeSeriesData: timeSeriesRows.map((row) => ({
-                date: row.date,
-                value: row.value,
-              })),
+              timeSeriesData,
               classification: {
                 reporting_frequency: classificationData.reporting_frequency,
                 normalized_scale: classificationData.normalized_scale,

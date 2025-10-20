@@ -200,20 +200,41 @@ async function classifyWithCluster() {
   }
 
   // Convert to indicator format
-  const indicators = sourceIndicators.map(si => ({
-    indicator_id: si.id,
-    name: si.name,
-    units: si.units,
-    long_name: si.long_name,
-    source_name: si.source_name,
-    periodicity: si.periodicity,
-    aggregation_method: si.aggregation_method,
-    scale: si.scale,
-    topic: si.topic,
-    category_group: si.category_group,
-    dataset: si.dataset,
-    currency_code: si.currency_code,
-  }));
+  const indicators = sourceIndicators.map(si => {
+    // Parse sample_values from JSON string to array
+    let parsedSampleValues = undefined;
+    if (si.sample_values) {
+      try {
+        const fullSampleValues = JSON.parse(si.sample_values);
+
+        // Limit sample values to most recent 50 points for efficiency
+        // This is enough for cumulative pattern detection while minimizing payload size
+        if (Array.isArray(fullSampleValues) && fullSampleValues.length > 50) {
+          parsedSampleValues = fullSampleValues.slice(-50); // Take last 50 points (most recent)
+        } else {
+          parsedSampleValues = fullSampleValues;
+        }
+      } catch (error) {
+        console.warn(`⚠️  Failed to parse sample_values for ${si.id}:`, error);
+      }
+    }
+
+    return {
+      indicator_id: si.id,
+      name: si.name,
+      units: si.units,
+      long_name: si.long_name,
+      source_name: si.source_name,
+      periodicity: si.periodicity,
+      aggregation_method: si.aggregation_method,
+      scale: si.scale,
+      topic: si.topic,
+      category_group: si.category_group,
+      dataset: si.dataset,
+      currency_code: si.currency_code,
+      sample_values: parsedSampleValues,
+    };
+  });
 
   console.log(`✅ Found ${indicators.length} indicators to classify\n`);
 

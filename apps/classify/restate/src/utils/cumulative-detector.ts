@@ -81,6 +81,9 @@ export function detectCumulativePattern(
     };
   }
 
+  // Note: We expect limited sample values (up to 50 recent points) to be passed in
+  // This is sufficient for pattern detection while keeping payload sizes small
+
   // Filter out non-date entries (like "last10YearsAvg")
   const validPoints = sampleValues
     .filter(p => {
@@ -88,6 +91,11 @@ export function detectCumulativePattern(
       return components !== null && !p.date.includes('Avg') && !p.date.includes('avg');
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Debug logging (can be removed later)
+  if (validPoints.length > 0) {
+    console.log(`[Cumulative Detector] Analyzing ${validPoints.length} valid points (filtered from ${sampleValues.length} total)`);
+  }
 
   if (validPoints.length < 3) {
     return {

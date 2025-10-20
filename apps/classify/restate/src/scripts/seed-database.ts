@@ -243,10 +243,9 @@ async function seedDatabase() {
   }
   console.log("");
 
-  // Fetch 25 most recent time series values for each indicator
-  // Using optimized query with window function to fetch all at once
+  // Fetch ALL time series values for each indicator
   console.log(
-    "📊 Fetching sample time series (25 most recent values per indicator)...",
+    "📊 Fetching ALL time series data for each indicator...",
   );
 
   // Build query with all indicator IDs at once
@@ -254,22 +253,13 @@ async function seedDatabase() {
   const tsPlaceholders = indicatorIds.map((_, idx) => `$${idx + 1}`).join(',');
 
   const timeSeriesQuery = `
-    WITH ranked_data AS (
-      SELECT
-        indicator_id,
-        date,
-        value,
-        ROW_NUMBER() OVER (PARTITION BY indicator_id ORDER BY date DESC) as rn
-      FROM country_indicators
-      WHERE indicator_id IN (${tsPlaceholders})
-        AND deleted_at IS NULL
-        AND value IS NOT NULL
-    )
     SELECT
       indicator_id,
       json_agg(json_build_object('date', date, 'value', value) ORDER BY date DESC) as samples
-    FROM ranked_data
-    WHERE rn <= 25
+    FROM country_indicators
+    WHERE indicator_id IN (${tsPlaceholders})
+      AND deleted_at IS NULL
+      AND value IS NOT NULL
     GROUP BY indicator_id
   `;
 
@@ -297,7 +287,7 @@ async function seedDatabase() {
   }));
 
   console.log(
-    `✅ Fetched time series samples for ${indicators.length} indicators\n`,
+    `✅ Fetched complete time series history for ${indicators.length} indicators\n`,
   );
 
   // Insert into local database
@@ -368,10 +358,83 @@ async function seedDatabase() {
   }
 
   console.log(
-    `\n✅ Seeded ${indicators.length} indicators with sample time series to local database\n`,
+    `\n✅ Seeded ${indicators.length} indicators with complete time series to local database\n`,
   );
 
+  // Populate time_series_data table for data quality checks
+  console.log("📊 Populating time_series_data table for data quality workflow...");
+
+  let timeSeriesInserted = 0;
+  const TIME_SERIES_BATCH_SIZE = 500;
+  const allTimeSeriesPoints: Array<{ indicator_id: string; date: Date; value: number }> = [];
+
+  // Extract all time series points from sample_values
+  for (const indicator of indicatorsWithSamples) {
+    try {
+      const samples: TimeSeriesPoint[] = JSON.parse(indicator.sample_values);
+      for (const point of samples) {
+        // Skip non-date values (e.g., "last10YearsAvg", "Q1", etc.)
+        const parsedDate = new Date(point.date);
+        if (isNaN(parsedDate.getTime())) {
+          continue; // Skip invalid dates
+        }
+
+        allTimeSeriesPoints.push({
+          indicator_id: indicator.indicator_id,
+          date: parsedDate,
+          value: point.value,
+        });
+      }
+    } catch (error) {
+      console.warn(`   ⚠️  Failed to parse time series for ${indicator.indicator_id}`);
+    }
+  }
+
+  console.log(`   Found ${allTimeSeriesPoints.length} total time series points`);
+
+  // Deduplicate time series points (keep last occurrence for each indicator_id + date combination)
+  const deduplicatedMap = new Map<string, { indicator_id: string; date: Date; value: number }>();
+  for (const point of allTimeSeriesPoints) {
+    const key = `${point.indicator_id}:${point.date.toISOString()}`;
+    deduplicatedMap.set(key, point);
+  }
+  const deduplicatedPoints = Array.from(deduplicatedMap.values());
+  console.log(`   Deduplicated to ${deduplicatedPoints.length} unique points (removed ${allTimeSeriesPoints.length - deduplicatedPoints.length} duplicates)`);
+
+  // Batch insert time series data
+  for (let i = 0; i < deduplicatedPoints.length; i += TIME_SERIES_BATCH_SIZE) {
+    const batch = deduplicatedPoints.slice(i, i + TIME_SERIES_BATCH_SIZE);
+
+    const tsValues: any[] = [];
+    const tsValueRows: string[] = [];
+
+    batch.forEach((point, idx) => {
+      const offset = idx * 3;
+      tsValueRows.push(`($${offset + 1}, $${offset + 2}, $${offset + 3})`);
+      tsValues.push(point.indicator_id, point.date, point.value);
+    });
+
+    await localDb.unsafe(`
+      INSERT INTO time_series_data (indicator_id, date, value)
+      VALUES ${tsValueRows.join(', ')}
+      ON CONFLICT (indicator_id, date) DO UPDATE SET
+        value = EXCLUDED.value,
+        updated_at = CURRENT_TIMESTAMP
+    `, tsValues);
+
+    timeSeriesInserted += batch.length;
+    if (timeSeriesInserted % 1000 === 0 || timeSeriesInserted === allTimeSeriesPoints.length) {
+      console.log(`   Inserted ${timeSeriesInserted}/${allTimeSeriesPoints.length} time series points...`);
+    }
+  }
+
+  console.log(`\n✅ Populated ${timeSeriesInserted} time series points for data quality checks\n`);
+
   console.log("🎉 Database seeding complete!");
+  console.log("\n📋 Summary:");
+  console.log(`   - Indicators seeded: ${indicators.length}`);
+  console.log(`   - Time series points: ${timeSeriesInserted}`);
+  console.log(`   - Ready for: Classification → Data Quality → Consensus Analysis\n`);
 }
 
 // Run if called directly
