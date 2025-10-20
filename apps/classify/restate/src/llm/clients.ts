@@ -152,6 +152,9 @@ class OpenAIClient implements LLMClient {
 
       // Log usage information including cached tokens
       if (result.usage) {
+        // Debug: Log the full usage object to see what OpenAI is actually returning
+        console.error('[OpenAIClient] DEBUG - Full usage object:', JSON.stringify(result.usage));
+
         // OpenAI returns cached_tokens in snake_case (not part of standard AI SDK type)
         const usage = result.usage as typeof result.usage & { cachedTokens?: number; cached_tokens?: number };
         // Try both camelCase and snake_case for compatibility
