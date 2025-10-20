@@ -1,464 +1,558 @@
-# Classify - Indicator Classification System
+# Classify - Economic Indicator Data Pipeline
 
-A durable workflow system for classifying economic indicators using LLMs and Restate for orchestration.
+**AI-powered economic indicator classification, quality validation, and standardization system**
+
+Built with [Restate](https://restate.dev) for durable workflow orchestration and LLMs for intelligent data processing.
+
+---
+
+## 📋 Table of Contents
+
+- [What This Does](#what-this-does)
+- [Quick Start](#quick-start)
+- [System Architecture](#system-architecture)
+- [The 3-Stage Pipeline](#the-3-stage-pipeline)
+- [Key Features](#key-features)
+- [Documentation](#documentation)
+- [Performance](#performance)
+- [API Reference](#api-reference)
+
+---
+
+## What This Does
+
+Transform raw economic indicator metadata into **production-ready, validated, standardized data** through a 3-stage AI pipeline:
+
+```
+Raw Indicators → Classification → Quality Checks → Consensus Analysis → Final Export
+```
+
+### Input
+Raw indicator metadata from your database:
+- Name: "GDP"
+- Units: "Millions USD"
+- Scale: unclear
+- Frequency: "Q"
+- Currency: "USD"
+
+### Output
+Validated, production-ready indicator data:
+- **Classification**: Type (Flow/Stock), Time-basis (Point/Period), Cumulative flag
+- **Quality Score**: 0-100 score, usability verdict, specific issues flagged
+- **Consensus**: Cross-country consistency, outlier detection, standardization needs
+- **Export-Ready**: Consolidated `final_indicators` table with all validated fields
+
+### Use Cases
+- **Data Quality Assurance** - Identify stale data, magnitude anomalies, false readings
+- **Indicator Standardization** - Ensure consistent units, scales, frequencies across countries
+- **API Data Export** - Production-ready endpoint with quality-filtered indicators
+- **Data Science Pipelines** - Clean, validated data for analysis and modeling
+
+---
 
 ## Quick Start
 
+### 1. Start Infrastructure
+
 ```bash
-# 1. Start infrastructure
+# Start PostgreSQL (TimescaleDB)
 docker-compose -f docker-compose.dev.yml up -d
+
+# Initialize database (creates 30 tables)
+bun install
 bun run db:init
+```
 
-# 2. Terminal 1: Start Restate server
-npx restate-server
+### 2. Seed with Data
 
-# 3. Terminal 2: Start service
-bun run dev
+```bash
+# Requires SOURCE_DATABASE_URL pointing to production database
+export SOURCE_DATABASE_URL="postgres://user:pass@host:5432/prod_db"
 
-# 4. Terminal 3: Register & test
-curl -X POST http://localhost:9070/deployments \
-  -H 'content-type: application/json' \
-  -d '{"uri": "http://localhost:9080"}'
+# Seed with indicators + time series data
+bun run db:seed
 
-# 5. Classify 200 random indicators
-bun run classify -- --200 --random --openai
+# Or limit for testing
+bun run db:seed -- --100
+```
+
+### 3. Run the Pipeline
+
+```bash
+# Option A: Single node (development)
+bun run dev:local:ultra
+
+# In another terminal:
+bun run pipeline:full
+```
+
+```bash
+# Option B: Cluster (production)
+bun run all-in-one:fast --force
+```
+
+### 4. Get Results
+
+```bash
+# Get production-ready indicators
+bun run final:production
+
+# Check quality issues
+bun run quality:issues
+
+# Check consensus outliers
+bun run consensus:issues
 ```
 
 **See [docs/QUICKSTART.md](docs/QUICKSTART.md) for detailed setup.**
 
-## What This Does
-
-**Input:** Raw economic indicators from `source_indicators` table
-**Process:** 6-stage LLM pipeline (normalization → classification → review)
-**Output:** Fully classified indicators in `classifications` table
-**Parallelism:** 200 workflows run simultaneously, ~60-120s total time
-
-### Single Node vs Cluster
-
-| Setup | Throughput | Time for 10,903 indicators |
-|-------|-----------|---------------------------|
-| **Single Node** | 300 RPM | ~36 minutes |
-| **3-Node Cluster** | 900 RPM | ~12 minutes (3x faster!) |
-
-**TL;DR:** Use `bun run all-in-one:fast --force` for instant 3x speedup with cluster.
+---
 
 ## System Architecture
 
-```mermaid
-graph TB
-    subgraph "Input"
-        DB[(source_indicators<br/>PostgreSQL table)]
-    end
-
-    subgraph "Classification System"
-        API[classify-api<br/>HTTP Endpoint]
-        WF[Restate Workflows<br/>200+ parallel]
-
-        subgraph "6 LLM Services"
-            S1[1. normalization]
-            S2[2. time-inference]
-            S3[3. family-assignment]
-            S4[4. type-classification]
-            S5[5. boolean-review]
-            S6[6. final-review]
-        end
-    end
-
-    subgraph "Output"
-        RESULTS[(classifications<br/>+ 6 result tables)]
-    end
-
-    DB -->|bun run classify| API
-    API -->|workflowSendClient| WF
-    WF -->|Stage 1| S1
-    S1 -->|Stage 2| S2
-    S2 -->|Stage 3| S3
-    S3 -->|Stage 4| S4
-    S4 -->|Stage 5| S5
-    S5 -->|Stage 6| S6
-    S6 -->|Store| RESULTS
-
-    style API fill:#fff4e1
-    style WF fill:#e1f5ff
-    style RESULTS fill:#e8f5e9
-```
-
-## Classification Pipeline
-
-Each indicator goes through 6 sequential stages:
-
-| Stage | Purpose | Input | Output |
-|-------|---------|-------|--------|
-| 1. **Normalization** | Parse units & currency | Raw units ("USD Mn") | Scale, currency, unit type |
-| 2. **Time Inference** | Temporal properties | Sample values | Stock/flow, cumulative |
-| 3. **Family Assignment** | Economic category | Name, description | Price/Activity/Rate |
-| 4. **Type Classification** | Specific type | Family + properties | CPI/GDP/Interest Rate |
-| 5. **Boolean Review** | Extract flags | All previous | Seasonally adjusted, etc. |
-| 6. **Final Review** | Aggregation rules | Complete data | Sum/average/last value |
-
-**Key Feature:** Stages 3 & 4 use different prompts for currency vs non-currency indicators.
-
-## Parallel Execution
-
-Restate provides automatic parallelism:
+### High-Level Overview
 
 ```
-1 API call (200 indicators)
-    ↓
-Split into 2 batches of 100 (max per request)
-    ↓
-200 parallel workflow instances
-    ↓
-Each workflow: 6 sequential stages
-    ↓
-Complete in 60-120 seconds
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          CLASSIFY PIPELINE                               │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  📥 INPUT                                                     📤 OUTPUT
+  ┌──────────────┐                                           ┌─────────────┐
+  │source_       │                                           │final_       │
+  │indicators    │                                           │indicators   │
+  │              │                                           │             │
+  │• Name        │                                           │• Validated  │
+  │• Units       │                                           │• Quality    │
+  │• Scale       │                                           │• Consensus  │
+  │• Frequency   │                                           │• Production │
+  │• Currency    │                                           │  Ready ✅   │
+  └──────┬───────┘                                           └─────▲───────┘
+         │                                                         │
+         │                                                         │
+         ▼                                                         │
+  ┌──────────────────────────────────────────────────────────────┴───────┐
+  │                     STAGE 1: CLASSIFICATION                          │
+  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐    │
+  │  │Normalize   │→ │Time        │→ │Family      │→ │Type        │    │
+  │  │            │  │Inference   │  │Assignment  │  │Classification│   │
+  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘    │
+  │                                                                       │
+  │  Output: validated_units, validated_scale, validated_frequency,      │
+  │          indicator_type, time_basis, is_cumulative                   │
+  └──────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                     STAGE 2: DATA QUALITY                             │
+  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐     │
+  │  │Staleness   │  │Magnitude   │  │False       │  │Unit        │     │
+  │  │Detector    │  │Detector    │  │Reading     │  │Change      │     │
+  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘     │
+  │                                                                        │
+  │  Output: quality_score, quality_status, usability_verdict,           │
+  │          specific issue flags                                         │
+  └────────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                   STAGE 3: CONSENSUS ANALYSIS                         │
+  │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐     │
+  │  │Unit        │  │Scale       │  │Frequency   │  │Currency    │     │
+  │  │Consensus   │  │Consensus   │  │Consensus   │  │Consensus   │     │
+  │  └────────────┘  └────────────┘  └────────────┘  └────────────┘     │
+  │                                                                        │
+  │  Output: consensus_status, outlier_detection,                        │
+  │          requires_standardization                                     │
+  └───────────────────────────────────────────────────────────────────────┘
 ```
 
-**See [docs/PARALLEL_EXECUTION.md](docs/PARALLEL_EXECUTION.md) for details.**
+### Tech Stack
 
-## Project Structure
+- **Orchestration**: [Restate](https://restate.dev) - Durable workflow engine
+- **LLMs**: OpenAI GPT-4o-mini (configurable)
+- **Database**: PostgreSQL with TimescaleDB (time-series optimization)
+- **Runtime**: Bun (fast TypeScript runtime)
+- **Load Balancing**: Traefik (Docker cluster mode)
+- **Deployment**: Railway, AWS Spot Instances (Pulumi IaC)
 
-```
-apps/classify/restate/
-├── src/
-│   ├── index.ts                          # Service entrypoint
-│   ├── workflows/
-│   │   ├── classification.workflow.ts    # Main orchestrator
-│   │   └── service-types.ts              # TypeScript interfaces
-│   ├── services/                         # 6 LLM services
-│   ├── prompts/                          # LLM prompts (currency-aware)
-│   ├── api/
-│   │   └── classify.api.ts               # HTTP endpoints
-│   ├── llm/
-│   │   └── client.ts                     # Multi-provider (OpenAI/Anthropic/LM Studio)
-│   ├── db/
-│   │   ├── client.ts                     # Database client
-│   │   ├── init.ts                       # Schema initialization
-│   │   └── schema.sql                    # Complete schema
-│   └── scripts/
-│       └── classify-indicators.ts        # Trigger classification
-├── docs/                                 # Documentation
-│   ├── QUICKSTART.md                     # Setup guide
-│   ├── PARALLEL_EXECUTION.md             # How parallelism works
-│   ├── API.md                            # API reference
-│   └── ARCHITECTURE.md                   # Detailed architecture
-├── docker-compose.dev.yml                # Local dev (TimescaleDB)
-├── docker-compose.cluster.yml            # Production (3-node cluster)
-├── package.json                          # Scripts & dependencies
-└── README.md                             # This file
-```
+---
 
-## Usage
+## The 3-Stage Pipeline
 
-### Classify Indicators
+### Stage 1: Classification Workflow
 
-```bash
-# 200 random indicators with OpenAI
-bun run classify -- --200 --random --openai
+**Purpose**: Validate and normalize indicator metadata
 
-# 50 quick test
-bun run classify -- --50 --random --openai
+**Process**:
+1. **Normalization** - Clean indicator names
+2. **Time Inference** - Detect point-in-time vs period data
+3. **Family Assignment** - Classify broad category (macro, finance, etc.)
+4. **Type Classification** - Flow vs Stock, temporal aggregation
+5. **Boolean Review** - Is cumulative? validation
+6. **Final Review** - Confidence scoring
 
-# All unclassified
-bun run classify -- --random --openai
+**Output Table**: `classifications`
 
-# With Anthropic
-bun run classify -- --200 --random --anthropic
-```
+**Key Fields**:
+- `validated_units` - Standardized unit format
+- `validated_scale` - Billions, Millions, Ones
+- `validated_frequency` - Monthly, Quarterly, Annual
+- `indicator_type` - Flow/Stock
+- `time_basis` - Point/Period/Period-Total
+- `is_cumulative` - Boolean flag
 
-### Monitor Progress
+**Run**: `bun run classify`
 
-**Restate UI:**
-```bash
-open http://localhost:9070
-```
+### Stage 2: Data Quality Workflow
 
-**Database:**
-```sql
--- Progress percentage
-SELECT
-  COUNT(*) as total,
-  COUNT(c.indicator_id) as completed,
-  ROUND(100.0 * COUNT(c.indicator_id) / COUNT(*), 2) as pct
-FROM source_indicators si
-LEFT JOIN classifications c ON si.id = c.indicator_id;
+**Purpose**: Assess data reliability and identify issues
 
--- By current stage
-SELECT
-  CASE
-    WHEN n.indicator_id IS NULL THEN 'normalizing'
-    WHEN t.indicator_id IS NULL THEN 'time-inferring'
-    WHEN f.indicator_id IS NULL THEN 'family-assigning'
-    WHEN ty.indicator_id IS NULL THEN 'type-classifying'
-    WHEN b.indicator_id IS NULL THEN 'reviewing'
-    WHEN fr.indicator_id IS NULL THEN 'final-reviewing'
-    ELSE 'completed'
-  END as stage,
-  COUNT(*) as count
-FROM source_indicators si
-LEFT JOIN normalization_results n ON si.id = n.indicator_id
-LEFT JOIN time_inference_results t ON si.id = t.indicator_id
-LEFT JOIN family_assignment_results f ON si.id = f.indicator_id
-LEFT JOIN type_classification_results ty ON si.id = ty.indicator_id
-LEFT JOIN boolean_review_results b ON si.id = b.indicator_id
-LEFT JOIN final_review_results fr ON si.id = fr.indicator_id
-WHERE n.indicator_id IS NOT NULL
-GROUP BY stage;
-```
+**Process**:
+1. **Staleness Detector** - Find data update gaps
+2. **Magnitude Detector** - Identify value anomalies (Z-score, IQR, YoY)
+3. **False Reading Detector** - Detect implausible values (zeros, repeats)
+4. **Unit Change Detector** - Find sudden magnitude shifts (scale changes)
+5. **Consistency Checker** - Validate against classification metadata
+6. **LLM Review** - Assess critical issues (when severity ≥ 4)
+
+**Input**: `classifications` + `time_series_data`
+
+**Output Table**: `data_quality_reports`
+
+**Key Fields**:
+- `quality_score` - 0-100 overall score
+- `quality_status` - clean, minor_issues, major_issues, critical_issues
+- `usability_verdict` - use_as_is, use_with_caution, requires_review, do_not_use
+- `has_staleness` - Boolean flag
+- `has_magnitude_anomalies` - Boolean flag
+- `has_false_readings` - Boolean flag
+
+**Run**: `bun run quality:check`
+
+### Stage 3: Consensus Analysis Workflow
+
+**Purpose**: Ensure cross-indicator consistency
+
+**Process**:
+1. **Dimension Detectors** - Run 5 parallel consensus checks:
+   - Unit Consensus
+   - Scale Consensus
+   - Frequency Consensus
+   - Currency Consensus
+   - Time-Basis Consensus
+2. **Consolidation** - Aggregate results across dimensions
+3. **Outlier Detection** - Identify inconsistent indicators
+4. **LLM Review** - Validate outliers (when found)
+
+**Input**: `classifications` (grouped by indicator name)
+
+**Output Table**: `consensus_analysis_reports`
+
+**Key Fields**:
+- `status` - highly_consistent, mostly_consistent, inconsistent, critical_inconsistency
+- `total_outliers` - Count of dimension mismatches
+- `dimensions_with_issues` - Which dimensions are inconsistent
+- `requires_standardization` - Boolean flag
+
+**Run**: `bun run consensus:analyze`
+
+### Stage 4: Final Indicators (Export)
+
+**Purpose**: Consolidate validated data for production use
+
+**Process**:
+1. Join data from all 3 workflows
+2. Apply production-readiness filters
+3. Add pipeline metadata
+
+**Input**: `source_indicators` + `classifications` + `data_quality_reports` + `consensus_analysis_reports`
+
+**Output Table**: `final_indicators` (51 columns)
+
+**Includes**:
+- All original source fields
+- All validated classification fields
+- Quality metrics and verdicts
+- Consensus flags
+- Pipeline status
+
+**Run**: `bun run final:migrate`
+
+---
+
+## Key Features
+
+### ⚡ High Performance
+- **Parallel Execution**: 200+ workflows simultaneously
+- **Cluster Mode**: 3-10x speedup with multi-node deployment
+- **Prompt Caching**: 90% cost reduction on repeated prompts
+- **Rate Limiting**: Smart throttling (300-5000 RPM)
+
+### 🔄 Durable Workflows
+- **Fault Tolerance**: Automatic retries, crash recovery
+- **Exactly-Once Semantics**: No duplicate processing
+- **Workflow State**: Full audit trail
+- **Long-Running**: Handle hours-long processes
+
+### 🎯 Production Ready
+- **Quality Scoring**: 0-100 score per indicator
+- **Usability Verdicts**: use_as_is | use_with_caution | requires_review | do_not_use
+- **API Endpoints**: REST API for all stages
+- **Export Ready**: Final indicators table for downstream systems
+
+### 📊 Comprehensive Monitoring
+- **Real-Time Stats**: Processing progress, success/failure rates
+- **Batch Statistics**: Performance metrics per run
+- **Issue Tracking**: Query by severity, status
+- **Queue Monitoring**: Check pending workflows
+
+---
+
+## Documentation
+
+### Getting Started
+- **[QUICKSTART.md](docs/QUICKSTART.md)** - Detailed setup guide
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design deep dive
+- **[WORKFLOWS.md](docs/WORKFLOWS.md)** - How each workflow works
+
+### Workflows
+- **[Classification Workflow](docs/workflows/CLASSIFICATION.md)** - Metadata validation
+- **[Data Quality Workflow](docs/workflows/DATA-QUALITY.md)** - Quality assessment
+- **[Consensus Analysis Workflow](docs/workflows/CONSENSUS-ANALYSIS.md)** - Consistency checking
+
+### Operations
+- **[TIME-SERIES-INGESTION.md](docs/TIME-SERIES-INGESTION.md)** - Load time series data
+- **[SCRIPTS.md](SCRIPTS.md)** - All available commands
+- **[API.md](docs/API.md)** - REST API reference
+
+### Deployment
+- **[RAILWAY.md](docs/deployment/RAILWAY.md)** - Deploy to Railway ($113/mo)
+- **[AWS-SPOT-PULUMI.md](docs/deployment/AWS-SPOT-PULUMI.md)** - AWS EC2 Spot ($111/mo)
+- **[DEPLOYMENT-COMPARISON.md](docs/deployment/DEPLOYMENT-COMPARISON.md)** - Choose your platform
+- **[CLUSTER.md](docs/CLUSTER.md)** - Multi-node scaling
+
+---
+
+## Performance
+
+### Single Node vs Cluster
+
+| Setup | Nodes | Services | RPM | Time (10,903 indicators) | Cost/Hour |
+|-------|-------|----------|-----|--------------------------|-----------|
+| **Dev** | 1 | 1 | 300 | ~36 min | $0.50 |
+| **Cluster (3-node)** | 3 | 3 | 900 | ~12 min | $1.50 |
+| **Cluster (5-node)** | 5 | 10 | 4000 | ~3 min | $6.00 |
+
+### Throughput by Stage
+
+| Stage | Parallel | LLM Calls | Avg Time | Cost (10k indicators) |
+|-------|----------|-----------|----------|----------------------|
+| Classification | 200 workflows | 6 per indicator | ~12 min | ~$15 |
+| Data Quality | 200 workflows | 1 per indicator (if issues) | ~8 min | ~$8 |
+| Consensus | By indicator name | 1 per name (if outliers) | ~2 min | ~$2 |
+| **Total** | - | ~70,000 calls | ~22 min | **~$25** |
+
+*Using GPT-4o-mini with prompt caching (90% cache hit rate)*
+
+---
 
 ## API Reference
 
-### POST /classify-api/batch
+### Classification API
 
-Classify up to 100 indicators.
+```bash
+# Classify all indicators
+curl -X POST http://localhost:8080/classify-api/classify-all \
+  -H "Content-Type: application/json"
 
-**Request:**
-```json
-{
-  "indicators": [
-    {
-      "indicator_id": "GDP_USA",
-      "name": "Gross Domestic Product",
-      "units": "USD Million",
-      "periodicity": "Quarterly",
-      "sample_values": [{"date": "2023-Q1", "value": 25000000}]
-    }
-  ],
-  "llm_provider": "openai"
-}
+# Classify specific indicator
+curl -X POST http://localhost:8080/classify-api/classify \
+  -H "Content-Type: application/json" \
+  -d '{"indicator_id": "GDP_USA_123"}'
+
+# Get classification result
+curl http://localhost:8080/classify-api/result/GDP_USA_123
 ```
 
-**Response:**
-```json
-{
-  "message": "Classification started",
-  "count": 1,
-  "trace_id": "550e8400-..."
-}
+### Data Quality API
+
+```bash
+# Check all indicators
+curl -X POST http://localhost:8080/data-quality-api/check-all \
+  -H "Content-Type: application/json"
+
+# Get quality report
+curl http://localhost:8080/data-quality-api/report/GDP_USA_123
+
+# Get indicators with issues
+curl "http://localhost:8080/data-quality-api/issues?status=major_issues"
 ```
 
-### GET /classify-api/getStatus
+### Consensus Analysis API
 
-Check workflow status.
+```bash
+# Analyze all indicators
+curl -X POST http://localhost:8080/consensus-analysis-api/analyze-all \
+  -H "Content-Type: application/json"
 
-**Request:**
-```json
-{"indicatorId": "GDP_USA"}
+# Get consensus report
+curl http://localhost:8080/consensus-analysis-api/report/GDP
+
+# Get outliers
+curl "http://localhost:8080/consensus-analysis-api/issues?status=inconsistent"
 ```
 
-**Response:**
-```json
-{
-  "indicator_id": "GDP_USA",
-  "status": "completed",
-  "started_at": "2025-10-16T10:00:00Z"
-}
+### Final Indicators API
+
+```bash
+# Get production-ready indicators
+curl "http://localhost:8080/final-indicators-api/production-ready?limit=100"
+
+# Get indicators requiring attention
+curl http://localhost:8080/final-indicators-api/requires-attention
+
+# Get statistics
+curl http://localhost:8080/final-indicators-api/stats
 ```
 
-## Configuration
+**See [docs/API.md](docs/API.md) for complete API documentation.**
 
-Create `.env`:
+---
+
+## Database Schema
+
+### 4 Main Output Tables
+
+| Table | Purpose | Key Use Case |
+|-------|---------|--------------|
+| `classifications` | Validated metadata | "What is this indicator?" |
+| `data_quality_reports` | Quality assessment | "Can I trust this data?" |
+| `consensus_analysis_reports` | Consistency check | "Is this consistent with others?" |
+| `final_indicators` | 🎯 Export-ready | **"Give me production data"** |
+
+### All 30 Tables
+
+**Classification** (10): classifications, normalization_results, time_inference_results, cumulative_detection_results, family_assignment_results, type_classification_results, boolean_review_results, final_review_results, processing_log, pipeline_stats
+
+**Data Quality** (8): time_series_data, data_quality_checks, data_quality_reports, staleness_detector_results, magnitude_detector_results, false_reading_detector_results, unit_change_detector_results, consistency_checker_results, quality_review_results
+
+**Consensus** (8): consensus_analysis_reports, unit_consensus_results, scale_consensus_results, frequency_consensus_results, currency_consensus_results, time_basis_consensus_results, consensus_outliers, consensus_review_results
+
+**Core** (3): source_indicators, final_indicators, schema_version
+
+---
+
+## Environment Variables
 
 ```bash
 # Database
 DATABASE_URL=postgres://classify:classify@localhost:5432/classify
+SOURCE_DATABASE_URL=postgres://user:pass@prod:5432/indicators  # For seeding
 
-# LLM Providers (choose one or more)
+# LLM Providers
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-5-mini
-
 ANTHROPIC_API_KEY=sk-ant-...
-ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
 
-LM_STUDIO_URL=http://127.0.0.1:1234/v1
-LM_STUDIO_MODEL=mistral-7b-instruct
-
-# Service
-PORT=9080
-HOST=0.0.0.0
+# Restate
+RESTATE_HOST=http://localhost:9070
 ```
 
-## Key Features
+---
 
-- **Durable Workflows**: Survive crashes, restarts, and failures
-- **Automatic Parallelism**: 200+ workflows execute simultaneously
-- **Multi-LLM Support**: OpenAI, Anthropic, or local LM Studio
-- **Currency-Aware**: Specialized prompts for currency vs non-currency indicators
-- **Observable**: Restate Admin UI shows real-time workflow state
-- **Type-Safe**: Full TypeScript with Zod schemas
+## Common Commands
 
-## Performance
-
-| Metric | Value |
-|--------|-------|
-| **Throughput** | 1000s indicators/minute |
-| **Latency per indicator** | 12-30 seconds (6 LLM calls) |
-| **API response time** | <10ms (fire-and-forget) |
-| **Parallel workflows** | Unlimited (cluster scales horizontally) |
-| **Bottleneck** | LLM API latency |
-
-## Why Restate?
-
-Traditional workflow engines require manual state management, retry logic, and distributed tracing. Restate provides:
-
-✅ **Automatic durability** - State persisted transparently
-✅ **Exactly-once semantics** - No duplicate LLM calls
-✅ **Built-in observability** - Full execution trace
-✅ **Simple code** - Write async/await, get durability
-
-## Documentation
-
-- **[docs/QUICKSTART.md](docs/QUICKSTART.md)** - Single node setup (7 steps)
-- **[docs/CLUSTER.md](docs/CLUSTER.md)** - 3-node cluster for 3x throughput 🚀
-- **[docs/PARALLEL_EXECUTION.md](docs/PARALLEL_EXECUTION.md)** - How parallelism works
-- **[docs/API.md](docs/API.md)** - Complete API reference
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture deep dive
-
-## Troubleshooting
-
-**Service won't start:**
 ```bash
-lsof -ti:9080 | xargs kill -9  # Kill conflicting process
-bun run dev
+# Database
+bun run db:init                    # Initialize database
+bun run db:seed                    # Seed with production data
+bun run db:seed -- --100          # Seed 100 indicators for testing
+
+# Classification
+bun run classify                   # Classify all indicators
+bun run classify:fast              # 300 RPM
+bun run classify:ultra             # 5000 RPM
+bun run reclassify:ultra          # Force reclassify
+
+# Data Quality
+bun run quality:check              # Check all indicators
+bun run quality:issues             # Get issues
+bun run quality:issues:critical    # Severity 5 only
+
+# Consensus Analysis
+bun run consensus:analyze          # Analyze all
+bun run consensus:issues           # Get inconsistencies
+bun run consensus:outliers         # Get outliers
+
+# Final Indicators
+bun run final:migrate              # Migrate to final table
+bun run final:production           # Get production-ready data
+bun run final:stats                # Get statistics
+
+# Full Pipeline
+bun run pipeline:full              # Run all 3 stages + migration
+bun run pipeline:full:force        # Force reprocess everything
+
+# Cluster (Production)
+bun run all-in-one:fast --force    # Cluster with 3 nodes @ 1000 RPM
+bun run all-in-one:ultra --force   # Cluster with 3 nodes @ 1500 RPM
 ```
 
-**Classification fails:**
-```bash
-echo $OPENAI_API_KEY  # Check API key is set
-curl http://localhost:9080  # Check service is running
-```
+**See [SCRIPTS.md](SCRIPTS.md) for all 79 commands.**
 
-**Workflows stuck:**
-```sql
--- Find stuck workflows
-SELECT si.id, si.name
-FROM source_indicators si
-LEFT JOIN normalization_results n ON si.id = n.indicator_id
-WHERE n.indicator_id IS NULL
-LIMIT 10;
-```
-
-See [docs/QUICKSTART.md](docs/QUICKSTART.md#troubleshooting) for more.
+---
 
 ## Development
 
 ```bash
-# Run locally
-bun run dev
+# Install dependencies
+bun install
 
-# Initialize database
-bun run db:init
+# Start dev environment
+bun run dev:local:ultra
 
-# Classify indicators
-bun run classify -- --200 --random --openai
+# Run tests
+bun test
 
 # Format code
 bun run format
+
+# Type check
+bun run typecheck
 ```
 
-## Production Deployment: 3-Node Cluster
+---
 
-For **3x throughput** and high availability, use the Restate cluster:
+## Architecture Highlights
 
-### Quick Start - Cluster
+### Restate Benefits
+- **Durable Execution**: Workflows survive crashes, restarts
+- **Exactly-Once Semantics**: No duplicate LLM calls
+- **Built-in State Management**: No Redis/external state store needed
+- **Automatic Retries**: Configurable retry policies
+- **Distributed Tracing**: Full observability
 
-```bash
-# All-in-one: Start cluster + classify all indicators
-bun run all-in-one:fast --force
+### Design Patterns
+- **Service-Oriented**: Each stage is a standalone service
+- **Workflow Orchestration**: Restate coordinates multi-stage pipelines
+- **Parallel Execution**: Process 200+ indicators simultaneously
+- **Prompt Caching**: OpenAI automatic caching (90% hit rate)
+- **Idempotent Operations**: Safe to rerun without side effects
 
-# Or step-by-step:
-bun run cluster:start      # Start 3-node cluster
-bun run dev                # Start classification service
-bun run cluster:classify   # Distribute work across nodes
-```
-
-### How Clustering Works
-
-```
-┌─────────────┐   ┌─────────────┐   ┌─────────────┐
-│  Restate    │   │  Restate    │   │  Restate    │
-│  Node 1     │   │  Node 2     │   │  Node 3     │
-│  :8080      │   │  :28080     │   │  :38080     │
-└──────┬──────┘   └──────┬──────┘   └──────┬──────┘
-       │                 │                 │
-       │   Shared cluster state (MinIO)    │
-       │   Load balanced round-robin        │
-       │                 │                 │
-       └─────────┬───────┴─────────┬───────┘
-                 │                 │
-                 ▼                 ▼
-         ┌───────────────────────────┐
-         │  Classification Service   │
-         │  (Single Instance)        │
-         │  :9080                    │
-         └────────────┬──────────────┘
-                      │
-                      ▼
-         ┌───────────────────────────┐
-         │   TimescaleDB (Local)     │
-         │   localhost:5432          │
-         └───────────────────────────┘
-```
-
-**Key Points:**
-- **Shared State**: All 3 nodes share cluster state via MinIO (S3-compatible storage)
-- **Load Distribution**: Batches distributed round-robin (Node 1 → 2 → 3 → 1...)
-- **Single Service**: ONE classification service instance that all nodes call
-- **Same Database**: All nodes write to the SAME local TimescaleDB at `localhost:5432`
-- **3x Throughput**: 900 RPM total (300 RPM per node) vs 300 RPM single node
-
-### Cluster Management
-
-```bash
-# Start cluster
-bun run cluster:start
-
-# Check status
-docker-compose -f docker-compose.cluster.yml exec restate-1 restatectl status
-
-# View logs
-docker-compose -f docker-compose.cluster.yml logs -f
-
-# Stop cluster (preserve data)
-bun run cluster:stop
-
-# Clean everything (remove all data)
-bun run cluster:clean
-```
-
-### Access Points
-
-**Restate Admin UIs** (all show same cluster state):
-- Node 1: http://localhost:9070
-- Node 2: http://localhost:29070
-- Node 3: http://localhost:39070
-
-**Restate Ingress** (all accept requests):
-- Node 1: http://localhost:8080
-- Node 2: http://localhost:28080
-- Node 3: http://localhost:38080
-
-**MinIO S3 Console**: http://localhost:9000 (minioadmin/minioadmin)
-
-### Performance Comparison
-
-| Setup | RPM | Time for 10,903 indicators |
-|-------|-----|---------------------------|
-| **Single Node** | 300 | ~36 minutes |
-| **3-Node Cluster** | 900 | ~12 minutes |
-
-### Scripts
-
-| Script | Description |
-|--------|-------------|
-| `bun run all-in-one:fast --force` | Start cluster + service + classify all |
-| `bun run cluster:start` | Start 3-node cluster |
-| `bun run cluster:stop` | Stop cluster (preserve data) |
-| `bun run cluster:clean` | Stop + remove all data |
-| `bun run cluster:classify` | Distribute work across cluster |
-
-See [docs/CLUSTER.md](docs/CLUSTER.md) for detailed cluster documentation.
+---
 
 ## License
 
 MIT
+
+---
+
+## Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/tellimer/open-source/issues)
+- **Restate Docs**: https://restate.dev
+
+---
+
+**Built with ❤️ using [Restate](https://restate.dev)**
