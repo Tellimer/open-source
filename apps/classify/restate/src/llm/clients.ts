@@ -159,8 +159,10 @@ class OpenAIClient implements LLMClient {
         const completionTokens = result.usage.completionTokens || 0;
         const cacheHitRate = promptTokens > 0 ? ((cachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
 
-        // biome-ignore lint: console is needed for LLM client logging outside Restate context
-        console.log(`[OpenAIClient] Usage: prompt=${promptTokens} (cached=${cachedTokens}, ${cacheHitRate}%), completion=${completionTokens}, total=${result.usage.totalTokens}`);
+        const usageMsg = `[OpenAIClient] Usage: prompt=${promptTokens} (cached=${cachedTokens}, ${cacheHitRate}%), completion=${completionTokens}, total=${result.usage.totalTokens}`;
+
+        // Log to stderr for Docker capture
+        console.error(usageMsg);
       }
 
       return result.object as T;
