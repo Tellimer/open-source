@@ -143,7 +143,7 @@ class OpenAIClient implements LLMClient {
 
     try {
       // Use native OpenAI SDK with Zod schema validation
-      const completion = await this.client.beta.chat.completions.parse({
+      const completion = await this.client.chat.completions.parse({
         model: modelName,
         messages: [
           { role: 'system', content: params.systemPrompt },
