@@ -164,10 +164,13 @@ export function detectCumulativePattern(
                 withinYearDecreases === 0;
 
   // Running Total: Values continuously increase, no resets
+  // IMPORTANT: This should be VERY rare - most trending data (CPI, wages, etc.) is NOT cumulative!
+  // Only flag as running total if we have overwhelming evidence (many consecutive increases)
+  // and the pattern is sustained across a long time period
   const isRunningTotal = yearResets === 0 &&
-                         withinYearIncreases >= 3 &&
+                         withinYearIncreases >= 10 && // Increased threshold from 3 to 10
                          withinYearDecreases === 0 &&
-                         totalTransitions >= 4;
+                         totalTransitions >= 12; // Increased from 4 to 12 (need 1+ years of data)
 
   // Calculate confidence
   let confidence = 0;
