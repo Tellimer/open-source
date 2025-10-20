@@ -297,7 +297,22 @@ Example Correct Classification:
 `
     : "";
 
-  const systemPrompt = `You are an expert economic indicator type classifier for NON-CURRENCY indicators (dimensionless measures).
+  return `This indicator is NOT currency-denominated (dimensionless).
+
+Indicator: ${input.name}
+Description: ${input.description || "N/A"}
+Long Name: ${input.longName || "N/A"}
+Source: ${input.sourceName || "N/A"}
+Category: ${input.categoryGroup || "N/A"}
+Dataset: ${input.dataset || "N/A"}
+Topic: ${input.topic || "N/A"}
+Aggregation Method: ${input.aggregationMethod || "N/A"}
+Family: ${input.family}
+Time basis: ${input.timeBasis}
+Scale: ${input.scale}
+Parsed Unit Type: ${input.parsedUnitType || "unknown"}${unitTypeHint}
+Value patterns: ${valueAnalysis}
+${cumulativeContext}
 
 APPLICABLE TYPES FOR ${input.family.toUpperCase()}:
 ${familyInfo.guidance}
@@ -533,39 +548,5 @@ Example Decision:
 - DECISION: Override to index + period-average
 - Reasoning: "Although wages are typically flows, this country reports wages as an index level"
 
-
-IMPORTANT: Return ONLY valid JSON matching this exact schema:
-=============================================================
-{
-  "indicatorType": string (from types listed above for your family),
-  "temporalAggregation": "point-in-time" | "period-rate" | "period-cumulative" | "period-average" | "period-total" | "not-applicable",
-  "heatMapOrientation": "higher-is-positive" | "lower-is-positive" | "neutral",
-  "confidence": 0.0-1.0,
-  "reasoning": "Clear explanation of your classification logic and key factors"
-}`;
-
-  const userPrompt = `Please classify this non-currency-denominated economic indicator:
-
-INDICATOR INFORMATION:
-======================
-
-Indicator: ${input.name}
-Description: ${input.description || "N/A"}
-Long Name: ${input.longName || "N/A"}
-Source: ${input.sourceName || "N/A"}
-Category: ${input.categoryGroup || "N/A"}
-Dataset: ${input.dataset || "N/A"}
-Topic: ${input.topic || "N/A"}
-Aggregation Method: ${input.aggregationMethod || "N/A"}
-Family: ${input.family}
-Time basis: ${input.timeBasis}
-Scale: ${input.scale}
-Parsed Unit Type: ${input.parsedUnitType || "unknown"}${unitTypeHint}
-Value patterns: ${valueAnalysis}
-${cumulativeContext}
-
-
-Analyze the above indicator and provide your classification as JSON.`;
-
-  return { systemPrompt, userPrompt };
+Provide your answer with clear reasoning.`;
 }

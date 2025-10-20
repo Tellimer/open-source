@@ -29,20 +29,18 @@ export const timeInferenceSchema = z.object({
   sourceUsed: z.enum(["units", "periodicity", "time-series", "unknown"]),
 });
 
+/**
+ * Create optimized time inference prompts with system/user separation
+ * System prompt: Static instructions (100% cacheable)
+ * User prompt: Variable indicator data
+ */
 export function createTimeInferencePrompt(input: {
   name: string;
   units?: string;
   periodicity?: string;
   timeSeriesFrequency?: string;
-}): string {
-  return `You are an expert economic indicator time classifier. Your task is to determine the reporting frequency and time basis for economic indicators based on available metadata.
-
-INDICATOR INFORMATION:
-======================
-Indicator Name: ${input.name}
-Units: ${input.units || "N/A"}
-Periodicity: ${input.periodicity || "N/A"}
-Time Series Analysis: ${input.timeSeriesFrequency || "N/A"} (detected from data points)
+}): { systemPrompt: string; userPrompt: string } {
+  const systemPrompt = `You are an expert economic indicator time classifier. Your task is to determine the reporting frequency and time basis for economic indicators based on available metadata.
 
 CLASSIFICATION TASK:
 ====================
@@ -216,7 +214,18 @@ IMPORTANT: Return ONLY valid JSON matching this exact schema:
   "confidence": 0.0-1.0,
   "reasoning": "Brief explanation of your classification logic and key factors",
   "sourceUsed": "units" | "periodicity" | "time-series" | "unknown"
-}
+}`;
 
-Now analyze the indicator above and provide your classification.`;
+  const userPrompt = `Please classify this economic indicator:
+
+INDICATOR INFORMATION:
+======================
+Indicator Name: ${input.name}
+Units: ${input.units || "N/A"}
+Periodicity: ${input.periodicity || "N/A"}
+Time Series Analysis: ${input.timeSeriesFrequency || "N/A"} (detected from data points)
+
+Analyze the above indicator and provide your classification as JSON.`;
+
+  return { systemPrompt, userPrompt };
 }

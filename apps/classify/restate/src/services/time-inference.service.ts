@@ -79,7 +79,7 @@ const timeInferenceService = restate.service({
               const llmConfig = getLLMConfig("time-inference", llm_provider);
               const llmClient = createLLMClient(llmConfig);
 
-              const prompt = createTimeInferencePrompt({
+              const { systemPrompt, userPrompt } = createTimeInferencePrompt({
                 name,
                 units,
                 periodicity,
@@ -89,7 +89,8 @@ const timeInferenceService = restate.service({
               timeInference = await ctx.run("llm-time-inference", async () => {
                 try {
                   return await llmClient.generateObject({
-                    prompt,
+                    systemPrompt,
+                    userPrompt,
                     schema: timeInferenceSchema,
                   });
                 } catch (error: any) {

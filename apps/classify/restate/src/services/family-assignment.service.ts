@@ -68,12 +68,13 @@ const familyAssignmentService = restate.service({
         const llmClient = createLLMClient(llmConfig);
 
         // Route to currency-specific or non-currency-specific prompt
-        let prompt: string;
+        let systemPrompt: string;
+        let userPrompt: string;
         let schema: any;
 
         if (is_currency) {
           // Currency-specific prompt (only 2 families: physical-fundamental, price-value)
-          prompt = createFamilyAssignmentCurrencyPrompt({
+          const prompts = createFamilyAssignmentCurrencyPrompt({
             name,
             description,
             timeBasis: time_basis,
@@ -85,10 +86,12 @@ const familyAssignmentService = restate.service({
             dataset,
             topic,
           });
+          systemPrompt = prompts.systemPrompt;
+          userPrompt = prompts.userPrompt;
           schema = familyAssignmentCurrencySchema;
         } else {
           // Non-currency-specific prompt (6 families with rate disambiguation)
-          prompt = createFamilyAssignmentNonCurrencyPrompt({
+          const prompts = createFamilyAssignmentNonCurrencyPrompt({
             name,
             description,
             timeBasis: time_basis,
@@ -100,6 +103,8 @@ const familyAssignmentService = restate.service({
             dataset,
             topic,
           });
+          systemPrompt = prompts.systemPrompt;
+          userPrompt = prompts.userPrompt;
           schema = familyAssignmentNonCurrencySchema;
         }
 
@@ -109,7 +114,8 @@ const familyAssignmentService = restate.service({
           async () => {
             try {
               return await llmClient.generateObject({
-                prompt,
+                systemPrompt,
+                userPrompt,
                 schema,
               });
             } catch (error: any) {

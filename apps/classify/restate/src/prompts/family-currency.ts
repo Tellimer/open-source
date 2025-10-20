@@ -24,6 +24,11 @@ export const familyAssignmentCurrencySchema = z.object({
   reasoning: z.string(),
 });
 
+/**
+ * Create optimized family assignment prompts for CURRENCY-DENOMINATED indicators
+ * System prompt: Static classification rules (100% cacheable)
+ * User prompt: Variable indicator data
+ */
 export function createFamilyAssignmentCurrencyPrompt(input: {
   name: string;
   description?: string;
@@ -35,7 +40,7 @@ export function createFamilyAssignmentCurrencyPrompt(input: {
   categoryGroup?: string;
   dataset?: string;
   topic?: string;
-}): string {
+}): { systemPrompt: string; userPrompt: string } {
   // Analyze sample values if available
   let valueAnalysis = "N/A";
   if (input.sampleValues && input.sampleValues.length > 0) {
@@ -60,18 +65,7 @@ export function createFamilyAssignmentCurrencyPrompt(input: {
       }`;
   }
 
-  return `This indicator is CURRENCY-DENOMINATED (measured in monetary units).
-
-Indicator: ${input.name}
-Description: ${input.description || "N/A"}
-Source: ${input.sourceName || "N/A"}
-Category Group: ${input.categoryGroup || "N/A"}
-Dataset: ${input.dataset || "N/A"}
-Topic: ${input.topic || "N/A"}
-Time basis: ${input.timeBasis}
-Scale: ${input.scale}
-Detected Currency: ${input.detectedCurrency || "Unknown"}
-Value patterns: ${valueAnalysis}
+  const systemPrompt = `You are an expert economic indicator family classifier for CURRENCY-DENOMINATED indicators (measured in monetary units).
 
 CLASSIFICATION RULE FOR CURRENCY-DENOMINATED INDICATORS:
 
@@ -128,5 +122,30 @@ CRITICAL DISAMBIGUATION:
 
 ✓ "Trade Balance" in currency? YES - Total net trade value → physical-fundamental
 
-Provide your answer with clear reasoning.`;
+IMPORTANT: Return ONLY valid JSON matching this exact schema:
+=============================================================
+{
+  "family": "physical-fundamental" | "price-value",
+  "confidence": 0.0-1.0,
+  "reasoning": "Clear explanation of your classification logic and key factors"
+}`;
+
+  const userPrompt = `Please classify this currency-denominated economic indicator:
+
+INDICATOR INFORMATION:
+======================
+Indicator: ${input.name}
+Description: ${input.description || "N/A"}
+Source: ${input.sourceName || "N/A"}
+Category Group: ${input.categoryGroup || "N/A"}
+Dataset: ${input.dataset || "N/A"}
+Topic: ${input.topic || "N/A"}
+Time basis: ${input.timeBasis}
+Scale: ${input.scale}
+Detected Currency: ${input.detectedCurrency || "Unknown"}
+Value patterns: ${valueAnalysis}
+
+Analyze the above indicator and provide your classification as JSON.`;
+
+  return { systemPrompt, userPrompt };
 }

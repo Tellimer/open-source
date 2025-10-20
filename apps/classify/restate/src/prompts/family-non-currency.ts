@@ -8,7 +8,7 @@ import { z } from "zod";
 /**
  * Get strong guidance based on parsed unit type
  */
-function getUnitTypeGuidance(unitType: string): string {
+function getUnitTypeGuidance(unitType: string | undefined): string {
   const guidance: Record<string, string> = {
     percentage: `
 → Strong indication: numeric-measurement OR price-value OR change-movement
@@ -51,7 +51,8 @@ function getUnitTypeGuidance(unitType: string): string {
 → Use all available context for classification`,
   };
 
-  return guidance[unitType] || guidance.unknown;
+  if (!unitType) return guidance.unknown as string;
+  return (guidance[unitType] ?? guidance.unknown) as string;
 }
 
 export const familyAssignmentNonCurrencySchema = z.object({
@@ -77,6 +78,11 @@ export const familyAssignmentNonCurrencySchema = z.object({
   reasoning: z.string(),
 });
 
+/**
+ * Create optimized family assignment prompts for NON-CURRENCY indicators
+ * System prompt: Static classification rules (100% cacheable)
+ * User prompt: Variable indicator data
+ */
 export function createFamilyAssignmentNonCurrencyPrompt(input: {
   name: string;
   description?: string;
@@ -88,7 +94,7 @@ export function createFamilyAssignmentNonCurrencyPrompt(input: {
   categoryGroup?: string;
   dataset?: string;
   topic?: string;
-}): string {
+}): { systemPrompt: string; userPrompt: string } {
   // Analyze sample values if available
   let valueAnalysis = "N/A";
   if (input.sampleValues && input.sampleValues.length > 0) {
@@ -121,18 +127,7 @@ export function createFamilyAssignmentNonCurrencyPrompt(input: {
 ${getUnitTypeGuidance(input.parsedUnitType)}`
     : "";
 
-  return `This indicator is NOT currency-denominated (dimensionless measure).
-
-Indicator: ${input.name}
-Description: ${input.description || "N/A"}
-Source: ${input.sourceName || "N/A"}
-Category Group: ${input.categoryGroup || "N/A"}
-Dataset: ${input.dataset || "N/A"}
-Topic: ${input.topic || "N/A"}
-Time basis: ${input.timeBasis}
-Scale: ${input.scale}
-Parsed Unit Type: ${input.parsedUnitType || "unknown"}
-Value patterns: ${valueAnalysis}${unitTypeHint}
+  const systemPrompt = `You are an expert economic indicator family classifier for NON-CURRENCY indicators (dimensionless measures like percentages, ratios, indices, counts).
 
 CLASSIFICATION FOR NON-CURRENCY INDICATORS:
 
@@ -240,5 +235,30 @@ EDGE CASES TO WATCH:
 • "Participation Rate" = numeric-measurement (not price-value)
   - Percentage of population in labor force (structural ratio)
 
-Provide your answer with clear reasoning based on the examples above.`;
+IMPORTANT: Return ONLY valid JSON matching this exact schema:
+=============================================================
+{
+  "family": "numeric-measurement" | "price-value" | "change-movement" | "composite-derived" | "temporal" | "qualitative",
+  "confidence": 0.0-1.0,
+  "reasoning": "Clear explanation of your classification logic and key factors"
+}`;
+
+  const userPrompt = `Please classify this non-currency-denominated economic indicator:
+
+INDICATOR INFORMATION:
+======================
+Indicator: ${input.name}
+Description: ${input.description || "N/A"}
+Source: ${input.sourceName || "N/A"}
+Category Group: ${input.categoryGroup || "N/A"}
+Dataset: ${input.dataset || "N/A"}
+Topic: ${input.topic || "N/A"}
+Time basis: ${input.timeBasis}
+Scale: ${input.scale}
+Parsed Unit Type: ${input.parsedUnitType || "unknown"}
+Value patterns: ${valueAnalysis}${unitTypeHint}
+
+Analyze the above indicator and provide your classification as JSON.`;
+
+  return { systemPrompt, userPrompt };
 }

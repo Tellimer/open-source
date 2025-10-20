@@ -79,7 +79,9 @@ class LocalLLMClient implements LLMClient {
   constructor(private config: LLMConfig) {}
 
   async generateObject<T>(params: {
-    prompt: string;
+    prompt?: string;
+    systemPrompt?: string;
+    userPrompt?: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model ||
@@ -91,10 +93,15 @@ class LocalLLMClient implements LLMClient {
     const modelInstance = lmstudioClient(modelName);
 
     try {
+      // Combine prompts for local model (doesn't benefit from caching)
+      const combinedPrompt = params.systemPrompt && params.userPrompt
+        ? `${params.systemPrompt}\n\n${params.userPrompt}`
+        : params.prompt || '';
+
       const result = await generateObject({
         model: modelInstance,
         schema: params.schema,
-        messages: [{ role: 'user', content: params.prompt }],
+        messages: [{ role: 'user', content: combinedPrompt }],
         mode: 'json',
         temperature: this.config.temperature || 0.2,
         maxRetries: 2,
@@ -111,33 +118,53 @@ class LocalLLMClient implements LLMClient {
 }
 
 /**
- * OpenAI client using Vercel AI SDK with prompt caching support
+ * OpenAI client using Vercel AI SDK with optimized prompt caching
  *
  * PROMPT CACHING:
  * - System messages >1024 tokens are automatically cached by OpenAI
  * - Cached input tokens cost 90% less ($0.025/M vs $0.25/M for GPT-5-mini)
  * - Cache is valid for 5-10 minutes of activity
- * - Use 'system' role for instructions, 'user' role for indicator data
+ * - OPTIMAL: Use systemPrompt for static instructions, userPrompt for variable data
+ * - LEGACY: Single prompt mode still supported (less efficient caching)
  */
 class OpenAIClient implements LLMClient {
   constructor(private config: LLMConfig) {}
 
   async generateObject<T>(params: {
-    prompt: string;
+    prompt?: string;
+    systemPrompt?: string;
+    userPrompt?: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || process.env.OPENAI_MODEL || 'gpt-5-mini';
-    console.log(`[OpenAIClient] Calling model: ${modelName} (with prompt caching)`);
+
+    // Determine which mode we're using
+    const mode = params.systemPrompt && params.userPrompt ? 'optimized' : 'legacy';
+    console.log(`[OpenAIClient] Calling model: ${modelName} (caching mode: ${mode})`);
 
     try {
+      let messages: Array<{ role: 'system' | 'user'; content: string }>;
+
+      if (params.systemPrompt && params.userPrompt) {
+        // OPTIMIZED MODE: Separate system (cacheable) and user (variable) messages
+        messages = [
+          { role: 'system' as const, content: params.systemPrompt },
+          { role: 'user' as const, content: params.userPrompt }
+        ];
+      } else if (params.prompt) {
+        // LEGACY MODE: Single prompt as system message
+        messages = [
+          { role: 'system' as const, content: params.prompt },
+          { role: 'user' as const, content: 'Please analyze and classify this indicator according to the instructions above.' }
+        ];
+      } else {
+        throw new Error('Must provide either prompt OR (systemPrompt + userPrompt)');
+      }
+
       const result = await generateObject({
         model: openaiClient(modelName),
         schema: params.schema,
-        // Use system message for cacheable instructions
-        messages: [
-          { role: 'system', content: params.prompt },
-          { role: 'user', content: 'Please analyze and classify this indicator according to the instructions above.' }
-        ],
+        messages,
         mode: 'json',
         temperature: this.config.temperature || 0.2,
         maxRetries: 3,
@@ -154,21 +181,30 @@ class OpenAIClient implements LLMClient {
 
 /**
  * Anthropic client using Vercel AI SDK
+ * Note: Anthropic also supports prompt caching
  */
 class AnthropicClient implements LLMClient {
   constructor(private config: LLMConfig) {}
 
   async generateObject<T>(params: {
-    prompt: string;
+    prompt?: string;
+    systemPrompt?: string;
+    userPrompt?: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || 'claude-3-5-haiku-20241022';
-    console.log(`[AnthropicClient] Calling model: ${modelName}`);
+    const mode = params.systemPrompt && params.userPrompt ? 'optimized' : 'legacy';
+    console.log(`[AnthropicClient] Calling model: ${modelName} (mode: ${mode})`);
+
+    // Combine prompts for single message (Anthropic uses different approach)
+    const combinedPrompt = params.systemPrompt && params.userPrompt
+      ? `${params.systemPrompt}\n\n${params.userPrompt}`
+      : params.prompt || '';
 
     const result = await generateObject({
       model: anthropicClient(modelName),
       schema: params.schema,
-      messages: [{ role: 'user', content: params.prompt }],
+      messages: [{ role: 'user', content: combinedPrompt }],
       mode: 'json',
       temperature: this.config.temperature || 0.2,
       maxRetries: 2,

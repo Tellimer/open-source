@@ -71,7 +71,7 @@ const typeClassificationService = restate.service({
             try {
               if (input.is_currency) {
                 // Currency-specific prompt with YTD detection integration
-                const prompt = createTypeClassificationCurrencyPrompt({
+                const { systemPrompt, userPrompt } = createTypeClassificationCurrencyPrompt({
                   name,
                   family,
                   timeBasis: time_basis,
@@ -82,12 +82,13 @@ const typeClassificationService = restate.service({
                   sampleValues: sample_values,
                 });
                 return await llmClient.generateObject({
-                  prompt,
+                  systemPrompt,
+                  userPrompt,
                   schema: typeClassificationCurrencySchema,
                 });
               } else {
                 // Non-currency-specific prompt with extensive type guidance
-                const prompt = createTypeClassificationNonCurrencyPrompt({
+                const { systemPrompt, userPrompt } = createTypeClassificationNonCurrencyPrompt({
                   name,
                   family,
                   timeBasis: time_basis,
@@ -98,7 +99,8 @@ const typeClassificationService = restate.service({
                   sampleValues: sample_values,
                 });
                 return await llmClient.generateObject({
-                  prompt,
+                  systemPrompt,
+                  userPrompt,
                   schema: typeClassificationNonCurrencySchema,
                 });
               }

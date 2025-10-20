@@ -43,6 +43,11 @@ export const typeClassificationCurrencySchema = z.object({
   reasoning: z.string(),
 });
 
+/**
+ * Create optimized type classification prompts for CURRENCY-DENOMINATED indicators
+ * System prompt: Static classification rules (100% cacheable)
+ * User prompt: Variable indicator data
+ */
 export function createTypeClassificationCurrencyPrompt(input: {
   name: string;
   description?: string;
@@ -61,45 +66,7 @@ export function createTypeClassificationCurrencyPrompt(input: {
   topic?: string;
   aggregationMethod?: string;
   currencyCode?: string;
-}): string {
-  const typeGuidance = input.family === "physical-fundamental"
-    ? `
-TYPES FOR PHYSICAL-FUNDAMENTAL (currency-denominated):
-
-- stock: A quantity held at a point in time
-  Examples: Foreign Exchange Reserves, Government Debt Outstanding
-  Temporal: point-in-time
-
-- flow: Movement/transactions over a period, OR total economic output
-  Examples: GDP, GNI, GDP by sector (Manufacturing, Services, etc.), Exports, Imports, Capital Inflows, Foreign Direct Investment
-  Temporal: period-total
-  ⚠️ CRITICAL: ALL GDP indicators (including sectoral like "GDP from Manufacturing") are flows, NOT capacity!
-
-- balance: Net difference between flows
-  Examples: Trade Balance, Current Account Balance, Budget Balance
-  Temporal: period-total (net flow)
-
-- capacity: Productive capacity (RARELY USED - do not use for GDP!)
-  Examples: Theoretical maximum production capacity
-  Temporal: period-total
-  ⚠️ NOTE: GDP is a FLOW (actual output), not capacity (potential output)!
-
-- volume: Total transactions/activity in currency
-  Examples: Trading Volume, Transaction Value
-  Temporal: period-total
-`
-    : `
-TYPES FOR PRICE-VALUE (currency-denominated):
-
-- price: Cost/value per unit in currency
-  Examples: Stock Price, Commodity Price ($/barrel), Real Estate Price
-  Temporal: point-in-time (snapshot price)
-
-- rate: Exchange rate (price of one currency in another)
-  Examples: USD/EUR Exchange Rate, Currency Cross Rate
-  Temporal: point-in-time or period-average
-`;
-
+}): { systemPrompt: string; userPrompt: string } {
   // Analyze sample values if available
   let valueAnalysis = "N/A";
   if (input.sampleValues && input.sampleValues.length > 0) {
@@ -192,24 +159,48 @@ Example Correct Classification:
 `
     : "";
 
-  return `This indicator is CURRENCY-DENOMINATED.
+  // Create type-specific guidance for system prompt (family-dependent but static rules)
+  const typeGuidancePhysical = `
+TYPES FOR PHYSICAL-FUNDAMENTAL (currency-denominated):
 
-Indicator: ${input.name}
-Description: ${input.description || "N/A"}
-Long Name: ${input.longName || "N/A"}
-Source: ${input.sourceName || "N/A"}
-Category: ${input.categoryGroup || "N/A"}
-Dataset: ${input.dataset || "N/A"}
-Topic: ${input.topic || "N/A"}
-Aggregation Method: ${input.aggregationMethod || "N/A"}
-Family: ${input.family}
-Time basis: ${input.timeBasis}
-Scale: ${input.scale}
-Currency: ${input.detectedCurrency || input.currencyCode || "Unknown"}
-Value patterns: ${valueAnalysis}
-${cumulativeContext}
+- stock: A quantity held at a point in time
+  Examples: Foreign Exchange Reserves, Government Debt Outstanding
+  Temporal: point-in-time
 
-${typeGuidance}
+- flow: Movement/transactions over a period, OR total economic output
+  Examples: GDP, GNI, GDP by sector (Manufacturing, Services, etc.), Exports, Imports, Capital Inflows, Foreign Direct Investment
+  Temporal: period-total
+  ⚠️ CRITICAL: ALL GDP indicators (including sectoral like "GDP from Manufacturing") are flows, NOT capacity!
+
+- balance: Net difference between flows
+  Examples: Trade Balance, Current Account Balance, Budget Balance
+  Temporal: period-total (net flow)
+
+- capacity: Productive capacity (RARELY USED - do not use for GDP!)
+  Examples: Theoretical maximum production capacity
+  Temporal: period-total
+  ⚠️ NOTE: GDP is a FLOW (actual output), not capacity (potential output)!
+
+- volume: Total transactions/activity in currency
+  Examples: Trading Volume, Transaction Value
+  Temporal: period-total
+`;
+
+  const typeGuidancePrice = `
+TYPES FOR PRICE-VALUE (currency-denominated):
+
+- price: Cost/value per unit in currency
+  Examples: Stock Price, Commodity Price ($/barrel), Real Estate Price
+  Temporal: point-in-time (snapshot price)
+
+- rate: Exchange rate (price of one currency in another)
+  Examples: USD/EUR Exchange Rate, Currency Cross Rate
+  Temporal: point-in-time or period-average
+`;
+
+  const systemPrompt = `You are an expert economic indicator type classifier for CURRENCY-DENOMINATED indicators (measured in monetary units).
+
+${input.family === "physical-fundamental" ? typeGuidancePhysical : typeGuidancePrice}
 
 TEMPORAL AGGREGATION:
 
@@ -388,5 +379,36 @@ Example Decision (NON-GDP):
 - DECISION: Override to flow + period-total
 - Reasoning: "Although reserves typically are balance at a point, this country reports the monthly accumulation flow"
 
-Provide your answer with clear reasoning.`;
+IMPORTANT: Return ONLY valid JSON matching this exact schema:
+=============================================================
+{
+  "indicatorType": "stock" | "flow" | "balance" | "capacity" | "volume" | "price" | "rate",
+  "temporalAggregation": "point-in-time" | "period-total" | "period-cumulative" | "period-average" | "not-applicable",
+  "heatMapOrientation": "higher-is-positive" | "lower-is-positive" | "neutral",
+  "confidence": 0.0-1.0,
+  "reasoning": "Clear explanation of your classification logic and key factors"
+}`;
+
+  const userPrompt = `Please classify this currency-denominated economic indicator:
+
+INDICATOR INFORMATION:
+======================
+Indicator: ${input.name}
+Description: ${input.description || "N/A"}
+Long Name: ${input.longName || "N/A"}
+Source: ${input.sourceName || "N/A"}
+Category: ${input.categoryGroup || "N/A"}
+Dataset: ${input.dataset || "N/A"}
+Topic: ${input.topic || "N/A"}
+Aggregation Method: ${input.aggregationMethod || "N/A"}
+Family: ${input.family}
+Time basis: ${input.timeBasis}
+Scale: ${input.scale}
+Currency: ${input.detectedCurrency || input.currencyCode || "Unknown"}
+Value patterns: ${valueAnalysis}
+${cumulativeContext}
+
+Analyze the above indicator and provide your classification as JSON.`;
+
+  return { systemPrompt, userPrompt };
 }
