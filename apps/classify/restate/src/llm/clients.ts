@@ -34,7 +34,7 @@ export interface LLMConfig {
 }
 
 // Instantiate provider clients once at module level
-const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_URL || 'http://127.0.0.1:1234/v1';
+const LM_STUDIO_BASE_URL = Bun.env.LM_STUDIO_URL || 'http://127.0.0.1:1234/v1';
 
 const lmstudioProvider = createOpenAI({
   baseURL: LM_STUDIO_BASE_URL,
@@ -152,9 +152,10 @@ class OpenAIClient implements LLMClient {
 
       // Log usage information including cached tokens
       if (result.usage) {
-        // OpenAI returns cachedTokens in the usage object (not part of standard AI SDK type)
-        const usage = result.usage as typeof result.usage & { cachedTokens?: number };
-        const cachedTokens = usage.cachedTokens || 0;
+        // OpenAI returns cached_tokens in snake_case (not part of standard AI SDK type)
+        const usage = result.usage as typeof result.usage & { cachedTokens?: number; cached_tokens?: number };
+        // Try both camelCase and snake_case for compatibility
+        const cachedTokens = usage.cached_tokens || usage.cachedTokens || 0;
         const promptTokens = result.usage.promptTokens || 0;
         const completionTokens = result.usage.completionTokens || 0;
         const cacheHitRate = promptTokens > 0 ? ((cachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
@@ -213,7 +214,7 @@ export function getLLMConfig(
 ): LLMConfig {
   // Check for stage-specific override
   const stageEnvVar = `LLM_PROVIDER_${stage.toUpperCase().replace(/-/g, '_')}`;
-  const provider = (process.env[stageEnvVar] as LLMProvider) || defaultProvider;
+  const provider = (Bun.env[stageEnvVar] as LLMProvider) || defaultProvider;
 
   console.log(
     `[LLM Config] Stage: ${stage}, Provider: ${provider}`,
@@ -221,8 +222,8 @@ export function getLLMConfig(
 
   // Get API keys
   const apiKeys = {
-    openai: process.env.OPENAI_API_KEY,
-    anthropic: process.env.ANTHROPIC_API_KEY,
+    openai: Bun.env.OPENAI_API_KEY,
+    anthropic: Bun.env.ANTHROPIC_API_KEY,
     local: 'not-needed',
   };
 
