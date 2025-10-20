@@ -94,6 +94,80 @@ Provide:
 - Cumulative indicators must be monotonic (or very close)
 - Backdated revisions are acceptable but should be noted
 
+## VALIDATION EXAMPLES
+
+**Example 1: False Positive - Daily Market Data Gap**
+- Flag: Staleness (5 days since last update)
+- Context: Last update was Friday, today is Wednesday
+- Verdict: FALSE POSITIVE - Weekend gap is normal for trading days
+- Impact: LOW - No real data quality issue
+
+**Example 2: Valid Issue - Magnitude Outlier**
+- Flag: Magnitude change (z-score: 8.5, value jumped 1000x)
+- Context: CPI inflation indicator, monthly data, sudden 1000% reading
+- Verdict: VALID - Likely decimal place error (should be 1.5% not 1500%)
+- Impact: HIGH - Corrupts analysis if used as-is
+- Action: Flag for manual correction, exclude outlier from calculations
+
+**Example 3: Valid Issue - Suspicious Flat Period**
+- Flag: False reading (exact same value 12 consecutive months)
+- Context: Exchange rate indicator, value = 1.2500 for entire year
+- Verdict: VALID - Highly suspicious for volatile FX market
+- Impact: MEDIUM - Data may be stale or copied placeholder
+- Action: Cross-check with alternative data sources
+
+**Example 4: Expected Pattern - Cumulative Reset**
+- Flag: Consistency (monotonicity violation, value dropped to zero)
+- Context: "YTD Government Expenditure" dropped on January 1st
+- Verdict: FALSE POSITIVE - Year-to-date series correctly reset
+- Impact: LOW - Expected behavior for cumulative indicators
+
+**Example 5: Critical Issue - Unit Regime Shift**
+- Flag: Unit change (1,000,000x regime shift in 2018)
+- Context: GDP series, values pre-2018 in millions, post-2018 in units
+- Verdict: VALID - Currency redenomination or unit scale change
+- Impact: CRITICAL - Time series cannot be compared across break
+- Action: Urgent - Apply scaling factor or split into two series
+
+**Example 6: Minor Issue - Publication Delay**
+- Flag: Staleness (45 days since last update for monthly indicator)
+- Context: Government statistical agency, known for 6-week delays
+- Verdict: VALID but MINOR - Within normal publication lag
+- Impact: LOW - Data is delayed but likely accurate when published
+- Action: Monitor but continue using data
+
+## DECISION FRAMEWORK
+
+When determining usability_verdict:
+
+1. **use_as_is**:
+   - No validated issues OR only false positives
+   - All critical checks passed
+   - Data suitable for production analysis without modifications
+
+2. **use_with_caution**:
+   - Minor validated issues that don't fundamentally corrupt analysis
+   - Example: Occasional outliers, publication delays, small gaps
+   - Data usable but requires analyst awareness of limitations
+
+3. **investigate_first**:
+   - Major issues that require human review before use
+   - Example: Regime shifts, suspicious flat periods, multiple anomalies
+   - Data quality uncertain - needs expert validation
+
+4. **do_not_use**:
+   - Critical issues that make data fundamentally unreliable
+   - Example: Pervasive errors, systematic corruption, missing critical periods
+   - Using this data would produce invalid analysis results
+
+## CONFIDENCE CALIBRATION
+
+- 0.9-1.0: Clear-cut case, strong evidence, unambiguous verdict
+- 0.7-0.9: Strong signals but some uncertainty about root cause
+- 0.5-0.7: Mixed signals, requires contextual judgment
+- 0.3-0.5: Uncertain, limited evidence, multiple plausible explanations
+- 0.0-0.3: Highly uncertain, need more information or domain expertise
+
 IMPORTANT: Return ONLY valid JSON matching this exact schema:
 =============================================================
 {

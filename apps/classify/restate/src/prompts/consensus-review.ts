@@ -81,6 +81,43 @@ Provide:
 - Cumulative for "Total" indicators, point-in-time for "Rate/Level" indicators
 - Inconsistent time basis = potential misclassification
 
+## VALIDATION EXAMPLES
+
+**Example 1: Valid Geographic Difference**
+- Outlier: Temperature in Fahrenheit (USA sources)
+- Consensus: Temperature in Celsius (85% of sources)
+- Verdict: VALID - Geographic convention difference
+- Action: document_difference - Note in metadata for users
+- Rationale: Both units are standard in their respective regions
+
+**Example 2: Data Entry Error**
+- Outlier: GDP in "ones" (1 country)
+- Consensus: GDP in "millions" (95% of sources)
+- Verdict: INVALID - Likely data entry error
+- Action: correct_error - Apply 1,000,000x multiplier
+- Rationale: GDP values would be unreasonably large in base units
+
+**Example 3: Valid Multi-Frequency Reporting**
+- Outlier: Daily frequency (2 sources - high-frequency trading data)
+- Consensus: Monthly frequency (80% of sources)
+- Verdict: VALID - Different data granularity needs
+- Action: no_action - Both frequencies serve different use cases
+- Rationale: High-frequency data for trading, monthly for macro analysis
+
+**Example 4: Inconsistent Currency Mix**
+- Outlier: "USD millions" while consensus is "Local currency ones"
+- Verdict: INVALID - Critical inconsistency mixing currency AND scale
+- Action: standardize - Convert all to common basis (e.g., USD millions)
+- Rationale: Cannot compare indicators with compound differences
+
+## CONFIDENCE CALIBRATION
+
+- 0.9-1.0: Clear consensus pattern, outliers are obvious errors or valid differences
+- 0.7-0.9: Strong consensus, outlier validity is reasonably certain
+- 0.5-0.7: Moderate consensus, some ambiguity about outlier causes
+- 0.3-0.5: Weak consensus, multiple valid interpretations possible
+- 0.0-0.3: No clear consensus, high uncertainty about standardization approach
+
 IMPORTANT: Return ONLY valid JSON matching this exact schema:
 =============================================================
 {
