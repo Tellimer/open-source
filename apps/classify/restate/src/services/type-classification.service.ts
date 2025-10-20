@@ -93,6 +93,8 @@ const typeClassificationService = restate.service({
                   timeBasis: time_basis,
                   scale: normalized_scale,
                   parsedUnitType: input.parsed_unit_type,
+                  isCumulative: input.is_cumulative,
+                  cumulativePatternType: input.cumulative_pattern_type,
                   sampleValues: sample_values,
                 });
                 return await llmClient.generateObject({

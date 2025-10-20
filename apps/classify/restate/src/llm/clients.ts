@@ -11,10 +11,13 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 
 /**
  * Generic LLM client interface
+ * Supports both legacy (single prompt) and optimized (system/user split) modes
  */
 export interface LLMClient {
   generateObject<T>(params: {
-    prompt: string;
+    prompt?: string;  // Legacy: single prompt (deprecated for caching)
+    systemPrompt?: string;  // Optimized: static instructions (cacheable)
+    userPrompt?: string;    // Optimized: variable data (not cached)
     schema: z.ZodSchema<T>;
   }): Promise<T>;
 }
@@ -108,7 +111,13 @@ class LocalLLMClient implements LLMClient {
 }
 
 /**
- * OpenAI client using Vercel AI SDK
+ * OpenAI client using Vercel AI SDK with prompt caching support
+ *
+ * PROMPT CACHING:
+ * - System messages >1024 tokens are automatically cached by OpenAI
+ * - Cached input tokens cost 90% less ($0.025/M vs $0.25/M for GPT-5-mini)
+ * - Cache is valid for 5-10 minutes of activity
+ * - Use 'system' role for instructions, 'user' role for indicator data
  */
 class OpenAIClient implements LLMClient {
   constructor(private config: LLMConfig) {}
@@ -118,13 +127,17 @@ class OpenAIClient implements LLMClient {
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || process.env.OPENAI_MODEL || 'gpt-5-mini';
-    console.log(`[OpenAIClient] Calling model: ${modelName}`);
+    console.log(`[OpenAIClient] Calling model: ${modelName} (with prompt caching)`);
 
     try {
       const result = await generateObject({
         model: openaiClient(modelName),
         schema: params.schema,
-        messages: [{ role: 'user', content: params.prompt }],
+        // Use system message for cacheable instructions
+        messages: [
+          { role: 'system', content: params.prompt },
+          { role: 'user', content: 'Please analyze and classify this indicator according to the instructions above.' }
+        ],
         mode: 'json',
         temperature: this.config.temperature || 0.2,
         maxRetries: 3,

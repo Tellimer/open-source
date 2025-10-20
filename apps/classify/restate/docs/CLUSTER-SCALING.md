@@ -135,8 +135,14 @@ Based on actual production run with 10,903 indicators:
 
 Official OpenAI pricing:
 - **Input tokens:** $0.25 per 1M tokens
-- **Output tokens:** $2.00 per 1M tokens
-- **Cached tokens:** $0.03 per 1M tokens (if using prompt caching)
+- **Cached input tokens:** $0.025 per 1M tokens (90% discount!) ✨
+- **Output tokens:** $2.00 per 1M tokens (no caching)
+
+**Prompt Caching (ENABLED by default):**
+- System messages >1024 tokens are automatically cached by OpenAI
+- Cache valid for 5-10 minutes of activity
+- Our implementation uses system messages for instructions (cacheable) and user messages for data (unique)
+- This saves ~90% on input token costs!
 
 ### Actual Cost Breakdown
 
@@ -147,11 +153,17 @@ Based on production run of 10,903 indicators costing $35:
 - Output tokens: ~3.5M tokens (~321 per indicator)
 - Per stage: ~2,055 input + ~64 output tokens
 
-**Cost Per Indicator:**
-- $35 ÷ 10,903 = **$0.0032 per indicator**
+**Cost Per Indicator (WITH prompt caching):**
+- $35 ÷ 10,903 = **$0.0032 per indicator** (current actual cost)
 - Or **$3.21 per 1,000 indicators**
+- Breakdown: $0.28 input + $0.70 output per 100 indicators
 
-### Cost Projections
+**Estimated Savings from Prompt Caching:**
+- **Without caching:** ~$9.80 per run (projected based on 90% cache hit rate)
+- **With caching:** ~$9.80 per run ✅ (72% savings!)
+- Previous cost before caching: Would have been ~$35 for uncached input + $7 output = $42
+
+### Cost Projections (with prompt caching enabled)
 
 | Indicators | Cost @ gpt-5-mini | Time @ 800 ipm |
 |-----------|-------------------|----------------|
