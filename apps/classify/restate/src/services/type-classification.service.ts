@@ -126,7 +126,7 @@ const typeClassificationService = restate.service({
         // Determine model
         let model: string;
         if (llm_provider === "openai") {
-          model = Bun.env.OPENAI_MODEL || "gpt-5-mini";
+          model = Bun.env.OPENAI_MODEL || "gpt-4.1-mini";
         } else if (llm_provider === "anthropic") {
           model = Bun.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
         } else {

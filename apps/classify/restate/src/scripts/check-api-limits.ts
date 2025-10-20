@@ -25,7 +25,7 @@ async function checkOpenAILimits() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-5-mini",
+        model: "gpt-4.1-mini",
         messages: [{ role: "user", content: "Hi" }],
         max_tokens: 5,
       }),

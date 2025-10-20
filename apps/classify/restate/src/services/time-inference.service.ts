@@ -45,6 +45,8 @@ const timeInferenceService = restate.service({
           indicator_id,
           name,
           provider: llm_provider,
+          sample_values_count: sample_values?.length || 0,
+          has_sample_values: !!sample_values,
         },
       );
 
@@ -106,13 +108,11 @@ const timeInferenceService = restate.service({
                   }
                   throw error; // Let Restate retry
                 }
-              }, {
-                maxRetries: 3, // Retry up to 3 times for LLM mistakes
               });
 
               provider = llmConfig.provider;
               if (llm_provider === "openai") {
-                model = Bun.env.OPENAI_MODEL || "gpt-5-mini";
+                model = Bun.env.OPENAI_MODEL || "gpt-4.1-mini";
               } else if (llm_provider === "anthropic") {
                 model = Bun.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
               } else {

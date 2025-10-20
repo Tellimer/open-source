@@ -44,13 +44,13 @@ const lmstudioProvider = createOpenAI({
 const lmstudioClient = (modelId: string) => lmstudioProvider.chat(modelId);
 
 const openaiProvider = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'not-needed',
+  apiKey: Bun.env.OPENAI_API_KEY || 'not-needed',
 });
 
 const openaiClient = (modelId: string) => openaiProvider.chat(modelId);
 
 const anthropicProvider = createAnthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || 'not-needed',
+  apiKey: Bun.env.ANTHROPIC_API_KEY || 'not-needed',
 });
 
 const anthropicClient = (modelId: string) => anthropicProvider(modelId);
@@ -118,9 +118,10 @@ class LocalLLMClient implements LLMClient {
  *
  * PROMPT CACHING:
  * - System messages >1024 tokens are automatically cached by OpenAI
- * - Cached input tokens cost 90% less ($0.025/M vs $0.25/M for GPT-5-mini)
+ * - Cached input tokens cost 75% less for gpt-4.1-mini ($0.10/M vs $0.40/M)
  * - Cache is valid for 5-10 minutes of activity
  * - Strategy: systemPrompt for static instructions, userPrompt for variable data
+ * - GPT-4.1-mini: 14x cheaper than GPT-5-mini with working cache
  */
 class OpenAIClient implements LLMClient {
   constructor(private config: LLMConfig) {}
@@ -130,8 +131,8 @@ class OpenAIClient implements LLMClient {
     userPrompt: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
-    const modelName = this.config.model || process.env.OPENAI_MODEL || 'gpt-5-mini';
-    console.log(`[OpenAIClient] Calling model: ${modelName}`);
+    const modelName = this.config.model || process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+    console.log(`[OpenAIClient] Calling model: ${modelName} (prompt caching: 75% discount on cached tokens)`);
 
     try {
       const messages: Array<{ role: 'system' | 'user'; content: string }> = [
@@ -146,6 +147,7 @@ class OpenAIClient implements LLMClient {
         mode: 'json',
         temperature: this.config.temperature || 0.2,
         maxRetries: 3,
+        // Prompt caching is automatic for gpt-4.1 models when system prompts >1024 tokens
       });
 
       console.log(`[OpenAIClient] Success!`);

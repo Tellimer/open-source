@@ -40,6 +40,8 @@ import consensusAnalysisWorkflow from "./workflows/consensus-analysis.workflow.t
 import classifyApi from "./api/classify.api.ts";
 import dataQualityApi from "./api/data-quality.api.ts";
 import consensusAnalysisApi from "./api/consensus-analysis.api.ts";
+import finalIndicatorsApi from "./api/final-indicators.api.ts";
+import timeSeriesApi from "./api/time-series.api.ts";
 
 /**
  * Create and configure Restate endpoint
@@ -82,7 +84,9 @@ function createRestateEndpoint() {
     // Register APIs
     .bind(classifyApi)
     .bind(dataQualityApi)
-    .bind(consensusAnalysisApi);
+    .bind(consensusAnalysisApi)
+    .bind(finalIndicatorsApi)
+    .bind(timeSeriesApi);
 }
 
 /**
@@ -96,7 +100,7 @@ async function main() {
   console.log(`📋 Environment:`);
   console.log(`   - PostgreSQL: ${process.env.POSTGRES_HOST || 'localhost'}:${process.env.POSTGRES_PORT || 5432}`);
   console.log(`   - Database: ${process.env.POSTGRES_DB || 'classify'}`);
-  console.log(`   - OpenAI Model: ${process.env.OPENAI_MODEL || 'gpt-5-mini'}`);
+  console.log(`   - OpenAI Model: ${process.env.OPENAI_MODEL || 'gpt-4.1-mini'}`);
   console.log(`   - Anthropic Model: ${process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022'}`);
   console.log(`   - LM Studio: ${process.env.LM_STUDIO_URL || 'http://127.0.0.1:1234/v1'}`);
   console.log();
@@ -146,6 +150,7 @@ async function main() {
   console.log("   - classify-api");
   console.log("   - data-quality-api");
   console.log("   - consensus-analysis-api");
+  console.log("   - final-indicators-api");
   console.log();
   console.log("🔗 API Endpoints:");
   console.log();
@@ -170,6 +175,14 @@ async function main() {
   console.log("   - GET  http://localhost:8080/consensus-analysis-api/outliers/:indicator_name");
   console.log("   - GET  http://localhost:8080/consensus-analysis-api/status/:indicator_name");
   console.log("   - GET  http://localhost:8080/consensus-analysis-api/health");
+  console.log();
+  console.log("  Final Indicators (Production Export):");
+  console.log("   - GET  http://localhost:8080/final-indicators-api/get/:id");
+  console.log("   - GET  http://localhost:8080/final-indicators-api/list");
+  console.log("   - GET  http://localhost:8080/final-indicators-api/production-ready");
+  console.log("   - GET  http://localhost:8080/final-indicators-api/requires-attention");
+  console.log("   - GET  http://localhost:8080/final-indicators-api/stats");
+  console.log("   - GET  http://localhost:8080/final-indicators-api/health");
   console.log();
   console.log("💡 Next Steps:");
   console.log("   1. Register services with Restate runtime:");
