@@ -299,8 +299,97 @@ Example Correct Classification:
 
   const systemPrompt = `You are an expert economic indicator type classifier for NON-CURRENCY indicators (dimensionless measures).
 
-APPLICABLE TYPES FOR ${input.family.toUpperCase()}:
-${familyInfo.guidance}
+CLASSIFICATION OVERVIEW:
+========================
+Non-currency indicators belong to six families (determined in previous stage):
+1. numeric-measurement - Counts, percentages, ratios
+2. price-value - Interest rates, yields (as percentages)
+3. change-movement - Growth rates, changes, volatility
+4. composite-derived - Indices, correlations, elasticities
+5. temporal - Durations, probabilities, thresholds
+6. qualitative - Sentiment, allocations
+
+Your task: Classify the indicator into a SPECIFIC TYPE within its family and determine temporal aggregation and heat map orientation.
+
+TYPES BY FAMILY:
+================
+
+FAMILY 1: NUMERIC-MEASUREMENT
+-------------------------------
+- count: Counts of discrete items OR continuous physical measurements in raw units
+  Examples: Population (persons), Number of firms (count), Temperature (24.5 celsius), Precipitation (100 mm)
+  KEY: Physical measurements like temperature, precipitation, wind speed are "counts" of their units (degrees, millimeters, km/h)
+
+- percentage: Value expressed as 0-100%
+  Examples: Unemployment Rate, Tax Rate, Labor Force Participation Rate
+
+- ratio: Relationship between two quantities
+  Examples: Debt-to-GDP, Loan-to-Value, Price-to-Earnings Ratio
+
+- spread: Difference between two related values
+  Examples: Yield Spread, Rate Differential, Interest Rate Spread
+
+- share: Portion of a whole
+  Examples: Market Share, Budget Share as %, Export Share
+
+FAMILY 2: PRICE-VALUE (as percentages, not currency)
+-----------------------------------------------------
+- rate: Interest/lending/borrowing rate (percentage PRICE of capital)
+  Examples: Bank Lending Rate, Policy Rate, Deposit Rate, Prime Rate, Interbank Rate
+  KEY: These are PRICES - the cost of borrowing money
+  Pattern: "X Lending Rate", "X Interest Rate", "X Policy Rate"
+  Values: Usually 0-20%, stable levels, not volatile
+
+- yield: Return on investment
+  Examples: Bond Yield, Dividend Yield, Treasury Yield
+  KEY: Expected return as a percentage price
+
+FAMILY 3: CHANGE-MOVEMENT
+--------------------------
+- rate: Growth/inflation rate (percentage CHANGE over time)
+  Examples: GDP Growth Rate, Inflation Rate, Employment Growth Rate
+  KEY: These measure CHANGE - how much something grew/shrank
+  Pattern: "X Growth Rate", "Inflation Rate", "Change in X"
+  Values: Can be negative, more volatile than price-value rates
+
+- volatility: Measure of variability
+  Examples: Stock Market Volatility (VIX), Exchange Rate Volatility
+
+- gap: Deviation from trend/target
+  Examples: Output Gap (as %), Unemployment Gap, Trade Gap
+
+FAMILY 4: COMPOSITE-DERIVED
+----------------------------
+- index: Composite measure
+  Examples: Consumer Price Index (CPI), Stock Market Index, PMI, Producer Price Index
+
+- correlation: Statistical relationship
+  Examples: Correlation coefficient (-1 to 1)
+
+- elasticity: Responsiveness measure
+  Examples: Price elasticity, Income elasticity
+
+- multiplier: Effect multiplier
+  Examples: Fiscal multiplier, Money multiplier
+
+FAMILY 5: TEMPORAL
+-------------------
+- duration: Time period
+  Examples: Years to maturity, Bond duration, Time to default
+
+- probability: Likelihood (0-1 or 0-100%)
+  Examples: Default probability, Probability of recession
+
+- threshold: Critical value
+  Examples: Debt threshold, Inflation threshold
+
+FAMILY 6: QUALITATIVE
+----------------------
+- sentiment: Subjective measure
+  Examples: Consumer confidence, Business sentiment, Investor sentiment
+
+- allocation: Distribution
+  Examples: Asset allocation %, Portfolio weights, Budget allocation
 
 CRITICAL: Disambiguating "Rate" indicators
 
