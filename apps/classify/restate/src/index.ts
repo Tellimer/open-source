@@ -5,7 +5,7 @@
 
 import * as restate from "@restatedev/restate-sdk";
 
-// Import services
+// Import classification services
 import normalizationService from "./services/normalization.service.ts";
 import timeInferenceService from "./services/time-inference.service.ts";
 import familyAssignmentService from "./services/family-assignment.service.ts";
@@ -13,11 +13,33 @@ import typeClassificationService from "./services/type-classification.service.ts
 import booleanReviewService from "./services/boolean-review.service.ts";
 import finalReviewService from "./services/final-review.service.ts";
 
+// Import data quality services
+import stalenessDetectorService from "./services/staleness-detector.service.ts";
+import magnitudeDetectorService from "./services/magnitude-detector.service.ts";
+import falseReadingDetectorService from "./services/false-reading-detector.service.ts";
+import unitChangeDetectorService from "./services/unit-change-detector.service.ts";
+import consistencyCheckerService from "./services/consistency-checker.service.ts";
+import qualityConsolidatorService from "./services/quality-consolidator.service.ts";
+import qualityReviewService from "./services/quality-review.service.ts";
+
+// Import consensus analysis services
+import unitConsensusDetectorService from "./services/unit-consensus-detector.service.ts";
+import scaleConsensusDetectorService from "./services/scale-consensus-detector.service.ts";
+import frequencyConsensusDetectorService from "./services/frequency-consensus-detector.service.ts";
+import currencyConsensusDetectorService from "./services/currency-consensus-detector.service.ts";
+import timeBasisConsensusDetectorService from "./services/time-basis-consensus-detector.service.ts";
+import consensusConsolidatorService from "./services/consensus-consolidator.service.ts";
+import consensusReviewService from "./services/consensus-review.service.ts";
+
 // Import workflows
 import classificationWorkflow from "./workflows/classification.workflow.ts";
+import dataQualityWorkflow from "./workflows/data-quality.workflow.ts";
+import consensusAnalysisWorkflow from "./workflows/consensus-analysis.workflow.ts";
 
-// Import API
+// Import APIs
 import classifyApi from "./api/classify.api.ts";
+import dataQualityApi from "./api/data-quality.api.ts";
+import consensusAnalysisApi from "./api/consensus-analysis.api.ts";
 
 /**
  * Create and configure Restate endpoint
@@ -27,20 +49,40 @@ function createRestateEndpoint() {
     .endpoint()
     // Configure default timeouts for all services
     .defaultServiceOptions({
-      // Increase abort timeout to 10 minutes (classification takes 1-3 minutes per indicator)
+      // Increase abort timeout to 10 minutes
       abortTimeout: 10 * 60 * 1000, // 10 minutes in milliseconds
     })
-    // Register stage services
+    // Register classification services
     .bind(normalizationService)
     .bind(timeInferenceService)
     .bind(familyAssignmentService)
     .bind(typeClassificationService)
     .bind(booleanReviewService)
     .bind(finalReviewService)
-    // Register workflow orchestrator (Virtual Object)
+    // Register data quality services
+    .bind(stalenessDetectorService)
+    .bind(magnitudeDetectorService)
+    .bind(falseReadingDetectorService)
+    .bind(unitChangeDetectorService)
+    .bind(consistencyCheckerService)
+    .bind(qualityConsolidatorService)
+    .bind(qualityReviewService)
+    // Register consensus analysis services
+    .bind(unitConsensusDetectorService)
+    .bind(scaleConsensusDetectorService)
+    .bind(frequencyConsensusDetectorService)
+    .bind(currencyConsensusDetectorService)
+    .bind(timeBasisConsensusDetectorService)
+    .bind(consensusConsolidatorService)
+    .bind(consensusReviewService)
+    // Register workflows
     .bind(classificationWorkflow)
-    // Register API service
-    .bind(classifyApi);
+    .bind(dataQualityWorkflow)
+    .bind(consensusAnalysisWorkflow)
+    // Register APIs
+    .bind(classifyApi)
+    .bind(dataQualityApi)
+    .bind(consensusAnalysisApi);
 }
 
 /**
@@ -68,19 +110,66 @@ async function main() {
   console.log(`✅ Restate endpoint listening on http://${HOST}:${PORT}`);
   console.log();
   console.log("📡 Registered Services:");
+  console.log();
+  console.log("  📊 Classification Services:");
   console.log("   - normalization");
   console.log("   - time-inference");
   console.log("   - family-assignment");
   console.log("   - type-classification");
   console.log("   - boolean-review");
   console.log("   - final-review");
-  console.log("   - classification-workflow (Workflow)");
+  console.log();
+  console.log("  🔍 Data Quality Services:");
+  console.log("   - staleness-detector");
+  console.log("   - magnitude-detector");
+  console.log("   - false-reading-detector");
+  console.log("   - unit-change-detector");
+  console.log("   - consistency-checker");
+  console.log("   - quality-consolidator");
+  console.log("   - quality-review");
+  console.log();
+  console.log("  🤝 Consensus Analysis Services:");
+  console.log("   - unit-consensus-detector");
+  console.log("   - scale-consensus-detector");
+  console.log("   - frequency-consensus-detector");
+  console.log("   - currency-consensus-detector");
+  console.log("   - time-basis-consensus-detector");
+  console.log("   - consensus-consolidator");
+  console.log("   - consensus-review");
+  console.log();
+  console.log("  🔄 Workflows:");
+  console.log("   - classification-workflow");
+  console.log("   - data-quality-workflow");
+  console.log("   - consensus-analysis-workflow");
+  console.log();
+  console.log("  🌐 APIs:");
   console.log("   - classify-api");
+  console.log("   - data-quality-api");
+  console.log("   - consensus-analysis-api");
   console.log();
   console.log("🔗 API Endpoints:");
-  console.log("   - POST http://localhost:8081/classify-api/batch");
-  console.log("   - GET  http://localhost:8081/classify-api/getStatus/:indicator_id");
-  console.log("   - GET  http://localhost:8081/classify-api/health");
+  console.log();
+  console.log("  Classification:");
+  console.log("   - POST http://localhost:8080/classify-api/batch");
+  console.log("   - GET  http://localhost:8080/classify-api/getStatus/:indicator_id");
+  console.log("   - GET  http://localhost:8080/classify-api/health");
+  console.log();
+  console.log("  Data Quality:");
+  console.log("   - POST http://localhost:8080/data-quality-api/check");
+  console.log("   - POST http://localhost:8080/data-quality-api/check-all");
+  console.log("   - GET  http://localhost:8080/data-quality-api/report/:indicator_id");
+  console.log("   - GET  http://localhost:8080/data-quality-api/issues");
+  console.log("   - GET  http://localhost:8080/data-quality-api/status/:indicator_id");
+  console.log("   - GET  http://localhost:8080/data-quality-api/health");
+  console.log();
+  console.log("  Consensus Analysis:");
+  console.log("   - POST http://localhost:8080/consensus-analysis-api/analyze");
+  console.log("   - POST http://localhost:8080/consensus-analysis-api/analyze-all");
+  console.log("   - GET  http://localhost:8080/consensus-analysis-api/report/:indicator_name");
+  console.log("   - GET  http://localhost:8080/consensus-analysis-api/issues");
+  console.log("   - GET  http://localhost:8080/consensus-analysis-api/outliers/:indicator_name");
+  console.log("   - GET  http://localhost:8080/consensus-analysis-api/status/:indicator_name");
+  console.log("   - GET  http://localhost:8080/consensus-analysis-api/health");
   console.log();
   console.log("💡 Next Steps:");
   console.log("   1. Register services with Restate runtime:");

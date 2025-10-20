@@ -55,7 +55,7 @@ const finalReviewService = restate.service({
         const llmClient = createLLMClient(llmConfig);
 
         // Create prompt
-        const prompt = createFinalReviewPrompt({
+        const { systemPrompt, userPrompt } = createFinalReviewPrompt({
           incorrectFields: incorrect_fields,
           reviewReasoning: review_reasoning,
           currentValues: current_values,
@@ -67,7 +67,8 @@ const finalReviewService = restate.service({
           async () => {
             try {
               return await llmClient.generateObject({
-                prompt,
+                systemPrompt,
+                userPrompt,
                 schema: finalReviewSchema,
               });
             } catch (error: any) {

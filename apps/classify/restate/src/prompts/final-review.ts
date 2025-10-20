@@ -25,20 +25,46 @@ export function createFinalReviewPrompt(input: {
   incorrectFields: string[];
   reviewReasoning: string;
   currentValues: Record<string, unknown>;
-}): string {
-  return `Previous review flagged incorrect fields: ${
-    input.incorrectFields.join(
-      ", ",
-    )
-  }
-Review reasoning: ${input.reviewReasoning}
+}): { systemPrompt: string; userPrompt: string } {
+  const systemPrompt = `You are an expert economic indicator classification final reviewer.
 
-Current values:
+Your task is to evaluate a previous review that flagged certain fields as incorrect, and determine if the review makes sense.
+
+If the review is valid:
+- Set reviewMakesSense to true
+- Provide corrections for the incorrect fields in the correctionsApplied object
+- Explain your reasoning in finalReasoning
+
+If the review is NOT valid (the original classification was actually correct):
+- Set reviewMakesSense to false
+- Leave correctionsApplied as an empty object {}
+- Explain why the original classification was correct in finalReasoning
+
+IMPORTANT: Return ONLY valid JSON matching this exact schema:
+=============================================================
+{
+  "reviewMakesSense": boolean,
+  "correctionsApplied": object,  // Corrections for incorrect fields, or {} if review doesn't make sense
+  "finalReasoning": "Clear explanation of your decision",
+  "confidence": 0.0-1.0
+}`;
+
+  const userPrompt = `Please perform a final review of a classification that was flagged as incorrect:
+
+FLAGGED FIELDS:
+===============
+Incorrect fields: ${input.incorrectFields.join(", ")}
+
+REVIEW REASONING:
+=================
+${input.reviewReasoning}
+
+CURRENT VALUES:
+===============
 ${JSON.stringify(input.currentValues, null, 2)}
 
-Does the review make sense?
-If yes, provide corrections for the incorrect fields in correctionsApplied object.
-If no, explain why in finalReasoning and leave correctionsApplied empty.
+Does the review make sense? If yes, provide corrections. If no, explain why the original was correct.
+Provide your final review as JSON.`;
 
-Provide your answer.`;
+  return { systemPrompt, userPrompt };
 }

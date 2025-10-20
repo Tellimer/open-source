@@ -3,7 +3,21 @@
  * These types allow TypeScript to properly type-check service invocations
  */
 
-import type { IndicatorInput } from "../types.ts";
+import type {
+  IndicatorInput,
+  TimeSeriesPoint,
+  StalenessResult,
+  MagnitudeResult,
+  FalseReadingResult,
+  UnitChangeResult,
+  ConsistencyResult,
+  ConsolidatedQualityReport,
+  LLMQualityReview,
+  IndicatorMetadata,
+  ConsensusResult,
+  ConsensusSummaryReport,
+  LLMConsensusReview,
+} from "../types.ts";
 
 // Normalization Service
 export interface NormalizationService {
@@ -152,6 +166,221 @@ export interface FinalReviewService {
         temporal_aggregation?: string;
       };
       reasoning: string;
+      provider: string;
+      model: string;
+      created_at: string;
+    };
+  }>;
+}
+
+//
+// ============================================================================
+// DATA QUALITY SERVICE TYPES
+// ============================================================================
+//
+
+// Staleness Detector Service
+export interface StalenessDetectorService {
+  detect: (input: {
+    indicator_id: string;
+    time_series: TimeSeriesPoint[];
+    expected_frequency: string; // from classification
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: StalenessResult;
+  }>;
+}
+
+// Magnitude Detector Service
+export interface MagnitudeDetectorService {
+  detect: (input: {
+    indicator_id: string;
+    time_series: TimeSeriesPoint[];
+    indicator_type: string; // from classification
+    is_cumulative: boolean; // from classification
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: MagnitudeResult;
+  }>;
+}
+
+// False Reading Detector Service
+export interface FalseReadingDetectorService {
+  detect: (input: {
+    indicator_id: string;
+    time_series: TimeSeriesPoint[];
+    indicator_type: string; // for context
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: FalseReadingResult;
+  }>;
+}
+
+// Unit Change Detector Service
+export interface UnitChangeDetectorService {
+  detect: (input: {
+    indicator_id: string;
+    time_series: TimeSeriesPoint[];
+    expected_scale: string; // from classification
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: UnitChangeResult;
+  }>;
+}
+
+// Consistency Checker Service
+export interface ConsistencyCheckerService {
+  check: (input: {
+    indicator_id: string;
+    time_series: TimeSeriesPoint[];
+    is_cumulative: boolean;
+    temporal_aggregation: string;
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: ConsistencyResult;
+  }>;
+}
+
+// Quality Consolidator Service
+export interface QualityConsolidatorService {
+  consolidate: (input: {
+    indicator_id: string;
+    staleness: StalenessResult;
+    magnitude: MagnitudeResult;
+    false_readings: FalseReadingResult;
+    unit_changes: UnitChangeResult;
+    consistency: ConsistencyResult;
+  }) => Promise<{
+    success: boolean;
+    result: ConsolidatedQualityReport;
+  }>;
+}
+
+// Quality Review Service (LLM)
+export interface QualityReviewService {
+  review: (input: {
+    indicator_id: string;
+    name: string;
+    consolidated_report: ConsolidatedQualityReport;
+    time_series_summary: {
+      count: number;
+      date_range: { start: string; end: string };
+      mean: number;
+      std_dev: number;
+    };
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: LLMQualityReview & {
+      provider: string;
+      model: string;
+      created_at: string;
+    };
+  }>;
+}
+
+//
+// ============================================================================
+// CONSENSUS ANALYSIS SERVICE TYPES
+// ============================================================================
+//
+
+// Unit Consensus Detector Service
+export interface UnitConsensusDetectorService {
+  detect: (input: {
+    indicator_name: string;
+    indicators: IndicatorMetadata[];
+    consensus_threshold: number; // e.g., 0.75 for 75%
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: ConsensusResult;
+  }>;
+}
+
+// Scale Consensus Detector Service
+export interface ScaleConsensusDetectorService {
+  detect: (input: {
+    indicator_name: string;
+    indicators: IndicatorMetadata[];
+    consensus_threshold: number;
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: ConsensusResult;
+  }>;
+}
+
+// Frequency Consensus Detector Service
+export interface FrequencyConsensusDetectorService {
+  detect: (input: {
+    indicator_name: string;
+    indicators: IndicatorMetadata[];
+    consensus_threshold: number;
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: ConsensusResult;
+  }>;
+}
+
+// Currency Consensus Detector Service
+export interface CurrencyConsensusDetectorService {
+  detect: (input: {
+    indicator_name: string;
+    indicators: IndicatorMetadata[];
+    consensus_threshold: number;
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: ConsensusResult;
+  }>;
+}
+
+// Time Basis Consensus Detector Service
+export interface TimeBasisConsensusDetectorService {
+  detect: (input: {
+    indicator_name: string;
+    indicators: IndicatorMetadata[];
+    consensus_threshold: number;
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: ConsensusResult;
+  }>;
+}
+
+// Consensus Consolidator Service
+export interface ConsensusConsolidatorService {
+  consolidate: (input: {
+    indicator_name: string;
+    total_indicators: number;
+    unit_consensus: ConsensusResult;
+    scale_consensus: ConsensusResult;
+    frequency_consensus: ConsensusResult;
+    currency_consensus: ConsensusResult;
+    time_basis_consensus: ConsensusResult;
+  }) => Promise<{
+    success: boolean;
+    result: ConsensusSummaryReport;
+  }>;
+}
+
+// Consensus Review Service (LLM)
+export interface ConsensusReviewService {
+  review: (input: {
+    indicator_name: string;
+    summary_report: ConsensusSummaryReport;
+    sample_indicators: IndicatorMetadata[]; // Sample for context
+    llm_provider?: string;
+  }) => Promise<{
+    success: boolean;
+    result: LLMConsensusReview & {
       provider: string;
       model: string;
       created_at: string;

@@ -5,7 +5,6 @@
  */
 
 import * as restate from "@restatedev/restate-sdk";
-import { TerminalError } from "@restatedev/restate-sdk";
 import { createLLMClient, getLLMConfig } from "../llm/clients.ts";
 import {
   createTimeInferencePrompt,

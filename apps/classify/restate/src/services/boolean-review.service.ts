@@ -4,7 +4,6 @@
  */
 
 import * as restate from "@restatedev/restate-sdk";
-import { TerminalError } from "@restatedev/restate-sdk";
 import { createLLMClient, getLLMConfig } from "../llm/clients.ts";
 import {
   booleanReviewSchema,
@@ -63,7 +62,7 @@ const booleanReviewService = restate.service({
         const llmClient = createLLMClient(llmConfig);
 
         // Create prompt
-        const prompt = createBooleanReviewPrompt({
+        const { systemPrompt, userPrompt } = createBooleanReviewPrompt({
           name,
           timeBasis: time_basis,
           scale: normalized_scale,
@@ -77,7 +76,8 @@ const booleanReviewService = restate.service({
         const reviewResult = await ctx.run("llm-boolean-review", async () => {
           try {
             return await llmClient.generateObject({
-              prompt,
+              systemPrompt,
+              userPrompt,
               schema: booleanReviewSchema,
             });
           } catch (error: any) {

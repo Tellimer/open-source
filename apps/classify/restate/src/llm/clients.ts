@@ -11,13 +11,12 @@ import { createAnthropic } from '@ai-sdk/anthropic';
 
 /**
  * Generic LLM client interface
- * Supports both legacy (single prompt) and optimized (system/user split) modes
+ * Uses optimized system/user prompt split for maximum cache hit rates
  */
 export interface LLMClient {
   generateObject<T>(params: {
-    prompt?: string;  // Legacy: single prompt (deprecated for caching)
-    systemPrompt?: string;  // Optimized: static instructions (cacheable)
-    userPrompt?: string;    // Optimized: variable data (not cached)
+    systemPrompt: string;  // Static instructions (cacheable)
+    userPrompt: string;    // Variable data (not cached)
     schema: z.ZodSchema<T>;
   }): Promise<T>;
 }
@@ -79,9 +78,8 @@ class LocalLLMClient implements LLMClient {
   constructor(private config: LLMConfig) {}
 
   async generateObject<T>(params: {
-    prompt?: string;
-    systemPrompt?: string;
-    userPrompt?: string;
+    systemPrompt: string;
+    userPrompt: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model ||
@@ -94,9 +92,7 @@ class LocalLLMClient implements LLMClient {
 
     try {
       // Combine prompts for local model (doesn't benefit from caching)
-      const combinedPrompt = params.systemPrompt && params.userPrompt
-        ? `${params.systemPrompt}\n\n${params.userPrompt}`
-        : params.prompt || '';
+      const combinedPrompt = `${params.systemPrompt}\n\n${params.userPrompt}`;
 
       const result = await generateObject({
         model: modelInstance,
@@ -124,42 +120,24 @@ class LocalLLMClient implements LLMClient {
  * - System messages >1024 tokens are automatically cached by OpenAI
  * - Cached input tokens cost 90% less ($0.025/M vs $0.25/M for GPT-5-mini)
  * - Cache is valid for 5-10 minutes of activity
- * - OPTIMAL: Use systemPrompt for static instructions, userPrompt for variable data
- * - LEGACY: Single prompt mode still supported (less efficient caching)
+ * - Strategy: systemPrompt for static instructions, userPrompt for variable data
  */
 class OpenAIClient implements LLMClient {
   constructor(private config: LLMConfig) {}
 
   async generateObject<T>(params: {
-    prompt?: string;
-    systemPrompt?: string;
-    userPrompt?: string;
+    systemPrompt: string;
+    userPrompt: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || process.env.OPENAI_MODEL || 'gpt-5-mini';
-
-    // Determine which mode we're using
-    const mode = params.systemPrompt && params.userPrompt ? 'optimized' : 'legacy';
-    console.log(`[OpenAIClient] Calling model: ${modelName} (caching mode: ${mode})`);
+    console.log(`[OpenAIClient] Calling model: ${modelName}`);
 
     try {
-      let messages: Array<{ role: 'system' | 'user'; content: string }>;
-
-      if (params.systemPrompt && params.userPrompt) {
-        // OPTIMIZED MODE: Separate system (cacheable) and user (variable) messages
-        messages = [
-          { role: 'system' as const, content: params.systemPrompt },
-          { role: 'user' as const, content: params.userPrompt }
-        ];
-      } else if (params.prompt) {
-        // LEGACY MODE: Single prompt as system message
-        messages = [
-          { role: 'system' as const, content: params.prompt },
-          { role: 'user' as const, content: 'Please analyze and classify this indicator according to the instructions above.' }
-        ];
-      } else {
-        throw new Error('Must provide either prompt OR (systemPrompt + userPrompt)');
-      }
+      const messages: Array<{ role: 'system' | 'user'; content: string }> = [
+        { role: 'system' as const, content: params.systemPrompt },
+        { role: 'user' as const, content: params.userPrompt }
+      ];
 
       const result = await generateObject({
         model: openaiClient(modelName),
@@ -187,19 +165,15 @@ class AnthropicClient implements LLMClient {
   constructor(private config: LLMConfig) {}
 
   async generateObject<T>(params: {
-    prompt?: string;
-    systemPrompt?: string;
-    userPrompt?: string;
+    systemPrompt: string;
+    userPrompt: string;
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || 'claude-3-5-haiku-20241022';
-    const mode = params.systemPrompt && params.userPrompt ? 'optimized' : 'legacy';
-    console.log(`[AnthropicClient] Calling model: ${modelName} (mode: ${mode})`);
+    console.log(`[AnthropicClient] Calling model: ${modelName}`);
 
     // Combine prompts for single message (Anthropic uses different approach)
-    const combinedPrompt = params.systemPrompt && params.userPrompt
-      ? `${params.systemPrompt}\n\n${params.userPrompt}`
-      : params.prompt || '';
+    const combinedPrompt = `${params.systemPrompt}\n\n${params.userPrompt}`;
 
     const result = await generateObject({
       model: anthropicClient(modelName),
