@@ -8,6 +8,8 @@ import { z } from 'zod';
 import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
 
 /**
  * Generic LLM client interface
@@ -114,7 +116,7 @@ class LocalLLMClient implements LLMClient {
 }
 
 /**
- * OpenAI client using Vercel AI SDK with optimized prompt caching
+ * OpenAI client using native OpenAI SDK with optimized prompt caching
  *
  * PROMPT CACHING:
  * - System messages >1024 tokens are automatically cached by OpenAI
@@ -124,7 +126,13 @@ class LocalLLMClient implements LLMClient {
  * - GPT-4.1-mini: 14x cheaper than GPT-5-mini with working cache
  */
 class OpenAIClient implements LLMClient {
-  constructor(private config: LLMConfig) {}
+  private client: OpenAI;
+
+  constructor(private config: LLMConfig) {
+    this.client = new OpenAI({
+      apiKey: Bun.env.OPENAI_API_KEY || config.apiKey,
+    });
+  }
 
   async generateObject<T>(params: {
     systemPrompt: string;
@@ -132,44 +140,38 @@ class OpenAIClient implements LLMClient {
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || process.env.OPENAI_MODEL || 'gpt-4.1-mini';
-    console.log(`[OpenAIClient] Calling model: ${modelName} (prompt caching: 75% discount on cached tokens)`);
 
     try {
-      const messages: Array<{ role: 'system' | 'user'; content: string }> = [
-        { role: 'system' as const, content: params.systemPrompt },
-        { role: 'user' as const, content: params.userPrompt }
-      ];
-
-      const result = await generateObject({
-        model: openaiClient(modelName),
-        schema: params.schema,
-        messages,
-        mode: 'json',
+      // Use native OpenAI SDK with Zod schema validation
+      const completion = await this.client.beta.chat.completions.parse({
+        model: modelName,
+        messages: [
+          { role: 'system', content: params.systemPrompt },
+          { role: 'user', content: params.userPrompt }
+        ],
+        response_format: zodResponseFormat(params.schema, 'response'),
         temperature: this.config.temperature || 0.2,
-        maxRetries: 3,
-        // Prompt caching is automatic for gpt-4.1 models when system prompts >1024 tokens
       });
 
       // Log usage information including cached tokens
-      if (result.usage) {
-        // Debug: Log the full usage object to see what OpenAI is actually returning
-        console.error('[OpenAIClient] DEBUG - Full usage object:', JSON.stringify(result.usage));
-
-        // OpenAI returns cached_tokens in snake_case (not part of standard AI SDK type)
-        const usage = result.usage as typeof result.usage & { cachedTokens?: number; cached_tokens?: number };
-        // Try both camelCase and snake_case for compatibility
-        const cachedTokens = usage.cached_tokens || usage.cachedTokens || 0;
-        const promptTokens = result.usage.promptTokens || 0;
-        const completionTokens = result.usage.completionTokens || 0;
+      if (completion.usage) {
+        const usage = completion.usage;
+        const cachedTokens = (usage as any).prompt_tokens_details?.cached_tokens || 0;
+        const promptTokens = usage.prompt_tokens || 0;
+        const completionTokens = usage.completion_tokens || 0;
+        const totalTokens = usage.total_tokens || 0;
         const cacheHitRate = promptTokens > 0 ? ((cachedTokens / promptTokens) * 100).toFixed(1) : '0.0';
 
-        const usageMsg = `[OpenAIClient] Usage: prompt=${promptTokens} (cached=${cachedTokens}, ${cacheHitRate}%), completion=${completionTokens}, total=${result.usage.totalTokens}`;
-
-        // Log to stderr for Docker capture
+        const usageMsg = `[OpenAIClient] Usage: prompt=${promptTokens} (cached=${cachedTokens}, ${cacheHitRate}%), completion=${completionTokens}, total=${totalTokens}`;
         console.error(usageMsg);
       }
 
-      return result.object as T;
+      const message = completion.choices[0]?.message;
+      if (!message?.parsed) {
+        throw new Error('No parsed response from OpenAI');
+      }
+
+      return message.parsed as T;
     } catch (error) {
       console.error(`[OpenAIClient] Error:`, error);
       throw error;

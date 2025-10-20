@@ -83,11 +83,12 @@
     "pipeline:full:force": "bun run reclassify:ultra && bun run quality:check && bun run consensus:analyze && bun run final:migrate:force"
   },
   "dependencies": {
-    "@restatedev/restate-sdk": "^1.4.1",
-    "zod": "^3.23.8",
-    "ai": "^4.0.0",
+    "@ai-sdk/anthropic": "^1.0.0",
     "@ai-sdk/openai": "^1.0.0",
-    "@ai-sdk/anthropic": "^1.0.0"
+    "@restatedev/restate-sdk": "^1.4.1",
+    "ai": "^4.0.0",
+    "openai": "^6.6.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@restatedev/restate-server": "^1.1.1",
