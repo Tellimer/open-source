@@ -159,48 +159,58 @@ Example Correct Classification:
 `
     : "";
 
-  // Create type-specific guidance for system prompt (family-dependent but static rules)
-  const typeGuidancePhysical = `
-TYPES FOR PHYSICAL-FUNDAMENTAL (currency-denominated):
-
-- stock: A quantity held at a point in time
-  Examples: Foreign Exchange Reserves, Government Debt Outstanding
-  Temporal: point-in-time
-
-- flow: Movement/transactions over a period, OR total economic output
-  Examples: GDP, GNI, GDP by sector (Manufacturing, Services, etc.), Exports, Imports, Capital Inflows, Foreign Direct Investment
-  Temporal: period-total
-  ⚠️ CRITICAL: ALL GDP indicators (including sectoral like "GDP from Manufacturing") are flows, NOT capacity!
-
-- balance: Net difference between flows
-  Examples: Trade Balance, Current Account Balance, Budget Balance
-  Temporal: period-total (net flow)
-
-- capacity: Productive capacity (RARELY USED - do not use for GDP!)
-  Examples: Theoretical maximum production capacity
-  Temporal: period-total
-  ⚠️ NOTE: GDP is a FLOW (actual output), not capacity (potential output)!
-
-- volume: Total transactions/activity in currency
-  Examples: Trading Volume, Transaction Value
-  Temporal: period-total
-`;
-
-  const typeGuidancePrice = `
-TYPES FOR PRICE-VALUE (currency-denominated):
-
-- price: Cost/value per unit in currency
-  Examples: Stock Price, Commodity Price ($/barrel), Real Estate Price
-  Temporal: point-in-time (snapshot price)
-
-- rate: Exchange rate (price of one currency in another)
-  Examples: USD/EUR Exchange Rate, Currency Cross Rate
-  Temporal: point-in-time or period-average
-`;
-
   const systemPrompt = `You are an expert economic indicator type classifier for CURRENCY-DENOMINATED indicators (measured in monetary units).
 
-${input.family === "physical-fundamental" ? typeGuidancePhysical : typeGuidancePrice}
+CLASSIFICATION OVERVIEW:
+========================
+Currency-denominated indicators belong to two families (determined in previous stage):
+1. physical-fundamental - Economic quantities/aggregates (GDP, Reserves, Trade)
+2. price-value - Prices and exchange rates (Stock Price, Exchange Rate)
+
+Your task: Classify the indicator into a SPECIFIC TYPE within its family and determine temporal aggregation and heat map orientation.
+
+TYPES BY FAMILY:
+================
+
+FAMILY 1: PHYSICAL-FUNDAMENTAL TYPES
+-------------------------------------
+- stock: Quantity held at a point in time
+  Examples: Foreign Exchange Reserves, Government Debt Outstanding, Bank Deposits
+  Temporal: point-in-time (snapshot of holdings)
+  Characteristics: Balance at specific date, measured at moment in time
+
+- flow: Movement/transactions over a period OR total economic output
+  Examples: GDP, GNI, Exports, Imports, Capital Inflows, FDI, Government Revenue
+  Temporal: period-total OR period-cumulative (if YTD)
+  Characteristics: Activity over time period, cumulative if reporting YTD
+  ⚠️ CRITICAL: ALL GDP indicators (including sectoral) are flows, NOT capacity!
+
+- balance: Net difference between flows (inflows minus outflows)
+  Examples: Trade Balance, Current Account Balance, Budget Balance, Savings
+  Temporal: period-total (net flow over period)
+  Characteristics: Can be positive or negative, represents net position
+
+- capacity: Productive capacity (RARELY USED - do NOT use for GDP!)
+  Examples: Theoretical maximum production capacity, installed capacity
+  Temporal: point-in-time (capacity at a moment)
+  ⚠️ NOTE: GDP is a FLOW (actual output), not capacity (potential output)!
+
+- volume: Total transactions/activity measured in currency
+  Examples: Trading Volume, Transaction Value, Payment Volume
+  Temporal: period-total (total over period)
+  Characteristics: Aggregated activity in monetary terms
+
+FAMILY 2: PRICE-VALUE TYPES
+----------------------------
+- price: Cost/value per unit in currency
+  Examples: Stock Price, Commodity Price ($/barrel), House Price, Bond Price
+  Temporal: point-in-time (snapshot price) OR period-average
+  Characteristics: Per-unit cost, market-determined, always positive
+
+- rate: Exchange rate (price of one currency in another)
+  Examples: USD/EUR Exchange Rate, Effective Exchange Rate, Cross Rate
+  Temporal: point-in-time (spot rate) OR period-average
+  Characteristics: Currency price ratio, can be quoted both ways (USD/EUR or EUR/USD)
 
 TEMPORAL AGGREGATION:
 
