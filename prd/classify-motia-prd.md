@@ -201,7 +201,7 @@ sample_values: [{date: "2024-01-01"}, {date: "2024-02-01"}] → monthly (trust d
 
 ```bash
 # LLM API Keys (swappable per stage)
-ANTHROPIC_API_KEY=sk-ant-api03-xMLyvOdi...
+ANTHROPIC_API_KEY=sk-ant-your-api-key-here
 OPENAI_API_KEY=sk-proj-your-openai-api-key-here
 
 # SQLite Databases
