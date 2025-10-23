@@ -59,19 +59,19 @@ Deno.test("applyScaleOutlierDetection - Tourist Arrivals real scenario", () => {
   });
 
   // Armenia should be marked as outlier
-  const armenia = result.find((item) => item.id === "ARM");
+  const armenia = result.data.find((item) => item.id === "ARM");
   assertEquals(armenia?.explain?.qualityWarnings?.length, 1);
   assertEquals(armenia?.explain?.qualityWarnings?.[0].type, "scale-outlier");
   assertEquals(armenia?.explain?.qualityWarnings?.[0].severity, "warning");
 
   // Others should have no warnings
-  const brazil = result.find((item) => item.id === "BRA");
+  const brazil = result.data.find((item) => item.id === "BRA");
   assertEquals(brazil?.explain?.qualityWarnings, undefined);
 
-  const vietnam = result.find((item) => item.id === "VNM");
+  const vietnam = result.data.find((item) => item.id === "VNM");
   assertEquals(vietnam?.explain?.qualityWarnings, undefined);
 
-  const greece = result.find((item) => item.id === "GRC");
+  const greece = result.data.find((item) => item.id === "GRC");
   assertEquals(greece?.explain?.qualityWarnings, undefined);
 });
 
@@ -97,8 +97,8 @@ Deno.test("applyScaleOutlierDetection - disabled by default", () => {
   const result = applyScaleOutlierDetection(data, {});
 
   // No warnings should be added
-  assertEquals(result[0].explain?.qualityWarnings, undefined);
-  assertEquals(result[1].explain?.qualityWarnings, undefined);
+  assertEquals(result.data[0].explain?.qualityWarnings, undefined);
+  assertEquals(result.data[1].explain?.qualityWarnings, undefined);
 });
 
 Deno.test("applyScaleOutlierDetection - groups by indicator name", () => {
@@ -154,18 +154,18 @@ Deno.test("applyScaleOutlierDetection - groups by indicator name", () => {
   });
 
   // Tourist Arrivals - Armenia should be marked
-  const armTA = result.find((item) => item.id === "ARM-TA");
+  const armTA = result.data.find((item) => item.id === "ARM-TA");
   assertEquals(armTA?.explain?.qualityWarnings?.length, 1);
 
   // Tourist Arrivals - others OK
-  const braTA = result.find((item) => item.id === "BRA-TA");
+  const braTA = result.data.find((item) => item.id === "BRA-TA");
   assertEquals(braTA?.explain?.qualityWarnings, undefined);
 
   // GDP - all OK (no clear outlier, magnitudes are 10, 12, 11)
-  const armGDP = result.find((item) => item.id === "ARM-GDP");
+  const armGDP = result.data.find((item) => item.id === "ARM-GDP");
   assertEquals(armGDP?.explain?.qualityWarnings, undefined);
 
-  const braGDP = result.find((item) => item.id === "BRA-GDP");
+  const braGDP = result.data.find((item) => item.id === "BRA-GDP");
   assertEquals(braGDP?.explain?.qualityWarnings, undefined);
 });
 
@@ -207,7 +207,7 @@ Deno.test("applyScaleOutlierDetection - preserves existing explain data", () => 
     detectScaleOutliers: true,
   });
 
-  const armenia = result.find((item) => item.id === "ARM");
+  const armenia = result.data.find((item) => item.id === "ARM");
 
   // Should preserve existing explain.magnitude
   assertEquals(armenia?.explain?.magnitude?.description, "No scaling needed");
@@ -240,10 +240,10 @@ Deno.test("applyScaleOutlierDetection - handles missing normalized values", () =
     detectScaleOutliers: true,
   });
 
-  assertEquals(result.length, 2);
+  assertEquals(result.data.length, 2);
   // Too few valid items for detection
-  assertEquals(result[0].explain?.qualityWarnings, undefined);
-  assertEquals(result[1].explain?.qualityWarnings, undefined);
+  assertEquals(result.data[0].explain?.qualityWarnings, undefined);
+  assertEquals(result.data[1].explain?.qualityWarnings, undefined);
 });
 
 Deno.test("applyScaleOutlierDetection - custom indicator key resolver", () => {
@@ -278,7 +278,7 @@ Deno.test("applyScaleOutlierDetection - custom indicator key resolver", () => {
       String((d.metadata as Record<string, unknown>)?.indicator_name ?? ""),
   });
 
-  const armenia = result.find((item) => item.id === "ARM");
+  const armenia = result.data.find((item) => item.id === "ARM");
   assertEquals(armenia?.explain?.qualityWarnings?.length, 1);
 });
 
@@ -287,7 +287,7 @@ Deno.test("applyScaleOutlierDetection - empty data array", () => {
     detectScaleOutliers: true,
   });
 
-  assertEquals(result.length, 0);
+  assertEquals(result.data.length, 0);
 });
 
 Deno.test("applyScaleOutlierDetection - quality warning details", () => {
@@ -320,7 +320,7 @@ Deno.test("applyScaleOutlierDetection - quality warning details", () => {
     scaleOutlierOptions: { includeDetails: true },
   });
 
-  const armenia = result.find((item) => item.id === "ARM");
+  const armenia = result.data.find((item) => item.id === "ARM");
   const warning = armenia?.explain?.qualityWarnings?.[0];
 
   assertEquals(warning?.type, "scale-outlier");
