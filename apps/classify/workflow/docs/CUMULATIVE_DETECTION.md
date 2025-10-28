@@ -51,6 +51,7 @@ CREATE TABLE cumulative_detection_results (
 ```
 
 Final `classifications` table includes:
+
 - `is_cumulative` (0/1)
 - `cumulative_pattern_type` (ytd|running_total|periodic|unknown)
 - `cumulative_confidence` (0-1)
@@ -84,6 +85,7 @@ Type classification prompts receive cumulative fields (via router):
 ```
 
 Guidance used by prompts:
+
 - High-confidence YTD (≥ 0.8): use `temporal_aggregation: "period-cumulative"` for applicable indicator types
 - Periodic: prefer `temporal_aggregation: "period-total"`
 
@@ -109,5 +111,3 @@ Guidance used by prompts:
 ---
 
 See also: `docs/USAGE_GUIDE.md`, `docs/DATABASE_PERSISTENCE.md`.
-
-

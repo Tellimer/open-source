@@ -3,24 +3,24 @@
  * Stage 6a: Classify indicator type for currency-denominated indicators
  */
 
-import { EventConfig } from 'motia';
-import { z } from 'zod';
+import { EventConfig } from "motia";
+import { z } from "zod";
 import {
   createLLMClient,
   createTypeClassificationCurrencyPrompt,
   getLLMConfig,
   typeClassificationCurrencySchema,
-} from '../../src/services/classify/index.ts';
-import { getDatabase } from '../../src/db/client.ts';
-import { createRepository } from '../../src/db/index.ts';
+} from "../../src/services/classify/index.ts";
+import { getDatabase } from "../../src/db/client.ts";
+import { createRepository } from "../../src/db/index.ts";
 
 export const config: EventConfig = {
-  type: 'event',
-  name: 'ClassifyTypeCurrency',
-  description: 'Stage 6a: Classify type for currency-denominated indicators',
-  flows: ['classify-indicator'],
-  subscribes: ['indicator.classify-type-currency'],
-  emits: ['indicator.complete'],
+  type: "event",
+  name: "ClassifyTypeCurrency",
+  description: "Stage 6a: Classify type for currency-denominated indicators",
+  flows: ["classify-indicator"],
+  subscribes: ["indicator.classify-type-currency"],
+  emits: ["indicator.complete"],
   input: z.object({
     indicator_id: z.string(),
     name: z.string(),
@@ -40,7 +40,7 @@ export const config: EventConfig = {
         z.object({
           date: z.string(),
           value: z.number(),
-        })
+        }),
       )
       .optional(),
     source_name: z.string().optional(),
@@ -51,9 +51,9 @@ export const config: EventConfig = {
     aggregation_method: z.string().optional(),
     currency_code: z.string().optional(),
     llm_provider: z
-      .enum(['local', 'openai', 'anthropic'])
+      .enum(["local", "openai", "anthropic"])
       .optional()
-      .default('local'),
+      .default("local"),
   }),
 };
 
@@ -79,13 +79,13 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
     topic,
     aggregation_method,
     currency_code,
-    llm_provider = 'local',
+    llm_provider = "local",
   } = input;
 
-  logger.info('Classifying type (currency branch)', { indicator_id, name });
+  logger.info("Classifying type (currency branch)", { indicator_id, name });
 
   // Create LLM client
-  const llmConfig = getLLMConfig('type-classification', llm_provider);
+  const llmConfig = getLLMConfig("type-classification", llm_provider);
   const llmClient = createLLMClient(llmConfig);
 
   // Generate prompt with full context
@@ -117,7 +117,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
       schema: typeClassificationCurrencySchema,
     });
   } catch (error) {
-    logger.error('Failed to classify type (currency)', {
+    logger.error("Failed to classify type (currency)", {
       indicator_id,
       name,
       error: error instanceof Error ? error.message : String(error),
@@ -127,17 +127,17 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
   }
 
   // Save to state
-  await state.set('type-classifications', indicator_id, {
+  await state.set("type-classifications", indicator_id, {
     indicator_id,
     ...typeResult,
-    branch: 'currency',
+    branch: "currency",
     created_at: new Date().toISOString(),
   });
 
   // Save to database (best-effort)
   try {
     const repo = createRepository(getDatabase());
-    await repo.saveStageResult('type', indicator_id, {
+    await repo.saveStageResult("type", indicator_id, {
       indicator_type: typeResult.indicatorType,
       temporal_aggregation: typeResult.temporalAggregation,
       heat_map_orientation: typeResult.heatMapOrientation,
@@ -146,13 +146,13 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
       created_at: new Date().toISOString(),
     });
   } catch (dbError) {
-    logger.warn('Type save skipped (transient DB error)', {
+    logger.warn("Type save skipped (transient DB error)", {
       indicator_id,
       error: dbError instanceof Error ? dbError.message : String(dbError),
     });
   }
 
-  logger.info('Type classification complete (currency)', {
+  logger.info("Type classification complete (currency)", {
     indicator_id,
     type: typeResult.indicatorType,
     confidence: typeResult.confidence,
@@ -160,11 +160,11 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 
   // Emit directly to complete (skip boolean-review and final-review)
   await emit({
-    topic: 'indicator.complete',
+    topic: "indicator.complete",
     data: {
       indicator_id,
       name,
-      review_status: 'passed',
+      review_status: "passed",
       llm_provider,
     },
   });

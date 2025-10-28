@@ -3,27 +3,27 @@
  * Stage 2: Combined time inference and cumulative detection (run in parallel)
  */
 
-import { EventConfig } from 'motia';
-import { z } from 'zod';
+import { EventConfig } from "motia";
+import { z } from "zod";
 import {
   createLLMClient,
   createTimeInferencePrompt,
   getLLMConfig,
   inferTimeRuleBased,
   timeInferenceSchema,
-} from '../../src/services/classify/index.ts';
-import { detectCumulativePattern } from '../../src/utils/cumulative-detector.ts';
-import { getDatabase } from '../../src/db/client.ts';
+} from "../../src/services/classify/index.ts";
+import { detectCumulativePattern } from "../../src/utils/cumulative-detector.ts";
+import { getDatabase } from "../../src/db/client.ts";
 import { createRepository } from "../../src/db/index.ts";
 
 export const config: EventConfig = {
-  type: 'event',
-  name: 'InferTimeBasisAndCumulativePattern',
+  type: "event",
+  name: "InferTimeBasisAndCumulativePattern",
   description:
-    'Stage 2: Infer reporting frequency and time basis (LLM or rule-based), and detect YTD/cumulative patterns in parallel',
-  flows: ['classify-indicator'],
-  subscribes: ['indicator.infer-time'],
-  emits: ['indicator.time-cumulative-complete'],
+    "Stage 2: Infer reporting frequency and time basis (LLM or rule-based), and detect YTD/cumulative patterns in parallel",
+  flows: ["classify-indicator"],
+  subscribes: ["indicator.infer-time"],
+  emits: ["indicator.time-cumulative-complete"],
   input: z.object({
     indicator_id: z.string(),
     name: z.string(),
@@ -35,7 +35,7 @@ export const config: EventConfig = {
         z.object({
           date: z.string(),
           value: z.number(),
-        })
+        }),
       )
       .optional(),
     parsed_scale: z.string(),
@@ -52,9 +52,9 @@ export const config: EventConfig = {
     topic: z.string().optional(),
     currency_code: z.string().optional(),
     llm_provider: z
-      .enum(['local', 'openai', 'anthropic'])
+      .enum(["local", "openai", "anthropic"])
       .optional()
-      .default('local'),
+      .default("local"),
   }),
 };
 
@@ -76,11 +76,11 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
     scale,
     topic,
     currency_code,
-    llm_provider = 'local',
+    llm_provider = "local",
   } = input;
 
   const startTime = Date.now();
-  logger.info('Starting parallel time inference and cumulative detection', {
+  logger.info("Starting parallel time inference and cumulative detection", {
     indicator_id,
     name,
     provider: llm_provider,
@@ -95,20 +95,20 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         const repo = createRepository(getDatabase());
         await repo.logProcessing({
           indicator_id,
-          stage: 'time',
-          status: 'started',
+          stage: "time",
+          status: "started",
         });
 
         let timeInference: any;
 
-        if (llm_provider !== 'local') {
+        if (llm_provider !== "local") {
           // LLM-based time inference
-          let timeSeriesFrequency = 'unknown';
+          let timeSeriesFrequency = "unknown";
           if (sample_values && sample_values.length >= 2) {
             timeSeriesFrequency = `${sample_values.length} data points`;
           }
 
-          const llmConfig = getLLMConfig('time-inference', llm_provider);
+          const llmConfig = getLLMConfig("time-inference", llm_provider);
           const llmClient = createLLMClient(llmConfig);
 
           const prompt = createTimeInferencePrompt({
@@ -136,18 +136,18 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         // Determine provider and model
         let provider: string;
         let model: string;
-        if (llm_provider === 'local') {
-          provider = 'rule-based';
-          model = 'deterministic';
+        if (llm_provider === "local") {
+          provider = "rule-based";
+          model = "deterministic";
         } else {
-          const llmConfig = getLLMConfig('time-inference', llm_provider);
+          const llmConfig = getLLMConfig("time-inference", llm_provider);
           provider = llmConfig.provider;
-          if (llm_provider === 'openai') {
-            model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
-          } else if (llm_provider === 'anthropic') {
-            model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
+          if (llm_provider === "openai") {
+            model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+          } else if (llm_provider === "anthropic") {
+            model = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
           } else {
-            model = llmConfig.model || 'unknown';
+            model = llmConfig.model || "unknown";
           }
         }
 
@@ -160,10 +160,10 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         };
 
         // Save to state
-        await state.set('time-inferences', indicator_id, result);
+        await state.set("time-inferences", indicator_id, result);
 
         // Save to SQLite
-        await repo.saveStageResult('time', indicator_id, {
+        await repo.saveStageResult("time", indicator_id, {
           reporting_frequency: timeInference.reportingFrequency,
           time_basis: timeInference.timeBasis,
           confidence: timeInference.confidence,
@@ -177,12 +177,12 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         const processingTime = Date.now() - timeStartTime;
         await repo.logProcessing({
           indicator_id,
-          stage: 'time',
-          status: 'completed',
+          stage: "time",
+          status: "completed",
           metadata: { processing_time_ms: processingTime },
         });
 
-        logger.info('Time inference complete', {
+        logger.info("Time inference complete", {
           indicator_id,
           time_basis: timeInference.timeBasis,
           confidence: timeInference.confidence,
@@ -192,7 +192,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         return timeInference;
       } catch (error) {
         const processingTime = Date.now() - timeStartTime;
-        logger.error('Time inference failed, using fallback', {
+        logger.error("Time inference failed, using fallback", {
           indicator_id,
           error: error instanceof Error ? error.message : String(error),
           processing_time_ms: processingTime,
@@ -203,13 +203,15 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
           const repo = createRepository(getDatabase());
           await repo.logProcessing({
             indicator_id,
-            stage: 'time',
-            status: 'failed',
-            error_message: error instanceof Error ? error.message : String(error),
+            stage: "time",
+            status: "failed",
+            error_message: error instanceof Error
+              ? error.message
+              : String(error),
             metadata: { processing_time_ms: processingTime },
           });
         } catch (dbError) {
-          logger.error('Failed to log error to database', { dbError });
+          logger.error("Failed to log error to database", { dbError });
         }
 
         // Return fallback result using rules
@@ -220,9 +222,10 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
           parsedUnitType: parsed_unit_type,
           sampleValues: sample_values,
         });
-        fallback.reasoning = `Failed during processing, using rule-based fallback: ${
-          error instanceof Error ? error.message : String(error)
-        }`;
+        fallback.reasoning =
+          `Failed during processing, using rule-based fallback: ${
+            error instanceof Error ? error.message : String(error)
+          }`;
         return fallback;
       }
     })(),
@@ -235,8 +238,8 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 
         await repo.logProcessing({
           indicator_id,
-          stage: 'cumulative-detection',
-          status: 'started',
+          stage: "cumulative-detection",
+          status: "started",
         });
 
         const detectionResult = detectCumulativePattern(sample_values);
@@ -248,7 +251,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         };
 
         // Save to database
-        await repo.saveStageResult('cumulative-detection', indicator_id, {
+        await repo.saveStageResult("cumulative-detection", indicator_id, {
           is_cumulative: detectionResult.is_cumulative ? 1 : 0,
           pattern_type: detectionResult.pattern_type,
           confidence: detectionResult.confidence,
@@ -260,12 +263,12 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         const processingTime = Date.now() - cumulativeStartTime;
         await repo.logProcessing({
           indicator_id,
-          stage: 'cumulative-detection',
-          status: 'completed',
+          stage: "cumulative-detection",
+          status: "completed",
           metadata: { processing_time_ms: processingTime },
         });
 
-        logger.info('Cumulative detection complete', {
+        logger.info("Cumulative detection complete", {
           indicator_id,
           is_cumulative: detectionResult.is_cumulative,
           pattern_type: detectionResult.pattern_type,
@@ -275,7 +278,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         return result;
       } catch (error) {
         const processingTime = Date.now() - cumulativeStartTime;
-        logger.error('Cumulative detection failed, using fallback', {
+        logger.error("Cumulative detection failed, using fallback", {
           indicator_id,
           error: error instanceof Error ? error.message : String(error),
           processing_time_ms: processingTime,
@@ -284,7 +287,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
         // Use fallback
         return {
           is_cumulative: false,
-          pattern_type: 'unknown',
+          pattern_type: "unknown",
           confidence: 0,
         };
       }
@@ -292,7 +295,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
   ]);
 
   const totalTime = Date.now() - startTime;
-  logger.info('Time and cumulative detection complete (parallel)', {
+  logger.info("Time and cumulative detection complete (parallel)", {
     indicator_id,
     time_basis: timeResult.timeBasis,
     is_cumulative: cumulativeResult.is_cumulative,
@@ -301,7 +304,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 
   // Emit combined result to currency router
   await emit({
-    topic: 'indicator.time-cumulative-complete',
+    topic: "indicator.time-cumulative-complete",
     data: {
       indicator_id,
       name,

@@ -11,6 +11,7 @@ Utility scripts for managing the classification pipeline database and results.
 ### What It Does
 
 ✅ **Clears:**
+
 - `classifications` - Final classification results
 - `normalization_results` - Stage 1 normalization data
 - `time_inference_results` - Stage 2 time/frequency inference
@@ -23,6 +24,7 @@ Utility scripts for managing the classification pipeline database and results.
 - `processing_log` - Audit trail of all processing steps
 
 ✅ **Preserves:**
+
 - `source_indicators` - Your original indicator data
 - `pipeline_stats` - Historical batch performance metrics
 - `schema_version` - Database schema tracking
@@ -123,18 +125,21 @@ Next steps:
 ### Error Handling
 
 **Database Not Found:**
+
 ```
 ❌ Database file not found.
    Run classifications first to create the database.
 ```
 
 **Tables Not Initialized:**
+
 ```
 ❌ Database exists but tables not initialized.
    Run migrations first: deno task migrate
 ```
 
 **Transaction Failure:**
+
 ```
 ❌ Error during reset: [error message]
    Transaction rolled back. Database unchanged.
@@ -176,6 +181,7 @@ sqlite3 classify.db "VACUUM;"
 ### Technical Details
 
 **Deletion Order:** Tables deleted in reverse dependency order to avoid foreign key violations:
+
 1. final_review_results
 2. boolean_review_results
 3. type_classification_results
@@ -197,18 +203,19 @@ sqlite3 classify.db "VACUUM;"
 
 ### reset-results.ts vs Full Database Reset
 
-| Aspect | reset-results.ts | Full DB Reset |
-|--------|-----------------|---------------|
-| Source indicators | ✅ Preserved | ❌ Deleted |
-| Pipeline stats | ✅ Preserved | ❌ Deleted |
-| Classification results | ❌ Deleted | ❌ Deleted |
-| Schema | ✅ Preserved | ❌ Recreated |
-| Speed | Fast (<1s) | Slower (re-seed) |
-| Use case | Re-classify | Complete fresh start |
+| Aspect                 | reset-results.ts | Full DB Reset        |
+| ---------------------- | ---------------- | -------------------- |
+| Source indicators      | ✅ Preserved     | ❌ Deleted           |
+| Pipeline stats         | ✅ Preserved     | ❌ Deleted           |
+| Classification results | ❌ Deleted       | ❌ Deleted           |
+| Schema                 | ✅ Preserved     | ❌ Recreated         |
+| Speed                  | Fast (<1s)       | Slower (re-seed)     |
+| Use case               | Re-classify      | Complete fresh start |
 
 ### When to Use Each
 
 **Use reset-results.ts when:**
+
 - Testing prompt improvements
 - Changing LLM configuration
 - Re-running with better models
@@ -216,6 +223,7 @@ sqlite3 classify.db "VACUUM;"
 - Keeping historical stats
 
 **Use full reset when:**
+
 - Changing database schema
 - Starting completely fresh project
 - Source indicator data needs updating
@@ -236,16 +244,19 @@ sqlite3 classify.db "VACUUM;"
 ## Troubleshooting
 
 ### "Database locked" error
+
 - Close any other connections to the database
 - Make sure no classification is running
 - Try again after a few seconds
 
 ### Reset doesn't show in query results
+
 - Make sure to re-run classifications after reset
 - Check that batch POST request was successful
 - Verify indicators in source_indicators table
 
 ### Pipeline stats show old runs
+
 - This is expected! Pipeline stats are intentionally preserved
 - Historical stats help track performance improvements over time
 - Stats won't affect new classification runs
@@ -385,6 +396,7 @@ deno task run:random all anthropic
 ### Use Cases
 
 #### 1. Testing Prompt Changes
+
 ```bash
 # Test updated prompts on 50 random indicators
 deno task reset-results
@@ -392,18 +404,21 @@ deno task run:random -50
 ```
 
 #### 2. Quality Sampling
+
 ```bash
 # Sample 100 indicators to check classification quality
 deno task run:random -100 openai
 ```
 
 #### 3. Production Run
+
 ```bash
 # Full pipeline with all indicators
 deno task run:random all openai
 ```
 
 #### 4. Cost-Free Testing
+
 ```bash
 # Test with local LLM (no API costs)
 deno task run:random -25 local
@@ -413,20 +428,21 @@ deno task run:random -25 local
 
 Based on benchmark (25 indicators = $0.20 with OpenAI GPT-4.1-mini):
 
-| Count  | Estimated Cost | Estimated Time | Use Case          |
-|--------|---------------|----------------|-------------------|
-| -25    | $0.20         | 2 minutes      | Quick test        |
-| -50    | $0.40         | 4 minutes      | Quality sample    |
-| -100   | $0.80         | 8 minutes      | Comprehensive test|
-| -500   | $4.00         | 40 minutes     | Large sample      |
-| -1000  | $8.00         | 1.3 hours      | Validation run    |
-| all    | $85.00        | 14.5 hours     | Full production   |
+| Count | Estimated Cost | Estimated Time | Use Case           |
+| ----- | -------------- | -------------- | ------------------ |
+| -25   | $0.20          | 2 minutes      | Quick test         |
+| -50   | $0.40          | 4 minutes      | Quality sample     |
+| -100  | $0.80          | 8 minutes      | Comprehensive test |
+| -500  | $4.00          | 40 minutes     | Large sample       |
+| -1000 | $8.00          | 1.3 hours      | Validation run     |
+| all   | $85.00         | 14.5 hours     | Full production    |
 
-*Prices: $0.150 input / $0.600 output per 1M tokens*
+_Prices: $0.150 input / $0.600 output per 1M tokens_
 
 ### Monitoring Progress
 
 **Check completed count:**
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db "
   SELECT COUNT(*) FROM classifications;
@@ -434,6 +450,7 @@ sqlite3 ./data/classify-workflow-local-dev.db "
 ```
 
 **Recent completions:**
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db "
   SELECT
@@ -450,6 +467,7 @@ sqlite3 ./data/classify-workflow-local-dev.db "
 ```
 
 **Stage breakdown:**
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db "
   SELECT
@@ -493,12 +511,14 @@ This allows the LLM to handle country-specific reporting variations (e.g., wages
 ### Troubleshooting
 
 **"No indicators found in database"**
+
 ```bash
 # Seed the database first
 deno task seed-db
 ```
 
 **"API request failed: 404"**
+
 ```bash
 # Start the Motia dev server
 deno task dev
@@ -508,6 +528,7 @@ curl http://localhost:3000/classify/batch
 ```
 
 **"Invalid count format"**
+
 ```bash
 # ❌ Wrong: 25 (missing dash)
 # ✅ Correct: -25
@@ -516,6 +537,7 @@ deno task run:random -25
 ```
 
 **"Database locked"**
+
 ```bash
 # Stop any running classifications
 pkill -f "deno task"
@@ -565,4 +587,4 @@ deno task run:random all
 
 ---
 
-*For more information, see [docs/ROUTING_VERIFICATION.md](../docs/ROUTING_VERIFICATION.md)*
+_For more information, see [docs/ROUTING_VERIFICATION.md](../docs/ROUTING_VERIFICATION.md)_

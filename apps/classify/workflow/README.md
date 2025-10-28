@@ -378,6 +378,7 @@ Results are stored in the following Motia state groups:
 Deploy the workflow service to Railway for production-scale processing with horizontal scaling and PostgreSQL/TimescaleDB persistence.
 
 **Performance:**
+
 - **Local (M3)**: ~30-40 indicators/min
 - **Railway (3 replicas)**: ~150 indicators/min (5-6× faster)
 - **10,903 indicators**: ~73 minutes on Railway vs ~6 hours locally
@@ -439,12 +440,14 @@ NODE_ENV=production
 ### API Usage
 
 **Health Check:**
+
 ```bash
 curl https://your-service.up.railway.app/health
 # Response: {"status":"ok","timestamp":"...","service":"classify-workflow"}
 ```
 
 **Classify Batch:**
+
 ```bash
 curl -X POST https://your-service.up.railway.app/classify/batch \
   -H "Content-Type: application/json" \
@@ -457,16 +460,19 @@ curl -X POST https://your-service.up.railway.app/classify/batch \
 ### Rate Limits & Scaling
 
 **OpenAI GPT-4o-mini Tier 1:**
+
 - TPM: 200,000 tokens/minute
 - Per indicator: ~1,000 tokens (2-3 LLM calls)
 - Max throughput: ~200 indicators/minute
 
 **Recommended Configuration:**
+
 - 3 replicas × 50 concurrent each = 150 concurrent total
 - TPM usage: 75% (150K/200K)
 - 25% headroom for variance/retries
 
 **Scaling:**
+
 - 2 replicas: ~100 indicators/min (safe, 50% TPM)
 - 3 replicas: ~150 indicators/min (recommended, 75% TPM)
 - 4 replicas: ~200 indicators/min (max Tier 1, 100% TPM)
@@ -474,6 +480,7 @@ curl -X POST https://your-service.up.railway.app/classify/batch \
 ### Monitoring
 
 **Track Performance:**
+
 ```sql
 -- View batch statistics
 SELECT * FROM pipeline_stats ORDER BY batch_start_time DESC LIMIT 10;
@@ -489,6 +496,7 @@ FROM classifications;
 ```
 
 **Railway Metrics:**
+
 - Service health via `/health` endpoint
 - CPU/Memory usage in Railway dashboard
 - Request rate and latency
@@ -496,16 +504,19 @@ FROM classifications;
 ### Cost Analysis
 
 **API Costs (OpenAI GPT-4o-mini):**
+
 - Per indicator: ~$0.00382
 - 10,903 indicators: ~$42
 - Same cost regardless of replicas!
 
 **Infrastructure (Railway):**
+
 - Workflow service: ~$10-20/month (3 replicas)
 - Postgres: ~$10-20/month
 - Total: ~$20-40/month
 
 **Time Savings:**
+
 - Local: ~6 hours per 10.9K run
 - Railway: ~1.2 hours per 10.9K run
 - Saves: ~4.8 hours per run

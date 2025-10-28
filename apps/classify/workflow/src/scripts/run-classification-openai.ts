@@ -7,7 +7,7 @@
  *   deno task run:openai -1000  # Run 1000 indicators (estimated $7.63)
  */
 
-import { Database } from '@db/sqlite';
+import { Database } from "@db/sqlite";
 
 interface IndicatorRecord {
   indicator_id: string;
@@ -26,20 +26,20 @@ function parseArgs(): { sampleSize: number } {
 
   // Parse sample size
   const sizeArg = args.find(
-    (arg) => arg.startsWith('--') || arg.startsWith('-')
+    (arg) => arg.startsWith("--") || arg.startsWith("-"),
   );
 
   let sampleSize = 100;
   if (sizeArg) {
-    const size = parseInt(sizeArg.replace(/^-+/, ''), 10);
+    const size = parseInt(sizeArg.replace(/^-+/, ""), 10);
     if (isNaN(size) || size <= 0) {
       throw new Error(
-        `Invalid sample size: ${sizeArg}. Use --N or -N where N is a positive number.`
+        `Invalid sample size: ${sizeArg}. Use --N or -N where N is a positive number.`,
       );
     }
     sampleSize = size;
   } else {
-    console.log('ℹ️  No sample size specified, defaulting to 100');
+    console.log("ℹ️  No sample size specified, defaulting to 100");
   }
 
   return { sampleSize };
@@ -53,9 +53,9 @@ function sampleIndicators(db: Database, sampleSize: number): IndicatorRecord[] {
   console.log(`\n🎲 Sampling ${sampleSize} diverse indicators...`);
 
   // First, get all unique indicator names
-  const uniqueNames =
-    db.sql`SELECT DISTINCT name FROM source_indicators ORDER BY name`.map(
-      (row: any) => row.name
+  const uniqueNames = db
+    .sql`SELECT DISTINCT name FROM source_indicators ORDER BY name`.map(
+      (row: any) => row.name,
     );
 
   console.log(`   Found ${uniqueNames.length} unique indicator types`);
@@ -63,12 +63,12 @@ function sampleIndicators(db: Database, sampleSize: number): IndicatorRecord[] {
   // Calculate how many indicators to sample per type
   const indicatorsPerType = Math.max(
     1,
-    Math.floor(sampleSize / uniqueNames.length)
+    Math.floor(sampleSize / uniqueNames.length),
   );
   const remainder = sampleSize % uniqueNames.length;
 
   console.log(
-    `   Sampling ~${indicatorsPerType} indicator(s) per type for variety`
+    `   Sampling ~${indicatorsPerType} indicator(s) per type for variety`,
   );
 
   const sampledIndicators: IndicatorRecord[] = [];
@@ -111,7 +111,7 @@ function sampleIndicators(db: Database, sampleSize: number): IndicatorRecord[] {
     distribution.set(ind.name, (distribution.get(ind.name) || 0) + 1);
   }
 
-  console.log('📊 Sample distribution (top 10):');
+  console.log("📊 Sample distribution (top 10):");
   const topTypes = Array.from(distribution.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
@@ -119,7 +119,7 @@ function sampleIndicators(db: Database, sampleSize: number): IndicatorRecord[] {
   for (const [name, count] of topTypes) {
     console.log(`   ${count}× ${name}`);
   }
-  console.log('');
+  console.log("");
 
   return sampledIndicators;
 }
@@ -153,7 +153,7 @@ function toAPIPayload(record: IndicatorRecord) {
  */
 async function classifyIndicators(
   indicators: IndicatorRecord[],
-  apiUrl: string
+  apiUrl: string,
 ) {
   const API_BATCH_SIZE = 100; // API limit per request
   const batches = Math.ceil(indicators.length / API_BATCH_SIZE);
@@ -179,19 +179,19 @@ async function classifyIndicators(
     const batchCost = (batch.length * costPerIndicator).toFixed(2);
 
     console.log(
-      `📦 API Batch ${batchNum}/${batches} (${batch.length} indicators, ~$${batchCost})...`
+      `📦 API Batch ${batchNum}/${batches} (${batch.length} indicators, ~$${batchCost})...`,
     );
 
     const payload = {
       indicators: batch.map(toAPIPayload),
-      llm_provider: 'openai',
+      llm_provider: "openai",
     };
 
     try {
       const response = await fetch(`${apiUrl}/classify/batch`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
@@ -215,8 +215,9 @@ async function classifyIndicators(
         await new Promise((resolve) => setTimeout(resolve, 500));
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
       console.error(`   ❌ Batch ${batchNum} failed:`, errorMessage);
       throw error;
     }
@@ -229,13 +230,13 @@ async function classifyIndicators(
  * Main function
  */
 async function main() {
-  console.log('🔬 OpenAI Classification Pipeline Runner\n');
+  console.log("🔬 OpenAI Classification Pipeline Runner\n");
 
   // Check for OpenAI API key
-  if (!Deno.env.get('OPENAI_API_KEY')) {
-    console.error('❌ OPENAI_API_KEY environment variable not set!');
-    console.error('   Set it in your .env file or export it:');
-    console.error('   export OPENAI_API_KEY=sk-...\n');
+  if (!Deno.env.get("OPENAI_API_KEY")) {
+    console.error("❌ OPENAI_API_KEY environment variable not set!");
+    console.error("   Set it in your .env file or export it:");
+    console.error("   export OPENAI_API_KEY=sk-...\n");
     Deno.exit(1);
   }
 
@@ -243,9 +244,8 @@ async function main() {
   const { sampleSize } = parseArgs();
 
   // Get database path
-  const dbPath =
-    Deno.env.get('CLASSIFY_DB_LOCAL_DEV') ||
-    './data/classify-workflow-local-dev.db';
+  const dbPath = Deno.env.get("CLASSIFY_DB_LOCAL_DEV") ||
+    "./data/classify-workflow-local-dev.db";
 
   console.log(`📂 Database: ${dbPath}`);
 
@@ -285,7 +285,7 @@ async function main() {
   db.close();
 
   // Get API URL from environment or default to localhost
-  const apiUrl = Deno.env.get('MOTIA_API_URL') || 'http://localhost:3000';
+  const apiUrl = Deno.env.get("MOTIA_API_URL") || "http://localhost:3000";
 
   // Classify indicators
   const startTime = Date.now();
@@ -293,36 +293,36 @@ async function main() {
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
   // Summary
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🎉 OpenAI classification pipeline started!');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("🎉 OpenAI classification pipeline started!");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   console.log(`   Total indicators: ${indicators.length}`);
   console.log(`   API batches sent: ${results.length}`);
   console.log(`   Submission time: ${duration}s`);
   console.log(
-    `   💰 Estimated cost: $${(indicators.length * 0.00763).toFixed(2)}`
+    `   💰 Estimated cost: $${(indicators.length * 0.00763).toFixed(2)}`,
   );
-  console.log('');
-  console.log('💡 Next steps:');
-  console.log('   1. Check Motia logs for classification progress');
-  console.log('   2. Run: deno task query');
-  console.log('   3. Run: deno task stats');
-  console.log('');
+  console.log("");
+  console.log("💡 Next steps:");
+  console.log("   1. Check Motia logs for classification progress");
+  console.log("   2. Run: deno task query");
+  console.log("   3. Run: deno task stats");
+  console.log("");
 
   // Show trace IDs
   if (results.length > 0) {
-    console.log('🔍 Trace IDs for tracking:');
+    console.log("🔍 Trace IDs for tracking:");
     for (let i = 0; i < results.length; i++) {
       console.log(`   Batch ${i + 1}: ${results[i].trace_id}`);
     }
-    console.log('');
+    console.log("");
   }
 }
 
 // Run if called directly
 if (import.meta.main) {
   main().catch((error) => {
-    console.error('\n❌ Error:', error.message);
+    console.error("\n❌ Error:", error.message);
     Deno.exit(1);
   });
 }

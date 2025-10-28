@@ -124,29 +124,35 @@ START: POST /classify/batch
 **Indicators:** GDP, Trade Balance, Foreign Reserves, Exchange Rates, Stock Prices
 
 **Characteristics:**
+
 - Values in monetary units (USD, EUR, etc.)
 - Detected by `check-currency` stage
 - Smaller option space reduces LLM confusion
 
 **Routing:**
+
 ```
 assign-family-currency → classify-type-currency → boolean-review
 ```
 
 **Family Options (2):**
+
 1. `physical-fundamental` - Economic flows, stocks, balances (GDP, Trade)
 2. `price-value` - Prices, exchange rates, asset values
 
 **Type Options (7):**
+
 - Physical-fundamental: `balance`, `capacity`, `flow`, `stock`
 - Price-value: `price`, `rate-exchange`, `value`
 
 **Prompt Sizes:**
+
 - Family: 126 lines
 - Type: 141 lines
 - **Total tokens:** ~600-800 per indicator
 
 **Key Features:**
+
 - ✅ Focused prompt with only 2 families
 - ✅ No unit-type disambiguation needed (currency is the unit)
 - ✅ Clear separation: economic aggregates vs prices
@@ -158,16 +164,19 @@ assign-family-currency → classify-type-currency → boolean-review
 **Indicators:** Percentages, Ratios, Indices, Counts, Rates, Volatility
 
 **Characteristics:**
+
 - No monetary units (%, ratio, index points, count)
 - Larger option space requires more guidance
 - Unit-type hints reduce "rate" ambiguity
 
 **Routing:**
+
 ```
 route-by-unit-type → assign-family-non-currency → classify-type-non-currency → boolean-review
 ```
 
 **Family Options (6):**
+
 1. `numeric-measurement` - Counts, percentages, ratios, shares
 2. `price-value` - Interest rates, yields (percentage prices)
 3. `change-movement` - Growth rates, volatility, gaps
@@ -176,6 +185,7 @@ route-by-unit-type → assign-family-non-currency → classify-type-non-currency
 6. `qualitative` - Sentiment, allocations
 
 **Type Options (19):**
+
 - Numeric: `count`, `percentage`, `ratio`, `spread`, `share`
 - Price: `rate`, `yield`
 - Change: `volatility`, `gap`
@@ -185,11 +195,13 @@ route-by-unit-type → assign-family-non-currency → classify-type-non-currency
 - Fallback: `other`
 
 **Prompt Sizes:**
+
 - Family: 238 lines (with `getUnitTypeGuidance()`)
 - Type: 256 lines (with `getTypeHintFromUnitType()`)
 - **Total tokens:** ~1200-1500 per indicator
 
 **Key Features:**
+
 - ✅ Unit-type hints for disambiguation
 - ✅ Handles "rate" ambiguity (interest rate vs growth rate vs unemployment rate)
 - ✅ Comprehensive coverage of dimensionless types
@@ -199,15 +211,15 @@ route-by-unit-type → assign-family-non-currency → classify-type-non-currency
 
 The `route-by-unit-type` step adds contextual hints based on `parsed_unit_type`:
 
-| Unit Type | Strong Indication | Example |
-|-----------|------------------|---------|
+| Unit Type    | Strong Indication                                     | Example                                           |
+| ------------ | ----------------------------------------------------- | ------------------------------------------------- |
 | `percentage` | numeric-measurement OR price-value OR change-movement | Bank Lending Rate, Growth Rate, Unemployment Rate |
-| `index` | composite-derived | CPI, Stock Index, PMI |
-| `ratio` | numeric-measurement | Debt-to-GDP, P/E Ratio |
-| `count` | numeric-measurement | Population, Number of firms |
-| `rate` | numeric-measurement | Per capita rates |
-| `duration` | temporal | Years to maturity |
-| `unknown` | Use all context | Fallback |
+| `index`      | composite-derived                                     | CPI, Stock Index, PMI                             |
+| `ratio`      | numeric-measurement                                   | Debt-to-GDP, P/E Ratio                            |
+| `count`      | numeric-measurement                                   | Population, Number of firms                       |
+| `rate`       | numeric-measurement                                   | Per capita rates                                  |
+| `duration`   | temporal                                              | Years to maturity                                 |
+| `unknown`    | Use all context                                       | Fallback                                          |
 
 ---
 
@@ -216,18 +228,21 @@ The `route-by-unit-type` step adds contextual hints based on `parsed_unit_type`:
 ### Stage 3: join-results.step.ts
 
 **Code (Lines 68-70):**
+
 ```typescript
 const isCurrency = currencyResult.is_currency;
 const targetTopic = isCurrency
-  ? "indicator.assign-family-currency"      // Currency branch
-  : "indicator.route-by-unit-type";         // Non-currency branch
+  ? "indicator.assign-family-currency" // Currency branch
+  : "indicator.route-by-unit-type"; // Non-currency branch
 ```
 
 **Decision:**
+
 - `is_currency = true` → Currency branch (skip route-by-unit-type entirely)
 - `is_currency = false` → Non-currency branch (skip assign-family-currency entirely)
 
 **Guarantees:**
+
 - ✅ Exactly ONE emit per indicator
 - ✅ No indicator goes through both branches
 - ✅ No duplication of family/type classification
@@ -343,15 +358,18 @@ Output:
 ### Non-Currency Family Prompt Enhancement
 
 **Before Unit-Type Routing (Old):**
+
 ```
 Indicator: Bank Lending Rate
 Time basis: per-period
 Scale: ones
 ```
+
 → LLM confused: "Is this a price (interest rate) or change (growth rate)?"
 → Result: 60% misclassified as `change-movement`
 
 **After Unit-Type Routing (New):**
+
 ```
 Indicator: Bank Lending Rate
 Time basis: per-period
@@ -363,6 +381,7 @@ Parsed Unit Type: percentage
 → If name contains "Growth/Inflation Rate" → change-movement (growth rates are changes)
 → Value range: Likely 0-100% or 0-20%
 ```
+
 → LLM clarity: "Lending + percentage → price-value (cost of capital)"
 → Result: 100% correct as `price-value`
 
@@ -371,6 +390,7 @@ Parsed Unit Type: percentage
 ### Non-Currency Type Prompt Enhancement
 
 **Before Unit-Type Routing:**
+
 ```
 Indicator: Bank Lending Rate
 Family: price-value
@@ -378,6 +398,7 @@ Family: price-value
 ```
 
 **After Unit-Type Routing:**
+
 ```
 Indicator: Bank Lending Rate
 Family: price-value
@@ -391,12 +412,14 @@ Parsed Unit Type: percentage
 ## Verification Checklist
 
 ### ✅ Routing Logic
+
 - [x] `join-results` uses boolean to route exclusively
 - [x] Currency indicators SKIP non-currency branch
 - [x] Non-currency indicators SKIP currency branch
 - [x] No indicator processes through both branches
 
 ### ✅ Currency Branch (Smaller Prompts)
+
 - [x] Family prompt: 126 lines
 - [x] Family options: 2 (physical-fundamental, price-value)
 - [x] Type prompt: 141 lines
@@ -404,6 +427,7 @@ Parsed Unit Type: percentage
 - [x] No unit-type hints needed (currency is the unit)
 
 ### ✅ Non-Currency Branch (Larger Prompts with Hints)
+
 - [x] Family prompt: 238 lines with `getUnitTypeGuidance()`
 - [x] Family options: 6 (numeric-measurement, price-value, change-movement, composite-derived, temporal, qualitative)
 - [x] Type prompt: 256 lines with `getTypeHintFromUnitType()`
@@ -411,6 +435,7 @@ Parsed Unit Type: percentage
 - [x] Unit-type hints: YES (percentage, index, ratio, count, rate, duration, physical, unknown)
 
 ### ✅ Unit-Type Sub-Routing (NEW)
+
 - [x] `route-by-unit-type` step created
 - [x] Passes `parsed_unit_type` to family classification
 - [x] Family prompt includes unit-type guidance
@@ -418,6 +443,7 @@ Parsed Unit Type: percentage
 - [x] Eliminates "rate" ambiguity (interest vs growth vs unemployment)
 
 ### ✅ Performance & Accuracy
+
 - [x] 100% accuracy maintained (22/22 test cases)
 - [x] Bank Lending Rate: Fixed from 60% to 100% correct
 - [x] Balance of Trade: 100% consistent
@@ -428,6 +454,7 @@ Parsed Unit Type: percentage
 ## Token Usage Comparison
 
 ### Currency Branch
+
 ```
 Family classification:
   Prompt: ~400 tokens (126 lines, 2 families)
@@ -444,6 +471,7 @@ Cost per 10k: ~$0.15 (at $0.015/1k tokens)
 ```
 
 ### Non-Currency Branch
+
 ```
 Unit-type routing:
   No LLM call (deterministic coordinator)
@@ -464,6 +492,7 @@ Cost per 10k: ~$0.27 (at $0.015/1k tokens)
 ```
 
 ### Overall Pipeline
+
 ```
 Average tokens per indicator: ~1,400 tokens
   (weighted by currency vs non-currency distribution)
@@ -500,17 +529,19 @@ Cost with claude-haiku: ~$7-10
 ### Recommendations
 
 **For Production:**
+
 - ✅ Keep current routing architecture
 - ✅ Monitor unit-type hint effectiveness
 - ✅ Consider adding more unit types if new patterns emerge
 
 **For Future Enhancements:**
+
 - Consider caching common classifications
 - Add confidence thresholds for human review
 - Track which unit-type hints are most effective
 
 ---
 
-*Verified: 2025-01-XX*
-*Pipeline version: 1.3.3*
-*Routing architecture: v2 (with unit-type sub-routing)*
+_Verified: 2025-01-XX_
+_Pipeline version: 1.3.3_
+_Routing architecture: v2 (with unit-type sub-routing)_

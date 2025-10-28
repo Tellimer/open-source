@@ -9,7 +9,7 @@
  *   deno task view:errors details      # Show detailed error logs
  */
 
-import { Database } from '@db/sqlite';
+import { Database } from "@db/sqlite";
 
 interface ErrorLog {
   id: number;
@@ -113,56 +113,58 @@ function getIncompleteIndicators(db: Database) {
 }
 
 function printSummary(db: Database) {
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log('                   ERROR SUMMARY');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.log("\n═══════════════════════════════════════════════════════════");
+  console.log("                   ERROR SUMMARY");
+  console.log("═══════════════════════════════════════════════════════════\n");
 
   const summary = getErrorSummary(db);
 
   if (summary.length === 0) {
-    console.log('✅ No errors found! All indicators processed successfully.\n');
+    console.log("✅ No errors found! All indicators processed successfully.\n");
     return;
   }
 
-  console.log('Errors by Stage:');
-  console.log('─'.repeat(60));
+  console.log("Errors by Stage:");
+  console.log("─".repeat(60));
   let totalErrors = 0;
   let totalIndicators = 0;
 
   summary.forEach((row) => {
     console.log(
-      `  ${row.stage.padEnd(20)} ${row.error_count} errors (${row.unique_indicators} indicators)`
+      `  ${
+        row.stage.padEnd(20)
+      } ${row.error_count} errors (${row.unique_indicators} indicators)`,
     );
     totalErrors += row.error_count;
     totalIndicators += row.unique_indicators;
   });
 
-  console.log('─'.repeat(60));
+  console.log("─".repeat(60));
   console.log(
-    `  Total: ${totalErrors} errors across ${totalIndicators} indicators\n`
+    `  Total: ${totalErrors} errors across ${totalIndicators} indicators\n`,
   );
 
   // Check for incomplete indicators (stuck in progress)
   const incomplete = getIncompleteIndicators(db);
   if (incomplete.length > 0) {
     console.log(
-      `⚠️  Found ${incomplete.length} indicators that started but never completed/failed`
+      `⚠️  Found ${incomplete.length} indicators that started but never completed/failed`,
     );
     console.log(
-      '   (These may be stuck in progress or timed out)\n'
+      "   (These may be stuck in progress or timed out)\n",
     );
   }
 }
 
 function printFailedIndicators(db: Database) {
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log('                 FAILED INDICATORS');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.log("\n═══════════════════════════════════════════════════════════");
+  console.log("                 FAILED INDICATORS");
+  console.log("═══════════════════════════════════════════════════════════\n");
 
   const failed = getFailedIndicators(db);
 
   if (failed.length === 0) {
-    console.log('✅ No failed indicators found!\n');
+    console.log("✅ No failed indicators found!\n");
     return;
   }
 
@@ -174,21 +176,21 @@ function printFailedIndicators(db: Database) {
       console.log(`   Name: ${row.indicator_name}`);
     }
     console.log(
-      `   Failed Stages: ${row.failed_stages} (${row.stages})`
+      `   Failed Stages: ${row.failed_stages} (${row.stages})`,
     );
     console.log();
   });
 }
 
 function printDetailedErrors(db: Database) {
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log('                 DETAILED ERROR LOGS');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.log("\n═══════════════════════════════════════════════════════════");
+  console.log("                 DETAILED ERROR LOGS");
+  console.log("═══════════════════════════════════════════════════════════\n");
 
   const errors = getDetailedErrors(db, 50);
 
   if (errors.length === 0) {
-    console.log('✅ No errors found!\n');
+    console.log("✅ No errors found!\n");
     return;
   }
 
@@ -201,10 +203,9 @@ function printDetailedErrors(db: Database) {
     }
     console.log(`   Time: ${error.created_at}`);
     if (error.error_message) {
-      const shortError =
-        error.error_message.length > 150
-          ? error.error_message.substring(0, 150) + '...'
-          : error.error_message;
+      const shortError = error.error_message.length > 150
+        ? error.error_message.substring(0, 150) + "..."
+        : error.error_message;
       console.log(`   Error: ${shortError}`);
     }
     console.log();
@@ -212,22 +213,22 @@ function printDetailedErrors(db: Database) {
 }
 
 function printIncomplete(db: Database) {
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log('              INCOMPLETE INDICATORS');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.log("\n═══════════════════════════════════════════════════════════");
+  console.log("              INCOMPLETE INDICATORS");
+  console.log("═══════════════════════════════════════════════════════════\n");
 
   const incomplete = getIncompleteIndicators(db);
 
   if (incomplete.length === 0) {
-    console.log('✅ No incomplete indicators found!\n');
+    console.log("✅ No incomplete indicators found!\n");
     return;
   }
 
   console.log(
-    `Found ${incomplete.length} indicators that started but never completed:\n`
+    `Found ${incomplete.length} indicators that started but never completed:\n`,
   );
   console.log(
-    '(These may be stuck in progress, timed out, or still processing)\n'
+    "(These may be stuck in progress, timed out, or still processing)\n",
   );
 
   incomplete.forEach((row, idx) => {
@@ -243,30 +244,30 @@ function printIncomplete(db: Database) {
 
 async function main() {
   const args = Deno.args;
-  const mode = args[0] || 'summary';
+  const mode = args[0] || "summary";
 
-  const dbPath = './data/classify-workflow-local-dev.db';
+  const dbPath = "./data/classify-workflow-local-dev.db";
   const db = new Database(dbPath);
 
   try {
     switch (mode) {
-      case 'summary':
+      case "summary":
         printSummary(db);
         break;
 
-      case 'indicators':
+      case "indicators":
         printFailedIndicators(db);
         break;
 
-      case 'details':
+      case "details":
         printDetailedErrors(db);
         break;
 
-      case 'incomplete':
+      case "incomplete":
         printIncomplete(db);
         break;
 
-      case 'all':
+      case "all":
         printSummary(db);
         printFailedIndicators(db);
         printIncomplete(db);
@@ -275,21 +276,27 @@ async function main() {
 
       default:
         console.error(`Unknown mode: ${mode}`);
-        console.error(`Valid modes: summary, indicators, details, incomplete, all`);
+        console.error(
+          `Valid modes: summary, indicators, details, incomplete, all`,
+        );
         Deno.exit(1);
     }
 
     // Show helpful commands
     const failedCount = getFailedIndicators(db).length;
     if (failedCount > 0) {
-      console.log('═══════════════════════════════════════════════════════════');
-      console.log('                  NEXT STEPS');
-      console.log('═══════════════════════════════════════════════════════════\n');
       console.log(
-        `💡 To retry failed indicators, use: deno task run:retry-failed`
+        "═══════════════════════════════════════════════════════════",
+      );
+      console.log("                  NEXT STEPS");
+      console.log(
+        "═══════════════════════════════════════════════════════════\n",
       );
       console.log(
-        `💡 To target specific indicator: deno task run:target INDICATOR_ID\n`
+        `💡 To retry failed indicators, use: deno task run:retry-failed`,
+      );
+      console.log(
+        `💡 To target specific indicator: deno task run:target INDICATOR_ID\n`,
       );
     }
   } finally {
@@ -299,7 +306,7 @@ async function main() {
 
 if (import.meta.main) {
   main().catch((error) => {
-    console.error('❌ Error:', error);
+    console.error("❌ Error:", error);
     Deno.exit(1);
   });
 }

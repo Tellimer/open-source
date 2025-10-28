@@ -1,6 +1,7 @@
 # V2 Pipeline Complete Guide
 
-Comprehensive guide to the V2 classification pipeline architecture, data flow, and review stages.
+Comprehensive guide to the V2 classification pipeline architecture, data flow,
+and review stages.
 
 ## Table of Contents
 
@@ -15,7 +16,8 @@ Comprehensive guide to the V2 classification pipeline architecture, data flow, a
 
 ## Pipeline Overview
 
-The V2 pipeline is a **7-stage classification system** with built-in quality control:
+The V2 pipeline is a **7-stage classification system** with built-in quality
+control:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -103,6 +105,7 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Purpose**: Classify indicators into 7 broad families
 
 **Families**:
+
 - `price-value` - Prices, indices, costs
 - `change-movement` - Growth rates, changes
 - `composite-derived` - Ratios, percentages
@@ -114,6 +117,7 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Input**: Indicator metadata (name, units, description)
 
 **Output**:
+
 ```typescript
 {
   indicator_id: "USCPI",
@@ -132,12 +136,15 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Purpose**: Detailed classification using family-specific prompts
 
 **Output Fields**:
+
 - `indicator_type`: balance | count | index | ratio
-- `temporal_aggregation`: period-rate | period-total | period-average | point-in-time
+- `temporal_aggregation`: period-rate | period-total | period-average |
+  point-in-time
 - `is_currency_denominated`: boolean
 - `confidence_cls`: 0-1
 
 **Example**:
+
 ```typescript
 {
   indicator_id: "USCPI",
@@ -158,12 +165,14 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Purpose**: Analyze time series data to detect patterns
 
 **Checks**:
+
 - Cumulative behavior (resets at year boundaries?)
 - Seasonal patterns
 - Monotonic increases within year
 - Dec-Jan ratio analysis
 
 **Output**:
+
 ```typescript
 {
   indicator_id: "USGOVTDEBT",
@@ -185,6 +194,7 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Purpose**: Determine heat map orientation (welfare interpretation)
 
 **Orientations**:
+
 - `higher-is-positive` - Higher = better (GDP growth, employment)
 - `lower-is-positive` - Lower = better (unemployment, inflation)
 - `neutral` - Context-dependent (exchange rates, balances)
@@ -192,6 +202,7 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Input**: Indicator name, units, description, classification results
 
 **Output**:
+
 ```typescript
 {
   indicator_id: "USUNRATE",
@@ -210,6 +221,7 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 **Purpose**: Identify potential classification issues
 
 **Rules** (6 total):
+
 1. **Low Confidence - Family**: `confidence_family < 0.75`
 2. **Low Confidence - Classification**: `confidence_cls < 0.75`
 3. **Low Confidence - Orientation**: `confidence_orient < 0.85`
@@ -218,6 +230,7 @@ The V2 pipeline is a **7-stage classification system** with built-in quality con
 6. **Orientation Mismatch**: Domain rules suggest different orientation
 
 **Output**:
+
 ```typescript
 {
   indicator_id: "UKGDP",
@@ -244,11 +257,13 @@ The review stages provide **two-model verification** for flagged indicators.
 **Purpose**: Initial review of flagged indicators
 
 **Actions**:
+
 - ✅ **confirm** - Original classification is correct despite flag
 - 🔧 **suggest-fix** - Propose specific changes to classification
 - ⚠️ **escalate** - Too ambiguous, needs human review
 
 **Input Context**:
+
 ```typescript
 {
   indicator: {
@@ -275,6 +290,7 @@ The review stages provide **two-model verification** for flagged indicators.
 ```
 
 **Output**:
+
 ```typescript
 {
   indicator_id: "UKGDP",
@@ -302,6 +318,7 @@ The review stages provide **two-model verification** for flagged indicators.
 **Purpose**: Verify suggested fixes with a **different model** to reduce bias
 
 **Actions**:
+
 - ✅ **accept-fix** - Suggested fix is correct, apply it
 - ❌ **reject-fix** - Suggested fix is wrong, keep original
 - ⚠️ **escalate** - Still ambiguous, needs human review
@@ -342,6 +359,7 @@ The review stages provide **two-model verification** for flagged indicators.
 ```
 
 **Claude Independently Analyzes**:
+
 1. ✅ Original classification quality
 2. 🔧 Suggested fix quality
 3. 📊 Time series data patterns
@@ -349,6 +367,7 @@ The review stages provide **two-model verification** for flagged indicators.
 5. 🎯 Taxonomy rules
 
 **Output**:
+
 ```typescript
 {
   indicator_id: "UKGDP",
@@ -365,7 +384,8 @@ The review stages provide **two-model verification** for flagged indicators.
 
 **Database**: `deep_review_decisions` table
 
-**Automatic Application**: Accepted fixes are **immediately applied** to the `classifications` table
+**Automatic Application**: Accepted fixes are **immediately applied** to the
+`classifications` table
 
 **Typical Results**: ~150 accepted, ~40 rejected, ~30 escalated
 
@@ -375,14 +395,14 @@ The review stages provide **two-model verification** for flagged indicators.
 
 ### What Context is Available at Each Stage?
 
-| Stage | Available Data |
-|-------|---------------|
-| **Router** | name, units, description, metadata |
-| **Specialist** | name, units, description, metadata, **family** |
-| **Validation** | **time series data** (historical values) |
-| **Orientation** | name, units, description, **family, type, temporal** |
-| **Flagging** | **all classifications + validation results** |
-| **Review** | **indicator context + all classifications + flags** |
+| Stage           | Available Data                                                            |
+| --------------- | ------------------------------------------------------------------------- |
+| **Router**      | name, units, description, metadata                                        |
+| **Specialist**  | name, units, description, metadata, **family**                            |
+| **Validation**  | **time series data** (historical values)                                  |
+| **Orientation** | name, units, description, **family, type, temporal**                      |
+| **Flagging**    | **all classifications + validation results**                              |
+| **Review**      | **indicator context + all classifications + flags**                       |
 | **Deep Review** | **EVERYTHING** (context + original + suggested fix + time series samples) |
 
 ### Database Schema
@@ -459,6 +479,7 @@ deno task prod:resume-orientation
 ```
 
 This will:
+
 - Run orientation on indicators missing orientation results
 - Run flagging, review, and deep review
 - Apply accepted fixes
@@ -482,6 +503,7 @@ deno task prod:deep-review
 **Cause**: SQLite foreign keys were disabled by default
 
 **Fix**: Applied in `src/v2/db/client.ts:43`
+
 ```typescript
 // Enable foreign keys (disabled by default in SQLite)
 this.db!.exec("PRAGMA foreign_keys = ON;");
@@ -498,6 +520,7 @@ this.db!.exec("PRAGMA foreign_keys = ON;");
 **Fix**: Use correct model ID `claude-sonnet-4-20250514`
 
 **Where**:
+
 - `scripts/production/resume_from_orientation.ts`
 - `scripts/production/run_deep_review.ts`
 
@@ -518,6 +541,7 @@ this.db!.exec("PRAGMA foreign_keys = ON;");
 ### Issue: Pipeline stuck at orientation
 
 **Diagnosis**:
+
 ```bash
 cd packages/classify
 sqlite3 ./data/classify_production_v2.db "
@@ -529,6 +553,7 @@ SELECT 'Oriented', COUNT(*) FROM orientation_results;
 ```
 
 **Fix**: Use resume script
+
 ```bash
 deno task prod:resume-orientation
 ```
@@ -581,16 +606,16 @@ deno task prod:resume-orientation
 
 ### Typical Run (668 indicators)
 
-| Stage | API Calls | Time | Model |
-|-------|-----------|------|-------|
-| Router | 134 | ~10 min | GPT-5 |
-| Specialist | 140 | ~12 min | GPT-5 |
-| Validation | 0 | ~2 min | Rule-based |
-| Orientation | 134 | ~40 min | GPT-5 |
-| Flagging | 0 | ~1 min | Rule-based |
-| Review | 44 | ~15 min | GPT-5 |
-| Deep Review | 44 | ~20 min | Claude Sonnet 4 |
-| **TOTAL** | **~496** | **~100 min** | Mixed |
+| Stage       | API Calls | Time         | Model           |
+| ----------- | --------- | ------------ | --------------- |
+| Router      | 134       | ~10 min      | GPT-5           |
+| Specialist  | 140       | ~12 min      | GPT-5           |
+| Validation  | 0         | ~2 min       | Rule-based      |
+| Orientation | 134       | ~40 min      | GPT-5           |
+| Flagging    | 0         | ~1 min       | Rule-based      |
+| Review      | 44        | ~15 min      | GPT-5           |
+| Deep Review | 44        | ~20 min      | Claude Sonnet 4 |
+| **TOTAL**   | **~496**  | **~100 min** | Mixed           |
 
 **Cost Estimate**: ~$50-80 per full run (depends on token usage)
 
@@ -599,22 +624,29 @@ deno task prod:resume-orientation
 ## Best Practices
 
 ### 1. Enable Foreign Keys
+
 Always ensure `PRAGMA foreign_keys = ON;` in database initialization
 
 ### 2. Use Resume Scripts
+
 If pipeline fails, resume from the last successful stage instead of re-running
 
 ### 3. Monitor Flagging Rate
+
 Typical: 30-45% flagged. If >60%, review thresholds
 
 ### 4. Review Escalations
+
 Human review needed for ~5-10% of indicators (escalated by both review stages)
 
 ### 5. Validate Time Series
+
 Ensure `sample_values` are populated for better validation and deep review
 
 ### 6. Use Different Models
-Stage 6 (Review) and Stage 7 (Deep Review) should use different models to reduce bias
+
+Stage 6 (Review) and Stage 7 (Deep Review) should use different models to reduce
+bias
 
 ---
 
@@ -630,5 +662,6 @@ Stage 6 (Review) and Stage 7 (Deep Review) should use different models to reduce
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: https://github.com/Tellimer/open-source/issues
 - Documentation: `packages/classify/docs/`

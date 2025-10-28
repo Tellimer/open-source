@@ -172,7 +172,9 @@ class OpenAIClient implements LLMClient {
     schema: z.ZodSchema<T>;
   }): Promise<T> {
     const modelName = this.config.model || "gpt-4o-mini";
-    console.log(`[OpenAIClient] Calling generateObject with model: ${modelName}`);
+    console.log(
+      `[OpenAIClient] Calling generateObject with model: ${modelName}`,
+    );
 
     try {
       const result = await generateObject({

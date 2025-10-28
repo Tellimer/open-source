@@ -25,7 +25,9 @@ export const config: EventConfig = {
     incorrect_fields: z.array(z.string()),
     review_reasoning: z.string(),
     current_values: z.record(z.unknown()),
-    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default("local"),
+    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default(
+      "local",
+    ),
   }),
 };
 

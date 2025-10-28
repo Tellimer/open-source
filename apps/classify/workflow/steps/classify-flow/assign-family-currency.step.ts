@@ -3,24 +3,24 @@
  * Stage 5a: Use LLM to assign indicator family for currency-denominated indicators
  */
 
-import { EventConfig } from 'motia';
-import { z } from 'zod';
+import { EventConfig } from "motia";
+import { z } from "zod";
 import {
   createFamilyAssignmentCurrencyPrompt,
   createLLMClient,
   familyAssignmentCurrencySchema,
   getLLMConfig,
-} from '../../src/services/classify/index.ts';
-import { getDatabase } from '../../src/db/client.ts';
-import { createRepository } from '../../src/db/index.ts';
+} from "../../src/services/classify/index.ts";
+import { getDatabase } from "../../src/db/client.ts";
+import { createRepository } from "../../src/db/index.ts";
 
 export const config: EventConfig = {
-  type: 'event',
-  name: 'AssignFamilyCurrency',
-  description: 'Stage 5a: Assign family for currency-denominated indicators',
-  flows: ['classify-indicator'],
-  subscribes: ['indicator.assign-family-currency'],
-  emits: ['indicator.classify-type-currency'],
+  type: "event",
+  name: "AssignFamilyCurrency",
+  description: "Stage 5a: Assign family for currency-denominated indicators",
+  flows: ["classify-indicator"],
+  subscribes: ["indicator.assign-family-currency"],
+  emits: ["indicator.classify-type-currency"],
   input: z.object({
     indicator_id: z.string(),
     name: z.string(),
@@ -39,7 +39,7 @@ export const config: EventConfig = {
         z.object({
           date: z.string(),
           value: z.number(),
-        })
+        }),
       )
       .optional(),
     // Contextual fields
@@ -51,9 +51,9 @@ export const config: EventConfig = {
     topic: z.string().optional(),
     currency_code: z.string().optional(),
     llm_provider: z
-      .enum(['local', 'openai', 'anthropic'])
+      .enum(["local", "openai", "anthropic"])
       .optional()
-      .default('local'),
+      .default("local"),
   }),
 };
 
@@ -75,13 +75,13 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
     topic,
     aggregation_method,
     currency_code,
-    llm_provider = 'local',
+    llm_provider = "local",
   } = input;
 
-  logger.info('Assigning family (currency branch)', { indicator_id, name });
+  logger.info("Assigning family (currency branch)", { indicator_id, name });
 
   // Create LLM client
-  const llmConfig = getLLMConfig('family-assignment', llm_provider);
+  const llmConfig = getLLMConfig("family-assignment", llm_provider);
   const llmClient = createLLMClient(llmConfig);
 
   // Generate prompt with contextual fields
@@ -105,30 +105,30 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
   });
 
   // Save to state
-  await state.set('family-assignments', indicator_id, {
+  await state.set("family-assignments", indicator_id, {
     indicator_id,
     ...familyResult,
-    branch: 'currency',
+    branch: "currency",
     created_at: new Date().toISOString(),
   });
 
   // Save to database (best-effort)
   try {
     const repo = createRepository(getDatabase());
-    await repo.saveStageResult('family', indicator_id, {
+    await repo.saveStageResult("family", indicator_id, {
       family: familyResult.family,
       confidence: familyResult.confidence,
       reasoning: familyResult.reasoning,
       created_at: new Date().toISOString(),
     });
   } catch (dbError) {
-    logger.warn('Family save skipped (transient DB error)', {
+    logger.warn("Family save skipped (transient DB error)", {
       indicator_id,
       error: dbError instanceof Error ? dbError.message : String(dbError),
     });
   }
 
-  logger.info('Family assignment complete (currency)', {
+  logger.info("Family assignment complete (currency)", {
     indicator_id,
     family: familyResult.family,
     confidence: familyResult.confidence,
@@ -136,7 +136,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 
   // Emit to currency-specific type classification with full context including cumulative data
   await emit({
-    topic: 'indicator.classify-type-currency',
+    topic: "indicator.classify-type-currency",
     data: {
       indicator_id,
       name,

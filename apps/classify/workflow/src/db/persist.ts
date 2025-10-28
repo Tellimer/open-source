@@ -3,7 +3,7 @@
  * @module
  */
 
-import type { DatabaseClient } from './types.ts';
+import type { DatabaseClient } from "./types.ts";
 
 /**
  * Initialize batch statistics tracking
@@ -15,13 +15,13 @@ export function startBatchStats(
     total_indicators: number;
     model: string;
     provider: string;
-  }
+  },
 ): void {
   // Skip stats tracking for PostgreSQL to avoid sync issues
   // This is a temporary workaround until we refactor to async
   const dbType = (db as any).constructor.name;
-  if (dbType === 'PostgresClient') {
-    console.log('[DB] Skipping batch stats for PostgreSQL (async limitation)');
+  if (dbType === "PostgresClient") {
+    console.log("[DB] Skipping batch stats for PostgreSQL (async limitation)");
     return;
   }
 
@@ -41,12 +41,14 @@ export function startBatchStats(
  */
 export function completeBatchStats(
   db: DatabaseClient,
-  batch_id: string
+  batch_id: string,
 ): void {
   // Skip stats tracking for PostgreSQL to avoid sync issues
   const dbType = (db as any).constructor.name;
-  if (dbType === 'PostgresClient') {
-    console.log('[DB] Skipping batch completion stats for PostgreSQL (async limitation)');
+  if (dbType === "PostgresClient") {
+    console.log(
+      "[DB] Skipping batch completion stats for PostgreSQL (async limitation)",
+    );
     return;
   }
   // Calculate stats from completed classifications
@@ -87,7 +89,7 @@ export function completeBatchStats(
     stats.duration_ms || 0,
     stats.completed || 0,
     stats.avg_confidence || null,
-    batch_id
+    batch_id,
   ]);
 }
 
@@ -160,7 +162,7 @@ export function saveFinalClassification(
     review_status?: string;
     provider?: string;
     model?: string;
-  }
+  },
 ): void {
   const sql = `
     INSERT OR REPLACE INTO classifications (
@@ -206,11 +208,7 @@ export function saveFinalClassification(
     data.time_confidence ?? null,
     data.time_reasoning ?? null,
     data.time_source_used ?? null,
-    data.is_cumulative !== undefined
-      ? data.is_cumulative
-        ? 1
-        : 0
-      : null,
+    data.is_cumulative !== undefined ? data.is_cumulative ? 1 : 0 : null,
     data.cumulative_pattern_type ?? null,
     data.cumulative_confidence ?? null,
     data.cumulative_reasoning ?? null,
@@ -218,9 +216,7 @@ export function saveFinalClassification(
     data.scale_confidence ?? null,
     data.scale_reasoning ?? null,
     data.is_currency_denominated !== undefined
-      ? data.is_currency_denominated
-        ? 1
-        : 0
+      ? data.is_currency_denominated ? 1 : 0
       : null,
     data.detected_currency ?? null,
     data.currency_confidence ?? null,
@@ -234,9 +230,7 @@ export function saveFinalClassification(
     data.type_confidence ?? null,
     data.type_reasoning ?? null,
     data.boolean_review_passed !== undefined
-      ? data.boolean_review_passed
-        ? 1
-        : 0
+      ? data.boolean_review_passed ? 1 : 0
       : null,
     data.boolean_review_fields_wrong
       ? JSON.stringify(data.boolean_review_fields_wrong)
@@ -252,7 +246,7 @@ export function saveFinalClassification(
     data.overall_confidence ?? null,
     data.review_status ?? null,
     data.provider ?? null,
-    data.model ?? null
+    data.model ?? null,
   );
 }
 
@@ -264,10 +258,10 @@ export function logProcessing(
   data: {
     indicator_id: string;
     stage: string;
-    status: 'started' | 'completed' | 'failed';
+    status: "started" | "completed" | "failed";
     error_message?: string;
     processing_time_ms?: number;
-  }
+  },
 ): void {
   const sql = `
     INSERT INTO processing_log (
@@ -281,7 +275,7 @@ export function logProcessing(
     data.stage,
     data.status,
     data.error_message ?? null,
-    data.processing_time_ms ?? null
+    data.processing_time_ms ?? null,
   );
 }
 
@@ -292,18 +286,18 @@ export function saveStageResult(
   db: Database.Database,
   stage: string,
   indicator_id: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): void {
   const tableMap: Record<string, string> = {
-    normalize: 'normalization_results',
-    time: 'time_inference_results',
-    'cumulative-detection': 'cumulative_detection_results',
-    scale: 'scale_inference_results',
-    currency: 'currency_check_results',
-    family: 'family_assignment_results',
-    type: 'type_classification_results',
-    'boolean-review': 'boolean_review_results',
-    'final-review': 'final_review_results',
+    normalize: "normalization_results",
+    time: "time_inference_results",
+    "cumulative-detection": "cumulative_detection_results",
+    scale: "scale_inference_results",
+    currency: "currency_check_results",
+    family: "family_assignment_results",
+    type: "type_classification_results",
+    "boolean-review": "boolean_review_results",
+    "final-review": "final_review_results",
   };
 
   const table = tableMap[stage];
@@ -312,22 +306,22 @@ export function saveStageResult(
   }
 
   // Build dynamic INSERT OR REPLACE query
-  const columns = ['indicator_id', ...Object.keys(data)];
-  const placeholders = columns.map(() => '?').join(', ');
+  const columns = ["indicator_id", ...Object.keys(data)];
+  const placeholders = columns.map(() => "?").join(", ");
   const values = [
     indicator_id,
     ...Object.values(data).map((v) => {
       // Convert booleans to 0/1 for SQLite
-      if (typeof v === 'boolean') return v ? 1 : 0;
+      if (typeof v === "boolean") return v ? 1 : 0;
       // Convert objects to JSON
-      if (typeof v === 'object' && v !== null) return JSON.stringify(v);
+      if (typeof v === "object" && v !== null) return JSON.stringify(v);
       // Return primitives as-is
       return v;
     }),
   ];
 
   const sql = `
-    INSERT OR REPLACE INTO ${table} (${columns.join(', ')})
+    INSERT OR REPLACE INTO ${table} (${columns.join(", ")})
     VALUES (${placeholders})
   `;
 
@@ -340,9 +334,9 @@ export function saveStageResult(
  */
 export function getClassification(
   db: Database.Database,
-  indicator_id: string
+  indicator_id: string,
 ): Record<string, unknown> | null {
-  const sql = 'SELECT * FROM classifications WHERE indicator_id = ?';
+  const sql = "SELECT * FROM classifications WHERE indicator_id = ?";
   const stmt = db.prepare(sql);
   const row = stmt.get(indicator_id);
 
@@ -360,32 +354,32 @@ export function getClassifications(
     review_status?: string;
     limit?: number;
     offset?: number;
-  }
+  },
 ): Array<Record<string, unknown>> {
-  let sql = 'SELECT * FROM classifications WHERE 1=1';
+  let sql = "SELECT * FROM classifications WHERE 1=1";
   const params: unknown[] = [];
 
   if (filters?.family) {
-    sql += ' AND family = ?';
+    sql += " AND family = ?";
     params.push(filters.family);
   }
   if (filters?.indicator_type) {
-    sql += ' AND indicator_type = ?';
+    sql += " AND indicator_type = ?";
     params.push(filters.indicator_type);
   }
   if (filters?.review_status) {
-    sql += ' AND review_status = ?';
+    sql += " AND review_status = ?";
     params.push(filters.review_status);
   }
 
-  sql += ' ORDER BY created_at DESC';
+  sql += " ORDER BY created_at DESC";
 
   if (filters?.limit) {
-    sql += ' LIMIT ?';
+    sql += " LIMIT ?";
     params.push(filters.limit);
   }
   if (filters?.offset) {
-    sql += ' OFFSET ?';
+    sql += " OFFSET ?";
     params.push(filters.offset);
   }
 

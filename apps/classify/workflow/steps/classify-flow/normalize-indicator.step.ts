@@ -3,20 +3,20 @@
  * Stage 1: Parse units, scale, and currency from indicator metadata
  */
 
-import { EventConfig } from 'motia';
-import { z } from 'zod';
-import { normalizeUnits } from '../../src/services/classify/index.ts';
-import { getDatabase, createRepository } from '../../src/db/index.ts';
+import { EventConfig } from "motia";
+import { z } from "zod";
+import { normalizeUnits } from "../../src/services/classify/index.ts";
+import { createRepository, getDatabase } from "../../src/db/index.ts";
 
 export const config: EventConfig = {
-  type: 'event',
-  name: 'NormalizeIndicator',
+  type: "event",
+  name: "NormalizeIndicator",
   description:
-    'Stage 1: Parse units, scale, and currency from indicator metadata',
-  flows: ['classify-indicator'],
-  subscribes: ['indicator.normalize'],
+    "Stage 1: Parse units, scale, and currency from indicator metadata",
+  flows: ["classify-indicator"],
+  subscribes: ["indicator.normalize"],
   emits: [
-    'indicator.infer-time', // Combined time inference and cumulative detection
+    "indicator.infer-time", // Combined time inference and cumulative detection
   ],
   input: z.object({
     indicator_id: z.string(),
@@ -29,7 +29,7 @@ export const config: EventConfig = {
         z.object({
           date: z.string(),
           value: z.number(),
-        })
+        }),
       )
       .optional(),
     // Contextual fields
@@ -43,9 +43,9 @@ export const config: EventConfig = {
     currency_code: z.string().optional(),
     // LLM provider selection
     llm_provider: z
-      .enum(['local', 'openai', 'anthropic'])
+      .enum(["local", "openai", "anthropic"])
       .optional()
-      .default('local'),
+      .default("local"),
   }),
 };
 
@@ -65,14 +65,14 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
     scale,
     topic,
     currency_code,
-    llm_provider = 'local',
+    llm_provider = "local",
   } = input;
 
   const startTime = Date.now();
-  logger.info('Normalizing indicator', { indicator_id, name });
+  logger.info("Normalizing indicator", { indicator_id, name });
 
   // Normalize units (pure CPU)
-  const normalized = normalizeUnits(units || '');
+  const normalized = normalizeUnits(units || "");
 
   const result = {
     indicator_id,
@@ -81,7 +81,7 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
   };
 
   // Save to state (non-blocking)
-  await state.set('normalizations', indicator_id, result);
+  await state.set("normalizations", indicator_id, result);
 
   // Best-effort DB writes — do not fail the pipeline on transient DB errors
   try {
@@ -89,11 +89,11 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 
     await repo.logProcessing({
       indicator_id,
-      stage: 'normalize',
-      status: 'started',
+      stage: "normalize",
+      status: "started",
     });
 
-    await repo.saveStageResult('normalize', indicator_id, {
+    await repo.saveStageResult("normalize", indicator_id, {
       original_units: normalized.originalUnits,
       parsed_scale: normalized.parsedScale,
       normalized_scale: normalized.normalizedScale,
@@ -106,19 +106,19 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
     const processingTime = Date.now() - startTime;
     await repo.logProcessing({
       indicator_id,
-      stage: 'normalize',
-      status: 'completed',
+      stage: "normalize",
+      status: "completed",
       metadata: { processing_time_ms: processingTime },
     });
 
-    logger.info('Normalization complete', {
+    logger.info("Normalization complete", {
       indicator_id,
       parsed_type: normalized.parsedUnitType,
       confidence: normalized.parsingConfidence,
       processing_time_ms: processingTime,
     });
   } catch (error) {
-    logger.warn('Normalization DB writes skipped (transient error)', {
+    logger.warn("Normalization DB writes skipped (transient error)", {
       indicator_id,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -150,13 +150,12 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 
   // Pass scale and currency data to time inference
   // No need for separate parallel stages since scale/currency are now determined synchronously
-  const isCurrency =
-    normalized.parsedUnitType === 'currency-amount' ||
+  const isCurrency = normalized.parsedUnitType === "currency-amount" ||
     normalized.parsedCurrency !== null;
 
   // Emit to combined time inference and cumulative detection step
   await emit({
-    topic: 'indicator.infer-time',
+    topic: "indicator.infer-time",
     data: {
       ...sharedData,
       // Include determined scale and currency for downstream use

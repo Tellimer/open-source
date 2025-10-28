@@ -11,7 +11,7 @@
  *   deno task run:target ID1 ID2 ID3 anthropic          # Multiple indicators with Anthropic
  */
 
-import { Database } from '@db/sqlite';
+import { Database } from "@db/sqlite";
 
 interface SourceIndicator {
   id: string;
@@ -35,9 +35,9 @@ interface SourceIndicator {
  */
 function getIndicatorsByIds(
   db: Database,
-  indicatorIds: string[]
+  indicatorIds: string[],
 ): SourceIndicator[] {
-  const placeholders = indicatorIds.map(() => '?').join(',');
+  const placeholders = indicatorIds.map(() => "?").join(",");
   const query = `
     SELECT
       id,
@@ -65,7 +65,7 @@ function getIndicatorsByIds(
 }
 
 function parseSampleValues(
-  sampleValuesJson?: string
+  sampleValuesJson?: string,
 ): Array<{ date: string; value: number }> | undefined {
   if (!sampleValuesJson) return undefined;
 
@@ -82,14 +82,14 @@ async function waitForBatchCompletion(
   db: Database,
   indicatorIds: string[],
   maxWaitMs: number = 300000, // 5 minutes max
-  pollIntervalMs: number = 2000 // Check every 2 seconds
+  pollIntervalMs: number = 2000, // Check every 2 seconds
 ): Promise<boolean> {
   const startTime = Date.now();
   const totalIndicators = indicatorIds.length;
   let lastReportedProgress = 0;
 
   while (Date.now() - startTime < maxWaitMs) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     const query = `
       SELECT COUNT(DISTINCT indicator_id) as completed
       FROM processing_log
@@ -110,7 +110,7 @@ async function waitForBatchCompletion(
     ) {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       console.log(
-        `   Progress: ${completed}/${totalIndicators} (${progressPercent}%) - ${elapsed}s elapsed`
+        `   Progress: ${completed}/${totalIndicators} (${progressPercent}%) - ${elapsed}s elapsed`,
       );
       lastReportedProgress = progressPercent;
     }
@@ -127,10 +127,10 @@ async function waitForBatchCompletion(
 
 async function classifyIndicators(
   indicators: SourceIndicator[],
-  llmProvider: string = 'openai',
-  db: Database
+  llmProvider: string = "openai",
+  db: Database,
 ) {
-  const baseUrl = Deno.env.get('MOTIA_API_URL') || 'http://localhost:3000';
+  const baseUrl = Deno.env.get("MOTIA_API_URL") || "http://localhost:3000";
   const totalIndicators = indicators.length;
 
   console.log(`\n🎯 Processing ${totalIndicators} targeted indicators...`);
@@ -157,12 +157,12 @@ async function classifyIndicators(
     llm_provider: llmProvider,
   };
 
-  console.log('📦 Submitting batch...');
+  console.log("📦 Submitting batch...");
 
   const response = await fetch(`${baseUrl}/classify/batch`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
@@ -170,7 +170,7 @@ async function classifyIndicators(
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(
-      `Batch submission failed: ${response.status} ${response.statusText}\n${errorText}`
+      `Batch submission failed: ${response.status} ${response.statusText}\n${errorText}`,
     );
   }
 
@@ -178,27 +178,31 @@ async function classifyIndicators(
   console.log(`   ✅ Batch accepted (trace: ${result.trace_id})\n`);
 
   // Wait for completion
-  console.log(`   ⏳ Waiting for ${totalIndicators} indicators to complete...\n`);
+  console.log(
+    `   ⏳ Waiting for ${totalIndicators} indicators to complete...\n`,
+  );
 
   const indicatorIds = indicators.map((ind) => ind.id);
   const completed = await waitForBatchCompletion(
     db,
     indicatorIds,
-    600000
+    600000,
   ); // 10 min timeout
 
   if (completed) {
     console.log(`   ✅ All indicators completed!\n`);
   } else {
-    console.log(`   ⚠️ Timed out, some indicators may still be processing...\n`);
+    console.log(
+      `   ⚠️ Timed out, some indicators may still be processing...\n`,
+    );
   }
 
   return result;
 }
 
 function printIndicatorSummary(indicators: SourceIndicator[]) {
-  console.log('\n📊 Target Indicators:');
-  console.log('═'.repeat(80));
+  console.log("\n📊 Target Indicators:");
+  console.log("═".repeat(80));
 
   indicators.forEach((ind, idx) => {
     console.log(`${idx + 1}. ${ind.name}`);
@@ -209,14 +213,14 @@ function printIndicatorSummary(indicators: SourceIndicator[]) {
     if (ind.definition) {
       console.log(
         `   Description: ${ind.definition.slice(0, 80)}${
-          ind.definition.length > 80 ? '...' : ''
-        }`
+          ind.definition.length > 80 ? "..." : ""
+        }`,
       );
     }
     console.log();
   });
 
-  console.log('═'.repeat(80));
+  console.log("═".repeat(80));
 }
 
 async function main() {
@@ -241,9 +245,9 @@ Arguments:
   }
 
   // Parse arguments - last arg might be provider
-  const validProviders = ['openai', 'local', 'anthropic'];
+  const validProviders = ["openai", "local", "anthropic"];
   const lastArg = args[args.length - 1];
-  let llmProvider = 'openai';
+  let llmProvider = "openai";
   let indicatorIds: string[];
 
   if (validProviders.includes(lastArg)) {
@@ -254,12 +258,12 @@ Arguments:
   }
 
   if (indicatorIds.length === 0) {
-    console.error('❌ No indicator IDs provided');
+    console.error("❌ No indicator IDs provided");
     Deno.exit(1);
   }
 
   // Open database
-  const dbPath = './data/classify-workflow-local-dev.db';
+  const dbPath = "./data/classify-workflow-local-dev.db";
   console.log(`📂 Opening database: ${dbPath}`);
 
   const db = new Database(dbPath);
@@ -270,8 +274,8 @@ Arguments:
     const indicators = getIndicatorsByIds(db, indicatorIds);
 
     if (indicators.length === 0) {
-      console.error('❌ No indicators found with the provided IDs');
-      console.error(`   Searched for: ${indicatorIds.join(', ')}`);
+      console.error("❌ No indicators found with the provided IDs");
+      console.error(`   Searched for: ${indicatorIds.join(", ")}`);
       Deno.exit(1);
     }
 
@@ -280,7 +284,7 @@ Arguments:
     const notFoundIds = indicatorIds.filter((id) => !foundIds.has(id));
     if (notFoundIds.length > 0) {
       console.warn(
-        `⚠️  Warning: ${notFoundIds.length} indicator(s) not found:`
+        `⚠️  Warning: ${notFoundIds.length} indicator(s) not found:`,
       );
       notFoundIds.forEach((id) => console.warn(`   - ${id}`));
       console.log();
@@ -289,7 +293,7 @@ Arguments:
     console.log(`✅ Found ${indicators.length} indicator(s)`);
 
     // Check which are already classified
-    const placeholders = indicators.map(() => '?').join(',');
+    const placeholders = indicators.map(() => "?").join(",");
     const checkQuery = `
       SELECT indicator_id
       FROM classifications
@@ -297,19 +301,19 @@ Arguments:
     `;
     const checkStmt = db.prepare(checkQuery);
     const alreadyClassified = checkStmt.all<{ indicator_id: string }>(
-      ...indicators.map((ind) => ind.id)
+      ...indicators.map((ind) => ind.id),
     );
 
     if (alreadyClassified.length > 0) {
       console.warn(
-        `⚠️  Warning: ${alreadyClassified.length} indicator(s) already classified:`
+        `⚠️  Warning: ${alreadyClassified.length} indicator(s) already classified:`,
       );
       alreadyClassified.forEach((row) => {
         const ind = indicators.find((i) => i.id === row.indicator_id);
         console.warn(`   - ${row.indicator_id}: ${ind?.name}`);
       });
       console.log(
-        '\n   These will be re-classified (existing classifications will remain).\n'
+        "\n   These will be re-classified (existing classifications will remain).\n",
       );
     }
 
@@ -326,7 +330,7 @@ Arguments:
     console.log(
       `   sqlite3 ${dbPath} "SELECT * FROM classifications WHERE indicator_id IN ('${
         indicators.map((i) => i.id).join("','")
-      }');"`
+      }');"`,
     );
   } finally {
     db.close();
@@ -335,7 +339,7 @@ Arguments:
 
 if (import.meta.main) {
   main().catch((error) => {
-    console.error('❌ Error:', error);
+    console.error("❌ Error:", error);
     Deno.exit(1);
   });
 }

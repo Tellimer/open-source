@@ -40,7 +40,9 @@ export const config: EventConfig = {
     aggregation_method: z.string().optional(),
     topic: z.string().optional(),
     currency_code: z.string().optional(),
-    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default("local"),
+    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default(
+      "local",
+    ),
   }),
 };
 

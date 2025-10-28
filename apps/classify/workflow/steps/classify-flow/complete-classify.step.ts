@@ -3,25 +3,25 @@
  * Stage 9: Finalize classification and aggregate results
  */
 
-import { EventConfig } from 'motia';
-import { z } from 'zod';
+import { EventConfig } from "motia";
+import { z } from "zod";
 import {
-  getDatabase,
   createRepository,
+  getDatabase,
   getDatabaseType,
-} from '../../src/db/index.ts';
+} from "../../src/db/index.ts";
 
 export const config: EventConfig = {
-  type: 'event',
-  name: 'CompleteClassify',
-  description: 'Stage 9: Finalize classification and aggregate results',
-  flows: ['classify-indicator'],
-  subscribes: ['indicator.complete'],
+  type: "event",
+  name: "CompleteClassify",
+  description: "Stage 9: Finalize classification and aggregate results",
+  flows: ["classify-indicator"],
+  subscribes: ["indicator.complete"],
   emits: [],
   input: z.object({
     indicator_id: z.string(),
     name: z.string(),
-    review_status: z.enum(['passed', 'corrected', 'failed']),
+    review_status: z.enum(["passed", "corrected", "failed"]),
     corrections: z.record(z.unknown()).optional(),
   }),
 };
@@ -30,7 +30,7 @@ export const handler = async (input: any, { state, logger }: any) => {
   const { indicator_id, name, review_status, corrections } = input;
   const startTime = Date.now();
 
-  logger.info('Completing classification', { indicator_id, name });
+  logger.info("Completing classification", { indicator_id, name });
 
   try {
     // Get database connection
@@ -39,26 +39,29 @@ export const handler = async (input: any, { state, logger }: any) => {
     // Log processing start
     await repo.logProcessing({
       indicator_id,
-      stage: 'complete',
-      status: 'started',
+      stage: "complete",
+      status: "started",
     });
 
     // Gather all results from state
-    const normalized = await state.get('normalizations', indicator_id);
-    const timeInference = await state.get('time-inferences', indicator_id);
-    const cumulativeDetection = await state.get('cumulative-detections', indicator_id);
-    const scaleInference = await state.get('scale-inferences', indicator_id);
-    const currencyCheck = await state.get('currency-checks', indicator_id);
+    const normalized = await state.get("normalizations", indicator_id);
+    const timeInference = await state.get("time-inferences", indicator_id);
+    const cumulativeDetection = await state.get(
+      "cumulative-detections",
+      indicator_id,
+    );
+    const scaleInference = await state.get("scale-inferences", indicator_id);
+    const currencyCheck = await state.get("currency-checks", indicator_id);
     const familyAssignment = await state.get(
-      'family-assignments',
-      indicator_id
+      "family-assignments",
+      indicator_id,
     );
     const typeClassification = await state.get(
-      'type-classifications',
-      indicator_id
+      "type-classifications",
+      indicator_id,
     );
-    const booleanReview = await state.get('boolean-reviews', indicator_id);
-    const finalReview = await state.get('final-reviews', indicator_id);
+    const booleanReview = await state.get("boolean-reviews", indicator_id);
+    const finalReview = await state.get("final-reviews", indicator_id);
 
     // Get source indicator metadata
     const sourceIndicator = await repo.getSourceIndicator(indicator_id);
@@ -92,10 +95,9 @@ export const handler = async (input: any, { state, logger }: any) => {
       booleanReview?.confidence,
     ].filter((c): c is number => c !== null && c !== undefined);
 
-    const overallConfidence =
-      confidences.length > 0
-        ? confidences.reduce((a, b) => a + b, 0) / confidences.length
-        : 0;
+    const overallConfidence = confidences.length > 0
+      ? confidences.reduce((a, b) => a + b, 0) / confidences.length
+      : 0;
 
     // Prepare data for database
     const classificationData = {
@@ -124,12 +126,9 @@ export const handler = async (input: any, { state, logger }: any) => {
       time_reasoning: timeInference?.reasoning,
       time_source_used: timeInference?.sourceUsed,
       // Cumulative detection
-      is_cumulative:
-        cumulativeDetection?.is_cumulative !== undefined
-          ? cumulativeDetection.is_cumulative
-            ? 1
-            : 0
-          : null,
+      is_cumulative: cumulativeDetection?.is_cumulative !== undefined
+        ? cumulativeDetection.is_cumulative ? 1 : 0
+        : null,
       cumulative_pattern_type: cumulativeDetection?.pattern_type,
       cumulative_confidence: cumulativeDetection?.confidence,
       cumulative_reasoning: cumulativeDetection?.reasoning,
@@ -138,12 +137,9 @@ export const handler = async (input: any, { state, logger }: any) => {
       scale_confidence: scaleInference?.confidence,
       scale_reasoning: scaleInference?.reasoning,
       // Currency check
-      is_currency_denominated:
-        finalValues.is_currency_denominated !== undefined
-          ? finalValues.is_currency_denominated
-            ? 1
-            : 0
-          : null,
+      is_currency_denominated: finalValues.is_currency_denominated !== undefined
+        ? finalValues.is_currency_denominated ? 1 : 0
+        : null,
       detected_currency: finalValues.detected_currency,
       currency_confidence: currencyCheck?.confidence,
       currency_reasoning: currencyCheck?.reasoning,
@@ -158,12 +154,9 @@ export const handler = async (input: any, { state, logger }: any) => {
       type_confidence: typeClassification?.confidence,
       type_reasoning: typeClassification?.reasoning,
       // Boolean review
-      boolean_review_passed:
-        booleanReview?.isCorrect !== undefined
-          ? booleanReview.isCorrect
-            ? 1
-            : 0
-          : null,
+      boolean_review_passed: booleanReview?.isCorrect !== undefined
+        ? booleanReview.isCorrect ? 1 : 0
+        : null,
       boolean_review_fields_wrong: booleanReview?.fieldsWrong
         ? JSON.stringify(booleanReview.fieldsWrong)
         : null,
@@ -179,8 +172,8 @@ export const handler = async (input: any, { state, logger }: any) => {
       // Overall
       overall_confidence: overallConfidence,
       review_status,
-      provider: timeInference?.provider || 'local',
-      model: timeInference?.model || 'unknown',
+      provider: timeInference?.provider || "local",
+      model: timeInference?.model || "unknown",
     };
 
     // Save to database
@@ -189,7 +182,7 @@ export const handler = async (input: any, { state, logger }: any) => {
       if (
         value !== null &&
         value !== undefined &&
-        typeof value === 'object' &&
+        typeof value === "object" &&
         !Buffer.isBuffer(value)
       ) {
         logger.warn(`Non-primitive value detected in classification data`, {
@@ -203,7 +196,7 @@ export const handler = async (input: any, { state, logger }: any) => {
     await repo.saveClassification(classificationData);
 
     // Save to Motia state for backward compatibility
-    await state.set('final-classifications', indicator_id, {
+    await state.set("final-classifications", indicator_id, {
       indicator_id,
       name,
       // Normalized data
@@ -227,12 +220,12 @@ export const handler = async (input: any, { state, logger }: any) => {
     // Log processing completion
     await repo.logProcessing({
       indicator_id,
-      stage: 'complete',
-      status: 'completed',
+      stage: "complete",
+      status: "completed",
       metadata: { processing_time_ms: processingTime },
     });
 
-    logger.info('Classification complete and saved to database', {
+    logger.info("Classification complete and saved to database", {
       indicator_id,
       name,
       review_status,
@@ -244,20 +237,20 @@ export const handler = async (input: any, { state, logger }: any) => {
     // All data is now persisted in SQLite, state no longer needed
     try {
       await Promise.all([
-        state.delete('normalizations', indicator_id),
-        state.delete('time-inferences', indicator_id),
-        state.delete('cumulative-detections', indicator_id),
-        state.delete('scale-inferences', indicator_id),
-        state.delete('currency-checks', indicator_id),
-        state.delete('family-assignments', indicator_id),
-        state.delete('type-classifications', indicator_id),
-        state.delete('boolean-reviews', indicator_id),
-        state.delete('final-reviews', indicator_id),
+        state.delete("normalizations", indicator_id),
+        state.delete("time-inferences", indicator_id),
+        state.delete("cumulative-detections", indicator_id),
+        state.delete("scale-inferences", indicator_id),
+        state.delete("currency-checks", indicator_id),
+        state.delete("family-assignments", indicator_id),
+        state.delete("type-classifications", indicator_id),
+        state.delete("boolean-reviews", indicator_id),
+        state.delete("final-reviews", indicator_id),
         // Keep final-classifications for now (may be used externally)
       ]);
-      logger.debug('State cleaned up', { indicator_id });
+      logger.debug("State cleaned up", { indicator_id });
     } catch (cleanupError) {
-      logger.warn('State cleanup failed (non-critical)', {
+      logger.warn("State cleanup failed (non-critical)", {
         indicator_id,
         error: cleanupError,
       });
@@ -267,14 +260,13 @@ export const handler = async (input: any, { state, logger }: any) => {
     try {
       // Find the most recent batch that hasn't been completed
       const dbType = getDatabaseType();
-      const sql =
-        dbType === 'sqlite'
-          ? `SELECT batch_id, total_indicators, successful_indicators
+      const sql = dbType === "sqlite"
+        ? `SELECT batch_id, total_indicators, successful_indicators
              FROM pipeline_stats
              WHERE batch_end_time IS NULL
              ORDER BY batch_start_time DESC
              LIMIT ?`
-          : `SELECT batch_id, total_indicators, successful_indicators
+        : `SELECT batch_id, total_indicators, successful_indicators
              FROM pipeline_stats
              WHERE batch_end_time IS NULL
              ORDER BY batch_start_time DESC
@@ -284,7 +276,7 @@ export const handler = async (input: any, { state, logger }: any) => {
 
       if (batch) {
         const newSuccessCount = (batch.successful_indicators || 0) + 1;
-        logger.info('Batch progress', {
+        logger.info("Batch progress", {
           batch_id: batch.batch_id,
           completed: newSuccessCount,
           total: batch.total_indicators,
@@ -293,23 +285,24 @@ export const handler = async (input: any, { state, logger }: any) => {
         // If all indicators are complete, finalize batch stats
         if (newSuccessCount >= batch.total_indicators) {
           await repo.completeBatchStats(batch.batch_id);
-          logger.info('Batch complete', {
+          logger.info("Batch complete", {
             batch_id: batch.batch_id,
             total_indicators: batch.total_indicators,
           });
         }
       }
     } catch (statsError) {
-      logger.error('Failed to update batch stats', {
-        error:
-          statsError instanceof Error ? statsError.message : String(statsError),
+      logger.error("Failed to update batch stats", {
+        error: statsError instanceof Error
+          ? statsError.message
+          : String(statsError),
       });
     }
   } catch (error) {
     const processingTime = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    logger.error('Failed to complete classification', {
+    logger.error("Failed to complete classification", {
       indicator_id,
       name,
       error: errorMessage,
@@ -321,13 +314,13 @@ export const handler = async (input: any, { state, logger }: any) => {
       const repo = createRepository(getDatabase());
       await repo.logProcessing({
         indicator_id,
-        stage: 'complete',
-        status: 'failed',
+        stage: "complete",
+        status: "failed",
         error_message: errorMessage,
         metadata: { processing_time_ms: processingTime },
       });
     } catch (dbError) {
-      logger.error('Failed to log error to database', {
+      logger.error("Failed to log error to database", {
         indicator_id,
         original_error: errorMessage,
         db_error: dbError instanceof Error ? dbError.message : String(dbError),

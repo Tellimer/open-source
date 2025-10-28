@@ -10,7 +10,7 @@
  *   deno task run:retry-failed anthropic    # Retry all failed with Anthropic
  */
 
-import { Database } from '@db/sqlite';
+import { Database } from "@db/sqlite";
 
 interface SourceIndicator {
   id: string;
@@ -64,7 +64,7 @@ function getFailedIndicators(db: Database): SourceIndicator[] {
 }
 
 function parseSampleValues(
-  sampleValuesJson?: string
+  sampleValuesJson?: string,
 ): Array<{ date: string; value: number }> | undefined {
   if (!sampleValuesJson) return undefined;
 
@@ -81,14 +81,14 @@ async function waitForBatchCompletion(
   db: Database,
   indicatorIds: string[],
   maxWaitMs: number = 300000, // 5 minutes max
-  pollIntervalMs: number = 2000 // Check every 2 seconds
+  pollIntervalMs: number = 2000, // Check every 2 seconds
 ): Promise<boolean> {
   const startTime = Date.now();
   const totalIndicators = indicatorIds.length;
   let lastReportedProgress = 0;
 
   while (Date.now() - startTime < maxWaitMs) {
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     const query = `
       SELECT COUNT(DISTINCT indicator_id) as completed
       FROM processing_log
@@ -109,7 +109,7 @@ async function waitForBatchCompletion(
     ) {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       console.log(
-        `   Progress: ${completed}/${totalIndicators} (${progressPercent}%) - ${elapsed}s elapsed`
+        `   Progress: ${completed}/${totalIndicators} (${progressPercent}%) - ${elapsed}s elapsed`,
       );
       lastReportedProgress = progressPercent;
     }
@@ -126,26 +126,26 @@ async function waitForBatchCompletion(
 
 async function classifyIndicatorsBatch(
   indicators: SourceIndicator[],
-  llmProvider: string = 'openai',
+  llmProvider: string = "openai",
   batchSize: number = 10,
   concurrentBatches: number = 2,
-  db: Database
+  db: Database,
 ) {
-  const baseUrl = Deno.env.get('MOTIA_API_URL') || 'http://localhost:3000';
+  const baseUrl = Deno.env.get("MOTIA_API_URL") || "http://localhost:3000";
   const totalIndicators = indicators.length;
   const numBatches = Math.ceil(totalIndicators / batchSize);
 
   console.log(
-    `\n🔄 Retrying ${totalIndicators} failed indicators in ${numBatches} batches of ${batchSize}...`
+    `\n🔄 Retrying ${totalIndicators} failed indicators in ${numBatches} batches of ${batchSize}...`,
   );
   console.log(`   Provider: ${llmProvider}`);
   console.log(
     `   Concurrent batches: ${concurrentBatches} (${
       batchSize * concurrentBatches
-    } indicators per group)`
+    } indicators per group)`,
   );
   console.log(
-    `   Strategy: Process 20 indicators, wait for completion, then next 20`
+    `   Strategy: Process 20 indicators, wait for completion, then next 20`,
   );
   console.log(`   API: ${baseUrl}/classify/batch\n`);
 
@@ -157,12 +157,16 @@ async function classifyIndicatorsBatch(
     const groupIndicatorIds: string[] = [];
 
     console.log(
-      `📋 Group ${Math.floor(i / concurrentBatches) + 1}/${Math.ceil(
-        numBatches / concurrentBatches
-      )}: Starting ${Math.min(
-        concurrentBatches,
-        numBatches - i
-      )} concurrent batches...\n`
+      `📋 Group ${Math.floor(i / concurrentBatches) + 1}/${
+        Math.ceil(
+          numBatches / concurrentBatches,
+        )
+      }: Starting ${
+        Math.min(
+          concurrentBatches,
+          numBatches - i,
+        )
+      } concurrent batches...\n`,
     );
 
     // Create concurrent batch requests
@@ -182,7 +186,7 @@ async function classifyIndicatorsBatch(
       console.log(
         `   📦 Batch ${batchNum}/${numBatches}: Submitting indicators ${
           start + 1
-        }-${end}...`
+        }-${end}...`,
       );
 
       const payload = {
@@ -207,21 +211,21 @@ async function classifyIndicatorsBatch(
 
       // Create a promise for this batch request
       const batchPromise = fetch(`${baseUrl}/classify/batch`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       }).then(async (response) => {
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(
-            `Batch ${batchNum} failed: ${response.status} ${response.statusText}\n${errorText}`
+            `Batch ${batchNum} failed: ${response.status} ${response.statusText}\n${errorText}`,
           );
         }
         const result = await response.json();
         console.log(
-          `      ✅ Batch ${batchNum} accepted (trace: ${result.trace_id})`
+          `      ✅ Batch ${batchNum} accepted (trace: ${result.trace_id})`,
         );
         return result;
       });
@@ -234,33 +238,33 @@ async function classifyIndicatorsBatch(
     results.push(...groupResults);
 
     console.log(
-      `   ✅ Group ${Math.floor(i / concurrentBatches) + 1} batches submitted! (${
-        groupIndicatorIds.length
-      } indicators queued)\n`
+      `   ✅ Group ${
+        Math.floor(i / concurrentBatches) + 1
+      } batches submitted! (${groupIndicatorIds.length} indicators queued)\n`,
     );
 
     // Wait for THIS GROUP to complete before moving to next group
     console.log(
-      `   ⏳ Waiting for ${groupIndicatorIds.length} indicators to complete...\n`
+      `   ⏳ Waiting for ${groupIndicatorIds.length} indicators to complete...\n`,
     );
 
     const completed = await waitForBatchCompletion(
       db,
       groupIndicatorIds,
-      600000
+      600000,
     ); // 10 min timeout per group
 
     if (completed) {
       console.log(
-        `   ✅ Group ${Math.floor(i / concurrentBatches) + 1} completed! (${
-          groupIndicatorIds.length
-        } indicators done)\n`
+        `   ✅ Group ${
+          Math.floor(i / concurrentBatches) + 1
+        } completed! (${groupIndicatorIds.length} indicators done)\n`,
       );
     } else {
       console.log(
         `   ⚠️ Group ${
           Math.floor(i / concurrentBatches) + 1
-        } timed out, continuing anyway...\n`
+        } timed out, continuing anyway...\n`,
       );
     }
 
@@ -276,29 +280,29 @@ async function classifyIndicatorsBatch(
 
 async function main() {
   const args = Deno.args;
-  const llmProvider = args[0] || 'openai';
+  const llmProvider = args[0] || "openai";
 
   // Validate provider
-  if (!['openai', 'local', 'anthropic'].includes(llmProvider)) {
+  if (!["openai", "local", "anthropic"].includes(llmProvider)) {
     console.error(
-      `❌ Invalid provider: ${llmProvider}. Must be "openai", "local", or "anthropic"`
+      `❌ Invalid provider: ${llmProvider}. Must be "openai", "local", or "anthropic"`,
     );
     Deno.exit(1);
   }
 
   // Open database
-  const dbPath = './data/classify-workflow-local-dev.db';
+  const dbPath = "./data/classify-workflow-local-dev.db";
   console.log(`📂 Opening database: ${dbPath}`);
 
   const db = new Database(dbPath);
 
   try {
     // Get total and failed counts
-    const totalStmt = db.prepare('SELECT COUNT(*) FROM source_indicators');
+    const totalStmt = db.prepare("SELECT COUNT(*) FROM source_indicators");
     const totalCount = totalStmt.value()![0] as number;
 
     const failedStmt = db.prepare(
-      'SELECT COUNT(DISTINCT indicator_id) FROM processing_log WHERE status = "failed"'
+      'SELECT COUNT(DISTINCT indicator_id) FROM processing_log WHERE status = "failed"',
     );
     const failedCount = failedStmt.value()![0] as number;
 
@@ -306,7 +310,9 @@ async function main() {
     console.log(`❌ Failed indicators: ${failedCount.toLocaleString()}`);
 
     if (failedCount === 0) {
-      console.log('\n✅ No failed indicators to retry! All processing succeeded.');
+      console.log(
+        "\n✅ No failed indicators to retry! All processing succeeded.",
+      );
       return;
     }
 
@@ -317,7 +323,7 @@ async function main() {
     console.log(`✅ Found ${indicators.length} failed indicators\n`);
 
     // Show first few
-    console.log('First 5 failed indicators:');
+    console.log("First 5 failed indicators:");
     indicators.slice(0, 5).forEach((ind, idx) => {
       console.log(`   ${idx + 1}. ${ind.id}: ${ind.name}`);
     });
@@ -331,14 +337,14 @@ async function main() {
       llmProvider,
       batchSize,
       concurrentBatches,
-      db
+      db,
     );
 
     console.log(`\n✅ All retry batches processed!`);
     console.log(`   Total indicators: ${indicators.length}`);
     console.log(`   Batches: ${results.length}`);
     console.log(
-      `\n💡 Check results: deno task view:errors`
+      `\n💡 Check results: deno task view:errors`,
     );
   } finally {
     db.close();
@@ -347,7 +353,7 @@ async function main() {
 
 if (import.meta.main) {
   main().catch((error) => {
-    console.error('❌ Error:', error);
+    console.error("❌ Error:", error);
     Deno.exit(1);
   });
 }

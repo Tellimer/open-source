@@ -12,6 +12,7 @@
 - **PostgreSQL:** Uses `$1`, `$2`, etc. placeholders
 
 **Files Updated:**
+
 - [src/db/repository.ts](./src/db/repository.ts) - All query methods now detect database type and use appropriate placeholders
 - [src/db/schema.ts](./src/db/schema.ts) - Added `metadata` column to `processing_log` table
 - [steps/classify-flow/complete-classify.step.ts](./steps/classify-flow/complete-classify.step.ts) - Fixed old `db.prepare()` calls, converted booleans to integers, JSON-stringified arrays/objects
@@ -21,6 +22,7 @@
 **Problem:** SQLite only accepts primitives (numbers, strings, bigints, buffers, null) but we were trying to bind JavaScript booleans and objects.
 
 **Solution:**
+
 - **Booleans → Integers:** All boolean fields (`is_cumulative`, `is_currency_denominated`, `boolean_review_passed`) now convert to 0/1
 - **Objects/Arrays → JSON Strings:** Fields like `boolean_review_fields_wrong` and `final_review_corrections` are JSON-stringified before saving
 
@@ -29,6 +31,7 @@
 **Problem:** `processing_log` table was missing the `metadata` column that was added to PostgreSQL.
 
 **Solution:**
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db "ALTER TABLE processing_log ADD COLUMN metadata TEXT;"
 ```
@@ -40,6 +43,7 @@ sqlite3 ./data/classify-workflow-local-dev.db "ALTER TABLE processing_log ADD CO
 **Solution:** Reduced to **1 concurrent batch** (5 indicators at a time):
 
 **Files Updated:**
+
 - [scripts/run-random.ts](./scripts/run-random.ts) - `concurrentBatches = 1`
 - [scripts/run-all.ts](./scripts/run-all.ts) - `concurrentBatches = 1`
 
@@ -48,6 +52,7 @@ sqlite3 ./data/classify-workflow-local-dev.db "ALTER TABLE processing_log ADD CO
 **Problem:** When indicators got stuck, the script would wait forever with no feedback.
 
 **Solution:** Added smart progress detection:
+
 - Detects when no progress for 20 seconds
 - Shows which indicators are stuck and at which stage
 - Shows error messages for failed indicators
@@ -56,6 +61,7 @@ sqlite3 ./data/classify-workflow-local-dev.db "ALTER TABLE processing_log ADD CO
 ## Final Configuration
 
 ### Environment Variables (`.env`)
+
 ```bash
 # SQLite Database
 CLASSIFY_DB=sqlite
@@ -67,20 +73,23 @@ INTERNAL_EMIT_DELAY_MS=500      # 500ms delay between batches
 ```
 
 ### Script Defaults
+
 ```typescript
-const batchSize = 5;              // 5 indicators per batch
-const concurrentBatches = 1;      // 1 batch at a time
+const batchSize = 5; // 5 indicators per batch
+const concurrentBatches = 1; // 1 batch at a time
 // Total concurrency: 5 indicators × ~6 LLM stages = ~30 API calls max
 ```
 
 ## Performance Characteristics
 
 ### Before
+
 - **Configuration:** 4 batches × 5 indicators = 20 concurrent
 - **LLM Calls:** ~120 concurrent API calls
 - **Result:** Rate limiting, stuck indicators, incomplete batches
 
 ### After
+
 - **Configuration:** 1 batch × 5 indicators = 5 concurrent
 - **LLM Calls:** ~30 concurrent API calls max
 - **Result:** Stable processing, all indicators complete, no rate limits
@@ -114,6 +123,7 @@ Next batch of 5 starts
 ## Database Compatibility
 
 ### SQLite (Local Development)
+
 - ✅ Proper `?` placeholders
 - ✅ Boolean values as 0/1 integers
 - ✅ JSON fields as TEXT
@@ -121,6 +131,7 @@ Next batch of 5 starts
 - ✅ All schema columns present
 
 ### PostgreSQL (Production)
+
 - ✅ Proper `$1, $2` placeholders
 - ✅ Boolean values as BOOLEAN type
 - ✅ JSON fields as JSONB
@@ -130,11 +141,13 @@ Next batch of 5 starts
 ## Usage
 
 ### Run 50 Random Indicators
+
 ```bash
 deno task run:random -- -50 openai
 ```
 
 ### Expected Output
+
 ```
 🚀 Processing 50 indicators in 10 batches of 5...
    Provider: openai
@@ -152,6 +165,7 @@ deno task run:random -- -50 openai
 ```
 
 ### Average Timing
+
 - **Per indicator:** ~25-35 seconds (with OpenAI GPT-4.1-mini)
 - **Per batch (5 indicators):** ~30-45 seconds
 - **50 indicators total:** ~5-8 minutes
@@ -159,12 +173,14 @@ deno task run:random -- -50 openai
 ## Monitoring
 
 ### Check Completion Status
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db \
   "SELECT COUNT(*) FROM classifications;"
 ```
 
 ### Check Recent Activity
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db \
   "SELECT stage, status, COUNT(*) as count
@@ -174,6 +190,7 @@ sqlite3 ./data/classify-workflow-local-dev.db \
 ```
 
 ### Check Failed Indicators
+
 ```bash
 sqlite3 ./data/classify-workflow-local-dev.db \
   "SELECT indicator_id, stage, error_message
@@ -210,17 +227,20 @@ These are non-critical and logged as warnings. The pipeline will continue proces
 ## Next Steps
 
 ### To Increase Throughput (if no rate limits)
+
 1. Increase `concurrentBatches` to 2
 2. Monitor for stuck indicators
 3. Adjust based on API performance
 
 ### To Switch to PostgreSQL
+
 1. Set `POSTGRES_URL` environment variable
 2. Remove or comment out `CLASSIFY_DB=sqlite`
 3. Run migrations: `deno task migrate`
 4. Restart dev server
 
 ### To Use Local LLM (Free)
+
 1. Install LM Studio
 2. Load a model (e.g., Mistral 7B)
 3. Set environment: `LLM_PROVIDER=local`
@@ -229,22 +249,27 @@ These are non-critical and logged as warnings. The pipeline will continue proces
 ## Files Changed
 
 ### Database Layer
+
 - ✅ [src/db/repository.ts](./src/db/repository.ts)
 - ✅ [src/db/schema.ts](./src/db/schema.ts)
 - ✅ [src/db/client.ts](./src/db/client.ts)
 
 ### Workflow Steps
+
 - ✅ [steps/classify-flow/complete-classify.step.ts](./steps/classify-flow/complete-classify.step.ts)
 
 ### Scripts
+
 - ✅ [scripts/run-random.ts](./scripts/run-random.ts)
 - ✅ [scripts/run-all.ts](./scripts/run-all.ts)
 
 ### Configuration
+
 - ✅ [.env](./.env)
 - ✅ [.env.example](./.env.example)
 
 ### Documentation
+
 - ✅ [BATCHING.md](./BATCHING.md)
 - ✅ [examples/README.md](./examples/README.md)
 - ✅ [examples/parallel-batches.ts](./examples/parallel-batches.ts)

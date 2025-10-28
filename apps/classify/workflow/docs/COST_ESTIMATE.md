@@ -11,18 +11,22 @@
 Based on the current simplified workflow, when using `--provider openai`:
 
 ### Rule-Based Stages (No LLM cost)
+
 1. **Normalize** - Rule-based unit/scale/currency parsing (free)
 
 ### Optional LLM Stages (Only if `llm_provider !== "local"`)
+
 2. **Time Inference** - Infer time basis and reporting frequency (optional LLM)
 
 ### Always LLM Stages
+
 3. **Family Assignment** - Assign indicator to family (currency or non-currency branch)
 4. **Type Classification** - Classify indicator type
 5. **Boolean Review** - Review classification quality
 6. **Final Review** - Final validation (only if needed)
 
 **Total LLM calls per indicator**:
+
 - **Minimum**: 3 calls (family + type + boolean review)
 - **Maximum**: 5 calls (+ time inference + final review)
 - **Typical**: 4 calls (time + family + type + boolean)
@@ -30,10 +34,12 @@ Based on the current simplified workflow, when using `--provider openai`:
 ## GPT-4o Pricing (2024-08-06)
 
 ### Standard API Rates
+
 - **Input**: $2.50 per 1M tokens
 - **Output**: $10.00 per 1M tokens
 
 ### Batch API Rates (50% discount)
+
 - **Input**: $1.25 per 1M tokens
 - **Output**: $5.00 per 1M tokens
 
@@ -41,13 +47,13 @@ Based on the current simplified workflow, when using `--provider openai`:
 
 Based on typical indicator classification prompts:
 
-| Stage | Input Tokens | Output Tokens | Total Tokens |
-|-------|-------------|---------------|--------------|
-| Time Inference | ~300 | ~50 | ~350 |
-| Family Assignment | ~400 | ~100 | ~500 |
-| Type Classification | ~350 | ~75 | ~425 |
-| Boolean Review | ~500 | ~150 | ~650 |
-| Final Review | ~600 | ~200 | ~800 |
+| Stage               | Input Tokens | Output Tokens | Total Tokens |
+| ------------------- | ------------ | ------------- | ------------ |
+| Time Inference      | ~300         | ~50           | ~350         |
+| Family Assignment   | ~400         | ~100          | ~500         |
+| Type Classification | ~350         | ~75           | ~425         |
+| Boolean Review      | ~500         | ~150          | ~650         |
+| Final Review        | ~600         | ~200          | ~800         |
 
 **Average per indicator**: ~4 calls × ~500 tokens = **~2,000 tokens**
 
@@ -70,24 +76,26 @@ Total per indicator: ~$0.00382
 ### Volume Estimates
 
 | Indicators | Standard API | Batch API (50% off) | Time to Process* |
-|-----------|--------------|---------------------|------------------|
-| 100 | $0.76 | $0.38 | ~2 minutes |
-| 1,000 | $7.63 | $3.82 | ~20 minutes |
-| 10,000 | $76.30 | $38.15 | ~3.3 hours |
-| 50,000 | $381.50 | $190.75 | ~16.7 hours |
-| 100,000 | $763.00 | $381.50 | ~33.3 hours |
+| ---------- | ------------ | ------------------- | ---------------- |
+| 100        | $0.76        | $0.38               | ~2 minutes       |
+| 1,000      | $7.63        | $3.82               | ~20 minutes      |
+| 10,000     | $76.30       | $38.15              | ~3.3 hours       |
+| 50,000     | $381.50      | $190.75             | ~16.7 hours      |
+| 100,000    | $763.00      | $381.50             | ~33.3 hours      |
 
 *Time estimates assume parallel processing with OpenAI's standard rate limits
 
 ## Current Setup Performance
 
 ### Real-time API (Current Implementation)
+
 - **Batch size**: 100 indicators per request
 - **Processing**: Parallel, results immediate
 - **Cost**: Standard API pricing (~$0.76 per 100 indicators)
 - **Best for**: Interactive workflows, smaller batches (<10k indicators)
 
 ### Batch API (Not Yet Implemented)
+
 - **Batch size**: Up to 50,000 indicators
 - **Processing**: Async, 24hr completion window
 - **Cost**: 50% discount (~$0.38 per 100 indicators)
@@ -96,17 +104,20 @@ Total per indicator: ~$0.00382
 ## Recommendations
 
 ### For Development/Testing (Current)
+
 - Use `--provider local` (free, uses LM Studio)
 - Limit sample sizes to 100-1000 indicators
 - Cost: $0
 
 ### For Production (Small batches: <5,000)
+
 - Use `--provider openai` with standard API
 - Batch size: 100 indicators per request
 - Cost: ~$0.76 per 100 indicators
 - Total: <$40 for 5,000 indicators
 
 ### For Production (Large batches: 5,000-50,000)
+
 - **Option 1**: Standard API with current setup
   - Cost: $38.15 - $381.50
   - Time: 3-17 hours
@@ -119,6 +130,7 @@ Total per indicator: ~$0.00382
   - **Savings**: $19-$191 per large batch
 
 ### For Production (>50,000)
+
 - Implement Batch API support (required for >50k per batch)
 - Cost: ~$3.82 per 1,000 indicators
 - Submit multiple batches if needed
@@ -129,6 +141,7 @@ Total per indicator: ~$0.00382
 Assuming you have ~26,000 indicators in the database:
 
 ### Standard API
+
 ```
 26,000 indicators × $0.00763 = $198.38
 Time: ~8.7 hours (parallel processing)
@@ -136,6 +149,7 @@ Batches: 260 API calls (100 per batch)
 ```
 
 ### Batch API (if implemented)
+
 ```
 26,000 indicators × $0.00382 = $99.32
 Time: Up to 24 hours
@@ -146,11 +160,13 @@ Savings: $99.06 (50%)
 ## Token Quota Management
 
 ### Default Tier Limits (Most common)
+
 - **Enqueued tokens**: 200M per month
 - **Max indicators at $0.00763**: ~26,200 indicators/month
 - **Rate limits**: 10,000 requests/min (more than enough)
 
 ### Monitor Usage
+
 ```bash
 # Check batch stats after run
 deno task stats
@@ -184,6 +200,4 @@ If implementing Batch API support:
 
 ---
 
-*Estimates based on GPT-4o-2024-08-06 pricing as of January 2025. Actual costs may vary based on prompt complexity and output length.*
-
-
+_Estimates based on GPT-4o-2024-08-06 pricing as of January 2025. Actual costs may vary based on prompt complexity and output length._

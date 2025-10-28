@@ -5,9 +5,9 @@
  * the local SQLite database for testing and development.
  */
 
-import { Client } from 'https://deno.land/x/postgres@v0.17.0/mod.ts';
-import { Database } from '@db/sqlite';
-import { CLASSIFY_WORKFLOW_SCHEMA } from '../db/schema.ts';
+import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
+import { Database } from "@db/sqlite";
+import { CLASSIFY_WORKFLOW_SCHEMA } from "../db/schema.ts";
 
 // Type definitions for database records
 interface IndicatorRow {
@@ -33,126 +33,126 @@ interface TimeSeriesPoint {
 
 // Target indicator names (100+ indicators from user specification)
 const TARGET_INDICATORS = [
-  'Imports of goods, World (CIF)',
-  'Inflation Rate',
-  'Real Effective Exchange Rate (REER)',
-  'Sales Tax Rate',
-  'Population',
-  'Unemployment Rate',
-  'Consumer Price Index CPI',
-  'Exports',
-  'GDP Annual Growth Rate',
-  'Imports',
-  'Balance of Trade',
-  'Food Inflation',
-  'Temperature',
-  'GDP',
-  'Inflation Rate MoM',
-  'Interest Rate',
-  'Corporate Tax Rate',
-  'GDP per Capita',
-  'GDP per Capita PPP',
-  'Corruption Index',
-  'Corruption Rank',
-  'Current Account',
-  'Current Account to GDP',
-  'Government Budget',
-  'Government Debt to GDP',
-  'Personal Income Tax Rate',
-  'CPI Transportation',
-  'GDP Constant Prices',
-  'Terrorism Index',
-  'CPI Housing Utilities',
-  'Money Supply M2',
-  'Military Expenditure',
-  'Money Supply M1',
-  'Precipitation',
-  'GDP from Agriculture',
-  'GDP from Construction',
-  'Government Spending',
-  'Inflation - Average Consumer Prices, % Change',
-  'Inflation - End of Period Consumer Prices, % Change',
-  'Consumer Spending',
-  'Social Security Rate For Companies',
-  'GDP from Manufacturing',
-  'Gross Fixed Capital Formation',
-  'Social Security Rate For Employees',
-  'Social Security Rate',
-  'Foreign Direct Investment',
-  'Deposit Interest Rate',
-  'Money Supply M0',
-  'Gold Reserves',
-  'Industrial Production',
-  'Capital Flows',
-  'External Debt',
-  'Government Budget Value',
-  'Government Revenues',
-  'Producer Prices',
-  'Full Year GDP Growth',
-  'GDP from Services',
-  'Official reserves assets',
-  'Fiscal Expenditure',
-  'GDP from Public Administration',
-  'Changes in Inventories',
-  'Minimum Wages',
-  'Money Supply M3',
-  'GDP from Transport',
-  'Unemployed Persons',
-  'Employed Persons',
-  'Producer Prices Change',
-  'Tourist Arrivals',
-  'GDP from Mining',
-  'Core Inflation Rate',
-  'Crude Oil Production',
-  'GDP Growth Rate',
-  'GDP from Utilities',
-  'Withholding Tax Rate',
-  'Central Bank Balance Sheet',
-  'Mining Production',
-  'Gasoline Prices',
-  'Foreign Exchange Reserves',
-  'General Government Net Lending/Borrowing, % of GDP',
-  'General Government Revenue, % of GDP',
-  'General Government Total Expenditure, % of GDP',
-  'Labor Force Participation Rate',
-  'General Government Gross Debt, % of GDP',
-  'Core Consumer Prices',
-  'General Government Primary Net Lending/Borrowing, % of GDP',
-  'Interest Payments, % of GDP',
-  'Loans to Private Sector',
-  'Wages',
-  'Banks Balance Sheet',
-  'Remittances',
-  'Employment Rate',
-  'Industrial Production Mom',
-  'GDP at Constant Prices, % Change',
-  'GDP at Current Prices, USD Billions',
-  'Export Prices',
-  'Import Prices',
-  'Business Confidence',
-  'Current Account Balance, USD Billions',
-  'Consumer Confidence',
-  'Interbank Rate',
-  'Retail Sales YoY',
-  'Manufacturing Production',
-  'Car Registrations',
-  'Consumer Credit',
-  'GDP Deflator',
-  'Gross Foreign Reserves',
-  'Terms of Trade',
-  'Bank Lending Rate',
-  'Capacity Utilization',
+  "Imports of goods, World (CIF)",
+  "Inflation Rate",
+  "Real Effective Exchange Rate (REER)",
+  "Sales Tax Rate",
+  "Population",
+  "Unemployment Rate",
+  "Consumer Price Index CPI",
+  "Exports",
+  "GDP Annual Growth Rate",
+  "Imports",
+  "Balance of Trade",
+  "Food Inflation",
+  "Temperature",
+  "GDP",
+  "Inflation Rate MoM",
+  "Interest Rate",
+  "Corporate Tax Rate",
+  "GDP per Capita",
+  "GDP per Capita PPP",
+  "Corruption Index",
+  "Corruption Rank",
+  "Current Account",
+  "Current Account to GDP",
+  "Government Budget",
+  "Government Debt to GDP",
+  "Personal Income Tax Rate",
+  "CPI Transportation",
+  "GDP Constant Prices",
+  "Terrorism Index",
+  "CPI Housing Utilities",
+  "Money Supply M2",
+  "Military Expenditure",
+  "Money Supply M1",
+  "Precipitation",
+  "GDP from Agriculture",
+  "GDP from Construction",
+  "Government Spending",
+  "Inflation - Average Consumer Prices, % Change",
+  "Inflation - End of Period Consumer Prices, % Change",
+  "Consumer Spending",
+  "Social Security Rate For Companies",
+  "GDP from Manufacturing",
+  "Gross Fixed Capital Formation",
+  "Social Security Rate For Employees",
+  "Social Security Rate",
+  "Foreign Direct Investment",
+  "Deposit Interest Rate",
+  "Money Supply M0",
+  "Gold Reserves",
+  "Industrial Production",
+  "Capital Flows",
+  "External Debt",
+  "Government Budget Value",
+  "Government Revenues",
+  "Producer Prices",
+  "Full Year GDP Growth",
+  "GDP from Services",
+  "Official reserves assets",
+  "Fiscal Expenditure",
+  "GDP from Public Administration",
+  "Changes in Inventories",
+  "Minimum Wages",
+  "Money Supply M3",
+  "GDP from Transport",
+  "Unemployed Persons",
+  "Employed Persons",
+  "Producer Prices Change",
+  "Tourist Arrivals",
+  "GDP from Mining",
+  "Core Inflation Rate",
+  "Crude Oil Production",
+  "GDP Growth Rate",
+  "GDP from Utilities",
+  "Withholding Tax Rate",
+  "Central Bank Balance Sheet",
+  "Mining Production",
+  "Gasoline Prices",
+  "Foreign Exchange Reserves",
+  "General Government Net Lending/Borrowing, % of GDP",
+  "General Government Revenue, % of GDP",
+  "General Government Total Expenditure, % of GDP",
+  "Labor Force Participation Rate",
+  "General Government Gross Debt, % of GDP",
+  "Core Consumer Prices",
+  "General Government Primary Net Lending/Borrowing, % of GDP",
+  "Interest Payments, % of GDP",
+  "Loans to Private Sector",
+  "Wages",
+  "Banks Balance Sheet",
+  "Remittances",
+  "Employment Rate",
+  "Industrial Production Mom",
+  "GDP at Constant Prices, % Change",
+  "GDP at Current Prices, USD Billions",
+  "Export Prices",
+  "Import Prices",
+  "Business Confidence",
+  "Current Account Balance, USD Billions",
+  "Consumer Confidence",
+  "Interbank Rate",
+  "Retail Sales YoY",
+  "Manufacturing Production",
+  "Car Registrations",
+  "Consumer Credit",
+  "GDP Deflator",
+  "Gross Foreign Reserves",
+  "Terms of Trade",
+  "Bank Lending Rate",
+  "Capacity Utilization",
 ];
 
 /**
  * Initialize SQLite database schema with WAL mode
  */
 function initializeSchema(db: Database) {
-  console.log('📋 Initializing database schema with WAL mode...');
+  console.log("📋 Initializing database schema with WAL mode...");
 
   // Split schema by semicolons and execute each statement
-  const statements = CLASSIFY_WORKFLOW_SCHEMA.split(';').filter(
-    (stmt) => stmt.trim().length > 0
+  const statements = CLASSIFY_WORKFLOW_SCHEMA.split(";").filter(
+    (stmt) => stmt.trim().length > 0,
   );
 
   for (const statement of statements) {
@@ -162,35 +162,34 @@ function initializeSchema(db: Database) {
         db.exec(trimmed);
       } catch (error) {
         console.error(
-          `❌ Error executing statement: ${trimmed.substring(0, 100)}...`
+          `❌ Error executing statement: ${trimmed.substring(0, 100)}...`,
         );
         throw error;
       }
     }
   }
 
-  console.log('✅ SQLite schema initialized with WAL mode');
+  console.log("✅ SQLite schema initialized with WAL mode");
 }
 
 /**
  * Main seed function
  */
 async function seedDatabase() {
-  const dbPath =
-    Deno.env.get('CLASSIFY_DB_LOCAL_DEV') ||
-    './data/classify-workflow-local-dev.db';
-  const databaseUrl = Deno.env.get('DATABASE_URL');
+  const dbPath = Deno.env.get("CLASSIFY_DB_LOCAL_DEV") ||
+    "./data/classify-workflow-local-dev.db";
+  const databaseUrl = Deno.env.get("DATABASE_URL");
 
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is required');
+    throw new Error("DATABASE_URL environment variable is required");
   }
 
   // Parse limit from command line (e.g., --200 or -200)
   const args = Deno.args;
   let limit: number | null = null;
   for (const arg of args) {
-    if (arg.startsWith('--') || arg.startsWith('-')) {
-      const num = parseInt(arg.replace(/^-+/, ''), 10);
+    if (arg.startsWith("--") || arg.startsWith("-")) {
+      const num = parseInt(arg.replace(/^-+/, ""), 10);
       if (!isNaN(num) && num > 0) {
         limit = num;
         break;
@@ -199,7 +198,7 @@ async function seedDatabase() {
   }
 
   console.log(`📦 Seeding database from PostgreSQL...`);
-  console.log(`   Source: ${databaseUrl.split('@')[1]}`);
+  console.log(`   Source: ${databaseUrl.split("@")[1]}`);
   console.log(`   Destination: ${dbPath}`);
   if (limit) {
     console.log(`   Limit: ${limit} indicators per indicator name\n`);
@@ -210,7 +209,7 @@ async function seedDatabase() {
   // Connect to PostgreSQL
   const pgClient = new Client(databaseUrl);
   await pgClient.connect();
-  console.log('✅ Connected to PostgreSQL');
+  console.log("✅ Connected to PostgreSQL");
 
   // Initialize SQLite
   const db = new Database(dbPath);
@@ -218,7 +217,7 @@ async function seedDatabase() {
 
   // Fetch indicators
   console.log(
-    `\n🔍 Fetching all indicators for ${TARGET_INDICATORS.length} indicator names...`
+    `\n🔍 Fetching all indicators for ${TARGET_INDICATORS.length} indicator names...`,
   );
 
   const query = `
@@ -254,11 +253,11 @@ async function seedDatabase() {
     console.log(`   📊 Limiting to first ${limit} indicators for testing`);
     indicators = indicators.slice(0, limit);
   }
-  console.log('');
+  console.log("");
 
   // Fetch 25 most recent time series values for each indicator
   console.log(
-    '📊 Fetching sample time series (25 most recent values per indicator)...'
+    "📊 Fetching sample time series (25 most recent values per indicator)...",
   );
 
   let processed = 0;
@@ -275,7 +274,7 @@ async function seedDatabase() {
 
     const tsResult = await pgClient.queryObject<TimeSeriesPoint>(
       timeSeriesQuery,
-      [indicator.indicator_id]
+      [indicator.indicator_id],
     );
 
     // Store as JSON string
@@ -288,11 +287,11 @@ async function seedDatabase() {
   }
 
   console.log(
-    `✅ Fetched time series samples for ${indicators.length} indicators\n`
+    `✅ Fetched time series samples for ${indicators.length} indicators\n`,
   );
 
   // Insert into SQLite
-  console.log('💾 Populating SQLite database...');
+  console.log("💾 Populating SQLite database...");
 
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO source_indicators (
@@ -336,17 +335,17 @@ async function seedDatabase() {
   db.close();
 
   console.log(
-    `\n✅ Seeded ${indicators.length} indicators with sample time series to ${dbPath}\n`
+    `\n✅ Seeded ${indicators.length} indicators with sample time series to ${dbPath}\n`,
   );
 
   await pgClient.end();
-  console.log('🎉 Database seeding complete!');
+  console.log("🎉 Database seeding complete!");
 }
 
 // Run if called directly
 if (import.meta.main) {
   seedDatabase().catch((error) => {
-    console.error('❌ Error seeding database:', error);
+    console.error("❌ Error seeding database:", error);
     Deno.exit(1);
   });
 }

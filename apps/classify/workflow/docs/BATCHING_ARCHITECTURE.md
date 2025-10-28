@@ -83,14 +83,16 @@ This is **intentional and necessary** because of the API's 25-indicator limit.
 **Controlled by:** `API_BATCH_SIZE = 25` (matches API limit)
 
 **Why it exists:**
+
 ```typescript
 // API schema enforces this limit
 bodySchema: z.object({
   indicators: z.array(indicatorInputSchema).min(1).max(25), // ← Hard limit
-})
+});
 ```
 
 **Example:**
+
 ```
 10,000 indicators ÷ 25 per request = 400 API calls
 Each call gets its own trace_id
@@ -106,11 +108,13 @@ Each call gets its own trace_id
 **Controlled by:** `batchSize = 25` (configurable)
 
 **Why it exists:**
+
 - Prevents OOM errors (processing 25 indicators in parallel uses less RAM than 100)
 - Allows cleanup between batches
 - Controls LLM request concurrency
 
 **Example:**
+
 ```
 If API limit increased to 100:
   API sends: 100 indicators
@@ -166,6 +170,7 @@ const API_BATCH_SIZE = 25; // Must match API schema max
 ```
 
 **To change:**
+
 1. Update API schema in `start-classify.step.ts:45`
 2. Update feeder script `API_BATCH_SIZE` to match
 
@@ -181,10 +186,10 @@ const batchSize = 25; // Configurable
 ```
 
 | System RAM | LLM Provider | Recommended |
-|-----------|--------------|-------------|
-| 16GB | Local | 10-15 |
-| 32GB | Local | 25-50 |
-| Any | Cloud | 50-100 |
+| ---------- | ------------ | ----------- |
+| 16GB       | Local        | 10-15       |
+| 32GB       | Local        | 25-50       |
+| Any        | Cloud        | 50-100      |
 
 ---
 
@@ -239,18 +244,21 @@ Combined total: ~2.8 hours
 ### ❌ "The double batching is redundant"
 
 **No!** They serve different purposes:
+
 - API batching = work around request size limit (network constraint)
 - Processing batching = manage memory and parallelization (system constraint)
 
 ### ❌ "We should remove one level"
 
 **No!** Both are needed:
+
 - Without API batching: Can't send more than 25 indicators
 - Without processing batching: Risk OOM with large API batches
 
 ### ❌ "Both batch sizes should always be the same"
 
 **No!** They can be different:
+
 - API batch size = limited by API schema
 - Processing batch size = limited by system RAM
 
@@ -303,6 +311,7 @@ const batchSize = 50; // 25 → 50 (if memory allows)
 **Scenario:** Process 1,000 indicators with cloud LLMs
 
 ### Current (25/25):
+
 ```
 API requests: 1,000 ÷ 25 = 40 calls
 Processing batches: 40 × 1 = 40 batches
@@ -310,6 +319,7 @@ Time: 40 × 50s = 33 minutes
 ```
 
 ### Optimized (100/25):
+
 ```
 API requests: 1,000 ÷ 100 = 10 calls
 Processing batches: 10 × 4 = 40 batches
@@ -319,6 +329,7 @@ Time: 10 × 200s = 33 minutes
 ```
 
 ### Optimized (100/50):
+
 ```
 API requests: 1,000 ÷ 100 = 10 calls
 Processing batches: 10 × 2 = 20 batches
@@ -336,6 +347,7 @@ Time: 10 × 200s = 33 minutes
 **Cause:** Trying to send more than 25 indicators per API call
 
 **Solution:**
+
 ```typescript
 // Check API_BATCH_SIZE matches API limit
 const API_BATCH_SIZE = 25; // Must match schema max
@@ -346,6 +358,7 @@ const API_BATCH_SIZE = 25; // Must match schema max
 **Cause:** Processing batch size too large for available RAM
 
 **Solution:**
+
 ```typescript
 // Reduce processing batch size
 const batchSize = 10; // Decreased from 25
@@ -356,6 +369,7 @@ const batchSize = 10; // Decreased from 25
 **Cause:** API batch size is small (25), creating many API calls
 
 **Solution:** Increase API limit (requires testing):
+
 ```typescript
 // start-classify.step.ts:45
 indicators: z.array(...).max(100), // Increased
@@ -376,6 +390,6 @@ indicators: z.array(...).max(100), // Increased
 
 ---
 
-*Last updated: 2025-01-XX*
-*API limit: 25 indicators per request*
-*Processing batch: 25 indicators in parallel*
+_Last updated: 2025-01-XX_
+_API limit: 25 indicators per request_
+_Processing batch: 25 indicators in parallel_

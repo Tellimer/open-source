@@ -5,6 +5,7 @@
 This guide provides detailed performance analysis and optimization strategies for scaling the indicator classification pipeline from the current 5-indicator tests to production-scale processing of 10,000+ indicators.
 
 **Key Findings:**
+
 - Current optimized configuration: **25 seconds for 5 indicators** (5 seconds/indicator)
 - Projected for 10,000 indicators: **14.5 hours** (current setup) → **1.7 hours** (optimized)
 - **Recommended approach:** Cloud LLMs with batch=25 → **2.8 hours at ~$15-20 cost**
@@ -16,12 +17,13 @@ This guide provides detailed performance analysis and optimization strategies fo
 
 ### Current State (Validated)
 
-| Configuration | Indicators | Time | Throughput | Accuracy |
-|--------------|-----------|------|------------|----------|
-| **Optimized (Current)** | 5 | 25s | 0.2/s | 100% |
-| Sequential (Previous) | 5 | 199s | 0.025/s | 100% |
+| Configuration           | Indicators | Time | Throughput | Accuracy |
+| ----------------------- | ---------- | ---- | ---------- | -------- |
+| **Optimized (Current)** | 5          | 25s  | 0.2/s      | 100%     |
+| Sequential (Previous)   | 5          | 199s | 0.025/s    | 100%     |
 
 **Current Settings:**
+
 - Batch size: 5 indicators processed in parallel
 - Inter-batch delay: 1 second
 - LLM: Local (LM Studio - Mistral 7B)
@@ -49,6 +51,7 @@ This guide provides detailed performance analysis and optimization strategies fo
 ## Scenario Analysis
 
 ### Scenario 1: Current Setup (Baseline)
+
 **Configuration:** Batch=5, Local LLM (Mistral 7B), 1s delay
 
 ```
@@ -66,11 +69,13 @@ Realistic estimate: 14.5 hours
 ```
 
 **Pros:**
+
 - Zero cloud costs
 - Full data privacy
 - No API rate limits
 
 **Cons:**
+
 - Long processing time
 - Single machine dependency
 - Memory constraints
@@ -80,6 +85,7 @@ Realistic estimate: 14.5 hours
 ---
 
 ### Scenario 2: Increased Batch Size
+
 **Configuration:** Batch=10, Local LLM, 1s delay
 
 ```
@@ -93,10 +99,12 @@ Realistic estimate: 8.6 hours
 ```
 
 **Requirements:**
+
 - 16GB+ RAM (currently sufficient for batch=5)
 - Monitor memory usage during processing
 
 **Implementation:**
+
 ```typescript
 // In steps/classify-flow/start-classify.step.ts
 const batchSize = 10; // Increased from 5
@@ -107,6 +115,7 @@ const batchSize = 10; // Increased from 5
 ---
 
 ### Scenario 3: Maximum Local Batch
+
 **Configuration:** Batch=25, Local LLM, 1s delay
 
 ```
@@ -120,6 +129,7 @@ Realistic estimate: 5.1 hours
 ```
 
 **Requirements:**
+
 - 32GB+ RAM recommended
 - Fast SSD for database writes
 - Monitoring for memory pressure
@@ -131,6 +141,7 @@ Realistic estimate: 5.1 hours
 ---
 
 ### Scenario 4: Cloud LLMs ⭐ RECOMMENDED
+
 **Configuration:** Batch=25, Cloud APIs (GPT-4o-mini/Claude Haiku), minimal delay
 
 ```
@@ -144,15 +155,18 @@ Realistic estimate: 2.8 hours
 ```
 
 **Why Faster:**
+
 - Cloud LLM APIs: 2-3x faster inference
 - Lower memory pressure: No local model loading
 - Better concurrency: API handles parallelization
 
 **Requirements:**
+
 - API keys: OpenAI, Anthropic, or Google AI
 - Budget: ~$15-20 for 10,000 indicators
 
 **Cost Breakdown:**
+
 ```
 LLM calls per indicator: 2-3 (family + type + optional boolean)
 Average tokens per call: 500 input + 100 output = 600 total
@@ -172,6 +186,7 @@ With retries & variability: $15-20
 ```
 
 **Implementation:**
+
 ```typescript
 // In .env
 LLM_PROVIDER_FAMILY=openai
@@ -189,12 +204,14 @@ if (i + batchSize < indicators.length) {
 ```
 
 **Pros:**
+
 - 5x faster than current setup
 - Predictable costs
 - No memory constraints
 - Easy to scale
 
 **Cons:**
+
 - API costs (~$15-20)
 - Requires API keys
 - Data leaves local environment
@@ -202,6 +219,7 @@ if (i + batchSize < indicators.length) {
 ---
 
 ### Scenario 5: Cloud Aggressive
+
 **Configuration:** Batch=50+, Cloud APIs, no delays, streaming
 
 ```
@@ -215,11 +233,13 @@ Realistic estimate: 1.7 hours
 ```
 
 **Requirements:**
+
 - API rate limits: Check provider limits
 - Error handling: Robust retry logic for 429 errors
 - Cost monitoring: Set budget alerts
 
 **Implementation:**
+
 ```typescript
 const batchSize = 50;
 // Remove inter-batch delay
@@ -246,6 +266,7 @@ for (let retry = 0; retry < MAX_RETRIES; retry++) {
 ---
 
 ### Scenario 6: Distributed Processing
+
 **Configuration:** 5 machines × Batch=25, Cloud APIs
 
 ```
@@ -257,12 +278,14 @@ Realistic estimate: 34 minutes
 ```
 
 **Requirements:**
+
 - 5 machines running classify-workflow
 - Shared database (PostgreSQL) or partitioned SQLite
 - Load balancer for /classify/batch endpoint
 - Coordination for batch_id uniqueness
 
 **Implementation:**
+
 ```bash
 # Machine 1
 curl -X POST http://localhost:3000/classify/batch \
@@ -284,6 +307,7 @@ curl -X POST http://localhost:3000/classify/batch \
 ## Quick Wins (Immediate Optimizations)
 
 ### 1. Increase Batch Size to 10 (5 minutes)
+
 **Effort:** Very Low | **Impact:** 40% faster
 
 ```typescript
@@ -296,6 +320,7 @@ const batchSize = 10; // Changed from 5
 ---
 
 ### 2. Switch to Cloud LLMs (15 minutes)
+
 **Effort:** Low | **Impact:** 80% faster
 
 ```bash
@@ -312,6 +337,7 @@ OPENAI_MODEL=gpt-4o-mini
 ---
 
 ### 3. Reduce Inter-Batch Delay (2 minutes)
+
 **Effort:** Very Low | **Impact:** 10-15% faster
 
 ```typescript
@@ -325,14 +351,14 @@ await new Promise((resolve) => setTimeout(resolve, 500)); // 0.5s instead of 1s
 
 ## Decision Matrix
 
-| Scenario | Time | Cost | Setup | Risk | Use When |
-|----------|------|------|-------|------|----------|
-| **1. Current** | 14.5h | $0 | ✓ Done | Low | Data privacy critical |
-| **2. Batch=10** | 8.6h | $0 | 5 min | Low | Have 16GB+ RAM |
-| **3. Batch=25** | 5.1h | $0 | 5 min | Medium | Have 32GB+ RAM |
-| **4. Cloud ⭐** | 2.8h | $15-20 | 15 min | Low | Production recommended |
-| **5. Aggressive** | 1.7h | $15-20 | 30 min | Medium | Time-critical + budget |
-| **6. Distributed** | 34 min | $20+ | 2 hours | High | Enterprise / urgent |
+| Scenario           | Time   | Cost   | Setup   | Risk   | Use When               |
+| ------------------ | ------ | ------ | ------- | ------ | ---------------------- |
+| **1. Current**     | 14.5h  | $0     | ✓ Done  | Low    | Data privacy critical  |
+| **2. Batch=10**    | 8.6h   | $0     | 5 min   | Low    | Have 16GB+ RAM         |
+| **3. Batch=25**    | 5.1h   | $0     | 5 min   | Medium | Have 32GB+ RAM         |
+| **4. Cloud ⭐**    | 2.8h   | $15-20 | 15 min  | Low    | Production recommended |
+| **5. Aggressive**  | 1.7h   | $15-20 | 30 min  | Medium | Time-critical + budget |
+| **6. Distributed** | 34 min | $20+   | 2 hours | High   | Enterprise / urgent    |
 
 ---
 
@@ -341,6 +367,7 @@ await new Promise((resolve) => setTimeout(resolve, 500)); // 0.5s instead of 1s
 ### Step-by-Step: Cloud Migration (Recommended)
 
 #### 1. Get API Keys (5 minutes)
+
 ```bash
 # OpenAI (recommended for cost)
 # Visit: https://platform.openai.com/api-keys
@@ -352,6 +379,7 @@ await new Promise((resolve) => setTimeout(resolve, 500)); // 0.5s instead of 1s
 ```
 
 #### 2. Configure Environment (2 minutes)
+
 ```bash
 # .env
 LLM_PROVIDER_FAMILY=openai
@@ -367,6 +395,7 @@ OPENAI_MODEL=gpt-4o-mini
 ```
 
 #### 3. Update Batch Configuration (3 minutes)
+
 ```typescript
 // steps/classify-flow/start-classify.step.ts
 
@@ -378,6 +407,7 @@ await new Promise((resolve) => setTimeout(resolve, 500)); // Reduced from 1000ms
 ```
 
 #### 4. Test with Small Batch (5 minutes)
+
 ```bash
 deno task run:dev
 
@@ -398,6 +428,7 @@ curl -X POST http://localhost:3000/classify/batch \
 ```
 
 #### 5. Run Full Production Batch
+
 ```bash
 # Load your 10,000 indicators from CSV/JSON
 node scripts/load-and-classify.js --batch-size 1000
@@ -425,17 +456,21 @@ ORDER BY created_at DESC;
 ### Common Issues
 
 #### 1. Out of Memory (OOM)
+
 **Symptoms:** Process crashes during batch processing
 
 **Solutions:**
+
 - Reduce batch size: 25 → 10 → 5
 - Increase system RAM
 - Switch to cloud LLMs (lower memory usage)
 
 #### 2. Rate Limit Errors (429)
+
 **Symptoms:** Cloud API calls failing with 429 status
 
 **Solutions:**
+
 ```typescript
 // Add exponential backoff retry logic
 const retryWithBackoff = async (fn, maxRetries = 3) => {
@@ -455,9 +490,11 @@ const retryWithBackoff = async (fn, maxRetries = 3) => {
 ```
 
 #### 3. Database Lock Errors
+
 **Symptoms:** SQLite BUSY errors during concurrent writes
 
 **Solutions:**
+
 ```typescript
 // Increase SQLite timeout
 const db = new Database("classify.db", {
@@ -468,9 +505,11 @@ const db = new Database("classify.db", {
 ```
 
 #### 4. Slow Local LLM
+
 **Symptoms:** Processing takes >10s per indicator
 
 **Solutions:**
+
 - Check GPU utilization (should be >80%)
 - Reduce model size: Mistral 7B → Phi-3 mini
 - Switch to cloud APIs
@@ -481,11 +520,11 @@ const db = new Database("classify.db", {
 
 ### Local Processing (Scenarios 1-3)
 
-| Component | Cost |
-|-----------|------|
-| Electricity (14.5h @ 200W) | ~$2 |
+| Component                   | Cost     |
+| --------------------------- | -------- |
+| Electricity (14.5h @ 200W)  | ~$2      |
 | Developer time (monitoring) | Variable |
-| **Total** | **$2** |
+| **Total**                   | **$2**   |
 
 **Best for:** <1000 indicators/day, privacy-critical data
 
@@ -493,13 +532,13 @@ const db = new Database("classify.db", {
 
 ### Cloud Processing (Scenarios 4-5)
 
-| Provider | Model | Cost per 10k | Quality | Speed |
-|----------|-------|--------------|---------|-------|
-| **OpenAI** | gpt-4o-mini | $4-6 | Good | Fast |
-| **OpenAI** | gpt-4o | $40-60 | Excellent | Fast |
-| **Anthropic** | claude-3-haiku | $7-10 | Excellent | Fast |
-| **Anthropic** | claude-3.5-sonnet | $60-80 | Best | Medium |
-| **Google** | gemini-1.5-flash | $2-4 | Good | Very Fast |
+| Provider      | Model             | Cost per 10k | Quality   | Speed     |
+| ------------- | ----------------- | ------------ | --------- | --------- |
+| **OpenAI**    | gpt-4o-mini       | $4-6         | Good      | Fast      |
+| **OpenAI**    | gpt-4o            | $40-60       | Excellent | Fast      |
+| **Anthropic** | claude-3-haiku    | $7-10        | Excellent | Fast      |
+| **Anthropic** | claude-3.5-sonnet | $60-80       | Best      | Medium    |
+| **Google**    | gemini-1.5-flash  | $2-4         | Good      | Very Fast |
 
 **Recommended:** OpenAI gpt-4o-mini or Anthropic claude-3-haiku
 
@@ -528,6 +567,7 @@ OPENAI_MODEL=gpt-4o-mini
 ## Optimization Roadmap
 
 ### Phase 1: Quick Wins (Day 1)
+
 - [ ] Increase batch size to 10
 - [ ] Test with 100 indicators
 - [ ] Validate accuracy remains 100%
@@ -537,6 +577,7 @@ OPENAI_MODEL=gpt-4o-mini
 ---
 
 ### Phase 2: Cloud Migration (Week 1)
+
 - [ ] Set up OpenAI/Anthropic API keys
 - [ ] Configure environment variables
 - [ ] Test with 1000 indicators
@@ -547,6 +588,7 @@ OPENAI_MODEL=gpt-4o-mini
 ---
 
 ### Phase 3: Advanced Optimization (Week 2-3)
+
 - [ ] Implement retry logic with exponential backoff
 - [ ] Add cost tracking per batch
 - [ ] Create monitoring dashboard
@@ -557,6 +599,7 @@ OPENAI_MODEL=gpt-4o-mini
 ---
 
 ### Phase 4: Scale (Month 1+)
+
 - [ ] Consider distributed processing for >50k indicators
 - [ ] Evaluate PostgreSQL migration for concurrent writes
 - [ ] Implement caching for common classifications
@@ -570,14 +613,15 @@ OPENAI_MODEL=gpt-4o-mini
 
 ### Accuracy Testing (22 Total Classifications)
 
-| Indicator | Count | Accuracy | Notes |
-|-----------|-------|----------|-------|
-| Balance of Trade | 13 | 100% | Consistent: physical-fundamental → balance |
-| Bank Lending Rate | 9 | 100% | Fixed: Now price-value → rate (was change-movement) |
+| Indicator         | Count | Accuracy | Notes                                               |
+| ----------------- | ----- | -------- | --------------------------------------------------- |
+| Balance of Trade  | 13    | 100%     | Consistent: physical-fundamental → balance          |
+| Bank Lending Rate | 9     | 100%     | Fixed: Now price-value → rate (was change-movement) |
 
 **Overall Accuracy:** 100% (22/22 correct)
 
 **Key Improvements:**
+
 1. Currency vs non-currency routing: 100% accurate
 2. Unit-type sub-routing: Eliminated "rate" ambiguity
 3. Enhanced prompts: Concrete examples prevent misclassification
@@ -599,7 +643,9 @@ export const handler = async (req, { emit, logger, traceId }) => {
   logger.info("Starting batch classification", {
     count: indicators.length,
     batchSize,
-    estimatedTime: `${Math.ceil(indicators.length / batchSize * 2.5 / 60)} minutes`,
+    estimatedTime: `${
+      Math.ceil(indicators.length / batchSize * 2.5 / 60)
+    } minutes`,
     traceId,
   });
 
@@ -637,7 +683,7 @@ export const handler = async (req, { emit, logger, traceId }) => {
       count: indicators.length,
       trace_id: traceId,
       estimated_completion: new Date(
-        Date.now() + (indicators.length / batchSize * 2.5 * 1000)
+        Date.now() + (indicators.length / batchSize * 2.5 * 1000),
       ).toISOString(),
     },
   };
@@ -680,11 +726,13 @@ LOG_LEVEL=info
 ## Support & References
 
 **Documentation:**
+
 - [Pipeline Architecture](./ARCHITECTURE.md)
 - [Classification Logic](./CLASSIFICATION_LOGIC.md)
 - [Quality Controls](./guides/quality-controls.md)
 
 **Code References:**
+
 - Batch processing: `steps/classify-flow/start-classify.step.ts:86-118`
 - LLM configuration: `src/services/classify/client.ts:1-50`
 - Database persistence: `src/db/persist.ts:1-200`
@@ -693,6 +741,6 @@ LOG_LEVEL=info
 
 ---
 
-*Last updated: 2025-01-XX*
-*Pipeline version: 1.3.3*
-*Tested configuration: Batch=5, Local Mistral 7B, 100% accuracy*
+_Last updated: 2025-01-XX_
+_Pipeline version: 1.3.3_
+_Tested configuration: Batch=5, Local Mistral 7B, 100% accuracy_

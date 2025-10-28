@@ -2,7 +2,11 @@
 
 ## Overview
 
-A Motia application for classifying economic indicators using a parallelized per-indicator workflow. Each indicator runs through its own pipeline workflow, with up to 25 workflows executing concurrently. Features local LLM inference by default with swappable providers (OpenAI via Vercel AI SDK), token-efficient prompts, and hybrid State+SQLite persistence.
+A Motia application for classifying economic indicators using a parallelized
+per-indicator workflow. Each indicator runs through its own pipeline workflow,
+with up to 25 workflows executing concurrently. Features local LLM inference by
+default with swappable providers (OpenAI via Vercel AI SDK), token-efficient
+prompts, and hybrid State+SQLite persistence.
 
 ## Project Status
 
@@ -12,21 +16,30 @@ A Motia application for classifying economic indicators using a parallelized per
 
 ## Implementation Checklist
 
-- [ ] **Setup & Cleanup**: Remove example petstore code (`steps/petstore/`, `src/services/pet-store/`), create directory structure (`src/services/classify/`, `src/utils/`, `src/scripts/`, `steps/classify-flow/`), add extensive Motia logging throughout ALL steps (logger.info for stage entry/exit, logger.debug for intermediate values/state, logger.warn for validation issues, logger.error for failures with full context including indicator_id)
+- [ ] **Setup & Cleanup**: Remove example petstore code (`steps/petstore/`,
+      `src/services/pet-store/`), create directory structure
+      (`src/services/classify/`, `src/utils/`, `src/scripts/`,
+      `steps/classify-flow/`), add extensive Motia logging throughout ALL steps
+      (logger.info for stage entry/exit, logger.debug for intermediate
+      values/state, logger.warn for validation issues, logger.error for failures
+      with full context including indicator_id)
 - [ ] Create .env file with API keys and database paths
 - [ ] Copy unit-classifier.ts from econify to src/utils/
 - [ ] Create service layer: normalize.ts, llm-clients.ts, types.ts
 - [ ] Create all 7 prompt templates in src/services/classify/prompts/
 - [ ] Implement Step 1: start-classify.step.ts (API endpoint to batch trigger)
 - [ ] Implement Step 2: normalize-indicator.step.ts (Event: regex parsing)
-- [ ] Implement Step 3: infer-time-basis.step.ts (Event: LLM time inference with periodicity logic)
+- [ ] Implement Step 3: infer-time-basis.step.ts (Event: LLM time inference with
+      periodicity logic)
 - [ ] Implement Step 4: infer-scale.step.ts (Event: LLM scale inference)
 - [ ] Implement Step 5: check-currency.step.ts (Event: LLM currency check)
 - [ ] Implement Step 6: assign-family.step.ts (Event: LLM family assignment)
 - [ ] Implement Step 7: classify-type.step.ts (Event: LLM type classification)
 - [ ] Implement Step 8: boolean-review.step.ts (Event: LLM boolean review)
-- [ ] Implement Step 9: final-review.step.ts (Event: LLM final review with corrections)
-- [ ] Implement Step 10: complete-classify.step.ts (Event: finalize and save to SQLite)
+- [ ] Implement Step 9: final-review.step.ts (Event: LLM final review with
+      corrections)
+- [ ] Implement Step 10: complete-classify.step.ts (Event: finalize and save to
+      SQLite)
 - [ ] Create seed-database.ts script to fetch indicators from PostgreSQL
 - [ ] Create SQLite schema and database operations
 - [ ] Test end-to-end workflow with 1 indicator
@@ -52,14 +65,21 @@ Motia State (intermediate) + SQLite (persistent audit trail)
 
 Each indicator goes through 10 steps:
 
-1. **API Trigger** (`start-classify.step.ts`) - Batch endpoint, emits to normalize
-2. **Normalization** (`normalize-indicator.step.ts`) - Regex parsing: scale, units, currency
-3. **Time Inference** (`infer-time-basis.step.ts`) - LLM determines reporting frequency + time basis
+1. **API Trigger** (`start-classify.step.ts`) - Batch endpoint, emits to
+   normalize
+2. **Normalization** (`normalize-indicator.step.ts`) - Regex parsing: scale,
+   units, currency
+3. **Time Inference** (`infer-time-basis.step.ts`) - LLM determines reporting
+   frequency + time basis
 4. **Scale Inference** (`infer-scale.step.ts`) - LLM confirms measurement scale
-5. **Currency Check** (`check-currency.step.ts`) - LLM binary decision on currency denomination
-6. **Family Assignment** (`assign-family.step.ts`) - LLM assigns to 1 of 7 families
-7. **Type Classification** (`classify-type.step.ts`) - LLM determines specific type (26 options)
-8. **Boolean Review** (`boolean-review.step.ts`) - LLM validates: is this correct?
+5. **Currency Check** (`check-currency.step.ts`) - LLM binary decision on
+   currency denomination
+6. **Family Assignment** (`assign-family.step.ts`) - LLM assigns to 1 of 7
+   families
+7. **Type Classification** (`classify-type.step.ts`) - LLM determines specific
+   type (26 options)
+8. **Boolean Review** (`boolean-review.step.ts`) - LLM validates: is this
+   correct?
 9. **Final Review** (`final-review.step.ts`) - LLM applies corrections if needed
 10. **Complete** (`complete-classify.step.ts`) - Finalize and persist to SQLite
 
@@ -75,41 +95,46 @@ Each indicator goes through 10 steps:
 - **Output**: Emits to next topic (e.g., `indicator.infer-time`)
 
 **Benefits**:
+
 - Automatic concurrency (Motia handles parallelization)
 - Independent failure handling per indicator
 - Full observability via Motia Workbench (tracing, logging, state inspection)
 - Horizontal scalability
 
 **Example Flow**:
+
 ```typescript
 // API Step triggers 25 workflows
-await Promise.all(indicators.map(ind => 
-  emit({ topic: 'indicator.normalize', data: ind })
-))
+await Promise.all(
+  indicators.map((ind) => emit({ topic: "indicator.normalize", data: ind })),
+);
 
 // Each Event Step processes independently
-handler: async (input, { state, emit, logger }) => {
-  logger.info('Stage started', { indicator_id: input.indicator_id })
-  const result = await processStage(input)
-  await state.set('stage-results', input.indicator_id, result)
-  logger.debug('Stage complete', { indicator_id, result })
-  await emit({ topic: 'next.stage', data: { ...input, ...result } })
-}
+handler: (async (input, { state, emit, logger }) => {
+  logger.info("Stage started", { indicator_id: input.indicator_id });
+  const result = await processStage(input);
+  await state.set("stage-results", input.indicator_id, result);
+  logger.debug("Stage complete", { indicator_id, result });
+  await emit({ topic: "next.stage", data: { ...input, ...result } });
+});
 ```
 
 ### 2. LLM Provider Strategy
 
 **Default: Local LLM**
+
 - Fast inference for simple classification tasks
 - Zero cost
 - Privacy/data control
 
 **Swappable: OpenAI via Vercel AI SDK**
+
 - Per-stage configuration via environment variables
 - Type-safe structured outputs via `generateObject`
 - Example: Local for time/scale/currency, OpenAI for review stages
 
 **Interface**:
+
 ```typescript
 interface LLMClient {
   generateObject<T>(params: {
@@ -119,8 +144,8 @@ interface LLMClient {
 }
 
 // Environment-based configuration
-const provider = Deno.env.get('LLM_PROVIDER_TIME_INFERENCE') || 'local'
-const client = createLLMClient(provider)
+const provider = Deno.env.get("LLM_PROVIDER_TIME_INFERENCE") || "local";
+const client = createLLMClient(provider);
 ```
 
 ### 3. Token-Efficient Prompts
@@ -130,6 +155,7 @@ const client = createLLMClient(provider)
 **Target**: ~100-150 tokens input, ~50 tokens output per stage
 
 **Example - Time Inference**:
+
 ```
 Indicator: GDP
 Units: USD Millions
@@ -151,33 +177,41 @@ Reason: [1 sentence]
 ### 4. Hybrid Storage Strategy
 
 **Motia State** (temporary workflow data):
+
 - Pass data between stages
 - Fast read/write
 - Automatic cleanup
 - Queryable per workflow
 
 **SQLite** (persistent audit trail):
+
 - Final classifications table
 - Complete classification history
 - Long-term storage
 - Query by name, family, type, etc.
 
 **PostgreSQL** (source):
+
 - 10,000+ indicators
 - Time series data
 - Seeded to SQLite for local development
 
 ### 5. Time Inference Logic (Critical)
 
-The most complex stage - determines **reporting frequency** from multiple sources:
+The most complex stage - determines **reporting frequency** from multiple
+sources:
 
 **Priority Order**:
-1. **Units field** - Check for time indicators (per day, per year, annual, quarterly, monthly)
+
+1. **Units field** - Check for time indicators (per day, per year, annual,
+   quarterly, monthly)
 2. **Periodicity field** - Use if units doesn't contain time info
-3. **Time series analysis** - Analyze sample_values dates if neither field has info
+3. **Time series analysis** - Analyze sample_values dates if neither field has
+   info
 4. **Validation** - If periodicity conflicts with time series, trust time series
 
 **Example**:
+
 ```typescript
 // Case 1: Time in units
 units: "USD Million per year" → annual
@@ -269,6 +303,7 @@ apps/motia/classify-workflow/
 **Flow**: `classify-indicator`
 
 **State Groups**:
+
 - `normalizations` - Stage 1 results
 - `time-inferences` - Stage 2 results
 - `scale-inferences` - Stage 3 results
@@ -279,6 +314,7 @@ apps/motia/classify-workflow/
 - `final-reviews` - Stage 8 results
 
 **Event Topics**:
+
 - `indicator.normalize`
 - `indicator.infer-time`
 - `indicator.infer-scale`
@@ -356,6 +392,7 @@ CREATE INDEX idx_final_type ON final_classifications(indicator_type);
 **Purpose**: Fetch 10,000+ indicators from PostgreSQL and populate local SQLite
 
 **Target Indicators** (100+ names, all countries):
+
 - Imports of goods, World (CIF)
 - Inflation Rate
 - Real Effective Exchange Rate (REER)
@@ -368,11 +405,13 @@ CREATE INDEX idx_final_type ON final_classifications(indicator_type);
 - ... (see full list in PRD)
 
 **Usage**:
+
 ```bash
 deno task seed-db
 ```
 
 **Script** (`src/scripts/seed-database.ts`):
+
 ```typescript
 import { Client } from "https://deno.land/x/postgres/mod.ts";
 import { Database } from "https://deno.land/x/sqlite/mod.ts";
@@ -411,38 +450,54 @@ async function seedDatabase() {
 **Critical**: Extensive logging at every stage for debugging and observability
 
 **logger.info** - Stage entry/exit:
+
 ```typescript
-logger.info('Stage started', { indicator_id, stage: 'normalize' })
-logger.info('Stage complete', { indicator_id, stage: 'normalize', confidence: 0.95 })
+logger.info("Stage started", { indicator_id, stage: "normalize" });
+logger.info("Stage complete", {
+  indicator_id,
+  stage: "normalize",
+  confidence: 0.95,
+});
 ```
 
 **logger.debug** - Intermediate state:
+
 ```typescript
-logger.debug('Normalization result', { 
-  indicator_id, 
-  parsed_scale, 
-  parsed_unit_type, 
+logger.debug("Normalization result", {
+  indicator_id,
+  parsed_scale,
+  parsed_unit_type,
   parsed_currency,
-  confidence 
-})
+  confidence,
+});
 ```
 
 **logger.warn** - Validation issues:
+
 ```typescript
-logger.warn('Low confidence', { indicator_id, confidence: 0.6, stage: 'time-inference' })
-logger.warn('Periodicity conflict', { indicator_id, periodicity, time_series_frequency })
+logger.warn("Low confidence", {
+  indicator_id,
+  confidence: 0.6,
+  stage: "time-inference",
+});
+logger.warn("Periodicity conflict", {
+  indicator_id,
+  periodicity,
+  time_series_frequency,
+});
 ```
 
 **logger.error** - Failures with full context:
+
 ```typescript
-logger.error('LLM inference failed', { 
-  indicator_id, 
-  name, 
-  units, 
-  stage: 'time-inference',
+logger.error("LLM inference failed", {
+  indicator_id,
+  name,
+  units,
+  stage: "time-inference",
   error: error.message,
-  stack: error.stack 
-})
+  stack: error.stack,
+});
 ```
 
 ## Success Metrics
@@ -463,4 +518,3 @@ logger.error('LLM inference failed', {
 - Export to econify package format
 - Web UI for reviewing flagged indicators
 - Batch review endpoint for manual corrections
-

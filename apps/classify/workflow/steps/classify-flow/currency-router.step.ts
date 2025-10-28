@@ -49,7 +49,9 @@ export const config: EventConfig = {
     topic: z.string().optional(),
     currency_code: z.string().optional(),
     // LLM provider selection
-    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default("local"),
+    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default(
+      "local",
+    ),
   }),
 };
 

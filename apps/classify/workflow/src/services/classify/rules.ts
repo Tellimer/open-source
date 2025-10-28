@@ -26,7 +26,9 @@ export function checkCurrencyRuleBased(input: {
     detectedCurrency: input.parsedCurrency,
     confidence: 1.0, // Rule-based is deterministic
     reasoning: isCurrency
-      ? `Currency detected from unit type: ${input.parsedUnitType}, currency code: ${input.parsedCurrency || "N/A"}`
+      ? `Currency detected from unit type: ${input.parsedUnitType}, currency code: ${
+        input.parsedCurrency || "N/A"
+      }`
       : `Not currency-denominated. Unit type: ${input.parsedUnitType}`,
   };
 }
@@ -108,8 +110,12 @@ function analyzeTimeSeriesFrequency(
     const medianInterval = intervals[Math.floor(intervals.length / 2)];
 
     // Determine frequency based on median interval
-    let frequency: "daily" | "monthly" | "quarterly" | "annual" |
-      "point-in-time";
+    let frequency:
+      | "daily"
+      | "monthly"
+      | "quarterly"
+      | "annual"
+      | "point-in-time";
     let confidence = 0.9;
 
     if (medianInterval < 7) {
@@ -273,7 +279,9 @@ function extractFrequencyFromMetadata(input: {
   if (periodicityLower.includes("quarterly")) {
     return { frequency: "quarterly", confidence: 0.95, source: "periodicity" };
   }
-  if (periodicityLower.includes("annual") || periodicityLower.includes("year")) {
+  if (
+    periodicityLower.includes("annual") || periodicityLower.includes("year")
+  ) {
     return { frequency: "annual", confidence: 0.95, source: "periodicity" };
   }
 
@@ -291,8 +299,12 @@ export function inferTimeRuleBased(input: {
   parsedUnitType: UnitSemanticType;
   sampleValues?: Array<{ date: string; value: number }>;
 }): {
-  reportingFrequency: "daily" | "monthly" | "quarterly" | "annual" |
-    "point-in-time";
+  reportingFrequency:
+    | "daily"
+    | "monthly"
+    | "quarterly"
+    | "annual"
+    | "point-in-time";
   timeBasis: "per-period" | "point-in-time" | "cumulative";
   confidence: number;
   reasoning: string;
@@ -310,8 +322,12 @@ export function inferTimeRuleBased(input: {
     : null;
 
   // Step 3: Determine which source to trust
-  let reportingFrequency: "daily" | "monthly" | "quarterly" | "annual" |
-    "point-in-time";
+  let reportingFrequency:
+    | "daily"
+    | "monthly"
+    | "quarterly"
+    | "annual"
+    | "point-in-time";
   let sourceUsed: "units" | "periodicity" | "time-series" | "unknown";
   let frequencyConfidence: number;
 

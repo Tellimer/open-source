@@ -12,7 +12,7 @@
  *   deno task run:all 1000 local   # Process first 1000 with local LLM
  */
 
-import { Database } from '@db/sqlite';
+import { Database } from "@db/sqlite";
 
 interface SourceIndicator {
   id: string;
@@ -36,7 +36,7 @@ interface SourceIndicator {
  */
 function getSequentialIndicators(
   db: Database,
-  count?: number
+  count?: number,
 ): SourceIndicator[] {
   let query: string;
 
@@ -86,16 +86,15 @@ function getSequentialIndicators(
   }
 
   const stmt = db.prepare(query);
-  const rows =
-    count === undefined
-      ? stmt.all<SourceIndicator>()
-      : stmt.all<SourceIndicator>(count);
+  const rows = count === undefined
+    ? stmt.all<SourceIndicator>()
+    : stmt.all<SourceIndicator>(count);
 
   return rows;
 }
 
 function parseSampleValues(
-  sampleValuesJson?: string
+  sampleValuesJson?: string,
 ): Array<{ date: string; value: number }> | undefined {
   if (!sampleValuesJson) return undefined;
 
@@ -112,7 +111,7 @@ async function waitForBatchCompletion(
   db: Database,
   indicatorIds: string[],
   maxWaitMs: number = 300000, // 5 minutes max
-  pollIntervalMs: number = 2000 // Check every 2 seconds
+  pollIntervalMs: number = 2000, // Check every 2 seconds
 ): Promise<boolean> {
   const startTime = Date.now();
   const totalIndicators = indicatorIds.length;
@@ -121,7 +120,7 @@ async function waitForBatchCompletion(
   while (Date.now() - startTime < maxWaitMs) {
     // Check how many indicators have FULLY completed (logged to processing_log with status='completed')
     // This ensures all workflow steps (including state saves and batch stats) are done
-    const placeholders = indicatorIds.map(() => '?').join(',');
+    const placeholders = indicatorIds.map(() => "?").join(",");
     const query = `
       SELECT COUNT(DISTINCT indicator_id) as completed
       FROM processing_log
@@ -142,7 +141,7 @@ async function waitForBatchCompletion(
     ) {
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       console.log(
-        `   Progress: ${completed}/${totalIndicators} (${progressPercent}%) - ${elapsed}s elapsed`
+        `   Progress: ${completed}/${totalIndicators} (${progressPercent}%) - ${elapsed}s elapsed`,
       );
       lastReportedProgress = progressPercent;
     }
@@ -160,26 +159,26 @@ async function waitForBatchCompletion(
 
 async function classifyIndicatorsBatch(
   indicators: SourceIndicator[],
-  llmProvider: string = 'openai',
+  llmProvider: string = "openai",
   batchSize: number = 5,
   concurrentBatches: number = 3,
-  db: Database
+  db: Database,
 ) {
-  const baseUrl = Deno.env.get('MOTIA_API_URL') || 'http://localhost:3000';
+  const baseUrl = Deno.env.get("MOTIA_API_URL") || "http://localhost:3000";
   const totalIndicators = indicators.length;
   const numBatches = Math.ceil(totalIndicators / batchSize);
 
   console.log(
-    `\n🚀 Processing ${totalIndicators} indicators in ${numBatches} batches of ${batchSize}...`
+    `\n🚀 Processing ${totalIndicators} indicators in ${numBatches} batches of ${batchSize}...`,
   );
   console.log(`   Provider: ${llmProvider}`);
   console.log(
     `   Concurrent batches: ${concurrentBatches} (${
       batchSize * concurrentBatches
-    } indicators per group)`
+    } indicators per group)`,
   );
   console.log(
-    `   Strategy: Process 20 indicators, wait for completion, then next 20`
+    `   Strategy: Process 20 indicators, wait for completion, then next 20`,
   );
   console.log(`   Brief pause: 0.5 seconds between groups for rate limiting`);
   console.log(`   API: ${baseUrl}/classify/batch\n`);
@@ -192,12 +191,16 @@ async function classifyIndicatorsBatch(
     const groupIndicatorIds: string[] = [];
 
     console.log(
-      `📋 Group ${Math.floor(i / concurrentBatches) + 1}/${Math.ceil(
-        numBatches / concurrentBatches
-      )}: Starting ${Math.min(
-        concurrentBatches,
-        numBatches - i
-      )} concurrent batches...\n`
+      `📋 Group ${Math.floor(i / concurrentBatches) + 1}/${
+        Math.ceil(
+          numBatches / concurrentBatches,
+        )
+      }: Starting ${
+        Math.min(
+          concurrentBatches,
+          numBatches - i,
+        )
+      } concurrent batches...\n`,
     );
 
     // Create concurrent batch requests
@@ -217,7 +220,7 @@ async function classifyIndicatorsBatch(
       console.log(
         `   📦 Batch ${batchNum}/${numBatches}: Submitting indicators ${
           start + 1
-        }-${end}...`
+        }-${end}...`,
       );
 
       const payload = {
@@ -242,21 +245,21 @@ async function classifyIndicatorsBatch(
 
       // Create a promise for this batch request
       const batchPromise = fetch(`${baseUrl}/classify/batch`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       }).then(async (response) => {
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(
-            `Batch ${batchNum} failed: ${response.status} ${response.statusText}\n${errorText}`
+            `Batch ${batchNum} failed: ${response.status} ${response.statusText}\n${errorText}`,
           );
         }
         const result = await response.json();
         console.log(
-          `      ✅ Batch ${batchNum} accepted (trace: ${result.trace_id})`
+          `      ✅ Batch ${batchNum} accepted (trace: ${result.trace_id})`,
         );
         return result;
       });
@@ -271,31 +274,31 @@ async function classifyIndicatorsBatch(
     console.log(
       `   ✅ Group ${
         Math.floor(i / concurrentBatches) + 1
-      } batches submitted! (${groupIndicatorIds.length} indicators queued)\n`
+      } batches submitted! (${groupIndicatorIds.length} indicators queued)\n`,
     );
 
     // Wait for THIS GROUP to complete before moving to next group
     console.log(
-      `   ⏳ Waiting for ${groupIndicatorIds.length} indicators to complete...\n`
+      `   ⏳ Waiting for ${groupIndicatorIds.length} indicators to complete...\n`,
     );
 
     const completed = await waitForBatchCompletion(
       db,
       groupIndicatorIds,
-      600000
+      600000,
     ); // 10 min timeout per group
 
     if (completed) {
       console.log(
-        `   ✅ Group ${Math.floor(i / concurrentBatches) + 1} completed! (${
-          groupIndicatorIds.length
-        } indicators done)\n`
+        `   ✅ Group ${
+          Math.floor(i / concurrentBatches) + 1
+        } completed! (${groupIndicatorIds.length} indicators done)\n`,
       );
     } else {
       console.log(
         `   ⚠️ Group ${
           Math.floor(i / concurrentBatches) + 1
-        } timed out, continuing anyway...\n`
+        } timed out, continuing anyway...\n`,
       );
     }
 
@@ -310,8 +313,8 @@ async function classifyIndicatorsBatch(
 }
 
 function printIndicatorSummary(indicators: SourceIndicator[]) {
-  console.log('\n📊 Indicator Range:');
-  console.log('═'.repeat(80));
+  console.log("\n📊 Indicator Range:");
+  console.log("═".repeat(80));
 
   const first = indicators[0];
   const last = indicators[indicators.length - 1];
@@ -321,25 +324,25 @@ function printIndicatorSummary(indicators: SourceIndicator[]) {
   console.log(`   Total: ${indicators.length} indicators`);
 
   // Show first 5
-  console.log('\n   First 5:');
+  console.log("\n   First 5:");
   indicators.slice(0, 5).forEach((ind, idx) => {
     console.log(`   ${idx + 1}. ${ind.id}: ${ind.name}`);
     if (ind.definition) {
       console.log(
         `      ${ind.definition.slice(0, 60)}${
-          ind.definition.length > 60 ? '...' : ''
-        }`
+          ind.definition.length > 60 ? "..." : ""
+        }`,
       );
     }
   });
 
-  console.log('═'.repeat(80));
+  console.log("═".repeat(80));
 }
 
 async function main() {
   const args = Deno.args;
 
-  if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
+  if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     console.log(`
 Usage:
   deno task run:all [count] [provider]
@@ -359,54 +362,54 @@ Arguments:
 
   // Parse arguments
   const countArg = args[0];
-  const llmProvider = args[1] || 'openai';
+  const llmProvider = args[1] || "openai";
 
   // Parse count (optional)
   let count: number | undefined;
-  if (countArg && !['openai', 'local', 'anthropic'].includes(countArg)) {
+  if (countArg && !["openai", "local", "anthropic"].includes(countArg)) {
     count = parseInt(countArg, 10);
     if (isNaN(count) || count <= 0) {
       console.error(
-        `❌ Invalid count: ${countArg}. Must be a positive number or omit for ALL.`
+        `❌ Invalid count: ${countArg}. Must be a positive number or omit for ALL.`,
       );
       Deno.exit(1);
     }
   }
 
   // Validate provider
-  if (!['openai', 'local', 'anthropic'].includes(llmProvider)) {
+  if (!["openai", "local", "anthropic"].includes(llmProvider)) {
     console.error(
-      `❌ Invalid provider: ${llmProvider}. Must be "openai", "local", or "anthropic"`
+      `❌ Invalid provider: ${llmProvider}. Must be "openai", "local", or "anthropic"`,
     );
     Deno.exit(1);
   }
 
   // Open database
-  const dbPath = './data/classify-workflow-local-dev.db';
+  const dbPath = "./data/classify-workflow-local-dev.db";
   console.log(`📂 Opening database: ${dbPath}`);
 
   const db = new Database(dbPath);
 
   try {
     // Get total count
-    const totalStmt = db.prepare('SELECT COUNT(*) FROM source_indicators');
+    const totalStmt = db.prepare("SELECT COUNT(*) FROM source_indicators");
     const totalCount = totalStmt.value()![0] as number;
     console.log(
-      `📊 Total indicators in database: ${totalCount.toLocaleString()}`
+      `📊 Total indicators in database: ${totalCount.toLocaleString()}`,
     );
 
     // Get sequential indicators
     const processingCount = count || totalCount;
     console.log(
       `🔄 Processing ${
-        count ? 'first ' + processingCount.toLocaleString() : 'ALL'
-      } indicators sequentially...`
+        count ? "first " + processingCount.toLocaleString() : "ALL"
+      } indicators sequentially...`,
     );
 
     const indicators = getSequentialIndicators(db, count);
 
     if (indicators.length === 0) {
-      console.error('❌ No indicators found in database');
+      console.error("❌ No indicators found in database");
       Deno.exit(1);
     }
 
@@ -423,16 +426,16 @@ Arguments:
       llmProvider,
       batchSize,
       concurrentBatches,
-      db
+      db,
     );
 
     console.log(`\n✅ All batches submitted successfully!`);
     console.log(`   Total indicators: ${indicators.length}`);
     console.log(`   Batches: ${results.length}`);
-    console.log(`   Trace IDs: ${results.map((r) => r.trace_id).join(', ')}`);
+    console.log(`   Trace IDs: ${results.map((r) => r.trace_id).join(", ")}`);
     console.log(`\n💡 Monitor progress with:`);
     console.log(
-      `   sqlite3 ./data/classify-workflow-local-dev.db "SELECT COUNT(*) FROM classifications;"`
+      `   sqlite3 ./data/classify-workflow-local-dev.db "SELECT COUNT(*) FROM classifications;"`,
     );
   } finally {
     db.close();
@@ -441,7 +444,7 @@ Arguments:
 
 if (import.meta.main) {
   main().catch((error) => {
-    console.error('❌ Error:', error);
+    console.error("❌ Error:", error);
     Deno.exit(1);
   });
 }

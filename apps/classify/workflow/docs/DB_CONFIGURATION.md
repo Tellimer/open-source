@@ -24,24 +24,30 @@ POSTGRES_URL="postgresql://..." deno task sync:postgres:dry-run
 ## Quick Start
 
 ### SQLite (Default - Local Development)
+
 No configuration needed. The workflow automatically uses SQLite if no PostgreSQL URL is provided:
+
 ```bash
 deno task run:dev
 ```
 
 ### PostgreSQL (Remote/Production)
+
 Set the `POSTGRES_URL` environment variable:
+
 ```bash
 export POSTGRES_URL="postgresql://user:password@host:5432/classify_workflow"
 deno task run:dev
 ```
 
 Or add to `.env`:
+
 ```env
 POSTGRES_URL=postgresql://user:password@host:5432/classify_workflow
 ```
 
 ### Syncing Local Data to PostgreSQL
+
 ```bash
 # 1. Initialize schema
 POSTGRES_URL="postgresql://..." deno task init:postgres
@@ -53,6 +59,7 @@ POSTGRES_URL="postgresql://..." deno task sync:postgres
 ## When to Use Each Database
 
 ### Use SQLite When:
+
 - Local development (fast, zero-config)
 - Single-user workflows
 - Prototyping
@@ -60,6 +67,7 @@ POSTGRES_URL="postgresql://..." deno task sync:postgres
 - Data portability
 
 ### Use PostgreSQL When:
+
 - Remote storage
 - Concurrent access / multiple instances
 - Production deployments
@@ -69,6 +77,7 @@ POSTGRES_URL="postgresql://..." deno task sync:postgres
 ## Architecture Details
 
 ### Hybrid Approach (Recommended for Production)
+
 ```
 Motia State (SQLite) → fast local coordination
             ↓
@@ -76,6 +85,7 @@ Classification Results (PostgreSQL) → shared, durable, queryable
 ```
 
 Why:
+
 - Motia internal state doesn't need remote access
 - Results benefit from PostgreSQL features
 - Separation of concerns: workflow state vs business data
@@ -83,6 +93,7 @@ Why:
 ## Implementation Notes
 
 Automatic database selection:
+
 ```typescript
 if (POSTGRES_URL || DATABASE_URL) {
   // Use PostgreSQL
@@ -92,6 +103,7 @@ if (POSTGRES_URL || DATABASE_URL) {
 ```
 
 Unified API:
+
 ```typescript
 import { getDatabase } from "./src/db/client.ts";
 
@@ -102,6 +114,7 @@ db.query("SELECT * FROM classifications");
 ## Syncing Data Between Databases
 
 ### SQLite → PostgreSQL
+
 ```bash
 # Initialize PostgreSQL schema
 POSTGRES_URL="postgresql://user:pass@host/db" deno task init:postgres
@@ -114,6 +127,7 @@ POSTGRES_URL="postgresql://user:pass@host/db" deno task sync:postgres:dry-run
 ```
 
 Options:
+
 ```bash
 # Sync specific tables
 deno task sync:postgres -- --tables=classifications,time_inference_results
@@ -139,4 +153,3 @@ CLASSIFY_DB_LOCAL_DEV=./data/classify-workflow-local-dev.db
 ```
 
 See also: `docs/DATABASE_PERSISTENCE.md` for schema details.
-

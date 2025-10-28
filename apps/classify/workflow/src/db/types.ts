@@ -25,7 +25,7 @@ export interface DatabaseClient {
    */
   run(
     sql: string,
-    params?: unknown[]
+    params?: unknown[],
   ): { changes: number; lastInsertRowid?: number };
 
   /**
@@ -55,4 +55,4 @@ export interface PreparedStatement {
   all<T = unknown>(params?: unknown[]): T[];
 }
 
-export type DatabaseType = 'sqlite' | 'postgres';
+export type DatabaseType = "sqlite" | "postgres";

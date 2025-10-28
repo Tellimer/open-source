@@ -7,6 +7,7 @@ We've created a unified database repository pattern that works seamlessly with b
 ## New Pattern
 
 ### Before (Old Way)
+
 ```typescript
 import { getDatabase } from "../../src/db/client.ts";
 import { logProcessing, saveStageResult } from "../../src/db/persist.ts";
@@ -20,6 +21,7 @@ saveStageResult(db, "normalize", indicator_id, {
 ```
 
 ### After (New Way)
+
 ```typescript
 import { getDatabase } from "../../src/db/client.ts";
 import { createRepository } from "../../src/db/repository.ts";
@@ -47,6 +49,7 @@ const result = await repo.getStageResult(stage, indicator_id);
 ```
 
 **Supported stages:**
+
 - `normalize` → `normalization_results`
 - `time` → `time_inference_results`
 - `cumulative-detection` → `cumulative_detection_results`
@@ -114,19 +117,19 @@ await repo.completeBatchStats(batch_id);
 // Run a query
 const results = await repo.query<MyType>(
   "SELECT * FROM table WHERE id = $1",
-  [id]
+  [id],
 );
 
 // Run a query for single result
 const result = await repo.queryOne<MyType>(
   "SELECT * FROM table WHERE id = $1 LIMIT 1",
-  [id]
+  [id],
 );
 
 // Execute a statement
 const { changes } = await repo.run(
   "UPDATE table SET status = $1 WHERE id = $2",
-  ["active", id]
+  ["active", id],
 );
 
 // Transaction
@@ -226,12 +229,14 @@ export const handler = async (input: any, { state, emit, logger }: any) => {
 ## Database-Specific Notes
 
 ### PostgreSQL
+
 - Uses prepared statements with `$1, $2, ...` placeholders
 - UPSERT uses `ON CONFLICT ... DO UPDATE`
 - Timestamps use `CURRENT_TIMESTAMP`
 - No busy-wait blocking (proper async)
 
 ### SQLite
+
 - Uses `?` placeholders (automatically converted)
 - UPSERT uses `ON CONFLICT ... DO UPDATE`
 - Timestamps use `datetime('now')`
@@ -254,14 +259,17 @@ Both databases can be tested with the same code:
 ## Troubleshooting
 
 ### "Query timeout" errors
+
 - Check PostgreSQL connection string
 - Ensure `init:postgres` was run to create schema
 - Verify network connectivity to database
 
 ### "Table does not exist" errors
+
 - Run `deno task init:postgres` for PostgreSQL
 - Schema auto-initializes for SQLite
 
 ### Type errors with `await`
+
 - Ensure handler is declared `async`
 - All repo methods return Promises - use `await`

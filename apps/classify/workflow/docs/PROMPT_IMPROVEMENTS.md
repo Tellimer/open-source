@@ -22,35 +22,41 @@ Updated classification prompts with patterns from 109 human-verified classificat
 Added explicit warnings about the most common mistakes with concrete examples:
 
 #### Interest/Lending Rates
+
 - ❌ WRONG: `indicator_type: ratio` or `percentage`
 - ✅ CORRECT: `indicator_type: rate`, `temporal_aggregation: period-average`, `heat_map_orientation: neutral`
 - Examples: Bank Lending Rate, Interbank Rate, Interest Rate, Deposit Interest Rate
 - Reasoning: Interest rates are PRICE-VALUE rates (cost of capital)
 
 #### Growth Rates (%, YoY, MoM)
+
 - ❌ WRONG: `indicator_type: ratio` or `percentage`
 - ✅ CORRECT: `indicator_type: rate`
 - Examples: GDP Growth Rate, Industrial Production %, Manufacturing Production %, Mining Production %
 - Reasoning: Growth rates are CHANGE-MOVEMENT rates (% change over time)
 
 #### Tax Rates & Social Security Rates
+
 - ❌ WRONG: `indicator_type: percentage`, `temporal_aggregation: not-applicable`
 - ✅ CORRECT: `indicator_type: ratio`, `temporal_aggregation: point-in-time`, `heat_map_orientation: neutral`
 - Examples: Corporate Tax Rate, Personal Income Tax Rate, Sales Tax Rate, Social Security Rate
 - Reasoning: Policy rates are NUMERIC-MEASUREMENT ratios (0-100% bounded)
 
 #### Labor Market Ratios
+
 - ❌ WRONG: `indicator_type: percentage` or `rate`, `temporal_aggregation: not-applicable` or `period-average`
 - ✅ CORRECT: `indicator_type: ratio`, `temporal_aggregation: point-in-time`
 - Examples: Unemployment Rate, Employment Rate, Labor Force Participation Rate
 - Reasoning: NUMERIC-MEASUREMENT ratios expressed as %, snapshot at a point in time
 
 #### Price Indices (CPI, PPI, etc.)
+
 - ❌ WRONG: `indicator_type: index`, `temporal_aggregation: point-in-time`
 - ✅ CORRECT: `indicator_type: index`, `temporal_aggregation: period-average`
 - Examples: Consumer Price Index, Core Consumer Prices, Producer Prices, Import Prices, Export Prices
 
 #### Population & Employment Counts
+
 - ❌ WRONG: `indicator_type: stock`
 - ✅ CORRECT: `indicator_type: count`
 - Examples: Population, Employed Persons, Unemployed Persons
@@ -58,22 +64,26 @@ Added explicit warnings about the most common mistakes with concrete examples:
 ### 2. Currency-Denominated Patterns
 
 #### GDP and Economic Output
+
 - ❌ WRONG: `indicator_type: capacity`
 - ✅ CORRECT: `indicator_type: flow`
 - Examples: GDP, GNI, GDP by sector (Agriculture, Construction, Manufacturing, Services)
 
 #### Flows vs Balances
+
 - ❌ WRONG: Consumer Spending = balance, FDI = balance, Exports = balance, Imports = balance
 - ✅ CORRECT: These are all flows (period-total)
 - Exception: Trade Balance, Current Account Balance are truly balances
 
 #### Reserves and Financial Stocks
+
 - ❌ WRONG: `indicator_type: stock`
 - ✅ CORRECT: `indicator_type: balance`
 - Examples: Foreign Exchange Reserves, Official Reserves
 - Reasoning: "Stock positions that can theoretically be positive or negative use 'balance' in taxonomy"
 
 #### Money Supply
+
 - ✅ CORRECT: `indicator_type: stock`
 - Examples: Money Supply M0, M1, M2, M3
 
@@ -92,12 +102,15 @@ All examples now include ✅ markers indicating which patterns were verified fro
 Enhanced with more context-dependent examples:
 
 **Higher-is-positive:**
+
 - GDP Growth Rate, Employment Rate, Consumer Confidence Index, Capacity Utilization, Export Volumes, Tourist Arrivals
 
 **Lower-is-positive:**
+
 - Unemployment Rate, External Debt, Government Debt to GDP
 
 **Neutral:**
+
 - Interest Rates (affects savers vs borrowers differently)
 - ✅ **Inflation Rate** - CORRECTED to neutral (depends on economic conditions and target rates)
 - Inflation level indices (reference point, not change)
@@ -123,6 +136,7 @@ Updated with verified patterns:
 Added guidance that balances consistency with flexibility:
 
 **Pattern-Based Default:**
+
 - Same indicator name USUALLY has consistent classification
 - Example: "GDP" is typically flow + period-total
 - Example: "Bank Lending Rate" is typically rate + period-average
@@ -148,6 +162,7 @@ Added guidance that balances consistency with flexibility:
    - Override trigger: Units say "index" or "2015=100"
 
 **Decision Process:**
+
 1. Start with indicator NAME pattern as hypothesis
 2. Check units, description, and sample values for contradictory evidence
 3. If data clearly indicates different characteristics, OVERRIDE the pattern
@@ -173,6 +188,7 @@ Added guidance that balances consistency with flexibility:
 ## Reference Data Source
 
 Analysis based on: `indicators_metadata-2025-10-10_110140.csv`
+
 - 109 human-verified classifications
 - Detailed reasoning for each classification
 - Comprehensive analysis document: `analysis_patterns.md`

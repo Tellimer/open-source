@@ -4,14 +4,14 @@
  * @module
  */
 
-import Database from 'better-sqlite3';
-import process from 'node:process';
-import { CLASSIFY_WORKFLOW_SCHEMA } from './schema.ts';
-import { CLASSIFY_WORKFLOW_POSTGRES_SCHEMA } from './postgres-schema.ts';
-import { SQLiteClient } from './sqlite-client.ts';
-import { PostgresClient } from './postgres-client.ts';
-import { ensurePostgresCompatMigrations } from './postgres-migrations.ts';
-import type { DatabaseClient, DatabaseType } from './types.ts';
+import Database from "better-sqlite3";
+import process from "node:process";
+import { CLASSIFY_WORKFLOW_SCHEMA } from "./schema.ts";
+import { CLASSIFY_WORKFLOW_POSTGRES_SCHEMA } from "./postgres-schema.ts";
+import { SQLiteClient } from "./sqlite-client.ts";
+import { PostgresClient } from "./postgres-client.ts";
+import { ensurePostgresCompatMigrations } from "./postgres-migrations.ts";
+import type { DatabaseClient, DatabaseType } from "./types.ts";
 
 let dbInstance: DatabaseClient | null = null;
 let dbType: DatabaseType | null = null;
@@ -24,48 +24,47 @@ let isInitialized = false;
 function detectDatabaseType(): { type: DatabaseType; connection: string } {
   // Support both Deno and Node.js environments
   const getEnv = (key: string): string | undefined => {
-    if (typeof Deno !== 'undefined' && Deno.env) {
+    if (typeof Deno !== "undefined" && Deno.env) {
       return Deno.env.get(key);
     }
     return process.env[key];
   };
 
   // Explicit override: allow forcing DB selection regardless of URLs present
-  const dbOverride = (getEnv('CLASSIFY_DB') || '').toLowerCase(); // 'sqlite' | 'postgres'
-  const forceSqlite = getEnv('CLASSIFY_FORCE_SQLITE') === '1';
+  const dbOverride = (getEnv("CLASSIFY_DB") || "").toLowerCase(); // 'sqlite' | 'postgres'
+  const forceSqlite = getEnv("CLASSIFY_FORCE_SQLITE") === "1";
 
-  if (dbOverride === 'sqlite' || forceSqlite) {
-    const sqlitePath =
-      getEnv('CLASSIFY_DB_LOCAL_DEV') ||
-      './data/classify-workflow-local-dev.db';
-    console.log('[DB] CLASSIFY_DB override -> sqlite');
-    return { type: 'sqlite', connection: sqlitePath };
+  if (dbOverride === "sqlite" || forceSqlite) {
+    const sqlitePath = getEnv("CLASSIFY_DB_LOCAL_DEV") ||
+      "./data/classify-workflow-local-dev.db";
+    console.log("[DB] CLASSIFY_DB override -> sqlite");
+    return { type: "sqlite", connection: sqlitePath };
   }
 
-  if (dbOverride === 'postgres') {
-    const forcedPgUrl = getEnv('POSTGRES_URL') || getEnv('DATABASE_URL');
+  if (dbOverride === "postgres") {
+    const forcedPgUrl = getEnv("POSTGRES_URL") || getEnv("DATABASE_URL");
     if (forcedPgUrl) {
-      console.log('[DB] CLASSIFY_DB override -> postgres');
-      return { type: 'postgres', connection: forcedPgUrl };
+      console.log("[DB] CLASSIFY_DB override -> postgres");
+      return { type: "postgres", connection: forcedPgUrl };
     } else {
       console.warn(
-        '[DB] CLASSIFY_DB=postgres set but no POSTGRES_URL/DATABASE_URL found; falling back to sqlite'
+        "[DB] CLASSIFY_DB=postgres set but no POSTGRES_URL/DATABASE_URL found; falling back to sqlite",
       );
     }
   }
 
-  const postgresUrl = getEnv('POSTGRES_URL') || getEnv('DATABASE_URL');
+  const postgresUrl = getEnv("POSTGRES_URL") || getEnv("DATABASE_URL");
 
   if (postgresUrl) {
-    console.log('[DB] PostgreSQL URL detected, using PostgreSQL');
-    return { type: 'postgres', connection: postgresUrl };
+    console.log("[DB] PostgreSQL URL detected, using PostgreSQL");
+    return { type: "postgres", connection: postgresUrl };
   }
 
-  const sqlitePath =
-    getEnv('CLASSIFY_DB_LOCAL_DEV') || './data/classify-workflow-local-dev.db';
+  const sqlitePath = getEnv("CLASSIFY_DB_LOCAL_DEV") ||
+    "./data/classify-workflow-local-dev.db";
 
-  console.log('[DB] No PostgreSQL URL found, using SQLite');
-  return { type: 'sqlite', connection: sqlitePath };
+  console.log("[DB] No PostgreSQL URL found, using SQLite");
+  return { type: "sqlite", connection: sqlitePath };
 }
 
 /**
@@ -91,7 +90,7 @@ export function getDatabase(path?: string): DatabaseClient {
     (dbType !== type || connectionString !== requestedConnection)
   ) {
     console.log(
-      `[DB] Switching from ${dbType}:${connectionString} to ${type}:${requestedConnection}`
+      `[DB] Switching from ${dbType}:${connectionString} to ${type}:${requestedConnection}`,
     );
     dbInstance.close();
     dbInstance = null;
@@ -106,16 +105,16 @@ export function getDatabase(path?: string): DatabaseClient {
   dbType = type;
   connectionString = requestedConnection;
 
-  if (type === 'postgres') {
+  if (type === "postgres") {
     dbInstance = new PostgresClient(requestedConnection);
     // Run lightweight compatibility migrations once per process after a short delay
     try {
-      const delay = Number(process.env.MIGRATIONS_DELAY_MS || '2000');
+      const delay = Number(process.env.MIGRATIONS_DELAY_MS || "2000");
       setTimeout(
         () => {
           ensurePostgresCompatMigrations(dbInstance);
         },
-        isNaN(delay) ? 2000 : delay
+        isNaN(delay) ? 2000 : delay,
       );
     } catch (_) {
       // best-effort
@@ -125,14 +124,14 @@ export function getDatabase(path?: string): DatabaseClient {
     const sqliteDb = new Database(requestedConnection);
 
     // Enable WAL mode optimizations for SQLite
-    sqliteDb.pragma('journal_mode = WAL');
-    sqliteDb.pragma('synchronous = NORMAL');
-    sqliteDb.pragma('busy_timeout = 15000');
-    sqliteDb.pragma('wal_autocheckpoint = 500');
-    sqliteDb.pragma('journal_size_limit = 67108864');
+    sqliteDb.pragma("journal_mode = WAL");
+    sqliteDb.pragma("synchronous = NORMAL");
+    sqliteDb.pragma("busy_timeout = 15000");
+    sqliteDb.pragma("wal_autocheckpoint = 500");
+    sqliteDb.pragma("journal_size_limit = 67108864");
 
     if (!isInitialized) {
-      console.log('[DB] WAL mode enabled with optimized settings');
+      console.log("[DB] WAL mode enabled with optimized settings");
     }
 
     dbInstance = new SQLiteClient(sqliteDb);
@@ -161,9 +160,9 @@ export function initializeSchema(db: DatabaseClient): void {
 
   // For PostgreSQL, skip schema initialization in workflow
   // Schema should be initialized separately using init:postgres script
-  if (currentType === 'postgres') {
+  if (currentType === "postgres") {
     console.log(
-      '[DB] PostgreSQL detected - assuming schema already initialized'
+      "[DB] PostgreSQL detected - assuming schema already initialized",
     );
     console.log('[DB] Run "deno task init:postgres" if tables are missing');
     return;
@@ -175,7 +174,7 @@ export function initializeSchema(db: DatabaseClient): void {
   const schema = CLASSIFY_WORKFLOW_SCHEMA;
 
   // Split schema by semicolons and execute each statement
-  const statements = schema.split(';').filter((stmt) => stmt.trim().length > 0);
+  const statements = schema.split(";").filter((stmt) => stmt.trim().length > 0);
 
   for (const statement of statements) {
     const trimmed = statement.trim();
@@ -186,8 +185,8 @@ export function initializeSchema(db: DatabaseClient): void {
         // Ignore errors for duplicate table/index creation
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (
-          !errorMsg.includes('already exists') &&
-          !errorMsg.includes('duplicate key')
+          !errorMsg.includes("already exists") &&
+          !errorMsg.includes("duplicate key")
         ) {
           console.error(`[DB] Error executing statement: ${trimmed}`, error);
           throw error;
@@ -196,7 +195,7 @@ export function initializeSchema(db: DatabaseClient): void {
     }
   }
 
-  console.log('[DB] Schema initialized successfully');
+  console.log("[DB] Schema initialized successfully");
 }
 
 /**
@@ -209,7 +208,7 @@ export function closeDatabase(): void {
     dbType = null;
     connectionString = null;
     isInitialized = false;
-    console.log('[DB] Database closed');
+    console.log("[DB] Database closed");
   }
 }
 
@@ -218,7 +217,7 @@ export function closeDatabase(): void {
  */
 export async function withTransaction<T>(
   db: DatabaseClient,
-  fn: () => T | Promise<T>
+  fn: () => T | Promise<T>,
 ): Promise<T> {
   return await db.transaction(fn);
 }

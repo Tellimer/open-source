@@ -3,7 +3,7 @@
  * Ensures tables have expected columns/identity and constraints
  */
 
-import type { DatabaseClient } from './types.ts';
+import type { DatabaseClient } from "./types.ts";
 
 let ran = false;
 
@@ -24,7 +24,7 @@ export async function ensurePostgresCompatMigrations(db: DatabaseClient) {
           if (attempt >= 2) throw e;
           if (
             e &&
-            (e.code === 'ECONNRESET' || /TLS|ssl/i.test(String(e.message)))
+            (e.code === "ECONNRESET" || /TLS|ssl/i.test(String(e.message)))
           ) {
             await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
             attempt++;
@@ -39,7 +39,7 @@ export async function ensurePostgresCompatMigrations(db: DatabaseClient) {
     await retry(() =>
       sql.unsafe(
         `ALTER TABLE IF EXISTS processing_log
-       ADD COLUMN IF NOT EXISTS metadata JSONB`
+       ADD COLUMN IF NOT EXISTS metadata JSONB`,
       )
     );
 
@@ -64,7 +64,7 @@ export async function ensurePostgresCompatMigrations(db: DatabaseClient) {
              ALTER SEQUENCE pipeline_stats_id_seq OWNED BY pipeline_stats.id;
            END;
          END;
-       END$$;`
+       END$$;`,
       )
     );
 
@@ -80,11 +80,11 @@ export async function ensurePostgresCompatMigrations(db: DatabaseClient) {
            ALTER TABLE pipeline_stats
            ADD CONSTRAINT pipeline_stats_batch_id_key UNIQUE (batch_id);
          END IF;
-       END$$;`
+       END$$;`,
       )
     );
   } catch (e) {
-    console.warn('[DB] Migration warning:', e);
+    console.warn("[DB] Migration warning:", e);
   } finally {
     ran = true;
   }

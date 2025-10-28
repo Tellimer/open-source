@@ -4,8 +4,8 @@
  * @module
  */
 
-import { getDatabaseType } from './client.ts';
-import type { DatabaseClient } from './types.ts';
+import { getDatabaseType } from "./client.ts";
+import type { DatabaseClient } from "./types.ts";
 
 /**
  * Database Repository
@@ -24,7 +24,7 @@ export class DatabaseRepository {
         if (attempt >= 2) throw e;
         if (
           e &&
-          (e.code === 'ECONNRESET' || /TLS|ssl/i.test(String(e.message)))
+          (e.code === "ECONNRESET" || /TLS|ssl/i.test(String(e.message)))
         ) {
           await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
           attempt++;
@@ -41,7 +41,7 @@ export class DatabaseRepository {
   async query<T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
     const dbType = getDatabaseType();
 
-    if (dbType === 'postgres') {
+    if (dbType === "postgres") {
       // Use underlying postgres driver directly for true async
       const sqlClient: any = (this.db as any).getSql?.();
       if (!sqlClient) {
@@ -65,7 +65,7 @@ export class DatabaseRepository {
    */
   async queryOne<T = unknown>(
     sql: string,
-    params: unknown[] = []
+    params: unknown[] = [],
   ): Promise<T | null> {
     const results = await this.query<T>(sql, params);
     return results.length > 0 ? results[0] : null;
@@ -76,11 +76,11 @@ export class DatabaseRepository {
    */
   async run(
     sql: string,
-    params: unknown[] = []
+    params: unknown[] = [],
   ): Promise<{ changes: number; lastInsertRowid?: number }> {
     const dbType = getDatabaseType();
 
-    if (dbType === 'postgres') {
+    if (dbType === "postgres") {
       const sqlClient: any = (this.db as any).getSql?.();
       if (!sqlClient) {
         return Promise.resolve(this.db.run(sql, params));
@@ -90,8 +90,9 @@ export class DatabaseRepository {
           ? sqlClient.unsafe(sql)
           : sqlClient.unsafe(sql, params)
       );
-      const count =
-        result && typeof result.count === 'number' ? result.count : 0;
+      const count = result && typeof result.count === "number"
+        ? result.count
+        : 0;
       return { changes: count };
     } else {
       return Promise.resolve(this.db.run(sql, params));
@@ -104,9 +105,9 @@ export class DatabaseRepository {
   async transaction<T>(fn: () => Promise<T>): Promise<T> {
     // Use underlying postgres transaction when available for true async
     const dbType = getDatabaseType();
-    if (dbType === 'postgres') {
+    if (dbType === "postgres") {
       const sqlClient: any = (this.db as any).getSql?.();
-      if (sqlClient && typeof sqlClient.begin === 'function') {
+      if (sqlClient && typeof sqlClient.begin === "function") {
         return await sqlClient.begin(async (sql: any) => {
           // temporarily expose a shim for nested calls
           const originalGetSql = (this.db as any).getSql;
@@ -129,18 +130,18 @@ export class DatabaseRepository {
   async saveStageResult(
     stage: string,
     indicator_id: string,
-    data: Record<string, unknown>
+    data: Record<string, unknown>,
   ): Promise<void> {
     const tableMap: Record<string, string> = {
-      normalize: 'normalization_results',
-      time: 'time_inference_results',
-      'cumulative-detection': 'cumulative_detection_results',
-      scale: 'scale_inference_results',
-      currency: 'currency_check_results',
-      family: 'family_assignment_results',
-      type: 'type_classification_results',
-      'boolean-review': 'boolean_review_results',
-      'final-review': 'final_review_results',
+      normalize: "normalization_results",
+      time: "time_inference_results",
+      "cumulative-detection": "cumulative_detection_results",
+      scale: "scale_inference_results",
+      currency: "currency_check_results",
+      family: "family_assignment_results",
+      type: "type_classification_results",
+      "boolean-review": "boolean_review_results",
+      "final-review": "final_review_results",
     };
 
     const tableName = tableMap[stage];
@@ -148,33 +149,37 @@ export class DatabaseRepository {
       throw new Error(`Unknown stage: ${stage}`);
     }
 
-    const columns = ['indicator_id', ...Object.keys(data)];
+    const columns = ["indicator_id", ...Object.keys(data)];
     const values = [indicator_id, ...Object.values(data)];
     const dbType = getDatabaseType();
 
     let sql: string;
 
-    if (dbType === 'sqlite') {
+    if (dbType === "sqlite") {
       // SQLite: use ? placeholders
-      const placeholders = columns.map(() => '?').join(', ');
+      const placeholders = columns.map(() => "?").join(", ");
       sql = `
-        INSERT INTO ${tableName} (${columns.join(', ')})
+        INSERT INTO ${tableName} (${columns.join(", ")})
         VALUES (${placeholders})
         ON CONFLICT (indicator_id) DO UPDATE SET
-          ${Object.keys(data)
-            .map((col) => `${col} = EXCLUDED.${col}`)
-            .join(', ')}
+          ${
+        Object.keys(data)
+          .map((col) => `${col} = EXCLUDED.${col}`)
+          .join(", ")
+      }
       `;
     } else {
       // PostgreSQL: use $1, $2, etc. placeholders
-      const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
+      const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
       sql = `
-        INSERT INTO ${tableName} (${columns.join(', ')})
+        INSERT INTO ${tableName} (${columns.join(", ")})
         VALUES (${placeholders})
         ON CONFLICT (indicator_id) DO UPDATE SET
-          ${Object.keys(data)
-            .map((col) => `${col} = EXCLUDED.${col}`)
-            .join(', ')}
+          ${
+        Object.keys(data)
+          .map((col) => `${col} = EXCLUDED.${col}`)
+          .join(", ")
+      }
       `;
     }
 
@@ -186,18 +191,18 @@ export class DatabaseRepository {
    */
   async getStageResult<T = unknown>(
     stage: string,
-    indicator_id: string
+    indicator_id: string,
   ): Promise<T | null> {
     const tableMap: Record<string, string> = {
-      normalize: 'normalization_results',
-      time: 'time_inference_results',
-      'cumulative-detection': 'cumulative_detection_results',
-      scale: 'scale_inference_results',
-      currency: 'currency_check_results',
-      family: 'family_assignment_results',
-      type: 'type_classification_results',
-      'boolean-review': 'boolean_review_results',
-      'final-review': 'final_review_results',
+      normalize: "normalization_results",
+      time: "time_inference_results",
+      "cumulative-detection": "cumulative_detection_results",
+      scale: "scale_inference_results",
+      currency: "currency_check_results",
+      family: "family_assignment_results",
+      type: "type_classification_results",
+      "boolean-review": "boolean_review_results",
+      "final-review": "final_review_results",
     };
 
     const tableName = tableMap[stage];
@@ -206,7 +211,7 @@ export class DatabaseRepository {
     }
 
     const dbType = getDatabaseType();
-    const sql = dbType === 'sqlite'
+    const sql = dbType === "sqlite"
       ? `SELECT * FROM ${tableName} WHERE indicator_id = ?`
       : `SELECT * FROM ${tableName} WHERE indicator_id = $1`;
 
@@ -230,16 +235,16 @@ export class DatabaseRepository {
 
     let sql: string;
 
-    if (dbType === 'sqlite') {
+    if (dbType === "sqlite") {
       // SQLite: use ? placeholders
-      const placeholders = columns.map(() => '?').join(', ');
-      const updateCols = columns.filter((col) => col !== 'indicator_id');
+      const placeholders = columns.map(() => "?").join(", ");
+      const updateCols = columns.filter((col) => col !== "indicator_id");
       const updateSet = updateCols
         .map((col) => `${col} = EXCLUDED.${col}`)
-        .join(', ');
+        .join(", ");
 
       sql = `
-        INSERT INTO classifications (${columns.join(', ')})
+        INSERT INTO classifications (${columns.join(", ")})
         VALUES (${placeholders})
         ON CONFLICT (indicator_id) DO UPDATE SET
           ${updateSet},
@@ -247,14 +252,14 @@ export class DatabaseRepository {
       `;
     } else {
       // PostgreSQL: use $1, $2, etc. placeholders
-      const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
-      const updateCols = columns.filter((col) => col !== 'indicator_id');
+      const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
+      const updateCols = columns.filter((col) => col !== "indicator_id");
       const updateSet = updateCols
         .map((col) => `${col} = EXCLUDED.${col}`)
-        .join(', ');
+        .join(", ");
 
       sql = `
-        INSERT INTO classifications (${columns.join(', ')})
+        INSERT INTO classifications (${columns.join(", ")})
         VALUES (${placeholders})
         ON CONFLICT (indicator_id) DO UPDATE SET
           ${updateSet},
@@ -270,7 +275,7 @@ export class DatabaseRepository {
    */
   async getClassification(indicator_id: string): Promise<any | null> {
     const dbType = getDatabaseType();
-    const sql = dbType === 'sqlite'
+    const sql = dbType === "sqlite"
       ? `SELECT * FROM classifications WHERE indicator_id = ?`
       : `SELECT * FROM classifications WHERE indicator_id = $1`;
 
@@ -282,7 +287,7 @@ export class DatabaseRepository {
    */
   async getSourceIndicator(indicator_id: string): Promise<any | null> {
     const dbType = getDatabaseType();
-    const sql = dbType === 'sqlite'
+    const sql = dbType === "sqlite"
       ? `SELECT * FROM source_indicators WHERE id = ?`
       : `SELECT * FROM source_indicators WHERE id = $1`;
 
@@ -298,28 +303,30 @@ export class DatabaseRepository {
     limit?: number;
   }): Promise<any[]> {
     const dbType = getDatabaseType();
-    const placeholder = dbType === 'sqlite' ? '?' : '$';
+    const placeholder = dbType === "sqlite" ? "?" : "$";
 
-    let sql = 'SELECT * FROM classifications WHERE 1=1';
+    let sql = "SELECT * FROM classifications WHERE 1=1";
     const params: unknown[] = [];
     let paramIndex = 1;
 
     if (filters?.family) {
-      sql += ` AND family = ${dbType === 'sqlite' ? '?' : `$${paramIndex}`}`;
+      sql += ` AND family = ${dbType === "sqlite" ? "?" : `$${paramIndex}`}`;
       params.push(filters.family);
       paramIndex++;
     }
 
     if (filters?.indicator_type) {
-      sql += ` AND indicator_type = ${dbType === 'sqlite' ? '?' : `$${paramIndex}`}`;
+      sql += ` AND indicator_type = ${
+        dbType === "sqlite" ? "?" : `$${paramIndex}`
+      }`;
       params.push(filters.indicator_type);
       paramIndex++;
     }
 
-    sql += ' ORDER BY updated_at DESC';
+    sql += " ORDER BY updated_at DESC";
 
     if (filters?.limit) {
-      sql += ` LIMIT ${dbType === 'sqlite' ? '?' : `$${paramIndex}`}`;
+      sql += ` LIMIT ${dbType === "sqlite" ? "?" : `$${paramIndex}`}`;
       params.push(filters.limit);
     }
 
@@ -332,12 +339,12 @@ export class DatabaseRepository {
   async logProcessing(data: {
     indicator_id: string;
     stage: string;
-    status: 'started' | 'completed' | 'failed';
+    status: "started" | "completed" | "failed";
     error_message?: string;
     metadata?: Record<string, unknown>;
   }): Promise<void> {
     const dbType = getDatabaseType();
-    const sql = dbType === 'sqlite'
+    const sql = dbType === "sqlite"
       ? `INSERT INTO processing_log (
           indicator_id, stage, status, error_message, metadata, created_at
         ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
@@ -365,7 +372,7 @@ export class DatabaseRepository {
   }): Promise<void> {
     try {
       const dbType = getDatabaseType();
-      const sql = dbType === 'sqlite'
+      const sql = dbType === "sqlite"
         ? `INSERT INTO pipeline_stats (
             batch_id, model, provider, total_indicators,
             batch_start_time
@@ -382,7 +389,7 @@ export class DatabaseRepository {
         data.total_indicators,
       ]);
     } catch (error) {
-      console.warn('[DB] Failed to save batch stats (non-critical):', error);
+      console.warn("[DB] Failed to save batch stats (non-critical):", error);
     }
   }
 
@@ -392,7 +399,7 @@ export class DatabaseRepository {
   async completeBatchStats(batch_id: string): Promise<void> {
     try {
       const dbType = getDatabaseType();
-      const sql = dbType === 'sqlite'
+      const sql = dbType === "sqlite"
         ? `UPDATE pipeline_stats
            SET batch_end_time = CURRENT_TIMESTAMP,
                updated_at = CURRENT_TIMESTAMP
@@ -404,7 +411,7 @@ export class DatabaseRepository {
 
       await this.run(sql, [batch_id]);
     } catch (error) {
-      console.warn('[DB] Failed to update batch stats (non-critical):', error);
+      console.warn("[DB] Failed to update batch stats (non-critical):", error);
     }
   }
 }

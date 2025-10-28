@@ -63,16 +63,46 @@ if (!tableCheck) {
 // Count current records before deletion
 console.log("📊 Current record counts:");
 const counts = {
-  classifications: db.prepare("SELECT COUNT(*) as count FROM classifications").get<{ count: number }>()?.count || 0,
-  normalization: db.prepare("SELECT COUNT(*) as count FROM normalization_results").get<{ count: number }>()?.count || 0,
-  time_inference: db.prepare("SELECT COUNT(*) as count FROM time_inference_results").get<{ count: number }>()?.count || 0,
-  scale_inference: db.prepare("SELECT COUNT(*) as count FROM scale_inference_results").get<{ count: number }>()?.count || 0,
-  currency_check: db.prepare("SELECT COUNT(*) as count FROM currency_check_results").get<{ count: number }>()?.count || 0,
-  family_assignment: db.prepare("SELECT COUNT(*) as count FROM family_assignment_results").get<{ count: number }>()?.count || 0,
-  type_classification: db.prepare("SELECT COUNT(*) as count FROM type_classification_results").get<{ count: number }>()?.count || 0,
-  boolean_review: db.prepare("SELECT COUNT(*) as count FROM boolean_review_results").get<{ count: number }>()?.count || 0,
-  final_review: db.prepare("SELECT COUNT(*) as count FROM final_review_results").get<{ count: number }>()?.count || 0,
-  processing_log: db.prepare("SELECT COUNT(*) as count FROM processing_log").get<{ count: number }>()?.count || 0,
+  classifications:
+    db.prepare("SELECT COUNT(*) as count FROM classifications").get<
+      { count: number }
+    >()?.count || 0,
+  normalization:
+    db.prepare("SELECT COUNT(*) as count FROM normalization_results").get<
+      { count: number }
+    >()?.count || 0,
+  time_inference:
+    db.prepare("SELECT COUNT(*) as count FROM time_inference_results").get<
+      { count: number }
+    >()?.count || 0,
+  scale_inference:
+    db.prepare("SELECT COUNT(*) as count FROM scale_inference_results").get<
+      { count: number }
+    >()?.count || 0,
+  currency_check:
+    db.prepare("SELECT COUNT(*) as count FROM currency_check_results").get<
+      { count: number }
+    >()?.count || 0,
+  family_assignment:
+    db.prepare("SELECT COUNT(*) as count FROM family_assignment_results").get<
+      { count: number }
+    >()?.count || 0,
+  type_classification:
+    db.prepare("SELECT COUNT(*) as count FROM type_classification_results").get<
+      { count: number }
+    >()?.count || 0,
+  boolean_review:
+    db.prepare("SELECT COUNT(*) as count FROM boolean_review_results").get<
+      { count: number }
+    >()?.count || 0,
+  final_review:
+    db.prepare("SELECT COUNT(*) as count FROM final_review_results").get<
+      { count: number }
+    >()?.count || 0,
+  processing_log:
+    db.prepare("SELECT COUNT(*) as count FROM processing_log").get<
+      { count: number }
+    >()?.count || 0,
 };
 
 console.log(`  - classifications: ${counts.classifications}`);
@@ -87,8 +117,14 @@ console.log(`  - final_review_results: ${counts.final_review}`);
 console.log(`  - processing_log: ${counts.processing_log}`);
 
 // Check preserved tables
-const sourceCount = db.prepare("SELECT COUNT(*) as count FROM source_indicators").get<{ count: number }>()?.count || 0;
-const statsCount = db.prepare("SELECT COUNT(*) as count FROM pipeline_stats").get<{ count: number }>()?.count || 0;
+const sourceCount =
+  db.prepare("SELECT COUNT(*) as count FROM source_indicators").get<
+    { count: number }
+  >()?.count || 0;
+const statsCount =
+  db.prepare("SELECT COUNT(*) as count FROM pipeline_stats").get<
+    { count: number }
+  >()?.count || 0;
 
 console.log("\n✅ Preserved tables (will NOT be deleted):");
 console.log(`  - source_indicators: ${sourceCount} records`);
@@ -153,7 +189,9 @@ try {
 
   let allEmpty = true;
   for (const table of verifyTables) {
-    const count = db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get<{ count: number }>()?.count || 0;
+    const count = db.prepare(`SELECT COUNT(*) as count FROM ${table}`).get<
+      { count: number }
+    >()?.count || 0;
     if (count > 0) {
       console.log(`  ⚠️  ${table}: ${count} records (expected 0)`);
       allEmpty = false;
@@ -163,11 +201,19 @@ try {
   }
 
   // Verify preserved tables
-  const sourceAfter = db.prepare("SELECT COUNT(*) as count FROM source_indicators").get<{ count: number }>()?.count || 0;
-  const statsAfter = db.prepare("SELECT COUNT(*) as count FROM pipeline_stats").get<{ count: number }>()?.count || 0;
+  const sourceAfter =
+    db.prepare("SELECT COUNT(*) as count FROM source_indicators").get<
+      { count: number }
+    >()?.count || 0;
+  const statsAfter =
+    db.prepare("SELECT COUNT(*) as count FROM pipeline_stats").get<
+      { count: number }
+    >()?.count || 0;
 
   console.log("\n✅ Preserved tables (unchanged):");
-  console.log(`  ✓ source_indicators: ${sourceAfter} records (was ${sourceCount})`);
+  console.log(
+    `  ✓ source_indicators: ${sourceAfter} records (was ${sourceCount})`,
+  );
   console.log(`  ✓ pipeline_stats: ${statsAfter} batches (was ${statsCount})`);
 
   if (allEmpty && sourceAfter === sourceCount && statsAfter === statsCount) {
@@ -179,7 +225,6 @@ try {
   } else {
     console.log("\n⚠️  Reset completed with warnings. Check output above.");
   }
-
 } catch (error) {
   db.exec("ROLLBACK");
   console.error("\n❌ Error during reset:", error);

@@ -9,7 +9,7 @@
  * Excludes percent/rate/index-like series.
  */
 
-import { Database } from '@db/sqlite';
+import { Database } from "@db/sqlite";
 
 type Row = {
   id: string;
@@ -33,14 +33,14 @@ function parsePoints(raw: string | null): Array<{ date: Date; value: number }> {
     const d = p?.date;
     let v = p?.value;
     if (!d || v === undefined || v === null) continue;
-    if (typeof v === 'string') {
+    if (typeof v === "string") {
       const n = Number(v);
       if (Number.isNaN(n)) continue;
       v = n;
     }
-    if (typeof d === 'string' && d.includes('last10')) continue; // drop aggregates
+    if (typeof d === "string" && d.includes("last10")) continue; // drop aggregates
     let ds = String(d);
-    if (ds.includes('T')) ds = ds.split('T')[0];
+    if (ds.includes("T")) ds = ds.split("T")[0];
     try {
       const date = new Date(ds);
       if (Number.isNaN(date.getTime())) continue;
@@ -90,11 +90,10 @@ function heuristics(points: Array<{ date: Date; value: number }>) {
   }
   // Growth in latest year
   const lyVals = byYear.get(years[years.length - 1])!;
-  const growthOk =
-    lyVals.length >= 4 && lyVals[lyVals.length - 1] >= lyVals[0] * 1.3;
+  const growthOk = lyVals.length >= 4 &&
+    lyVals[lyVals.length - 1] >= lyVals[0] * 1.3;
   // Score for sorting
-  const score =
-    nondecRatio * 0.6 +
+  const score = nondecRatio * 0.6 +
     (transitions ? resets / transitions : 0) * 0.3 +
     (growthOk ? 0.1 : 0);
   return { nondecRatio, resets, transitions, growthOk, score };
@@ -104,19 +103,18 @@ function looksExcluded(name: string, units: string): boolean {
   const n = name.toLowerCase();
   const u = units.toLowerCase();
   return (
-    u.includes('%') ||
-    u.includes('percent') ||
-    n.includes('ratio') ||
-    n.includes('rate') ||
-    n.includes('index') ||
-    n.includes('inflation')
+    u.includes("%") ||
+    u.includes("percent") ||
+    n.includes("ratio") ||
+    n.includes("rate") ||
+    n.includes("index") ||
+    n.includes("inflation")
   );
 }
 
 async function main() {
-  const dbPath =
-    Deno.env.get('CLASSIFY_DB_LOCAL_DEV') ||
-    './data/classify-workflow-local-dev.db';
+  const dbPath = Deno.env.get("CLASSIFY_DB_LOCAL_DEV") ||
+    "./data/classify-workflow-local-dev.db";
   const db = new Database(dbPath);
   try {
     const rows = db.sql<Row>`
@@ -138,8 +136,8 @@ async function main() {
     }> = [];
 
     for (const r of rows) {
-      const name = r.name ?? '';
-      const units = r.units ?? '';
+      const name = r.name ?? "";
+      const units = r.units ?? "";
       if (looksExcluded(name, units)) continue;
       const pts = parsePoints(r.sample_values);
       if (pts.length < 8) continue;
@@ -149,8 +147,8 @@ async function main() {
       if (!likely) continue;
       candidates.push({
         id: r.id,
-        name: r.name ?? '',
-        periodicity: r.periodicity ?? '',
+        name: r.name ?? "",
+        periodicity: r.periodicity ?? "",
         score: Number(h.score.toFixed(3)),
         nondec_ratio: Number(h.nondecRatio.toFixed(3)),
         resets: h.resets,
@@ -169,7 +167,7 @@ async function main() {
 
 if (import.meta.main) {
   main().catch((e) => {
-    console.error('❌ Error:', e?.message ?? String(e));
+    console.error("❌ Error:", e?.message ?? String(e));
     Deno.exit(1);
   });
 }

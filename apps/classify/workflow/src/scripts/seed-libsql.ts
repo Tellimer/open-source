@@ -117,7 +117,7 @@ function readLocalIndicators(dbPath: string): SourceIndicator[] {
  */
 async function initializeLibSQLSchema(
   client: ReturnType<typeof createClient>,
-  dropFirst: boolean
+  dropFirst: boolean,
 ) {
   console.log(`🔧 Initializing LibSQL schema...`);
 
@@ -128,8 +128,8 @@ async function initializeLibSQLSchema(
 
   // Execute schema statements
   const statements = LIBSQL_SCHEMA.split(";")
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 
   for (const statement of statements) {
     await client.execute(statement);
@@ -144,12 +144,14 @@ async function initializeLibSQLSchema(
 async function seedLibSQL(
   client: ReturnType<typeof createClient>,
   indicators: SourceIndicator[],
-  batchSize: number
+  batchSize: number,
 ) {
   console.log(`📤 Seeding LibSQL database...`);
   console.log(`   Batch size: ${batchSize}`);
   console.log(`   Total indicators: ${indicators.length.toLocaleString()}`);
-  console.log(`   Total batches: ${Math.ceil(indicators.length / batchSize)}\n`);
+  console.log(
+    `   Total batches: ${Math.ceil(indicators.length / batchSize)}\n`,
+  );
 
   const batches = chunk(indicators, batchSize);
   let totalInserted = 0;
@@ -162,7 +164,7 @@ async function seedLibSQL(
     const end = start + batch.length - 1;
 
     process.stdout.write(
-      `\r   📦 Batch ${batchNum}/${batches.length}: Processing indicators ${start}-${end}...`
+      `\r   📦 Batch ${batchNum}/${batches.length}: Processing indicators ${start}-${end}...`,
     );
 
     let batchInserted = 0;
@@ -259,7 +261,9 @@ async function verifySeeding(client: ReturnType<typeof createClient>) {
   const row = result.rows[0] as any;
 
   console.log(`   Total indicators: ${Number(row.total).toLocaleString()}`);
-  console.log(`   Queued for processing: ${Number(row.queued).toLocaleString()}`);
+  console.log(
+    `   Queued for processing: ${Number(row.queued).toLocaleString()}`,
+  );
   console.log(`   Already sent: ${Number(row.sent).toLocaleString()}`);
   console.log(`   Processed: ${Number(row.processed).toLocaleString()}`);
 }
@@ -335,7 +339,7 @@ async function main() {
     console.log("   2. Start processing: cd ../feeder && deno task start\n");
   } catch (error) {
     console.error(
-      `\n❌ Error: ${error instanceof Error ? error.message : String(error)}`
+      `\n❌ Error: ${error instanceof Error ? error.message : String(error)}`,
     );
     if (error instanceof Error && error.stack) {
       console.error(error.stack);

@@ -29,7 +29,9 @@ export const config: EventConfig = {
     family: z.string(),
     indicator_type: z.string(),
     temporal_aggregation: z.string(),
-    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default("local"),
+    llm_provider: z.enum(["local", "openai", "anthropic"]).optional().default(
+      "local",
+    ),
   }),
 };
 

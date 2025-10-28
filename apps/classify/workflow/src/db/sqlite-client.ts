@@ -4,8 +4,8 @@
  * @module
  */
 
-import Database from 'better-sqlite3';
-import type { DatabaseClient, PreparedStatement } from './types.ts';
+import Database from "better-sqlite3";
+import type { DatabaseClient, PreparedStatement } from "./types.ts";
 
 export class SQLiteClient implements DatabaseClient {
   constructor(private db: Database.Database) {}
@@ -25,7 +25,10 @@ export class SQLiteClient implements DatabaseClient {
     return result ? (result as T) : null;
   }
 
-  run(sql: string, params: unknown[] = []): { changes: number; lastInsertRowid?: number } {
+  run(
+    sql: string,
+    params: unknown[] = [],
+  ): { changes: number; lastInsertRowid?: number } {
     const stmt = this.db.prepare(sql);
     const info = stmt.run(...params);
     return {
@@ -39,13 +42,13 @@ export class SQLiteClient implements DatabaseClient {
   }
 
   async transaction<T>(fn: () => T | Promise<T>): Promise<T> {
-    this.db.exec('BEGIN TRANSACTION');
+    this.db.exec("BEGIN TRANSACTION");
     try {
       const result = await fn();
-      this.db.exec('COMMIT');
+      this.db.exec("COMMIT");
       return result;
     } catch (error) {
-      this.db.exec('ROLLBACK');
+      this.db.exec("ROLLBACK");
       throw error;
     }
   }

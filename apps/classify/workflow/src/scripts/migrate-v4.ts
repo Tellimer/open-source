@@ -29,7 +29,9 @@ function migrateToV4() {
     console.log(`📊 Current schema version: ${currentVersion}`);
 
     if (currentVersion >= 4) {
-      console.log("✅ Database is already at v4 or higher. No migration needed.");
+      console.log(
+        "✅ Database is already at v4 or higher. No migration needed.",
+      );
       return;
     }
 
@@ -82,7 +84,9 @@ function migrateToV4() {
     console.log(`   Records with normalized_scale: ${stats?.[0] || 0}`);
 
     console.log("\n✅ Migration to v4 complete!");
-    console.log("\nNote: scale_inference_results and currency_check_results tables");
+    console.log(
+      "\nNote: scale_inference_results and currency_check_results tables",
+    );
     console.log("are now deprecated but kept for backward compatibility.");
   } catch (error) {
     console.error("\n❌ Migration failed:", error);

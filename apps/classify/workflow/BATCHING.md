@@ -23,11 +23,13 @@ INTERNAL_EMIT_DELAY_MS=100
 ### Script Defaults
 
 All scripts use these defaults:
+
 - **Batch size:** 5 indicators per batch
 - **Concurrent batches:** 4 batches running in parallel
 - **Total concurrency:** 20 indicators processing simultaneously
 
 This is configured in:
+
 - [scripts/run-random.ts](./scripts/run-random.ts) (lines 418-419)
 - [scripts/run-all.ts](./scripts/run-all.ts) (lines 417-418)
 
@@ -61,6 +63,7 @@ This is configured in:
 ## Usage Examples
 
 ### Run Random Indicators
+
 ```bash
 # Process 20 random indicators (4 batches × 5)
 deno task run:random -- -20 openai
@@ -70,6 +73,7 @@ deno task run:random -- -100 openai
 ```
 
 ### Run All Indicators
+
 ```bash
 # Process all indicators (in groups of 20)
 deno task run:all openai
@@ -81,12 +85,13 @@ deno task run:all 40 openai
 ## Performance Tuning
 
 ### Increase Concurrency
+
 To process **40 indicators concurrently** (8 batches of 5):
 
 1. Update scripts:
    ```typescript
    const batchSize = 5;
-   const concurrentBatches = 8;  // Changed from 4
+   const concurrentBatches = 8; // Changed from 4
    ```
 
 2. Ensure your system can handle it:
@@ -95,15 +100,17 @@ To process **40 indicators concurrently** (8 batches of 5):
    - Database connection pool may need adjustment
 
 ### Reduce Concurrency
+
 To process **10 indicators concurrently** (2 batches of 5):
 
 1. Update scripts:
    ```typescript
    const batchSize = 5;
-   const concurrentBatches = 2;  // Changed from 4
+   const concurrentBatches = 2; // Changed from 4
    ```
 
 ### Change Batch Size
+
 To use larger batches (e.g., 10 indicators per batch):
 
 1. Update `.env`:
@@ -113,8 +120,8 @@ To use larger batches (e.g., 10 indicators per batch):
 
 2. Update scripts:
    ```typescript
-   const batchSize = 10;  // Changed from 5
-   const concurrentBatches = 2;  // Adjust to maintain total concurrency
+   const batchSize = 10; // Changed from 5
+   const concurrentBatches = 2; // Adjust to maintain total concurrency
    ```
 
 ## Monitoring
@@ -190,18 +197,22 @@ CREATE TABLE pipeline_stats (
 ## Troubleshooting
 
 ### "Too many concurrent requests"
+
 - Reduce `concurrentBatches` in scripts
 - Increase `INTERNAL_EMIT_DELAY_MS` in `.env`
 
 ### "Out of memory"
+
 - Reduce `concurrentBatches` (fewer indicators processing simultaneously)
 - Use smaller LLM model in LM Studio
 
 ### "Database locked"
+
 - SQLite handles concurrency well with WAL mode (enabled by default)
 - If issues persist, consider switching to PostgreSQL for production
 
 ### Batches not completing
+
 - Check logs for errors in individual steps
 - Query `processing_log` table for failed stages
 - Increase timeout in `waitForBatchCompletion()` if needed

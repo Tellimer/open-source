@@ -520,6 +520,7 @@ START: How many indicators?
 ## Migration Path
 
 ### Phase 0: Current State (Day 0)
+
 ```
 Configuration: Batch=5, Local LLM
 Throughput: 0.19 indicators/sec
@@ -527,6 +528,7 @@ Status: ████████████████████████
 ```
 
 ### Phase 1: Quick Win (Day 1)
+
 ```
 Configuration: Batch=10, Local LLM
 Throughput: 0.32 indicators/sec (+68%)
@@ -535,6 +537,7 @@ Action: Increase batchSize in start-classify.step.ts
 ```
 
 ### Phase 2: Cloud Migration (Week 1)
+
 ```
 Configuration: Batch=25, Cloud APIs
 Throughput: 1.0 indicators/sec (+426%)
@@ -543,6 +546,7 @@ Action: Set up OpenAI/Anthropic keys, test with 1000 indicators
 ```
 
 ### Phase 3: Optimization (Week 2-4)
+
 ```
 Configuration: Batch=50, Cloud APIs, Retry Logic
 Throughput: 1.6 indicators/sec (+742%)
@@ -551,6 +555,7 @@ Action: Add monitoring, alerting, cost tracking
 ```
 
 ### Phase 4: Scale (Month 2+)
+
 ```
 Configuration: Distributed (if needed)
 Throughput: 4.9 indicators/sec (+2,480%)
@@ -595,6 +600,7 @@ Action: Multi-machine orchestration, PostgreSQL
 ## Summary Recommendations
 
 ### For Small Teams (<1000 indicators/day)
+
 ```
 Configuration: Cloud LLMs (Batch=25)
 Estimated Cost: $1-5/day
@@ -603,6 +609,7 @@ Benefit: 5x faster, low maintenance, scalable
 ```
 
 ### For Medium Teams (1,000-10,000/day)
+
 ```
 Configuration: Cloud LLMs (Batch=50) + Monitoring
 Estimated Cost: $15-50/day
@@ -611,6 +618,7 @@ Benefit: Production-grade, cost-effective, reliable
 ```
 
 ### For Large Teams (>10,000/day)
+
 ```
 Configuration: Distributed Cloud + PostgreSQL
 Estimated Cost: $50-200/day
@@ -620,4 +628,4 @@ Benefit: Enterprise scale, high throughput, redundancy
 
 ---
 
-*For implementation details, see [PERFORMANCE_GUIDE.md](./PERFORMANCE_GUIDE.md)*
+_For implementation details, see [PERFORMANCE_GUIDE.md](./PERFORMANCE_GUIDE.md)_

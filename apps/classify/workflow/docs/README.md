@@ -7,8 +7,8 @@ Complete documentation for the classify-workflow application.
 - [Main README](../README.md) - Project overview and quick start
 - [Usage Guide](./USAGE_GUIDE.md) - Detailed usage instructions and examples
 - [Cumulative Detection](./CUMULATIVE_DETECTION.md) - Data-driven YTD detection and integration
- - [Prompt Improvements](./PROMPT_IMPROVEMENTS.md) - Verified patterns applied to prompts
- - [Analysis Patterns](./ANALYSIS_PATTERNS.md) - Summary of 109 verified classifications
+- [Prompt Improvements](./PROMPT_IMPROVEMENTS.md) - Verified patterns applied to prompts
+- [Analysis Patterns](./ANALYSIS_PATTERNS.md) - Summary of 109 verified classifications
 - [LM Studio Setup](./LM_STUDIO_SETUP.md) - How to set up and configure LM Studio
 - [Database Persistence](./DATABASE_PERSISTENCE.md) - Database schema and persistence layer
 - [Cost Estimates](./COST_ESTIMATE.md) - OpenAI costs and batch API projections

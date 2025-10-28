@@ -28,7 +28,9 @@ function parseArgs(): { sampleSize: number; provider: LLMProvider } {
 
   // Parse sample size
   const sizeArg = args.find(
-    (arg) => (arg.startsWith("--") || arg.startsWith("-")) && !arg.includes("provider"),
+    (arg) =>
+      (arg.startsWith("--") || arg.startsWith("-")) &&
+      !arg.includes("provider"),
   );
 
   let sampleSize = 100;
@@ -50,7 +52,10 @@ function parseArgs(): { sampleSize: number; provider: LLMProvider } {
 
   if (providerIndex !== -1 && providerIndex + 1 < args.length) {
     const providerArg = args[providerIndex + 1];
-    if (providerArg === "openai" || providerArg === "anthropic" || providerArg === "local") {
+    if (
+      providerArg === "openai" || providerArg === "anthropic" ||
+      providerArg === "local"
+    ) {
       provider = providerArg;
     } else {
       throw new Error(
@@ -70,7 +75,8 @@ function sampleIndicators(db: Database, sampleSize: number): IndicatorRecord[] {
   console.log(`\n🎲 Sampling ${sampleSize} diverse indicators...`);
 
   // First, get all unique indicator names
-  const uniqueNames = db.sql`SELECT DISTINCT name FROM source_indicators ORDER BY name`
+  const uniqueNames = db
+    .sql`SELECT DISTINCT name FROM source_indicators ORDER BY name`
     .map((row: any) => row.name);
 
   console.log(`   Found ${uniqueNames.length} unique indicator types`);
@@ -178,7 +184,9 @@ async function classifyIndicators(
   console.log(`   API: ${apiUrl}`);
   console.log(`   LLM Provider: ${llmProvider}`);
   console.log(`   Total indicators: ${indicators.length}`);
-  console.log(`   API batches: ${batches} (max ${API_BATCH_SIZE} per request)\n`);
+  console.log(
+    `   API batches: ${batches} (max ${API_BATCH_SIZE} per request)\n`,
+  );
 
   const results = [];
   let processed = 0;
