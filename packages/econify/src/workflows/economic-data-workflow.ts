@@ -175,16 +175,37 @@ export interface ParsedData {
   value: number;
   unit: string;
 
-  /** Explicit metadata fields - use if provided, otherwise parse from unit string */
-  periodicity?: string; // "Quarterly", "Monthly", "Yearly" - takes precedence over unit string parsing
-  scale?: string; // "Millions", "Billions", "Thousands" - takes precedence over unit string parsing
-  currency_code?: string; // "USD", "SAR", "XOF" - takes precedence over unit string parsing
+  /** Explicit metadata fields from database - PRIORITIZE these over unit string parsing */
 
-  /** Classification from classify package - when provided, used instead of econify's own classification */
-  indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio", etc.
-  is_currency_denominated?: boolean; // true for currency amounts, false otherwise
-  /** Temporal aggregation from @tellimer/classify - how values accumulate over time */
+  // Time dimension (from reporting_frequency database column)
+  // Maps database values: "annual" | "quarterly" | "monthly" | "weekly" | "daily" | "point-in-time"
+  periodicity?: string; // Accepts string for backward compatibility, use reporting_frequency for new code
+  reporting_frequency?: string; // From database - accepts string for flexibility with DB values
+
+  // Magnitude/scale (from scale column or parsed from units)
+  scale?: string; // "Millions", "Billions", "Thousands" - accepts string for flexibility
+
+  // Currency (from currency_code column)
+  currency_code?: string; // ISO currency codes: "USD", "SAR", "XOF", etc.
+
+  // Unit semantic type (from unit_type column) - helps avoid incorrect parsing
+  unit_type?: string; // From database - typed as UnitType in imports: "count" | "unknown" | "currency-amount" | "physical" | "percentage" | "index"
+
+  /** Classification from @tellimer/classify batch workflow - AUTHORITATIVE metadata */
+
+  // Indicator behavior classification (from "type" DB column)
+  indicator_type?: string; // "flow" | "stock" | "percentage" | "ratio" | "rate" | "index" | etc.
+
+  // Time aggregation behavior (from "temporal_aggregation" DB column)
   temporal_aggregation?: string; // "point-in-time" | "period-rate" | "period-cumulative" | "period-average" | "period-total" | "not-applicable"
+
+  // Visual/UI hint (from "heat_map_orientation" DB column - not used in normalization)
+  heat_map_orientation?: string; // "higher-is-positive" | "neutral" | "lower-is-positive"
+
+  // Currency conversion control (from "is_currency_denominated" DB column - LAST column in DB)
+  // THIS IS THE DOMINANT CHECK - controls whether to apply FX conversion
+  // Set by classification workflow based on indicator semantics
+  is_currency_denominated?: boolean; // true = apply FX conversion, false = skip FX conversion
 
   parsedUnit?: ParsedUnit;
   inferredUnit?: string;

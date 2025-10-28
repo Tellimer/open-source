@@ -4,6 +4,49 @@ All notable changes to the econify package will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.6] - 2025-10-28
+
+### Changed
+
+- **Database-First Normalization Priority**: Refactored normalization logic to
+  prioritize structured database fields over unit string parsing
+  - **Field Priority System**: Database fields (`reporting_frequency`,
+    `currency_code`, `unit_type`, `is_currency_denominated`) now take precedence
+    over parseUnit() fallbacks
+  - **New Type Enums**: Added `UnitType` and `ReportingFrequency` type
+    definitions matching database values
+  - **Simplified Currency Logic**: `is_currency_denominated` is now the
+    authoritative control for FX conversion (no redundant unit_type checks)
+  - **Enhanced Documentation**: Comprehensive JSDoc with DB column mapping
+    examples and priority hierarchy
+  - **Data Quality Validation**: Added warnings when `unit_type` conflicts with
+    `is_currency_denominated`
+  - **Special Handling**: Added support for `point-in-time` reporting frequency
+    (returns null for time scale)
+
+### Added
+
+- **BatchItem Interface Enhancements**:
+  - Added `reporting_frequency` field (typed as `ReportingFrequency | string`)
+    for explicit time dimension
+  - Added `unit_type` field (typed as `UnitType | string`) for semantic unit
+    classification
+  - Added `heat_map_orientation` field from database (visual/UI hint)
+  - Improved field documentation showing actual database column mapping
+- **Type Safety**: New `UnitType` enum:
+  `"count" | "unknown" | "currency-amount" | "physical" | "percentage" | "index"`
+- **Type Safety**: New `ReportingFrequency` enum:
+  `"annual" | "quarterly" | "monthly" | "weekly" | "daily" | "point-in-time"`
+
+### Fixed
+
+- **Currency Detection**: Fixed incorrect FX conversion on ratios (e.g., FX
+  rates like "PKR/USD" now respect `is_currency_denominated=false`)
+- **Type Compatibility**: Fixed TypeScript errors when passing `ParsedData` to
+  `BatchItem` interfaces
+
+## [Unreleased - Prior]
+
 ### Changed
 
 - **Unit Type Classifier - Complete Database Coverage**: Enhanced unit type

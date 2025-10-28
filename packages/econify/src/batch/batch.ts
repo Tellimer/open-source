@@ -9,7 +9,14 @@ import { assessDataQuality, type QualityScore } from "../quality/quality.ts";
 import { getScale } from "../scale/scale.ts";
 import { parseWithCustomUnits } from "../custom/custom_units.ts";
 import { allowsTimeConversion } from "../normalization/indicator_type_rules.ts";
-import type { Explain, FXTable, Scale, TimeScale } from "../types.ts";
+import type {
+  Explain,
+  FXTable,
+  ReportingFrequency,
+  Scale,
+  TimeScale,
+  UnitType,
+} from "../types.ts";
 
 /**
  * Normalize scale string from database to Scale type
@@ -36,9 +43,20 @@ function normalizeScale(scale?: string | null): Scale | null {
 /**
  * Normalize time scale string from database to TimeScale type
  */
+/**
+ * Normalize time scale from database reporting_frequency or periodicity field.
+ * Handles both database values (annual, quarterly, monthly) and descriptive variants.
+ *
+ * Note: "point-in-time" is a special database value indicating snapshot data
+ * with no regular frequency. We return null for it since it doesn't map to a TimeScale.
+ */
 function normalizeTimeScale(periodicity?: string | null): TimeScale | null {
   if (!periodicity || periodicity.trim() === "") return null;
   const normalized = periodicity.toLowerCase().trim();
+
+  // Handle special case: point-in-time data has no time scale
+  if (normalized === "point-in-time") return null;
+
   switch (normalized) {
     case "yearly":
     case "annual":
@@ -75,28 +93,79 @@ function normalizeTimeScale(periodicity?: string | null): TimeScale | null {
  * Normalize currency code from database
  * - Only accept known ISO currency codes; otherwise treat as non-monetary (null)
  */
+/**
+ * Normalize currency code from database currency_code field.
+ * Validates against known currency codes and returns uppercase ISO code.
+ */
 function normalizeCurrency(currency?: string | null): string | null {
   if (!currency || currency.trim() === "") return null;
   const code = currency.trim().toUpperCase();
   return CURRENCY_CODES.has(code) ? code : null;
 }
 
+/**
+ * BatchItem represents economic indicator data with metadata from database.
+ *
+ * Database columns are provided by the classification workflow and should be
+ * treated as authoritative over unit string parsing.
+ *
+ * Example DB row to BatchItem mapping:
+ * ```
+ * DB: AFGHANISTACONSPE | Consumer Spending | ... | AFN Million | Millions | Yearly |
+ *     AFN | flow | period-total | higher-is-positive | currency-amount | annual | true
+ *
+ * BatchItem: {
+ *   id: "AFGHANISTACONSPE",
+ *   name: "Consumer Spending",
+ *   value: 1500,
+ *   unit: "AFN Million",
+ *   scale: "Millions",           // DB: scale column
+ *   currency_code: "AFN",         // DB: currency_code column
+ *   indicator_type: "flow",       // DB: type column
+ *   temporal_aggregation: "period-total",  // DB: temporal_aggregation column
+ *   unit_type: "currency-amount", // DB: unit_type column
+ *   reporting_frequency: "annual",// DB: reporting_frequency column
+ *   is_currency_denominated: true // DB: is_currency_denominated column (last)
+ * }
+ * ```
+ */
 export interface BatchItem {
   id?: string | number;
   name?: string; // Indicator name for classification (e.g., "GDP", "Balance of Trade")
   value: number;
   unit: string;
 
-  /** Explicit metadata fields - use if provided, otherwise parse from unit string */
-  periodicity?: string; // "Quarterly", "Monthly", "Yearly"
-  scale?: string; // "Millions", "Billions", "Thousands"
-  currency_code?: string; // "USD", "SAR", "XOF"
+  /** Explicit metadata fields from database - PRIORITIZE these over unit string parsing */
 
-  /** Classification from classify package - when provided, used instead of econify's own classification */
-  indicator_type?: string; // e.g., "flow", "stock", "percentage", "ratio", etc.
-  is_currency_denominated?: boolean; // true for currency amounts, false otherwise
-  /** Temporal aggregation from @tellimer/classify - how values accumulate over time */
+  // Time dimension (from reporting_frequency database column)
+  // Maps database values: "annual" | "quarterly" | "monthly" | "weekly" | "daily" | "point-in-time"
+  periodicity?: string; // Accepts string for backward compatibility, use reporting_frequency for new code
+  reporting_frequency?: ReportingFrequency | string; // From database - accepts string for flexibility
+
+  // Magnitude/scale (from scale column or parsed from units)
+  scale?: string; // "Millions", "Billions", "Thousands" - accepts string for flexibility
+
+  // Currency (from currency_code column)
+  currency_code?: string; // ISO currency codes: "USD", "SAR", "XOF", etc.
+
+  // Unit semantic type (from unit_type column) - helps avoid incorrect parsing
+  unit_type?: UnitType | string; // From database - accepts string for flexibility: "count" | "unknown" | "currency-amount" | "physical" | "percentage" | "index"
+
+  /** Classification from @tellimer/classify batch workflow - AUTHORITATIVE metadata */
+
+  // Indicator behavior classification (from "type" DB column)
+  indicator_type?: string; // "flow" | "stock" | "percentage" | "ratio" | "rate" | "index" | etc.
+
+  // Time aggregation behavior (from "temporal_aggregation" DB column)
   temporal_aggregation?: string; // "point-in-time" | "period-rate" | "period-cumulative" | "period-average" | "period-total" | "not-applicable"
+
+  // Visual/UI hint (from "heat_map_orientation" DB column - not used in normalization)
+  heat_map_orientation?: string; // "higher-is-positive" | "neutral" | "lower-is-positive"
+
+  // Currency conversion control (from "is_currency_denominated" DB column - LAST column in DB)
+  // THIS IS THE DOMINANT CHECK - controls whether to apply FX conversion
+  // Set by classification workflow based on indicator semantics
+  is_currency_denominated?: boolean; // true = apply FX conversion, false = skip FX conversion
 
   metadata?: Record<string, unknown>;
 }
@@ -376,21 +445,55 @@ function processSequentially<T extends BatchItem>(
 /**
  * Process single item
  */
+/**
+ * Process a single batch item through normalization pipeline.
+ *
+ * FIELD PRIORITY SYSTEM (Database First):
+ * ========================================
+ * This function prioritizes structured metadata from the database over unit string parsing:
+ *
+ * 1. TIME DIMENSION:
+ *    - reporting_frequency (DB column) → PRIMARY SOURCE
+ *    - periodicity field → fallback
+ *    - parseUnit(unit).timeScale → last resort
+ *
+ * 2. CURRENCY:
+ *    - is_currency_denominated flag → controls whether to look for currency
+ *    - unit_type → helps identify non-currency types (percentage, physical)
+ *    - currency_code (DB column) → PRIMARY SOURCE for currency
+ *    - parseUnit(unit).currency → fallback
+ *
+ * 3. MAGNITUDE/SCALE:
+ *    - scale (DB column) → PRIMARY SOURCE
+ *    - parseUnit(unit).scale → fallback
+ *    - Exception: Chinese units (hundred-millions) prefer parsed value
+ *
+ * 4. INDICATOR BEHAVIOR:
+ *    - temporal_aggregation (DB) → controls time conversion rules
+ *    - indicator_type (DB) → fallback for time conversion
+ *
+ * This approach ensures data from @tellimer/classify is authoritative.
+ */
 function processItem<T extends BatchItem>(
   item: T,
   options: Omit<BatchOptions, "parallel" | "concurrency" | "progressCallback">,
 ): { normalized: number; normalizedUnit: string; explain?: Explain } | null {
   try {
-    // Parse unit to get baseline information
+    // PRIORITY 1: Use database fields when available (reporting_frequency, currency_code, etc.)
+    // PRIORITY 2: Parse unit string as fallback for missing metadata
     const parsed = parseUnit(item.unit);
 
-    // Determine if this is count data (e.g., car registrations) to avoid currency parts in unit
-    // indicator_type must be provided from @tellimer/classify package
+    // Extract metadata from @tellimer/classify package
     const indicatorName = (item as unknown as { name?: string }).name;
     const indicatorType = (item as unknown as { indicator_type?: string })
       .indicator_type;
 
-    // Use indicator_type from classify package to determine count data
+    // UNIT_TYPE from database can help avoid incorrect parsing
+    // e.g., if unit_type="percentage", we know it's not a currency amount
+    // Available values: "count" | "unknown" | "currency-amount" | "physical" | "percentage" | "index"
+    const unitType = item.unit_type;
+
+    // Determine if this is count/volume data (avoid treating as currency)
     const isCountData = indicatorType === "count" || indicatorType === "volume";
 
     // Check custom units if standard parsing returns unknown
@@ -400,25 +503,73 @@ function processItem<T extends BatchItem>(
       return null;
     }
 
-    // Use explicit fields if provided, otherwise fall back to parsed values
-    // Normalize explicit metadata to match expected types
+    // PRIORITY SYSTEM: Database fields first, then unit string parsing
+    // This ensures structured data from @tellimer/classify takes precedence
+
     const isCurrencyDenominated = (item as unknown as {
       is_currency_denominated?: boolean;
     }).is_currency_denominated;
 
-    // If is_currency_denominated is explicitly false, skip currency detection
-    // If true or undefined, use currency_code or parsed currency
-    const effectiveCurrency = (isCurrencyDenominated === false)
+    // CURRENCY CONVERSION CONTROL
+    // ============================
+    // is_currency_denominated (from DB) is the DOMINANT CHECK set by classification workflow
+    // It authoritatively controls whether FX conversion should be applied
+    //
+    // DECISION HIERARCHY:
+    // 1. is_currency_denominated flag → AUTHORITATIVE (from classification workflow)
+    //    - true:  Apply FX conversion (value is in currency units)
+    //    - false: Skip FX conversion (even if unit text contains currency codes)
+    //    - undefined: Fall back to heuristics (unit_type, parsing)
+    //
+    // 2. unit_type → Validation hint only
+    //    - "currency-amount": Suggests currency (but defer to is_currency_denominated)
+    //    - "percentage", "physical", "index": Suggests non-currency
+    //
+    // 3. currency_code (from DB) → Which currency if conversion is enabled
+    //
+    // 4. parseUnit(unit) → Fallback parsing if DB fields missing
+    //
+    // KEY EXAMPLES:
+    // - FX Rate "PKR/USD": is_currency_denominated=false (don't convert ratio)
+    // - GDP "USD Million": is_currency_denominated=true (convert USD→target currency)
+    // - Unemployment "%": is_currency_denominated=false (no currency)
+
+    const shouldSkipCurrency = isCurrencyDenominated === false;
+
+    // Additional validation: warn if unit_type conflicts with is_currency_denominated
+    if (
+      typeof console !== "undefined" && unitType &&
+      isCurrencyDenominated !== undefined
+    ) {
+      const unitTypeImpliesCurrency = unitType === "currency-amount";
+      if (unitTypeImpliesCurrency && isCurrencyDenominated === false) {
+        console.warn(
+          `⚠️  Data quality issue: unit_type="${unitType}" but is_currency_denominated=false for item ${
+            item.id || "unknown"
+          }. ` +
+            `Using is_currency_denominated as authoritative.`,
+        );
+      }
+    }
+
+    const effectiveCurrency = shouldSkipCurrency
       ? null
       : (normalizeCurrency(item.currency_code) || parsed.currency);
 
-    // SPECIAL CASE: If unit text contains "hundred million", prefer parsed scale over database scale
-    // This handles Chinese accounting units (亿, yi = 100 million) where database may incorrectly say "Millions"
+    // SCALE/MAGNITUDE: Database scale first, with special case for Chinese units
+    // SPECIAL CASE: If unit text contains "hundred million" (亿), prefer parsed scale
+    // This handles Chinese accounting units where database may incorrectly say "Millions"
     const effectiveScale = parsed.scale === "hundred-millions"
       ? parsed.scale
       : (normalizeScale(item.scale) || parsed.scale);
 
-    const effectiveTimeScale = normalizeTimeScale(item.periodicity) ||
+    // TIME SCALE: Use reporting_frequency from database FIRST (maps to periodicity)
+    // Fallback to periodicity field, then unit string parsing as last resort
+    // This ensures the dataset's reporting cadence (from DB) is preferred over guessing from unit text
+    const reportingFreq = (item as unknown as { reporting_frequency?: string })
+      .reporting_frequency;
+    const effectiveTimeScale = normalizeTimeScale(reportingFreq) ||
+      normalizeTimeScale(item.periodicity) ||
       parsed.timeScale;
 
     // Determine an explicit target magnitude for consistent unit strings (compute before normalization)

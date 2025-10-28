@@ -79,6 +79,33 @@ export type Scale =
 export type TimeScale = "year" | "quarter" | "month" | "week" | "day" | "hour";
 
 /**
+ * Unit semantic types from database unit_type column
+ * Helps avoid incorrect parsing of unit strings
+ */
+export type UnitType =
+  | "count"
+  | "unknown"
+  | "currency-amount"
+  | "physical"
+  | "percentage"
+  | "index";
+
+/**
+ * Reporting frequency from database reporting_frequency column
+ * Represents how often the data is released (the dataset's cadence)
+ *
+ * Note: "point-in-time" is a special case indicating snapshot data
+ * that doesn't have a regular reporting frequency
+ */
+export type ReportingFrequency =
+  | "annual"
+  | "quarterly"
+  | "monthly"
+  | "weekly"
+  | "daily"
+  | "point-in-time";
+
+/**
  * Configuration for exempting specific indicators from normalization
  */
 export interface NormalizationExemptions {
