@@ -675,12 +675,16 @@ export function buildExplainMetadata(
     !isNonCurrencyCategory && !isNonCurrencyDomain &&
     (hasKnownCurrency || didFX)
   ) {
-    explain.currency = {
-      original: hasKnownCurrency ? effectiveCurrency : undefined,
-      normalized: didFX
-        ? options.toCurrency
-        : (hasKnownCurrency ? effectiveCurrency : undefined),
-    };
+    const normalizedCurrency = didFX
+      ? (options.toCurrency || "USD")
+      : (hasKnownCurrency ? effectiveCurrency : undefined);
+    
+    if (normalizedCurrency) {
+      explain.currency = {
+        original: hasKnownCurrency ? effectiveCurrency : undefined,
+        normalized: normalizedCurrency,
+      };
+    }
   }
 
   if (originalScale || targetScale) {
