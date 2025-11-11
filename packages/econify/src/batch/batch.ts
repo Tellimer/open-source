@@ -640,9 +640,24 @@ function processItem<T extends BatchItem>(
         const scale = targetMagnitude ?? "ones";
         normalizedUnit = scale === "ones" ? "ones" : titleCase(scale);
       } else {
+        // Choose label currency for units:
+        // - If FX would occur (known currency, target set, fx available and different), use target currency
+        // - Else, use known effective currency (if any)
+        const effectiveCurrencyKnown = (effectiveCurrency &&
+            effectiveCurrency !== "UNKNOWN")
+          ? effectiveCurrency
+          : undefined;
+        const willConvert = !shouldSkipCurrency &&
+          !!effectiveCurrencyKnown &&
+          !!options.toCurrency &&
+          !!options.fx &&
+          effectiveCurrencyKnown !== options.toCurrency;
+        const labelCurrency = willConvert
+          ? options.toCurrency
+          : effectiveCurrencyKnown;
         normalizedUnit = buildNormalizedUnit(
           item.unit,
-          options.toCurrency,
+          labelCurrency,
           targetMagnitude,
           options.toTimeScale,
           indicatorType,
@@ -716,7 +731,27 @@ function buildNormalizedUnit(
 ): string {
   const parsed = parseUnit(original);
 
-  const cur = (currency || parsed.currency)?.toUpperCase();
+  // Special-case placeholder currencies (e.g., "National currency"): preserve original label,
+  // add magnitude if any, and append time dimension when appropriate.
+  if (parsed.currency === "UNKNOWN") {
+    const mag = magnitude ?? parsed.scale ?? getScale(original);
+    const ts = timeScale ?? parsed.timeScale;
+    const parts: string[] = [original];
+    if (mag && mag !== "ones") parts.push(String(mag));
+    let out = parts.join(" ");
+    const shouldIncludeTime = ts &&
+      allowsTimeConversion(indicatorType, temporalAggregation);
+    if (shouldIncludeTime) {
+      out = `${out}${out ? " " : ""}per ${ts}`;
+    }
+    return out || original;
+  }
+
+  // Sanitize provided currency: ignore placeholder values
+  const provided = currency && currency.toUpperCase() !== "UNKNOWN"
+    ? currency
+    : undefined;
+  const cur = (provided || parsed.currency)?.toUpperCase();
   // Fallback to detect scale from unit text when parser misses singular forms (e.g., "Thousand")
   const mag = magnitude ?? parsed.scale ?? getScale(original);
   const ts = timeScale ?? parsed.timeScale;

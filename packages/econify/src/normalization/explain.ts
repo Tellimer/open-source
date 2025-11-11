@@ -43,6 +43,8 @@ export function buildExplainMetadata(
 
   // Use explicit fields if provided, otherwise fall back to parsed values
   const effectiveCurrency = options.explicitCurrency || parsed.currency;
+  const hasKnownCurrency = !!effectiveCurrency &&
+    effectiveCurrency !== "UNKNOWN";
   const effectiveScale = options.explicitScale || parsed.scale;
 
   // Time scale priority:
@@ -61,7 +63,7 @@ export function buildExplainMetadata(
 
   // FX information
   if (
-    effectiveCurrency && options.toCurrency && options.fx &&
+    hasKnownCurrency && options.toCurrency && options.fx &&
     effectiveCurrency !== options.toCurrency
   ) {
     const rate = options.fx.rates[effectiveCurrency];
@@ -78,6 +80,9 @@ export function buildExplainMetadata(
       };
     }
   }
+
+  // Determine if FX conversion actually occurred (based on presence of explain.fx)
+  const didFX = !!explain.fx;
 
   // Magnitude information - only provide when scaling actually occurs
   const originalScale = effectiveScale || getScale(originalUnit);
@@ -257,73 +262,122 @@ export function buildExplainMetadata(
     }
   } else {
     // Monetary/currency-based units (default behavior)
-    originalUnitString = buildOriginalUnitString(
-      effectiveCurrency,
-      originalScale,
-    );
-    // For monetary units, only preserve original time scale if it was explicitly in the unit string
-    // (not just in metadata periodicity). This prevents adding "per month" to stock indicators.
-    const hasTimeInUnit = !!parsed.timeScale;
+    // Special handling for placeholder currency (e.g., "National currency") with no FX:
+    // Present units using the original label without injecting a target currency.
+    if (!hasKnownCurrency && !didFX) {
+      const base = originalUnit;
+      // For placeholder currencies, reflect target time scale if provided
+      if (options.toTimeScale) {
+        originalUnitString = base;
+        normalizedUnitString = `${base} per ${options.toTimeScale}`;
+        originalFullUnit = originalUnitString;
+        normalizedFullUnit = normalizedUnitString;
+      } else {
+        originalUnitString = base;
+        normalizedUnitString = base;
+        originalFullUnit = base;
+        normalizedFullUnit = base;
+      }
+    } else {
+      // Known currency or FX occurred: build currency-based labels normally
+      originalUnitString = buildOriginalUnitString(
+        effectiveCurrency,
+        originalScale,
+      );
+      // For monetary units, only preserve original time scale if it was explicitly in the unit string
+      // (not just in metadata periodicity). This prevents adding "per month" to stock indicators.
+      const hasTimeInUnit = !!parsed.timeScale;
 
-    // Use target time scale unless conversion was explicitly blocked
-    // Check if time conversion was blocked (not just "no conversion needed")
-    const timeWasBlocked = explain.periodicity?.adjusted === false &&
-      explain.periodicity?.description?.includes("blocked");
-    const effectiveTargetTime: TimeScale | undefined = timeWasBlocked
-      ? (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined)
-      : (options.toTimeScale ||
-        (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined));
+      // Use target time scale unless conversion was explicitly blocked
+      // Check if time conversion was blocked (not just "no conversion needed")
+      const timeWasBlocked = explain.periodicity?.adjusted === false &&
+        explain.periodicity?.description?.includes("blocked");
+      const effectiveTargetTime: TimeScale | undefined = timeWasBlocked
+        ? (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined)
+        : (options.toTimeScale ||
+          (hasTimeInUnit && originalTimeScale ? originalTimeScale : undefined));
 
-    normalizedUnitString = buildNormalizedUnitString(
-      options.toCurrency || effectiveCurrency,
-      targetScale,
-      effectiveTargetTime,
-    );
+      // Choose label currency:
+      // - If FX occurred, use target currency
+      // - Else, use the known effective currency
+      const labelCurrency = didFX
+        ? options.toCurrency
+        : (effectiveCurrency || undefined);
 
-    // Build full unit strings with time periods
-    originalFullUnit = buildFullUnitString(
-      effectiveCurrency,
-      originalScale,
-      originalTimeScale || undefined,
-    );
-    normalizedFullUnit = buildFullUnitString(
-      options.toCurrency || effectiveCurrency,
-      targetScale,
-      effectiveTargetTime,
-    ) || normalizedUnitString;
+      normalizedUnitString = buildNormalizedUnitString(
+        labelCurrency,
+        targetScale,
+        effectiveTargetTime,
+      );
+
+      // Build full unit strings with time periods
+      originalFullUnit = buildFullUnitString(
+        effectiveCurrency,
+        originalScale,
+        originalTimeScale || undefined,
+      );
+      normalizedFullUnit = buildFullUnitString(
+        labelCurrency,
+        targetScale,
+        effectiveTargetTime,
+      ) || normalizedUnitString;
+    }
 
     // Per-capita: avoid adding scale label like 'millions' to currency units
     if (isPerCapita) {
-      normalizedUnitString = buildNormalizedUnitString(
-        options.toCurrency || effectiveCurrency,
-        "ones",
-        options.toTimeScale,
-      );
-      normalizedFullUnit = buildFullUnitString(
-        options.toCurrency || effectiveCurrency,
-        "ones",
-        options.toTimeScale,
-      ) || normalizedUnitString;
+      const perCapitaCurrency = didFX
+        ? options.toCurrency
+        : (effectiveCurrency || undefined);
+      if (perCapitaCurrency) {
+        normalizedUnitString = buildNormalizedUnitString(
+          perCapitaCurrency,
+          "ones",
+          options.toTimeScale,
+        );
+        normalizedFullUnit = buildFullUnitString(
+          perCapitaCurrency,
+          "ones",
+          options.toTimeScale,
+        ) || normalizedUnitString;
+      } else {
+        // If currency is unknown, keep the base label without currency
+        const base = originalUnit;
+        normalizedUnitString = options.toTimeScale
+          ? `${base} per ${options.toTimeScale}`
+          : base;
+        normalizedFullUnit = normalizedUnitString;
+      }
     }
 
     // Indicators with skipTimeInUnit: omit per-time in unit strings
     // This includes: stock, balance, capacity, price, percentage, ratio, rate, index, etc.
     if (skipTimeInUnitString) {
-      normalizedUnitString = buildNormalizedUnitString(
-        options.toCurrency || effectiveCurrency,
-        targetScale,
-        undefined,
-      );
-      originalFullUnit = buildFullUnitString(
-        effectiveCurrency,
-        originalScale,
-        undefined,
-      );
-      normalizedFullUnit = buildFullUnitString(
-        options.toCurrency || effectiveCurrency,
-        targetScale,
-        undefined,
-      ) || normalizedUnitString;
+      if (hasKnownCurrency || didFX) {
+        const labelCurrency = didFX
+          ? options.toCurrency
+          : (effectiveCurrency || undefined);
+        normalizedUnitString = buildNormalizedUnitString(
+          labelCurrency,
+          targetScale,
+          undefined,
+        );
+        originalFullUnit = buildFullUnitString(
+          effectiveCurrency,
+          originalScale,
+          undefined,
+        );
+        normalizedFullUnit = buildFullUnitString(
+          labelCurrency,
+          targetScale,
+          undefined,
+        ) || normalizedUnitString;
+      } else {
+        // Placeholder currency: keep base without per-time
+        const base = originalUnit;
+        normalizedUnitString = base;
+        originalFullUnit = base;
+        normalizedFullUnit = base;
+      }
     }
   }
 
@@ -619,12 +673,18 @@ export function buildExplainMetadata(
   // 🆕 Separate component fields for easy frontend access
   if (
     !isNonCurrencyCategory && !isNonCurrencyDomain &&
-    (effectiveCurrency || options.toCurrency)
+    (hasKnownCurrency || didFX)
   ) {
-    explain.currency = {
-      original: effectiveCurrency,
-      normalized: options.toCurrency || effectiveCurrency || "USD",
-    };
+    const normalizedCurrency = didFX
+      ? (options.toCurrency || "USD")
+      : (hasKnownCurrency ? effectiveCurrency : undefined);
+    
+    if (normalizedCurrency) {
+      explain.currency = {
+        original: hasKnownCurrency ? effectiveCurrency : undefined,
+        normalized: normalizedCurrency,
+      };
+    }
   }
 
   if (originalScale || targetScale) {
